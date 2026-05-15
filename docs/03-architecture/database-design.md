@@ -108,7 +108,8 @@ CREATE TABLE supplier_products (
     current_cost DECIMAL(12,2) NOT NULL CHECK (current_cost >= 0),
     is_preferred BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(product_id, supplier_id)
 );
 ```
 
@@ -134,7 +135,7 @@ CREATE TABLE stock_movements (
     type VARCHAR(50) NOT NULL CHECK (type IN ('PURCHASE_ENTRY','POS_SALE','ONLINE_SALE','CANCELLATION_RETURN','MANUAL_ADJUSTMENT','WASTE','INTERNAL_CONSUMPTION')),
     quantity DECIMAL(12,3) NOT NULL,
     reason TEXT,
-    order_id BIGINT,
+    order_id BIGINT REFERENCES orders(id),
     created_by_user_id BIGINT REFERENCES users(id),
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -156,7 +157,7 @@ CREATE TABLE orders (
     customer_name_snapshot VARCHAR(255),
     customer_email_snapshot VARCHAR(255),
     customer_phone_snapshot VARCHAR(50),
-    fulfillment_type VARCHAR(20) DEFAULT 'PICKUP',
+    fulfillment_type VARCHAR(20) DEFAULT 'PICKUP' CHECK (fulfillment_type IN ('PICKUP')),
     subtotal DECIMAL(12,2) NOT NULL CHECK (subtotal >= 0),
     discount_total DECIMAL(12,2) DEFAULT 0 CHECK (discount_total >= 0),
     total DECIMAL(12,2) NOT NULL CHECK (total >= 0),
