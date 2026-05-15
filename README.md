@@ -2,15 +2,18 @@
 
 **Integrated commercial management system with built-in e-commerce**
 
-[![Status](https://img.shields.io/badge/Status-Planning-2ea44f?style=flat-square)]()
+[![Status](https://img.shields.io/badge/Status-Development-2ea44f?style=flat-square)]()
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=java)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?style=flat-square&logo=spring)](https://spring.io/projects/spring-boot)
-[![Angular](https://img.shields.io/badge/Angular-18-DD0031?style=flat-square&logo=angular)](https://angular.dev)
+[![Angular](https://img.shields.io/badge/Angular-21-DD0031?style=flat-square&logo=angular)](https://angular.dev)
+[![PrimeNG](https://img.shields.io/badge/PrimeNG-21-9C27B0?style=flat-square)](https://primeng.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)]()
+[![AI Handover](https://img.shields.io/badge/AI-AGENTS.md-blue?style=flat-square)](AGENTS.md)
 
 This project is a **thesis** (TPF/Tesina) for a Systems Engineering degree. It is a single platform with a shared commercial core that serves both in-store sales (POS) and online sales (e-commerce), avoiding the common mistake of building two disconnected systems.
 
-[Overview](#overview) · [Architecture](#architecture) · [Domain highlights](#domain-highlights) · [Documentation](#documentation) · [MVP scope](#mvp-scope) · [Status](#status)
+[Overview](#overview) · [Architecture](#architecture) · [Current status](#current-status) · [Domain highlights](#domain-highlights) · [Documentation](#documentation) · [MVP scope](#mvp-scope) · [Quick start](#quick-start)
 
 ---
 
@@ -20,9 +23,9 @@ Dietetica Lembas is a health food store in Argentina. The system manages the ful
 
 ```text
 Three integrated areas:
-├── Backoffice / ERP     → products, stock, suppliers, POS, cash register, orders
-├── E-commerce module    → public catalog, cart, Mercado Pago checkout, pickup
-└── Intelligent assistant → rule-based recommendations (low stock, expiring, rotation)
+  Backoffice / ERP     -> products, stock, suppliers, POS, cash register, orders
+  E-commerce module    -> public catalog, cart, Mercado Pago checkout, pickup
+  Intelligent assistant -> rule-based recommendations (low stock, expiring, rotation)
 ```
 
 > [!IMPORTANT]
@@ -32,40 +35,59 @@ Three integrated areas:
 
 | Layer | Technology |
 |---|---|
-| **Backend** | Java 21, Spring Boot 3.5, JPA/Hibernate, Flyway |
-| **Frontend** | Angular, Signals, PrimeNG, Tailwind CSS |
+| **Backend** | Java 21, Spring Boot 3.5, JPA/Hibernate, Flyway, Spring Security |
+| **Frontend** | Angular 21.2, Signals, PrimeNG 21, Tailwind CSS 4, Vitest |
 | **Database** | PostgreSQL 16 |
 | **Payments** | Mercado Pago Checkout Pro (adapter pattern) |
-| **Infra** | Docker Compose, Nginx |
+| **Infrastructure** | Docker Compose, Nginx |
 
 ### Style: Modular Monolith
 
-The system is organized by domain modules. No microservices. No message queues. No Redis.
+The system is organized by domain modules. No microservices, no message queues, no Redis.
 
 ```text
-backend/
-├── auth/           JWT, registration, login
-├── users/          Internal user management
-├── catalog/        Products, categories
-├── inventory/      Stock lots, FEFO, movements
-├── orders/         Unified POS + ONLINE orders
-├── payments/       Payment entity, Mercado Pago gateway
-├── cash/           Cash register sessions and movements
-├── suppliers/      Suppliers, product-supplier costs
-├── reports/        Dashboard, cash report, recommendations
-├── audit/          Audit logging
-└── webhooks/       Mercado Pago webhook endpoint
+backend/src/main/java/com/dietetica/lembas/
+  auth/          JWT login & registration
+  users/         Internal user management
+  catalog/       Products, categories
+  inventory/     Stock lots, FEFO, movements
+  orders/        Unified POS + ONLINE orders
+  payments/      Payment entity, Mercado Pago gateway
+  cash/          Cash register sessions & movements
+  suppliers/     Suppliers, product-supplier costs
+  reports/       Dashboard, cash report, recommendations
+  audit/         Audit logging
+  webhooks/      Mercado Pago webhook endpoint
+  shared/        Security, OpenAPI, shared config
 ```
+
+Each module follows a consistent package structure: `model/`, `repository/`, `service/`, `web/`, `dto/`, `policy/`, `gateway/`.
 
 The frontend follows the same separation:
 
 ```text
-src/app/features/
-├── public-store/   Catalog, product detail
-├── customer/       Orders, checkout, profile
-├── admin/          Dashboard, products, stock, POS, cash, orders, suppliers, reports, users
-└── auth/           Login, registration
+frontend/src/app/features/
+  public-store/  Catalog, product detail
+  customer/      Orders, checkout, profile
+  admin/         Dashboard, products, stock, POS, cash, orders, suppliers, reports, users
+  auth/          Login, registration
 ```
+
+Every feature component implements an all-states pattern (loading, empty, error, data) for consistent UX across the application.
+
+## Current status
+
+> Sprint 0 (scaffolding) is complete. The backend and frontend skeletons are in place with routing, security, guards, interceptors, and environment configuration ready. Sprint 1 implementation is about to begin.
+
+| Area | Status |
+|---|---|
+| **Documentation** | Complete (50+ files including 47 ADRs, domain model, API specs, process flows) |
+| **Backend scaffolding** | Module structure, security config, OpenAPI config, multi-environment application config, Flyway migrations dir |
+| **Frontend scaffolding** | Standalone components, routing with lazy loads, auth guards, error interceptor, auth/cart services, all feature stubs |
+| **Testing infra** | Vitest + jsdom (frontend), JUnit 5 + Testcontainers (backend) |
+| **Sprint 1** | Technical foundation, auth, admin catalog, public storefront (pending) |
+
+See [AGENTS.md](AGENTS.md) for a complete project knowledge base used for AI-assisted development sessions.
 
 ## Domain highlights
 
@@ -89,12 +111,14 @@ The register controls physical cash. Other payment methods (QR, transfer, cards)
 
 ### 47 Architecture Decision Records
 
-Every significant decision is documented as an ADR (see [architecture-decisions.md](docs/03-architecture/architecture-decisions.md)):
+Every significant decision is documented as an ADR:
 
 - Why modular monolith? (ADR-001)
 - Why stock is only deducted on payment confirmation? (ADR-013)
 - Why pickup only in MVP? (ADR-040)
 - Why no stock_reservations table? (ADR-025)
+
+See [architecture-decisions.md](docs/03-architecture/architecture-decisions.md) for the full list.
 
 ## Documentation
 
@@ -102,17 +126,17 @@ The full documentation is in the [`docs/`](docs/) directory:
 
 ```text
 docs/
-├── 00-overview/          Project brief, scope, glossary
-├── 01-product/           MVP definition, roadmap, epics, user stories, out-of-scope
-├── 02-domain/            Domain model, entities, business rules, state machines
-├── 03-architecture/      Architecture overview, backend, frontend, database, security,
-│                         integrations, 47 ADRs
-├── 04-processes/         Full sequence diagrams for all critical flows
-├── 05-api/               API guidelines, endpoints, error handling, DTO conventions
-├── 06-development/       Setup guide, coding standards, testing strategy
-├── 07-deployment/        Docker, local environment, production deployment
-└── 08-academic/          Thesis defense, technical justification, project risks,
-                          evaluation criteria
+  00-overview/          Project brief, scope, glossary
+  01-product/           MVP definition, roadmap, epics, user stories, out-of-scope
+  02-domain/            Domain model, entities, business rules, state machines
+  03-architecture/      Architecture overview, backend, frontend, database, security,
+                        integrations, 47 ADRs
+  04-processes/         Full sequence diagrams for all critical flows
+  05-api/               API guidelines, endpoints, error handling, DTO conventions
+  06-development/       Setup guide, coding standards, testing strategy
+  07-deployment/        Docker, local environment, production deployment
+  08-academic/          Thesis defense, technical justification, project risks,
+                        evaluation criteria
 ```
 
 > [!TIP]
@@ -133,6 +157,7 @@ docs/
 | How the cash register works | [cash-register-rules.md](docs/02-domain/cash-register-rules.md) |
 | The complete API | [endpoints.md](docs/05-api/endpoints.md) |
 | How to set up the dev environment | [setup.md](docs/06-development/setup.md) |
+| AI-assisted development context | [AGENTS.md](AGENTS.md) |
 
 ## MVP scope
 
@@ -170,10 +195,61 @@ The MVP is planned as **4 sprints of 2 weeks each** (48 user stories, ~300 story
 
 See [out-of-scope.md](docs/01-product/out-of-scope.md) for the full list with ADR references.
 
-## Status
+## Quick start
 
-> [!NOTE]
-> This repository currently contains the **full documentation** for the project. Backend and frontend code will be added as implementation progresses through the 4-sprint plan.
+### Backend
+
+```bash
+# Prerequisites: Java 21+, Maven, PostgreSQL 16
+
+cd backend
+
+# Run tests
+./mvnw test
+
+# Start development server (requires a running PostgreSQL instance)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+### Frontend
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server (proxies API to localhost:8080)
+npm start
+
+# Run tests
+npm run test
+
+# Build for production
+npm run build
+```
+
+### Database
+
+```bash
+# Start a local PostgreSQL instance with Docker
+docker run -d --name lembas-db \
+  -e POSTGRES_DB=lembas \
+  -e POSTGRES_USER=lembas \
+  -e POSTGRES_PASSWORD=lembas \
+  -p 5432:5432 \
+  postgres:16
+```
+
+## Project structure
+
+```text
+lembas/
+  backend/           Spring Boot 3.5 (Maven, Java 21)
+  frontend/          Angular 21.2 (Standalone, PrimeNG, Tailwind)
+  docs/              Full project documentation (50+ files)
+    AGENTS.md        AI session handover knowledge base
+```
 
 ## Author
 
@@ -181,4 +257,4 @@ See [out-of-scope.md](docs/01-product/out-of-scope.md) for the full list with AD
 
 ---
 
-[Documentation](docs/) · [Architecture decisions](docs/03-architecture/architecture-decisions.md) · [GitHub](https://github.com/NachoOsella/lembas)
+[Documentation](docs/) · [Architecture decisions](docs/03-architecture/architecture-decisions.md) · [GitHub](https://github.com/NachoOsella/lembas) · [AI context](AGENTS.md)
