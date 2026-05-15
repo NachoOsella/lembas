@@ -290,3 +290,38 @@ CREATE TABLE audit_logs (
 | suppliers | (name) | Supplier search |
 | supplier_products | (product_id) | Products by supplier |
 | supplier_products | (supplier_id) | Suppliers by product |
+
+## Entity-relationship diagram
+
+```mermaid
+erDiagram
+    branches ||--o{ users : has
+    branches ||--o{ stock_lots : contains
+    branches ||--o{ stock_movements : registers
+    branches ||--o{ orders : belongs_to
+    branches ||--o{ cash_sessions : opens
+
+    users ||--o{ stock_movements : creates
+    users ||--o{ orders : as_customer
+    users ||--o{ orders : as_creator
+    users ||--o{ cash_sessions : opens
+    users ||--o{ cash_sessions : closes
+    users ||--o{ cash_movements : creates
+
+    categories ||--o{ products : contains
+
+    products ||--o{ stock_lots : has_lots
+    products ||--o{ stock_movements : tracks
+    products ||--o{ order_items : sold_in
+    products ||--o{ supplier_products : supplied_by
+
+    suppliers ||--o{ supplier_products : offers
+
+    stock_lots ||--o{ stock_movements : referenced_in
+
+    orders ||--o{ order_items : contains
+    orders ||--o{ payments : has
+
+    cash_sessions ||--o{ payments : contains_payments
+    cash_sessions ||--o{ cash_movements : contains_movements
+```
