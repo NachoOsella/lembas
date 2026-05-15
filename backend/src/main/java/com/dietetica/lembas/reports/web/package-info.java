@@ -1,0 +1,4 @@
+/**
+ * Contains web classes for the reports module.
+ */
+package com.dietetica.lembas.reports.web;

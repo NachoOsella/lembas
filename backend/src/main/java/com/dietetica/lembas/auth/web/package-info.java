@@ -1,0 +1,4 @@
+/**
+ * Contains web classes for the auth module.
+ */
+package com.dietetica.lembas.auth.web;
