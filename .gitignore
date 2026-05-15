@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+.env
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build output
+target/
+dist/
+build/
