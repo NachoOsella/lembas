@@ -8,7 +8,6 @@
 [![Angular](https://img.shields.io/badge/Angular-21-DD0031?style=flat-square&logo=angular)](https://angular.dev)
 [![PrimeNG](https://img.shields.io/badge/PrimeNG-21-9C27B0?style=flat-square)](https://primeng.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)]()
 [![AI Handover](https://img.shields.io/badge/AI-AGENTS.md-blue?style=flat-square)](AGENTS.md)
 
 This project is a **thesis** (TPF/Tesina) for a Systems Engineering degree. It is a single platform with a shared commercial core that serves both in-store sales (POS) and online sales (e-commerce), avoiding the common mistake of building two disconnected systems.
