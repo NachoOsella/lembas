@@ -9,12 +9,12 @@ COPY backend/mvnw backend/pom.xml ./
 COPY backend/.mvn ./.mvn
 RUN chmod +x ./mvnw
 
-# Download dependencies using a BuildKit cache so rebuilds are much faster.
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -B dependency:go-offline
+# Download dependencies in a Docker layer so rebuilds can reuse Maven artifacts without BuildKit.
+RUN ./mvnw -B dependency:go-offline
 
 # Copy source after dependency resolution so code changes do not invalidate dependency cache.
 COPY backend/src ./src
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -B package -DskipTests
+RUN ./mvnw -B package -DskipTests
 
 # Run the packaged application with a smaller JRE image and a non-root user.
 FROM eclipse-temurin:21-jre-alpine AS runtime
