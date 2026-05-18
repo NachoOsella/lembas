@@ -8,28 +8,17 @@ The only external integration in the MVP.
 
 Process online payments for the e-commerce channel. Customers are redirected to MP's hosted checkout page and return to the store after payment.
 
-### Integration pattern
+### Integration approach
 
-Mercado Pago is integrated behind a `PaymentGateway` interface:
+Mercado Pago is integrated directly from the payments and webhook services. The MVP does not introduce a separate abstraction because there is only one online payment provider.
 
-```java
-interface PaymentGateway {
-    Preference createPreference(Order order, Payment payment);
-    PaymentStatus checkPayment(String paymentId);
-    boolean verifyWebhookSignature(WebhookRequest request);
-}
-```
-
-This provides:
-- Testability via FakePaymentGateway
-- Ability to switch or add payment providers without redesigning the payment module
-- Clean separation of external API logic from domain logic
+This keeps the backend simpler while still keeping the external API calls localized in a small number of service classes.
 
 ### Endpoints used
 
 | MP API | Purpose |
 |---|---|
-| POST /v1/payments | Create payment preference |
+| POST /checkout/preferences | Create Checkout Pro preference |
 | GET /v1/payments/{id} | Query payment status |
 | POST /webhooks | Receive payment notifications |
 
@@ -69,13 +58,6 @@ Product images are stored on the local file system and served by Nginx as static
 | Logistics (Rappi, PedidosYa) | Post-MVP |
 | Supplier price import | Post-MVP |
 
-## Future integration architecture
+## Future integrations
 
-When new external integrations are required, they should follow the same adapter pattern:
-
-```text
-Domain interface (e.g., ShippingGateway, NotificationService)
-    └── Implementation 1 (e.g., ManualShipping)
-    └── Implementation 2 (e.g., RappiApiAdapter)
-    └── Fake implementation for tests
-```
+When new external integrations are required, implement them in focused service classes first. Introduce an interface only when there are multiple implementations or a clear testing need that cannot be covered with standard mocks.

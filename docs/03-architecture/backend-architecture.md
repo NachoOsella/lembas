@@ -23,7 +23,7 @@ backend/
   catalog/          -- Products, categories
   inventory/        -- StockLot, StockMovement, FEFO
   orders/           -- Unified orders (POS and ONLINE)
-  payments/         -- Payment, MercadoPagoGateway, webhook
+  payments/         -- Payment, Mercado Pago integration
   cash/             -- CashSession, CashMovement
   suppliers/        -- Suppliers, supplier_products
   reports/          -- Dashboard, cash report, recommendations
@@ -34,7 +34,7 @@ backend/
 
 Each module follows:
 
-```
+```text
 module/
   model/       -- JPA entities, enums
   repository/  -- Spring Data repositories
@@ -52,10 +52,6 @@ payments/
     PaymentProvider.java           -- Enum: MERCADO_PAGO, MANUAL, BANK, CARD_TERMINAL
     PaymentMethod.java             -- Enum: CHECKOUT_PRO, CASH, QR, TRANSFER, etc.
     PaymentStatus.java             -- Enum: PENDING, APPROVED, REJECTED, etc.
-  gateway/
-    PaymentGateway.java            -- Interface
-    MercadoPagoGateway.java        -- Real MP API implementation
-    FakePaymentGateway.java        -- For tests and development
   service/
     PaymentService.java            -- Creation, update, query
     MercadoPagoService.java        -- Create preference, verify payment, process webhook
@@ -72,10 +68,8 @@ cash/
     CashSession.java
     CashMovement.java
     CashMovementType.java
-  policy/
-    CashCloseCalculator.java       -- Expected cash calculation, difference detection
   service/
-    CashService.java               -- Open, close, movements, report
+    CashService.java               -- Open, close, movements, report, expected cash calculation
   web/
     CashController.java            -- Cash endpoints
 ```
@@ -88,10 +82,8 @@ inventory/
     StockLot.java
     StockMovement.java
     StockMovementType.java
-  policy/
-    FefoStockDeductionPolicy.java   -- Pure FEFO logic, testable without Spring
   service/
-    InventoryService.java           -- Orchestrates Policy + Repository + @Transactional
+    InventoryService.java          -- FEFO deduction, stock entries, movements, @Transactional
   web/
     InventoryController.java
 ```
@@ -99,10 +91,10 @@ inventory/
 ## Implementation rules
 
 - Controllers must not contain business logic
-- Business logic belongs in services or domain policy classes
+- Business logic belongs in services
 - Use DTOs for API input/output -- never expose JPA entities directly
-- Complex domain logic (FEFO, cash calculation) extracted into testable policy classes
-- External integrations (Mercado Pago) behind interface adapters
+- Keep external API calls localized in the service that owns the feature
+- Extract helper classes only when a service becomes too large or a second implementation is required
 
 ## Security filter chain
 

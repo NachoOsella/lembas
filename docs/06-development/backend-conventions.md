@@ -11,8 +11,6 @@ Each backend module follows:
   service/     -- Business logic services
   web/         -- REST controllers
   dto/         -- Request and Response DTOs
-  policy/      -- Pure domain logic (no Spring dependencies, testable without context)
-  gateway/     -- External integration interfaces (e.g., PaymentGateway)
 ```
 
 ## Module list
@@ -22,7 +20,7 @@ Each backend module follows:
 | auth | JWT authentication, registration, login |
 | users | Internal user management (CRUD, enable/disable) |
 | catalog | Categories and products |
-| inventory | Stock lots, movements, FEFO policy |
+| inventory | Stock lots, movements, FEFO deduction |
 | orders | Unified orders (POS and ONLINE) |
 | payments | Payment entity, Mercado Pago integration |
 | cash | Cash register sessions and movements |
@@ -64,7 +62,7 @@ public class ProductAdminController {
 
 ## Service conventions
 
-- Services contain business logic
+- Services contain business logic, including domain rules such as FEFO and cash-close calculations
 - Use `@Transactional` for operations that span multiple repository calls
 - Services do not return entities directly -- map to DTOs
 
@@ -99,7 +97,6 @@ public abstract class DomainException extends RuntimeException {
 
 ## Testing conventions
 
-- Domain policy classes: pure unit tests (no Spring context)
 - Repositories: Integration tests with `@DataJpaTest` + Testcontainers
 - Controllers: `@WebMvcTest` with mocked services
 - Services: Unit tests with mocked repositories

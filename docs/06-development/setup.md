@@ -51,9 +51,9 @@ cd backend
 
 | Profile | Database | Payments | Use case |
 |---|---|---|---|
-| dev | Local PostgreSQL | FakePaymentGateway | Development |
-| test | Testcontainers | FakePaymentGateway | Automated tests |
-| prod | Production PostgreSQL | MercadoPagoGateway | Deployment |
+| dev | Local PostgreSQL | Local Mercado Pago config | Development |
+| test | Testcontainers | Mocked Mercado Pago calls | Automated tests |
+| prod | Production PostgreSQL | Mercado Pago production config | Deployment |
 
 ## Frontend setup
 

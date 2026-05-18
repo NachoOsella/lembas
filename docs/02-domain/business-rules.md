@@ -57,7 +57,7 @@
 - In-store payments use MANUAL provider with the selected method (CASH, QR, TRANSFER, DEBIT_CARD, CREDIT_CARD)
 - In-store payments must be associated with an open cash session
 - No sensitive card data is stored in the system
-- Mercado Pago integration is behind a PaymentGateway interface for testability
+- Mercado Pago integration is implemented in the payments/webhooks services
 
 ## Cash Register
 

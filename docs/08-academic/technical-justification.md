@@ -32,7 +32,7 @@ The modular monolith provides domain separation through package structure withou
 
 ### Why Mercado Pago Checkout Pro?
 
-- Most widely used payment gateway in Argentina
+- Most widely used payment provider in Argentina
 - Hosted checkout reduces PCI compliance scope
 - Webhook-based notification model fits async order processing
 - Sandbox environment for development and testing

@@ -33,7 +33,7 @@ When deducting stock:
 3. Deduction may span multiple lots to satisfy the required quantity
 4. If total available stock is insufficient, the operation fails with INSUFFICIENT_STOCK
 
-The FEFO policy is a pure domain logic class that can be unit-tested without Spring context.
+The FEFO deduction logic lives in the inventory service and is covered by unit tests.
 
 ## Stock movement types
 

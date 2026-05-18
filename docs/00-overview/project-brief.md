@@ -43,7 +43,7 @@ This project eliminates those gaps by providing a single system that:
 | Catalog | Categories, products, barcodes, images, online publication status |
 | Inventory | Stock lots, FEFO deduction, movements, adjustments, expiry alerts |
 | Orders | Unified POS and ONLINE orders, items with snapshots, state machine |
-| Payments | Unified payment table, Mercado Pago gateway, manual payments |
+| Payments | Unified payment table, Mercado Pago integration, manual payments |
 | Cash Register | Opening, manual movements, closing with cash count and discrepancy justification |
 | POS (Point of Sale) | Fast product search, barcode scanning, multi-method payment |
 | Suppliers | Supplier registry, product-supplier association with manual cost |

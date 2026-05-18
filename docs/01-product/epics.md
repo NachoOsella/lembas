@@ -9,7 +9,7 @@
 | EP-02 | Catalog management | Categories, products, pricing, barcodes, single image, online status | 1 |
 | EP-03 | Online store | Public catalog, local cart, authenticated checkout, own order history, payment result display | 1, 2, 3 |
 | EP-04 | Mercado Pago Checkout Pro | Payment adapter, preference creation, webhook, idempotency, payment statuses | 3 |
-| EP-05 | Stock | Stock by lot and branch, FEFO policy, movements, adjustments, expiry and low-stock alerts | 2, 3 |
+| EP-05 | Stock | Stock by lot and branch, FEFO deduction, movements, adjustments, expiry and low-stock alerts | 2, 3 |
 | EP-06 | Orders | Unified POS/ONLINE orders, items with snapshots, state machine, preparation, delivery, cancellation | 2, 4 |
 | EP-07 | Cash register | Opening, current session, manual movements, closing with cash count and discrepancy justification | 3 |
 | EP-08 | In-store POS | Fast sale with name/barcode search, mandatory open register, multi-method payment, FEFO deduction | 3 |
@@ -48,14 +48,14 @@ Public catalog with search and filters, local cart (localStorage), authenticated
 
 ## EP-04 -- Mercado Pago Checkout Pro
 
-Payment adapter (PaymentGateway), preference creation in MP, webhook with signature verification, idempotency by provider_payment_id, MP status mapping to internal PaymentStatus.
+Mercado Pago preference creation, webhook with signature verification, idempotency by provider_payment_id, MP status mapping to internal PaymentStatus.
 
 **Sprint:** 3
 **Stories:** S3-US01 (adapter), S3-US02 (preference), S3-US03 (webhook)
 
 ## EP-05 -- Stock
 
-Stock by lots as single source of truth, stock movements, testable FEFO policy, entries and manual adjustments. Expiry and low-stock alerts in reports.
+Stock by lots as single source of truth, stock movements, FEFO deduction, entries and manual adjustments. Expiry and low-stock alerts in reports.
 
 **Sprints:** 2, 3
 **Stories:** S2-US01 (lot model), S2-US02 (entries), S2-US03 (FEFO), S2-US04 (adjustments), S3-US04 (online FEFO deduction)

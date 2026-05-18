@@ -62,7 +62,7 @@ All payments are recorded in the single `payments` entity, regardless of channel
 ```
 1. Customer creates order (POST /api/customer/orders)
 2. Customer requests checkout (POST /api/customer/orders/{id}/checkout/mp)
-3. Backend creates preference in MP via MercadoPagoGateway
+3. Backend creates preference in MP from the payment service
 4. Backend saves provider_preference_id in payment
 5. Backend returns init_point to frontend
 6. Frontend redirects to MP Checkout Pro
@@ -83,14 +83,6 @@ The webhook handler must:
 4. If yes, return 200 OK without any side effects
 5. If no, process the payment update atomically
 
-### Adapter interface
+### Implementation note
 
-```java
-interface PaymentGateway {
-    Preference createPreference(Order order, Payment payment);
-    PaymentStatus checkPayment(String paymentId);
-    boolean verifyWebhookSignature(WebhookRequest request);
-}
-```
-
-This allows testing with FakePaymentGateway and switching implementations without redesigning the payment module.
+Mercado Pago API calls live in the payments/webhooks services. If the project later needs multiple payment providers, an interface can be introduced at that time.

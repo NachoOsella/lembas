@@ -28,7 +28,7 @@
 
 - Stock by lot with expiration dates
 - Stock movements with full traceability
-- FEFO (First Expired, First Out) deduction policy
+- FEFO (First Expired, First Out) stock deduction
 - Stock entry and manual adjustments
 - Expiry and low-stock alerts
 

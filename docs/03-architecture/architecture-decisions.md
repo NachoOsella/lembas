@@ -5,7 +5,7 @@
 | ADR-001 | Modular Monolith | Less complexity for a single-developer thesis. Avoids microservice overhead |
 | ADR-002 | Separate storefront and backoffice in frontend | Different users (customers vs employees) need different interfaces |
 | ADR-003 | PostgreSQL | Strong relational model for stock, sales, orders. Transaction support |
-| ADR-004 | Adapter pattern for payments | Enables mock testing and real MP integration without redesign |
+| ADR-004 | Direct Mercado Pago integration in payment services | Reduces abstraction for MVP; a payment abstraction can be added if a second provider is required |
 | ADR-005 | No fiscal invoicing in MVP | Exceeds legal and technical scope of the thesis |
 | ADR-006 | No external logistics in MVP | Manual internal delivery only. Pickup is the MVP fulfillment method |
 | ADR-007 | Barcode reader as keyboard input | Simple, realistic, sufficient for MVP |
@@ -43,7 +43,7 @@
 | ADR-039 | Online purchase requires registration and login | No guest checkout |
 | ADR-040 | Pickup only in MVP (no delivery) | Only PICKUP fulfillment. No home delivery |
 | ADR-041 | Cart in frontend (localStorage) | No database persistence |
-| ADR-042 | Mercado Pago Checkout Pro as payment gateway | Real payment gateway. Backend creates preferences, receives webhooks, verifies payments |
+| ADR-042 | Mercado Pago Checkout Pro for online payments | Backend creates preferences, receives webhooks, verifies payments |
 | ADR-043 | Cash register with cash count | All in-store sales require open register. Closing calculates cash difference |
 | ADR-044 | Unified payments (payments table) | Shared table for online (MP) and in-store (cash register) payments |
 | ADR-045 | STOCK_CONFLICT status for stock exceptions | If payment is approved but stock is insufficient, order goes to manual review |

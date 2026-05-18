@@ -32,7 +32,7 @@ For the degree thesis, this project demonstrates:
 | Software architecture | Modular monolith design; separation of concerns by domain |
 | Full-stack development | Angular frontend + Spring Boot backend from scratch |
 | Database design | Normalized relational model with transactional integrity |
-| External integration | Mercado Pago Checkout Pro via adapter pattern |
+| External integration | Mercado Pago Checkout Pro |
 | Business process modeling | Sequence diagrams for all critical flows |
 | Testing strategy | Unit, integration, and E2E testing with realistic scenarios |
 | Project management | Scrum-based planning with 4 sprints, 48 user stories, 300 story points |

@@ -1,7 +1,3 @@
 spring:
   jpa:
     show-sql: true
-
-app:
-  payments:
-    gateway: fake

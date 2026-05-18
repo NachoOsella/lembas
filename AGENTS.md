@@ -9,7 +9,7 @@ Sprint 0: backend/ frontend/ on disk untracked, only docs/ committed on main.
 
 ## STRUCTURE
 
-- backend/ (SB 3.5.0, Maven): 12 feature modules {auth,users,catalog,inventory,orders,payments,cash,suppliers,reports,audit,webhooks} each with 7 sub-pkgs {model,repository,service,web,dto,policy,gateway}/ -- all package-info stubs. Only 3 real classes: LembasBackendApplication, SecurityConfig, OpenApiConfig.
+- backend/ (SB 3.5.0, Maven): 12 feature modules {auth,users,catalog,inventory,orders,payments,cash,suppliers,reports,audit,webhooks} each with 5 sub-pkgs {model,repository,service,web,dto}/ -- all package-info stubs. Only 3 real classes: LembasBackendApplication, SecurityConfig, OpenApiConfig.
 - frontend/ (Angular 21.2 standalone): PrimeNG+Aura+Tailwind. app/ with core/ (guards,interceptors,services stubs), features/ (public-store,auth,customer,admin stubs), shared/ (empty models). @angular/build:application + :unit-test (Vitest).
 - docs/: 50 files (domain, architecture, API, dev, deploy, academic).
 
@@ -27,10 +27,10 @@ Feature branches from main, squash-merge PRs. Conventional commits: feat fix doc
 
 ## BE (JAVA)
 
-- Pkg by feature: com.dietetica.lembas.<module>/{model,repo,service,web,dto,policy,gateway}
+- Pkg by feature: com.dietetica.lembas.<module>/{model,repository,service,web,dto}
 - Thin controllers, DTOs for API (no JPA entities exposed). Constructor injection only.
-- Domain policies = pure Java (no Spring) for testable rules (FEFO, cash).
-- Adapter: PaymentGateway interface -> MercadoPagoGateway | FakePaymentGateway.
+- Business rules live in services; extract helper classes only when a real complexity appears.
+- Mercado Pago integration lives in the payments/webhooks services; add an abstraction only if a second provider is required.
 - DomainException base (code+status). Single @ControllerAdvice -> uniform ApiError.
 - Stock: @Lock(PESSIMISTIC_WRITE), open-in-view:false, ddl-auto:validate + Flyway.
 - Security: CSRF disabled, stateless. Public: /api/auth/**, /api/store/**, /api/webhooks/**, /uploads/**, /actuator/health, /api-docs/**, /swagger-ui/**.
@@ -76,7 +76,7 @@ Microservices, msg queues, Redis, separate POS/ONLINE models, home delivery, fis
 
 ## ADRS
 
-013=Stock timing (stock), 022=Unified orders (orders), 040=Pickup only (checkout), 009=Pkg-by-feature (new modules), 012=Controller-DTO (endpoints), 017=Security (auth), 025=Payment gateway (payments), 031=Audit logging (audit), 037=Testing pyramid (tests).
+013=Stock timing (stock), 022=Unified orders (orders), 040=Pickup only (checkout), 009=Pkg-by-feature (new modules), 012=Controller-DTO (endpoints), 017=Security (auth), 025=Payment integration (payments), 031=Audit logging (audit), 037=Testing pyramid (tests).
 
 ## WHERE
 

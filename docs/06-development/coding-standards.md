@@ -15,8 +15,8 @@
 
 | Element | Convention | Example |
 |---|---|---|
-| Classes | PascalCase | `ProductService`, `FefoStockDeductionPolicy` |
-| Interfaces | PascalCase | `PaymentGateway` |
+| Classes | PascalCase | `ProductService`, `StockDeductionService` |
+| Interfaces | PascalCase | `PaymentClient` |
 | Methods | camelCase | `createPreference()`, `deductStock()` |
 | Variables | camelCase | `availableStock`, `totalAmount` |
 | Constants | UPPER_SNAKE_CASE | `MAX_PAGE_SIZE` |
@@ -40,13 +40,11 @@ com.dietetica.<module>/
   service/     -- Business logic
   web/         -- REST controllers
   dto/         -- Request/Response DTOs
-  policy/      -- Domain policies (pure logic, no Spring dependencies)
-  gateway/     -- External integration interfaces
 ```
 
 ### Testing
 
-- Unit tests for domain policies (no Spring context)
+- Unit tests for services and complex helper methods
 - Integration tests with Testcontainers for repositories
 - Controller tests with `@WebMvcTest`
 - Use descriptive test method names: `shouldDeductFromExpiringLotFirst()`

@@ -52,9 +52,9 @@ perf:     Performance improvement
 ### Examples
 
 ```text
-feat: add StockLot entity and FEFO deduction policy
+feat: add StockLot entity and FEFO deduction
 fix: prevent double deduction on duplicate MP webhook
-refactor: extract FEFO logic into testable policy class
+refactor: simplify FEFO stock deduction logic
 test: add integration test for POS sale with FEFO deduction
 docs: add architecture overview document
 chore: configure Testcontainers for CI

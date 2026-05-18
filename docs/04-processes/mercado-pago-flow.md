@@ -2,7 +2,7 @@
 
 ## Overview
 
-Mercado Pago Checkout Pro is the payment gateway for the online store. The integration follows the adapter pattern to keep the payment module testable and maintainable.
+Mercado Pago Checkout Pro processes online payments for the store. The integration is kept in the payments and webhook services to avoid unnecessary abstraction in the MVP.
 
 ## Integration architecture
 
@@ -12,29 +12,18 @@ Customer's browser
 Mercado Pago Checkout Pro (hosted payment page)
     ↓ (webhook + redirect)
 Backend Spring Boot
-    └── MercadoPagoGateway (implements PaymentGateway)
-    └── MercadoPagoWebhookController
     └── MercadoPagoService
-```
-
-## PaymentGateway interface
-
-```java
-interface PaymentGateway {
-    Preference createPreference(Order order, Payment payment);
-    PaymentStatus checkPayment(String paymentId);
-    boolean verifyWebhookSignature(WebhookRequest request);
-}
+    └── MercadoPagoWebhookController
 ```
 
 ## Full checkout flow
 
-```
+```text
 1. Customer creates order → POST /api/customer/orders
    └── Backend creates order (PENDING_PAYMENT) + payment (PENDING)
 
 2. Customer requests checkout → POST /api/customer/orders/{id}/checkout/mp
-   └── Backend calls MercadoPagoGateway.createPreference(order, payment)
+   └── Backend creates a Mercado Pago preference
    └── MP returns { initPoint, preferenceId }
    └── Backend saves provider_preference_id in payment
    └── Returns { initPoint } to frontend
@@ -83,13 +72,12 @@ This prevents double-deduction of stock if MP sends duplicate webhooks.
 1. The webhook endpoint is public (no JWT required)
 2. Signature verification uses `X-Signature` header and a configured secret
 3. The backend never trusts the webhook body alone -- it always queries the real status from MP API
-4. Rate limiting is not applied to this endpoint (MP needs to deliver notifications reliably)
+4. Rate limiting is not applied to this endpoint because MP needs to deliver notifications reliably
 
 ## Test strategy
 
 | Test | What it verifies |
 |---|---|
-| FakePaymentGateway | In-memory implementation returns configured responses |
 | Preference creation | Correct mapping of order items to MP request format |
 | Webhook approved | Full transactional flow: payment update, FEFO deduction, order status change |
 | Webhook duplicate | Idempotency: second same notification returns 200 without side effects |

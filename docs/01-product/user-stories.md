@@ -33,7 +33,7 @@ Full detailed content with acceptance criteria for each story is available in th
 |---|---|---|---|
 | S2-US01 | EP-05 | Create stock-by-lot model | 8 |
 | S2-US02 | EP-05 | Register stock entries | 5 |
-| S2-US03 | EP-05 | Implement testable FEFO policy | 8 |
+| S2-US03 | EP-05 | Implement FEFO stock deduction | 8 |
 | S2-US04 | EP-05 | Register manual adjustments and internal consumption | 5 |
 | S2-US05 | EP-03 | Show real stock availability in store | 5 |
 | S2-US06 | EP-06 | Create unified order model | 8 |

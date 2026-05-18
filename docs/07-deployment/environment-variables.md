@@ -55,6 +55,6 @@ SERVER_PORT=8080
 
 | Profile | Database | Payments | When to use |
 |---|---|---|---|
-| `dev` | Local PostgreSQL | FakePaymentGateway | Local development |
-| `test` | Testcontainers | FakePaymentGateway | Automated tests |
-| `prod` | Production PostgreSQL | MercadoPagoGateway | Production deployment |
+| `dev` | Local PostgreSQL | Local Mercado Pago config | Local development |
+| `test` | Testcontainers | Mocked Mercado Pago calls | Automated tests |
+| `prod` | Production PostgreSQL | Mercado Pago production config | Production deployment |

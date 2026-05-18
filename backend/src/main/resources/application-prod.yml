@@ -1,7 +1,3 @@
 spring:
   jpa:
     show-sql: false
-
-app:
-  payments:
-    gateway: mercado-pago

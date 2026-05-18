@@ -55,7 +55,7 @@ The system goes beyond simple CRUD because it implements complete business proce
 2. **Unified order model** (POS and ONLINE share the same table)
 3. **Stock lots as source of truth** (no denormalized stock counts, FEFO built in)
 4. **Stock deducted on payment confirmation** (no separate reservation table)
-5. **Adapter pattern for payments** (testable, swappable)
+5. **Mercado Pago integration** (localized payment processing and webhook handling)
 6. **Cash register controls physical cash only** (other methods are informational at close)
 7. **Rule-based recommendations over AI** -- deterministic, predictable, no hallucination
 
@@ -69,6 +69,6 @@ The system goes beyond simple CRUD because it implements complete business proce
 | Transaction management | FEFO stock deduction with pessimistic locking (SELECT FOR UPDATE) |
 | Testing strategy | Unit (domain policies), integration (Testcontainers), E2E (critical flows) |
 | Project management | Scrum with 4 sprints, 48 user stories, 300 story points, Jira tracking |
-| Software architecture | Modular monolith, adapter pattern, layered architecture, DTO mapping |
+| Software architecture | Modular monolith, layered architecture, DTO mapping |
 | Security | JWT, BCrypt, role-based access (4 roles), route guards, audit logging |
 | Business process modeling | Full sequence diagrams for all 4 critical workflows |

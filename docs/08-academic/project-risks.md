@@ -6,7 +6,7 @@
 |---|---|---|---|
 | Concurrent POS + webhook causes overselling | Low | High | Pessimistic locking (SELECT FOR UPDATE) on stock_lots |
 | Duplicate MP webhook double-deducts stock | Low | High | Idempotency check by provider_payment_id before any side effects |
-| MP API changes break integration | Low | Medium | Adapter pattern isolates MP logic. Only one class to update |
+| MP API changes break integration | Low | Medium | Keep MP API calls localized in payment/webhook services. Update those classes when the API changes |
 | Database schema changes late in project | Medium | Medium | Flyway migrations versioned and tested. Rollback script available |
 | Front-backend type mismatch | Medium | Low | DTOs with validation, OpenAPI spec for contract consistency |
 | Performance with large product catalog | Low | Low | Paginated queries, indexed columns, lazy loading in frontend |

@@ -38,7 +38,7 @@ An employee must be able to:
 ```text
 - Modular monolith structure (domain-separated modules)
 - Unified order and payment models
-- Adapter pattern for external integrations
+- Clear separation between controllers, services, repositories, and DTOs
 - Pessimistic locking for concurrent stock operations
 - Flyway database migrations
 - Standardized API error format
@@ -54,7 +54,7 @@ An employee must be able to:
 | Backend | Spring Boot best practices, layered architecture, transactional integrity | backend-architecture.md, controller/service/repository pattern |
 | Frontend | Angular best practices, Signals, component design, error handling | frontend-architecture.md, component structure |
 | Database | Normalized schema, constraints, indexes, migration strategy | database-design.md, Flyway migrations |
-| Integration | Mercado Pago adapter pattern, webhook idempotency | integrations.md, mercado-pago-flow.md |
+| Integration | Mercado Pago service integration, webhook idempotency | integrations.md, mercado-pago-flow.md |
 | Testing | Unit, integration, and E2E coverage for critical flows | testing-strategy.md, test suite |
 | Security | JWT, BCrypt, role-based access, route guards | security-architecture.md |
 | Domain | FEFO, unified orders/payments, cash register logic | domain-model.md, business-rules.md |

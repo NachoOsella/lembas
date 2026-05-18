@@ -4,7 +4,7 @@
 
 | Level | Scope | Tool | Speed |
 |---|---|---|---|
-| Unit | Domain policies, services (isolated) | JUnit 5 + Mockito | Fast |
+| Unit | Services and helper methods (isolated) | JUnit 5 + Mockito | Fast |
 | Integration | Repositories, database interactions | Testcontainers | Medium |
 | Controller | HTTP endpoints, serialization, security | @WebMvcTest | Medium |
 | E2E | Full frontend-to-backend flows | Playwright / Cypress | Slow |
@@ -13,10 +13,10 @@
 
 ### Unit tests
 
-Test domain policy classes in isolation (no Spring context):
+Test services and helper methods in isolation with mocked dependencies:
 
-- `FefoStockDeductionPolicy` -- pure Java logic
-- `CashCloseCalculator` -- calculation logic
+- FEFO stock deduction logic
+- Cash close expected amount and discrepancy calculation
 - Order number generation, state transitions
 
 ### Integration tests
@@ -129,4 +129,4 @@ Critical user flows to cover:
 - Seed data with realistic products (15-20 items), categories, lots
 - Demo users: admin, manager, employee, customer
 - Demo branch: "Centro"
-- Fake Mercado Pago gateway for dev/test environments
+- Mock Mercado Pago calls in automated tests

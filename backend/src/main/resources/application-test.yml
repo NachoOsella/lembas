@@ -2,7 +2,3 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-
-app:
-  payments:
-    gateway: fake
