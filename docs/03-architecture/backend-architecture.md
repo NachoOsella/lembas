@@ -23,12 +23,11 @@ backend/
   catalog/          -- Products, categories
   inventory/        -- StockLot, StockMovement, FEFO
   orders/           -- Unified orders (POS and ONLINE)
-  payments/         -- Payment, Mercado Pago integration
+  payments/         -- Payment, Mercado Pago integration and webhook endpoint
   cash/             -- CashSession, CashMovement
   suppliers/        -- Suppliers, supplier_products
   reports/          -- Dashboard, cash report, recommendations
   audit/            -- AuditLog
-  webhooks/         -- Webhook endpoints (Mercado Pago)
   shared/           -- Common DTOs, exceptions, utilities
 ```
 
@@ -57,7 +56,7 @@ payments/
     MercadoPagoService.java        -- Create preference, verify payment, process webhook
   web/
     PaymentController.java         -- Few endpoints (payments created from orders)
-    MercadoPagoWebhook.java        -- POST /api/webhooks/mercadopago
+    MercadoPagoWebhookController.java -- POST /api/webhooks/mercadopago
 ```
 
 ## Example: cash module

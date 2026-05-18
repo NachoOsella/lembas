@@ -53,7 +53,7 @@
 
 | ID | Epic | Title | Priority | Points |
 |---|---|---|---:|---:|---:|
-| S3-US01 | EP-04 | Create Mercado Pago adapter | High | 5 |
+| S3-US01 | EP-04 | Create Mercado Pago payment service | High | 5 |
 | S3-US02 | EP-04 | Create Checkout Pro payment preference | High | 5 |
 | S3-US03 | EP-04 | Process Mercado Pago webhook with idempotency | High | 8 |
 | S3-US04 | EP-05 | Deduct FEFO stock on online payment approval | High | 8 |

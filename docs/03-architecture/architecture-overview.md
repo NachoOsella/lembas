@@ -88,7 +88,7 @@ payments   -- orders, cash, auth
 cash       -- auth
 suppliers  -- catalog, auth
 reports    -- catalog, inventory, orders, payments, cash, auth
-webhooks   -- payments, orders, inventory, auth
+payments   -- orders, inventory, auth, external Mercado Pago webhook
 audit      -- auth
 shared     -- (utilized by all modules)
 ```
@@ -98,7 +98,7 @@ shared     -- (utilized by all modules)
 1. **Unified Order model** -- POS and ONLINE sales share the same entity
 2. **Unified Payment model** -- Online and in-store payments share the same entity
 3. **Stock lots as source of truth** -- No denormalized stock counts
-4. **Localized external integrations** -- Mercado Pago calls are kept in payment/webhook services
+4. **Localized external integrations** -- Mercado Pago calls and webhook handling are kept in the payments module
 5. **Pessimistic locking for stock operations** -- SELECT FOR UPDATE to prevent overselling
 6. **Stock deducted at payment confirmation** -- Not at order creation, not at delivery
 7. **Cash register controls physical cash** -- Other methods are informational at close

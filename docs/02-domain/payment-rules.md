@@ -85,4 +85,4 @@ The webhook handler must:
 
 ### Implementation note
 
-Mercado Pago API calls live in the payments/webhooks services. If the project later needs multiple payment providers, an interface can be introduced at that time.
+Mercado Pago API calls and webhook handling live in the payments module. If the project later needs multiple payment providers, an interface can be introduced at that time.

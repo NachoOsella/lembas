@@ -2,7 +2,7 @@
 
 ## Overview
 
-Mercado Pago Checkout Pro processes online payments for the store. The integration is kept in the payments and webhook services to avoid unnecessary abstraction in the MVP.
+Mercado Pago Checkout Pro processes online payments for the store. The integration is kept in the payments module to avoid unnecessary abstraction in the MVP.
 
 ## Integration architecture
 

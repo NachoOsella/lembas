@@ -22,12 +22,11 @@ Each backend module follows:
 | catalog | Categories and products |
 | inventory | Stock lots, movements, FEFO deduction |
 | orders | Unified orders (POS and ONLINE) |
-| payments | Payment entity, Mercado Pago integration |
+| payments | Payment entity, Mercado Pago integration, Mercado Pago webhook endpoint |
 | cash | Cash register sessions and movements |
 | suppliers | Suppliers and supplier-product associations |
 | reports | Dashboard, cash report, recommendations |
 | audit | Audit log recording |
-| webhooks | External webhook endpoints |
 | shared | Common DTOs, exceptions, utilities |
 
 ## Controller conventions

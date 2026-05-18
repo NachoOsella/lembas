@@ -51,7 +51,7 @@ Full detailed content with acceptance criteria for each story is available in th
 
 | Story | Epic | Title | Points |
 |---|---|---|---|
-| S3-US01 | EP-04 | Create Mercado Pago adapter | 5 |
+| S3-US01 | EP-04 | Create Mercado Pago payment service | 5 |
 | S3-US02 | EP-04 | Create Checkout Pro payment preference | 5 |
 | S3-US03 | EP-04 | Process Mercado Pago webhook with idempotency | 8 |
 | S3-US04 | EP-05 | Deduct FEFO stock on online payment approval | 8 |

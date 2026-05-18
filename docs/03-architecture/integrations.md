@@ -10,7 +10,7 @@ Process online payments for the e-commerce channel. Customers are redirected to 
 
 ### Integration approach
 
-Mercado Pago is integrated directly from the payments and webhook services. The MVP does not introduce a separate abstraction because there is only one online payment provider.
+Mercado Pago is integrated directly in the payments module. The MVP does not introduce a separate abstraction because there is only one online payment provider.
 
 This keeps the backend simpler while still keeping the external API calls localized in a small number of service classes.
 

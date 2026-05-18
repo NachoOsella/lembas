@@ -8,7 +8,7 @@
 | EP-01 | Authentication and registration | CUSTOMER registration, login, JWT, BCrypt, frontend session, security foundation | 1 |
 | EP-02 | Catalog management | Categories, products, pricing, barcodes, single image, online status | 1 |
 | EP-03 | Online store | Public catalog, local cart, authenticated checkout, own order history, payment result display | 1, 2, 3 |
-| EP-04 | Mercado Pago Checkout Pro | Payment adapter, preference creation, webhook, idempotency, payment statuses | 3 |
+| EP-04 | Mercado Pago Checkout Pro | Mercado Pago service, preference creation, webhook, idempotency, payment statuses | 3 |
 | EP-05 | Stock | Stock by lot and branch, FEFO deduction, movements, adjustments, expiry and low-stock alerts | 2, 3 |
 | EP-06 | Orders | Unified POS/ONLINE orders, items with snapshots, state machine, preparation, delivery, cancellation | 2, 4 |
 | EP-07 | Cash register | Opening, current session, manual movements, closing with cash count and discrepancy justification | 3 |
@@ -51,7 +51,7 @@ Public catalog with search and filters, local cart (localStorage), authenticated
 Mercado Pago preference creation, webhook with signature verification, idempotency by provider_payment_id, MP status mapping to internal PaymentStatus.
 
 **Sprint:** 3
-**Stories:** S3-US01 (adapter), S3-US02 (preference), S3-US03 (webhook)
+**Stories:** S3-US01 (MP service), S3-US02 (preference), S3-US03 (webhook)
 
 ## EP-05 -- Stock
 
@@ -86,7 +86,7 @@ Fast sale with name or barcode search, mandatory open register, multiple payment
 Shared payments table for online (MERCADO_PAGO, CHECKOUT_PRO, cash_session_id null) and in-store (MANUAL, method per payment type, cash_session_id required). Statuses PENDING/APPROVED/REJECTED/CANCELLED/REFUNDED/EXPIRED/IN_PROCESS.
 
 **Sprints:** 2, 3
-**Stories:** S2-US07 (payment base), S3-US01 (MP adapter), S3-US02 (preference), S3-US03 (webhook)
+**Stories:** S2-US07 (payment base), S3-US01 (MP service), S3-US02 (preference), S3-US03 (webhook)
 
 ## EP-10 -- Suppliers
 
