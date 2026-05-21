@@ -96,3 +96,9 @@ Microservices, msg queues, Redis, separate POS/ONLINE models, home delivery, fis
 - SecurityConfig: backend/.../shared/config/SecurityConfig.java
 - FE config/routes: frontend/src/app/{app.config,app.routes}.ts
 - Design: frontend/DESING.md
+
+## AI Usage Documentation
+Update `docs/ai-usage-log.md` only for meaningful AI-assisted changes.
+Do not log minor edits, typo fixes, formatting changes, small renames, or trivial implementation details.
+Log only considerable changes, such as creating files/modules, generating documentation, implementing meaningful parts of a feature, refactoring important code, modifying business logic, or changing architecture/configuration.
+Keep entries concise. The log should be a historical record of relevant AI-assisted changes, not a detailed changelog.
