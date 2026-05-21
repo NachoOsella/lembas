@@ -4,67 +4,39 @@
 
 .loading-spinner {
   align-items: center;
-  color: rgba(0, 0, 0, 0.87);
+  border: 1px solid transparent;
+  border-radius: var(--radius-card);
+  color: var(--color-text-muted);
   display: flex;
   flex-direction: column;
-  font-family: SoDoSans, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   gap: 1rem;
   justify-content: center;
-  letter-spacing: -0.01em;
   min-height: 8rem;
-  padding: 1.6rem;
+  padding: 1.5rem;
   text-align: center;
 }
 
 .loading-spinner--card {
   background: #ffffff;
-  border-radius: 12px;
-  box-shadow:
-    0 0 0.5px 0 rgba(0, 0, 0, 0.14),
-    0 1px 1px 0 rgba(0, 0, 0, 0.24);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-card);
 }
 
 .loading-spinner--band {
-  background: #1e3932;
-  color: #ffffff;
-}
-
-.loading-spinner__mark {
-  animation: loading-spinner-rotate 0.9s linear infinite;
-  border: 3px solid rgba(0, 117, 74, 0.18);
-  border-radius: 50%;
-  border-top-color: #00754a;
-  display: inline-block;
-}
-
-.loading-spinner--band .loading-spinner__mark {
-  border-color: rgba(255, 255, 255, 0.25);
-  border-top-color: #ffffff;
-}
-
-.loading-spinner--sm .loading-spinner__mark {
-  height: 1.75rem;
-  width: 1.75rem;
-}
-
-.loading-spinner--md .loading-spinner__mark {
-  height: 2.5rem;
-  width: 2.5rem;
-}
-
-.loading-spinner--lg .loading-spinner__mark {
-  height: 3.5rem;
-  width: 3.5rem;
+  background: var(--color-primary-dark);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .loading-spinner__label {
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.5;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
-@keyframes loading-spinner-rotate {
-  to {
-    transform: rotate(360deg);
-  }
+:host ::ng-deep .p-progressspinner-circle {
+  stroke: var(--color-accent);
+}
+
+.loading-spinner--band ::ng-deep .p-progressspinner-circle {
+  stroke: #ffffff;
 }

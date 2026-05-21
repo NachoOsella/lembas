@@ -1,1 +1,7 @@
-<p>skeleton works!</p>
+<p-skeleton
+  [width]="shape() === 'circle' ? height() : width()"
+  [height]="height()"
+  [shape]="shape() === 'circle' ? 'circle' : 'rectangle'"
+  [styleClass]="'app-skeleton app-skeleton--' + shape()"
+  aria-hidden="true"
+/>

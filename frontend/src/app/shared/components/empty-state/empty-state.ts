@@ -1,12 +1,14 @@
+import { NgClass } from '@angular/common';
 import { Component, input, output } from '@angular/core';
+import { Button } from 'primeng/button';
 
 @Component({
   selector: 'app-empty-state',
-  imports: [],
+  imports: [Button, NgClass],
   templateUrl: './empty-state.html',
   styleUrl: './empty-state.css',
 })
-/** Presents a friendly empty-data message with an optional recovery action. */
+/** Presents a friendly empty-data message with an optional PrimeNG action button. */
 export class EmptyState {
   readonly icon = input('pi pi-inbox');
   readonly title = input('No hay resultados');

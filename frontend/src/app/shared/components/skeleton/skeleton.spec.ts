@@ -19,4 +19,17 @@ describe('Skeleton', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should apply inputs correctly to element styles and classes', () => {
+    fixture.componentRef.setInput('shape', 'circle');
+    fixture.componentRef.setInput('width', '50px');
+    fixture.componentRef.setInput('height', '50px');
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement.querySelector('.skeleton-element');
+    expect(element).toBeTruthy();
+    expect(element.classList.contains('skeleton-circle')).toBe(true);
+    expect(element.style.height).toBe('50px');
+  });
 });
+

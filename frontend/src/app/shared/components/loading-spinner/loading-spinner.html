@@ -1,4 +1,17 @@
-<div class="loading-spinner" [class]="'loading-spinner--' + size() + ' loading-spinner--' + surface()" role="status" aria-live="polite">
-  <span class="loading-spinner__mark" aria-hidden="true"></span>
+<div
+  role="status"
+  aria-live="polite"
+  class="loading-spinner"
+  [class.loading-spinner--card]="surface() === 'card'"
+  [class.loading-spinner--band]="surface() === 'band'"
+>
+  <p-progress-spinner
+    strokeWidth="5"
+    animationDuration=".8s"
+    [style.width]="spinnerSize()"
+    [style.height]="spinnerSize()"
+    aria-hidden="true"
+  />
+
   <span class="loading-spinner__label">{{ label() }}</span>
 </div>

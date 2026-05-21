@@ -1,21 +1,41 @@
-@if (visible()) {
-  <div class="confirm-dialog" role="presentation">
-    <button class="confirm-dialog__backdrop" type="button" aria-label="Cancelar confirmacion" (click)="onCancel()"></button>
-    <section class="confirm-dialog__panel" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-message">
-      <button class="confirm-dialog__close" type="button" aria-label="Cerrar dialogo" (click)="onCancel()">
-        <span class="pi pi-times" aria-hidden="true"></span>
-      </button>
-      <span class="confirm-dialog__icon pi" [class.pi-trash]="destructive()" [class.pi-check-circle]="!destructive()" aria-hidden="true"></span>
-      <h2 id="confirm-dialog-title">{{ title() }}</h2>
-      <p id="confirm-dialog-message">{{ message() }}</p>
-      <div class="confirm-dialog__actions">
-        <button class="confirm-dialog__button confirm-dialog__button--secondary" type="button" (click)="onCancel()">
-          {{ cancelLabel() }}
-        </button>
-        <button class="confirm-dialog__button confirm-dialog__button--primary" [class.confirm-dialog__button--danger]="destructive()" type="button" (click)="onConfirm()">
-          {{ confirmLabel() }}
-        </button>
-      </div>
-    </section>
+<p-dialog
+  [visible]="visible()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: 'min(92vw, 28rem)' }"
+  styleClass="confirm-dialog"
+  (onHide)="onCancel()"
+>
+  <ng-template #header>
+    <span class="confirm-dialog__eyebrow">
+      {{ destructive() ? 'Accion irreversible' : 'Confirmacion requerida' }}
+    </span>
+  </ng-template>
+
+  <div class="confirm-dialog__body">
+    <span
+      class="confirm-dialog__icon"
+      [class.confirm-dialog__icon--danger]="destructive()"
+      aria-hidden="true"
+    >
+      <i class="pi" [class.pi-check]="!destructive()" [class.pi-trash]="destructive()"></i>
+    </span>
+
+    <div class="confirm-dialog__copy">
+      <h2>{{ title() }}</h2>
+      <p>{{ message() }}</p>
+    </div>
   </div>
-}
+
+  <ng-template #footer>
+    <p-button [label]="cancelLabel()" severity="secondary" outlined="true" rounded="true" (onClick)="onCancel()" />
+    <p-button
+      [label]="confirmLabel()"
+      [severity]="destructive() ? 'danger' : 'success'"
+      rounded="true"
+      (onClick)="onConfirm()"
+    />
+  </ng-template>
+</p-dialog>

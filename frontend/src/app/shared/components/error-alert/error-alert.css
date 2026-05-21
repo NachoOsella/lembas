@@ -2,70 +2,56 @@
   display: block;
 }
 
-.error-alert {
-  align-items: flex-start;
+:host ::ng-deep .error-alert {
   background: hsl(4 82% 43% / 5%);
-  border-left: 4px solid #c82014;
-  border-radius: 12px;
-  color: rgba(0, 0, 0, 0.87);
-  display: flex;
-  font-family: SoDoSans, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  gap: 1rem;
-  letter-spacing: -0.01em;
+  border: 1px solid rgba(200, 32, 20, 0.28);
+  border-radius: var(--radius-card);
+  color: var(--color-text);
   padding: 1rem;
+}
+
+:host ::ng-deep .error-alert .p-message-content {
+  align-items: flex-start;
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  width: 100%;
 }
 
 .error-alert__icon {
   align-items: center;
   background: #ffffff;
-  border-radius: 50%;
+  border: 1px solid rgba(200, 32, 20, 0.12);
+  border-radius: 999px;
   color: #c82014;
-  display: inline-flex;
-  flex: 0 0 auto;
-  height: 2.5rem;
-  justify-content: center;
-  width: 2.5rem;
-}
-
-.error-alert__copy {
-  flex: 1;
-}
-
-.error-alert h2 {
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.error-alert p {
-  color: rgba(0, 0, 0, 0.58);
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin: 0.25rem 0 0;
-}
-
-.error-alert__dismiss {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  border-radius: 50%;
-  color: rgba(0, 0, 0, 0.58);
-  cursor: pointer;
-  display: inline-flex;
-  flex: 0 0 auto;
+  display: flex;
   height: 2rem;
   justify-content: center;
-  transition: all 0.2s ease;
   width: 2rem;
 }
 
-.error-alert__dismiss:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: rgba(0, 0, 0, 0.87);
+.error-alert__content {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
 }
 
-.error-alert__dismiss:focus-visible {
-  outline: 3px solid rgba(200, 32, 20, 0.18);
-  outline-offset: 2px;
+.error-alert__content strong {
+  color: var(--color-text);
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.error-alert__content span {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+:host ::ng-deep .error-alert .p-button {
+  color: #c82014;
+  height: 2rem;
+  margin-top: -0.25rem;
+  width: 2rem;
 }

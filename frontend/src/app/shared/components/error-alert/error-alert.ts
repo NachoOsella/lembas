@@ -1,12 +1,14 @@
 import { Component, input, output } from '@angular/core';
+import { Button } from 'primeng/button';
+import { Message } from 'primeng/message';
 
 @Component({
   selector: 'app-error-alert',
-  imports: [],
+  imports: [Button, Message],
   templateUrl: './error-alert.html',
   styleUrl: './error-alert.css',
 })
-/** Shows an accessible error message with an optional dismiss control. */
+/** Shows an accessible PrimeNG error message with an optional dismiss control. */
 export class ErrorAlert {
   readonly title = input('No pudimos completar la accion');
   readonly message = input('Intentá nuevamente en unos minutos.');

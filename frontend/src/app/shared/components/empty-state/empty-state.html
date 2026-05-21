@@ -1,12 +1,18 @@
-<section class="empty-state" aria-live="polite">
-  <span class="empty-state__icon" [class]="icon()" aria-hidden="true"></span>
-  <div class="empty-state__copy">
+<section aria-live="polite" class="empty-state">
+  <div class="empty-state__icon" aria-hidden="true">
+    <i [ngClass]="icon()"></i>
+  </div>
+
+  <div class="empty-state__content">
     <h2>{{ title() }}</h2>
     <p>{{ description() }}</p>
   </div>
+
   @if (actionLabel()) {
-    <button class="empty-state__action" type="button" (click)="onAction()">
-      {{ actionLabel() }}
-    </button>
+    <p-button
+      [label]="actionLabel() ?? ''"
+      rounded="true"
+      (onClick)="onAction()"
+    />
   }
 </section>

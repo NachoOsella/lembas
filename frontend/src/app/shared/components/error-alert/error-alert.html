@@ -1,12 +1,23 @@
-<aside class="error-alert" role="alert" aria-live="assertive">
-  <span class="error-alert__icon pi pi-exclamation-triangle" aria-hidden="true"></span>
-  <div class="error-alert__copy">
-    <h2>{{ title() }}</h2>
-    <p>{{ message() }}</p>
-  </div>
-  @if (dismissible()) {
-    <button class="error-alert__dismiss" type="button" aria-label="Cerrar alerta" (click)="onDismiss()">
-      <span class="pi pi-times" aria-hidden="true"></span>
-    </button>
-  }
-</aside>
+<p-message severity="error" styleClass="error-alert" role="alert" aria-live="assertive">
+  <ng-template #container>
+    <span class="error-alert__icon" aria-hidden="true">
+      <i class="pi pi-exclamation-triangle"></i>
+    </span>
+
+    <span class="error-alert__content">
+      <strong>{{ title() }}</strong>
+      <span>{{ message() }}</span>
+    </span>
+
+    @if (dismissible()) {
+      <p-button
+        icon="pi pi-times"
+        severity="danger"
+        text="true"
+        rounded="true"
+        ariaLabel="Cerrar alerta"
+        (onClick)="onDismiss()"
+      />
+    }
+  </ng-template>
+</p-message>

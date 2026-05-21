@@ -4,69 +4,61 @@
 
 .empty-state {
   align-items: center;
-  background: #f2f0eb;
-  border-radius: 12px;
-  color: rgba(0, 0, 0, 0.87);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-card);
+  color: var(--color-text);
   display: flex;
   flex-direction: column;
-  font-family: SoDoSans, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   gap: 1.25rem;
   justify-content: center;
-  letter-spacing: -0.01em;
-  min-height: 18rem;
-  padding: 3rem 1.6rem;
+  min-height: 19rem;
+  padding: 2rem;
   text-align: center;
 }
 
 .empty-state__icon {
   align-items: center;
-  background: #d4e9e2;
-  border-radius: 50%;
-  color: #006241;
-  display: inline-flex;
-  font-size: 2rem;
+  background: var(--color-gold-wash);
+  border: 1px solid rgba(0, 98, 65, 0.08);
+  border-radius: 999px;
+  color: var(--color-primary);
+  display: flex;
+  font-size: 1.45rem;
   height: 4.5rem;
   justify-content: center;
   width: 4.5rem;
 }
 
-.empty-state__copy {
-  max-width: 34rem;
+.empty-state__content {
+  max-width: 24rem;
 }
 
-.empty-state h2 {
-  color: #006241;
+.empty-state__content h2 {
+  color: var(--color-primary);
   font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.5;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.18;
   margin: 0;
 }
 
-.empty-state p {
-  color: rgba(0, 0, 0, 0.58);
-  font-size: 1rem;
-  line-height: 1.5;
-  margin: 0.5rem 0 0;
+.empty-state__content p {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0.65rem 0 0;
 }
 
-.empty-state__action {
-  background: #00754a;
-  border: 1px solid #00754a;
-  border-radius: 50px;
+:host ::ng-deep .p-button {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  border-radius: var(--radius-pill);
   color: #ffffff;
-  cursor: pointer;
-  font: inherit;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 0.55rem 1rem;
-  transition: all 0.2s ease;
+  font-weight: 700;
+  min-width: 9.5rem;
 }
 
-.empty-state__action:active {
-  transform: scale(0.95);
-}
-
-.empty-state__action:focus-visible {
-  outline: 3px solid rgba(0, 117, 74, 0.28);
-  outline-offset: 3px;
+:host ::ng-deep .p-button .p-button-label {
+  color: #ffffff;
 }

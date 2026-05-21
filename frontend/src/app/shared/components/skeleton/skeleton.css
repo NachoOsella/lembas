@@ -1,0 +1,22 @@
+:host {
+  display: inline-block;
+  width: 100%;
+}
+
+:host ::ng-deep .app-skeleton {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.08));
+}
+
+:host ::ng-deep .app-skeleton--text {
+  border-radius: 0.35rem;
+}
+
+:host ::ng-deep .app-skeleton--rect {
+  border-radius: 0.75rem;
+}
+
+:host-context(.bg-primary-dark) ::ng-deep .app-skeleton,
+:host-context([class*="bg-primary-dark"]) ::ng-deep .app-skeleton,
+:host-context(.text-white) ::ng-deep .app-skeleton {
+  background: rgba(255, 255, 255, 0.12);
+}

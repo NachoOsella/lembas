@@ -1,12 +1,14 @@
 import { Component, input, output } from '@angular/core';
+import { Button } from 'primeng/button';
+import { Dialog } from 'primeng/dialog';
 
 @Component({
   selector: 'app-confirm-dialog',
-  imports: [],
+  imports: [Button, Dialog],
   templateUrl: './confirm-dialog.html',
   styleUrl: './confirm-dialog.css',
 })
-/** Renders a lightweight confirmation modal for sensitive user actions. */
+/** Renders a PrimeNG confirmation modal for sensitive user actions. */
 export class ConfirmDialog {
   readonly visible = input(false);
   readonly title = input('Confirmar accion');
