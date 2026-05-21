@@ -1,5 +1,39 @@
-/* Tailwind CSS v4 */
 @import "tailwindcss";
-
-/* PrimeIcons */
 @import "primeicons/primeicons.css";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --tracking-tight: -0.01em;
+
+  --color-primary: #006241;
+  --color-accent: #00754a;
+  --color-primary-dark: #1e3932;
+  --color-canvas: #f2f0eb;
+  --color-surface: #ffffff;
+  --color-surface-muted: #edebe9;
+  --color-gold-wash: #faf6ee;
+  --color-text: rgba(0, 0, 0, 0.87);
+  --color-text-muted: rgba(0, 0, 0, 0.58);
+  --color-text-on-dark-muted: rgba(255, 255, 255, 0.7);
+
+  --radius-card: 12px;
+  --radius-pill: 50px;
+
+  --shadow-card:
+    0 0 0.5px 0 rgba(0, 0, 0, 0.14),
+    0 1px 1px 0 rgba(0, 0, 0, 0.24);
+  --shadow-nav:
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    0 2px 2px rgba(0, 0, 0, 0.06),
+    0 0 2px rgba(0, 0, 0, 0.07);
+
+  --spacing-xl: clamp(1.25rem, 4vw, 3rem);
+  --spacing-2xl: clamp(2rem, 6vw, 4rem);
+}
+
+@layer base {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
