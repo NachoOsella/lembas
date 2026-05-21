@@ -23,6 +23,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/admin/admin.routes'),
   },
   {
+    path: 'dev/ui',
+    loadComponent: () => import('./features/dev/component-showcase/component-showcase').then((m) => m.ComponentShowcase),
+  },
+  {
     path: '**',
     redirectTo: '/store',
   },

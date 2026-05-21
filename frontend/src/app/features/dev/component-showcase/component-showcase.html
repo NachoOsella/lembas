@@ -1,0 +1,116 @@
+<main class="showcase-shell">
+  <section class="showcase-hero">
+    <p class="showcase-kicker">Lembas UI Lab</p>
+    <h1>Componentes y pantallas en un solo lugar</h1>
+    <p>
+      Ruta de desarrollo para revisar estados visuales, copiar patrones y navegar rapido a las pantallas principales.
+    </p>
+  </section>
+
+  <section class="showcase-section" aria-labelledby="components-title">
+    <div class="showcase-section__header">
+      <p class="showcase-kicker">Shared module</p>
+      <h2 id="components-title">Componentes base</h2>
+    </div>
+
+    <div class="showcase-grid showcase-grid--components">
+      <article class="showcase-card">
+        <span class="showcase-card__eyebrow">LoadingSpinner</span>
+        <app-loading-spinner label="Buscando productos frescos..." surface="card" />
+      </article>
+
+      <article class="showcase-card showcase-card--cream">
+        <span class="showcase-card__eyebrow">EmptyState</span>
+        <app-empty-state
+          icon="pi pi-shopping-bag"
+          title="Todavia no hay productos"
+          description="Cuando cargues productos activos van a aparecer en esta seccion."
+          actionLabel="Crear producto"
+          (action)="handleEmptyAction()"
+        />
+      </article>
+
+      <article class="showcase-card">
+        <span class="showcase-card__eyebrow">ErrorAlert</span>
+        <app-error-alert
+          title="No pudimos sincronizar el stock"
+          message="Revisá tu conexion y volvé a intentarlo."
+          [dismissible]="true"
+          (dismissed)="handleAlertDismiss()"
+        />
+      </article>
+
+      <article class="showcase-card showcase-card--dark">
+        <span class="showcase-card__eyebrow">ConfirmDialog</span>
+        <h3>Accion sensible</h3>
+        <p>Usalo para bajas, cancelaciones o cambios que necesiten confirmacion.</p>
+        <button class="showcase-button" type="button" (click)="openDialog()">Abrir dialogo</button>
+        <small>{{ lastAction() }}</small>
+      </article>
+
+      <article class="showcase-card">
+        <span class="showcase-card__eyebrow">Skeleton</span>
+        <app-skeleton />
+      </article>
+    </div>
+  </section>
+
+  <section class="showcase-section" aria-labelledby="screens-title">
+    <div class="showcase-section__header">
+      <p class="showcase-kicker">Screen map</p>
+      <h2 id="screens-title">Pantallas navegables</h2>
+    </div>
+
+    <div class="screen-groups">
+      <article class="screen-group">
+        <h3>Publicas</h3>
+        <div class="screen-links">
+          @for (screen of publicScreens; track screen.path) {
+            <a [routerLink]="screen.path" class="screen-link">
+              <strong>{{ screen.label }}</strong>
+              <span>{{ screen.description }}</span>
+              <code>{{ screen.path }}</code>
+            </a>
+          }
+        </div>
+      </article>
+
+      <article class="screen-group">
+        <h3>Cliente</h3>
+        <div class="screen-links">
+          @for (screen of customerScreens; track screen.path) {
+            <a [routerLink]="screen.path" class="screen-link">
+              <strong>{{ screen.label }}</strong>
+              <span>{{ screen.description }}</span>
+              <code>{{ screen.path }}</code>
+            </a>
+          }
+        </div>
+      </article>
+
+      <article class="screen-group screen-group--wide">
+        <h3>Admin</h3>
+        <div class="screen-links screen-links--admin">
+          @for (screen of adminScreens; track screen.path) {
+            <a [routerLink]="screen.path" class="screen-link">
+              <strong>{{ screen.label }}</strong>
+              <span>{{ screen.description }}</span>
+              <code>{{ screen.path }}</code>
+            </a>
+          }
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<app-confirm-dialog
+  [visible]="dialogVisible()"
+  title="Cancelar pedido de ejemplo"
+  message="Esta accion simula una confirmacion destructiva para validar el estado visual del dialogo."
+  confirmLabel="Si, cancelar"
+  cancelLabel="Volver"
+  [destructive]="true"
+  (confirmed)="confirmDialog()"
+  (cancelled)="cancelDialog()"
+/>
