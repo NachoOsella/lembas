@@ -6,6 +6,7 @@ export default [
   {
     path: '',
     canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('./admin-layout/admin-layout').then((m) => m.AdminLayout),
     children: [
       {
         path: '',

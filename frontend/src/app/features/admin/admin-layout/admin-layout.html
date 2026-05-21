@@ -1,0 +1,77 @@
+<div class="admin-shell">
+  <!-- Sidebar -->
+  <aside
+    class="sidebar"
+    [class.sidebar--collapsed]="collapsed()"
+    aria-label="Barra de navegacion del panel"
+  >
+    <div class="sidebar__brand">
+      <img
+        src="/brand/lembas-logo.png"
+        alt="Lembas"
+        width="36"
+        height="36"
+        class="sidebar__logo"
+      />
+      @if (!collapsed()) {
+        <span class="sidebar__title">Lembas Admin</span>
+      }
+    </div>
+
+    <nav class="sidebar__nav" aria-label="Secciones de administracion">
+      @for (item of navItems; track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="sidebar__link--active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="sidebar__link"
+          [attr.aria-label]="item.label"
+        >
+          <i [class]="item.icon" aria-hidden="true"></i>
+          @if (!collapsed()) {
+            <span>{{ item.label }}</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar__footer">
+      <p-button
+        [icon]="collapsed() ? 'pi pi-chevron-right' : 'pi pi-chevron-left'"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        ariaLabel="Colapsar menu lateral"
+        (onClick)="toggleSidebar()"
+      />
+    </div>
+  </aside>
+
+  <!-- Main area -->
+  <div class="main-area">
+    <!-- Topbar -->
+    <header class="topbar">
+      <p-breadcrumb
+        [model]="breadcrumbs()"
+        styleClass="topbar__breadcrumb"
+        aria-label="Miga de pan"
+      />
+
+      <div class="topbar__user">
+        <span class="topbar__user-name">Admin</span>
+        <p-avatar
+          icon="pi pi-user"
+          size="normal"
+          styleClass="topbar__avatar"
+          shape="circle"
+          ariaLabel="Menu de usuario"
+        />
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="page-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>
