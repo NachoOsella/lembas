@@ -1,0 +1,10 @@
+:host {
+  display: block;
+}
+
+.store-header__nav {
+  scrollbar-width: none;
+}
+.store-header__nav::-webkit-scrollbar {
+  display: none;
+}
