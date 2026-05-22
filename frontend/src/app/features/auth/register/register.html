@@ -1,1 +1,245 @@
-<p>register works!</p>
+<div class="register-page min-h-dvh bg-canvas text-text font-sans tracking-tight flex items-center justify-center px-4 py-8 md:px-8">
+  <section class="register-shell w-full max-w-5xl" aria-labelledby="register-title">
+    <div class="register-card bg-surface rounded-[28px] shadow-card overflow-hidden grid lg:grid-cols-[0.95fr_1.05fr]">
+
+      <!-- Brand panel: adds warmth and continuity with the public store header. -->
+      <aside class="register-hero relative hidden lg:flex flex-col justify-between p-9 text-white">
+        <div class="relative z-10 flex items-center gap-3">
+          <img
+            src="/brand/lembas-logo.png"
+            alt="Lembas Tienda Saludable"
+            width="58"
+            height="58"
+            class="size-14 rounded-full bg-gold-wash object-cover shadow-card"
+          />
+          <div>
+            <strong class="block text-2xl font-[700] leading-tight">Lembas</strong>
+            <span class="text-xs font-bold tracking-[0.16em] uppercase text-white/70">Tienda saludable</span>
+          </div>
+        </div>
+
+        <div class="relative z-10 max-w-sm">
+          <p class="mb-4 inline-flex items-center gap-2 rounded-pill bg-white/12 px-3 py-1.5 text-xs font-bold tracking-[0.12em] uppercase backdrop-blur">
+            <i class="pi pi-shopping-bag" aria-hidden="true"></i>
+            Retiro en sucursal
+          </p>
+          <h2 class="text-[clamp(2.1rem,4vw,3.4rem)] font-[750] leading-[0.95] tracking-[-0.045em]">
+            Tu despensa natural, lista para retirar.
+          </h2>
+          <p class="mt-5 text-sm leading-6 text-white/75">
+            Crea tu cuenta para guardar tus datos, revisar pedidos y acelerar tus compras saludables.
+          </p>
+        </div>
+
+        <div class="relative z-10 grid grid-cols-3 gap-3 text-center text-xs font-semibold text-white/78">
+          <span class="rounded-2xl bg-white/10 px-3 py-3 backdrop-blur">Sin envio</span>
+          <span class="rounded-2xl bg-white/10 px-3 py-3 backdrop-blur">Stock local</span>
+          <span class="rounded-2xl bg-white/10 px-3 py-3 backdrop-blur">Compra simple</span>
+        </div>
+      </aside>
+
+      <div class="p-6 sm:p-8 md:p-10 lg:p-12">
+        <!-- Compact mobile brand, keeping the card balanced on small screens. -->
+        <div class="mb-7 flex items-center justify-center gap-3 lg:hidden">
+          <img src="/brand/lembas-logo.png" alt="Lembas" width="48" height="48" class="size-12 rounded-full bg-gold-wash object-cover shadow-card" />
+          <div>
+            <strong class="block text-primary text-xl font-[750] leading-tight">Lembas</strong>
+            <span class="text-[0.68rem] font-bold tracking-[0.14em] uppercase text-text-muted">Tienda saludable</span>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <p class="mb-2 text-xs font-bold tracking-[0.16em] uppercase text-accent">Crear cuenta</p>
+          <h1 id="register-title" class="text-[clamp(1.75rem,3vw,2.35rem)] font-[760] leading-tight tracking-[-0.035em] text-primary-dark">
+            Empeza tu pedido en minutos
+          </h1>
+          <p class="mt-2 text-sm leading-6 text-text-muted">
+            Completa tus datos para comprar online y retirar en la tienda.
+          </p>
+        </div>
+
+        <!-- General API error -->
+        @if (generalError()) {
+          <div
+            class="mb-5 flex items-center gap-2 rounded-2xl border border-red bg-red/5 px-4 py-3 text-sm text-red"
+            role="alert"
+            data-testid="general-error"
+          >
+            <i class="pi pi-times-circle shrink-0 text-sm" aria-hidden="true"></i>
+            <span>{{ generalError() }}</span>
+          </div>
+        }
+
+        <form (submit)="onSubmit(); $event.preventDefault()" class="grid gap-4" novalidate>
+
+          <!-- Row: first name + last name. -->
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="field-group">
+              <label for="firstName" class="register-label">Nombre</label>
+              <input
+                [formField]="form.firstName"
+                id="firstName"
+                type="text"
+                autocomplete="given-name"
+                placeholder="Tu nombre"
+                class="register-input"
+                [class.register-input--error]="form.firstName().touched() && form.firstName().errors().length"
+              />
+              @if (form.firstName().touched() && form.firstName().errors().length) {
+                <p class="register-error" data-testid="firstName-error">
+                  <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                  {{ form.firstName().errors()[0].message }}
+                </p>
+              }
+            </div>
+            <div class="field-group">
+              <label for="lastName" class="register-label">Apellido</label>
+              <input
+                [formField]="form.lastName"
+                id="lastName"
+                type="text"
+                autocomplete="family-name"
+                placeholder="Tu apellido"
+                class="register-input"
+                [class.register-input--error]="form.lastName().touched() && form.lastName().errors().length"
+              />
+              @if (form.lastName().touched() && form.lastName().errors().length) {
+                <p class="register-error" data-testid="lastName-error">
+                  <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                  {{ form.lastName().errors()[0].message }}
+                </p>
+              }
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="field-group">
+            <label for="email" class="register-label">Email</label>
+            <div class="relative">
+              <input
+                [formField]="form.email"
+                id="email"
+                type="email"
+                autocomplete="email"
+                placeholder="tucorreo@ejemplo.com"
+                class="register-input register-input--with-icon"
+                [class.register-input--error]="form.email().touched() && form.email().errors().length"
+              />
+              <i class="pi pi-at register-field-icon" aria-hidden="true"></i>
+            </div>
+            @if (form.email().touched() && form.email().errors().length) {
+              <p class="register-error" data-testid="email-error">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                {{ form.email().errors()[0].message }}
+              </p>
+            }
+          </div>
+
+          <!-- Row: password + confirm password. -->
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="field-group">
+              <label for="password" class="register-label">Contrasena</label>
+              <div class="relative">
+                <input
+                  [formField]="form.password"
+                  id="password"
+                  [type]="passwordVisible() ? 'text' : 'password'"
+                  autocomplete="new-password"
+                  placeholder="Min. 8 caracteres"
+                  class="register-input pr-11"
+                  [class.register-input--error]="form.password().touched() && form.password().errors().length"
+                />
+                <button
+                  type="button"
+                  (click)="passwordVisible.set(!passwordVisible())"
+                  class="register-eye-btn"
+                  [attr.aria-label]="passwordVisible() ? 'Ocultar contrasena' : 'Mostrar contrasena'"
+                  tabindex="-1"
+                  data-testid="toggle-password"
+                >
+                  <i [class]="passwordVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'" aria-hidden="true"></i>
+                </button>
+              </div>
+              @if (form.password().touched() && form.password().errors().length) {
+                <p class="register-error" data-testid="password-error">
+                  <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                  {{ form.password().errors()[0].message }}
+                </p>
+              }
+            </div>
+            <div class="field-group">
+              <label for="confirmPassword" class="register-label">Confirmar</label>
+              <div class="relative">
+                <input
+                  [formField]="form.confirmPassword"
+                  id="confirmPassword"
+                  [type]="confirmPasswordVisible() ? 'text' : 'password'"
+                  autocomplete="new-password"
+                  placeholder="Repetir"
+                  class="register-input pr-11"
+                  [class.register-input--error]="form.confirmPassword().touched() && form.confirmPassword().errors().length"
+                />
+                <button
+                  type="button"
+                  (click)="confirmPasswordVisible.set(!confirmPasswordVisible())"
+                  class="register-eye-btn"
+                  [attr.aria-label]="confirmPasswordVisible() ? 'Ocultar contrasena' : 'Mostrar contrasena'"
+                  tabindex="-1"
+                  data-testid="toggle-confirm-password"
+                >
+                  <i [class]="confirmPasswordVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'" aria-hidden="true"></i>
+                </button>
+              </div>
+              @if (form.confirmPassword().touched() && form.confirmPassword().errors().length) {
+                <p class="register-error" data-testid="confirmPassword-error">
+                  <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                  {{ form.confirmPassword().errors()[0].message }}
+                </p>
+              }
+            </div>
+          </div>
+
+          <!-- Phone is optional. -->
+          <div class="field-group">
+            <label for="phone" class="register-label">
+              Telefono <span class="font-normal text-text-muted">(opcional)</span>
+            </label>
+            <div class="relative">
+              <input
+                [formField]="form.phone"
+                id="phone"
+                type="tel"
+                autocomplete="tel"
+                placeholder="+54 351 123 4567"
+                class="register-input register-input--with-icon"
+                [class.register-input--error]="form.phone().touched() && form.phone().errors().length"
+              />
+              <i class="pi pi-phone register-field-icon" aria-hidden="true"></i>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <app-button
+            type="submit"
+            variant="primary"
+            size="lg"
+            icon="pi pi-user-plus"
+            loadingLabel="Creando cuenta..."
+            [loading]="submitting()"
+            testId="submit-btn"
+            class="mt-1 block"
+          >
+            Crear cuenta
+          </app-button>
+        </form>
+
+        <p class="mt-6 text-center text-sm text-text-muted">
+          Ya tenes cuenta?
+          <a routerLink="/auth/login" class="font-[750] text-accent no-underline transition-colors duration-200 hover:text-primary hover:underline">
+            Inicia sesion
+          </a>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
