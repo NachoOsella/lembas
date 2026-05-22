@@ -15,3 +15,11 @@
 - `backend/src/main/java/com/dietetica/lembas/shared/{dto,web}/`, `backend/src/test/java/com/dietetica/lembas/shared/web/` — added uniform `ApiError` payload, global exception handler, and handler tests.
 - `backend/src/test/java/com/dietetica/lembas/LembasBackendApplicationTests.java`, `frontend/src/app/shared/components/skeleton/skeleton.spec.ts` — fixed backend smoke test and Skeleton component spec.
 - `backend/src/test/java/com/dietetica/lembas/auth/`, `backend/src/test/java/com/dietetica/lembas/users/`, `backend/pom.xml` — added auth service/mapper/JWT/DTO validation tests and a PostgreSQL Testcontainers `UserRepository` JPA slice test using Testcontainers 2.0.5.
+
+## 2026-05-22
+
+- `backend/src/test/java/com/dietetica/lembas/auth/service/AuthServiceTest.java` — rewrote AuthServiceTest with `Should_expected_when_condition` pattern, added password hash, email normalization, null phone, and no-side-effects-on-duplicate tests (from 2 to 7 tests).
+- `backend/src/test/java/com/dietetica/lembas/auth/integration/AuthRegistrationIntegrationTest.java` — added `@SpringBootTest` + Testcontainers integration test for the full registration flow (7 tests: persistence, BCrypt encoding, duplicate rejection, email normalization, unique constraint).
+- `frontend/src/app/core/services/auth.ts` — added `register()` method using HttpClient for `POST /api/auth/register`.
+- `frontend/src/app/core/services/auth.spec.ts` — rewrote auth service tests with `Should_*` covering happy path, null phone, 409 duplicated email, 400 validation error, and network failure (5 tests).
+- `frontend/src/app/features/auth/register/register.spec.ts` — enhanced Register component tests with injection verification and template assertion.
