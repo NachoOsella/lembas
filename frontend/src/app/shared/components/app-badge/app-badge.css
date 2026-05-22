@@ -1,0 +1,48 @@
+:host {
+  display: inline-flex;
+}
+
+.app-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: max-content;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-badge--success {
+  color: #006241;
+  background: rgba(212, 233, 226, 0.72);
+  border-color: rgba(0, 98, 65, 0.18);
+}
+
+.app-badge--warning {
+  color: #7a4f00;
+  background: #fff4d8;
+  border-color: rgba(203, 162, 88, 0.42);
+}
+
+.app-badge--danger {
+  color: #c82014;
+  background: hsla(4, 82%, 43%, 0.08);
+  border-color: hsla(4, 82%, 43%, 0.18);
+}
+
+.app-badge--info {
+  color: #1e3932;
+  background: #eaf4f1;
+  border-color: rgba(30, 57, 50, 0.14);
+}
+
+.app-badge--neutral {
+  color: rgba(0, 0, 0, 0.58);
+  background: #edebe9;
+  border-color: rgba(0, 0, 0, 0.06);
+}

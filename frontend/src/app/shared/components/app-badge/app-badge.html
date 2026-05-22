@@ -1,0 +1,6 @@
+<span class="app-badge" [class]="'app-badge app-badge--' + tone()">
+  @if (icon()) {
+    <i [class]="icon()" aria-hidden="true"></i>
+  }
+  <ng-content />
+</span>

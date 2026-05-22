@@ -1,0 +1,19 @@
+<section class="section-card" [class]="'section-card section-card--' + tone()">
+  @if (eyebrow() || title() || description()) {
+    <header class="section-card__header">
+      @if (eyebrow()) {
+        <p class="section-card__eyebrow">{{ eyebrow() }}</p>
+      }
+      @if (title()) {
+        <h2 class="section-card__title">{{ title() }}</h2>
+      }
+      @if (description()) {
+        <p class="section-card__description">{{ description() }}</p>
+      }
+    </header>
+  }
+
+  <div class="section-card__content">
+    <ng-content />
+  </div>
+</section>
