@@ -41,7 +41,6 @@ import java.time.Instant;
 @Table(
         name = "users",
         indexes = {
-                @Index(name = "idx_users_email", columnList = "email", unique = true),
                 @Index(name = "idx_users_branch_id", columnList = "branch_id")
         }
 )

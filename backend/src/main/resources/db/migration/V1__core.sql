@@ -39,13 +39,19 @@ CREATE TABLE users (
     updated_at      TIMESTAMPTZ     DEFAULT now(),
 
     CONSTRAINT chk_user_role
-        CHECK (role IN ('ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER'))
+        CHECK (role IN ('ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER')),
+    CONSTRAINT chk_users_branch_by_role
+        CHECK (
+            (role = 'CUSTOMER' AND branch_id IS NULL)
+            OR (role IN ('MANAGER', 'EMPLOYEE') AND branch_id IS NOT NULL)
+            OR role = 'ADMIN'
+        )
 );
 
 COMMENT ON TABLE users IS 'System users: employees, managers, admins, and customers.';
 
 COMMENT ON COLUMN users.role IS 'Allowed: ADMIN, MANAGER, EMPLOYEE, CUSTOMER.';
+COMMENT ON CONSTRAINT chk_users_branch_by_role ON users IS 'CUSTOMER requires branch_id NULL; MANAGER and EMPLOYEE require branch_id; ADMIN may have or omit branch_id.';
 
--- Index for login lookups and branch scoping
-CREATE INDEX idx_users_email ON users (email);
+-- Branch scoping index. The UNIQUE email constraint already creates its own index for login lookups.
 CREATE INDEX idx_users_branch_id ON users (branch_id);

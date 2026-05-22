@@ -5,6 +5,7 @@ import com.dietetica.lembas.auth.dto.RegisterRequest;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
+import com.dietetica.lembas.users.service.UserBranchPolicy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,13 +25,16 @@ public class AuthService {
     private final AuthMapper authMapper;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final UserBranchPolicy userBranchPolicy;
 
     public AuthService(UserRepository userRepository, AuthMapper authMapper,
-                       JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder) {
+                       JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder,
+                       UserBranchPolicy userBranchPolicy) {
         this.userRepository = userRepository;
         this.authMapper = authMapper;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
+        this.userBranchPolicy = userBranchPolicy;
     }
 
     /**
@@ -56,6 +60,7 @@ public class AuthService {
 
         String encodedPassword = passwordEncoder.encode(request.password());
         User user = authMapper.toEntity(request, encodedPassword);
+        userBranchPolicy.validate(user.getRole(), user.getBranchId());
         User savedUser = userRepository.save(user);
 
         String accessToken = jwtTokenProvider.createAccessToken(savedUser);

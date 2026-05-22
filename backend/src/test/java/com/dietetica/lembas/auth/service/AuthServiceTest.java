@@ -6,6 +6,7 @@ import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
+import com.dietetica.lembas.users.service.UserBranchPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,8 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userRepository, new AuthMapper(), jwtTokenProvider, passwordEncoder);
+        authService = new AuthService(userRepository, new AuthMapper(), jwtTokenProvider, passwordEncoder,
+                new UserBranchPolicy());
     }
 
     @Nested
