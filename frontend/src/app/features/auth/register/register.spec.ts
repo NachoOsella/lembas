@@ -4,7 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter, Router } from '@angular/router';
 
 import { Register } from './register';
-import { Auth, AuthResponse } from '../../../core/services/auth';
+import { AuthResponse, AuthService } from '../../../core/services/auth';
 
 /** Helper: fills an input field and dispatches the events signal-forms listens to. */
 function fillField(fixture: ComponentFixture<Register>, selector: string, value: string): void {
@@ -29,7 +29,7 @@ function typeField(fixture: ComponentFixture<Register>, selector: string, value:
 describe('Register component', () => {
   let component: Register;
   let fixture: ComponentFixture<Register>;
-  let authService: Auth;
+  let authService: AuthService;
   let httpMock: HttpTestingController;
   let router: Router;
 
@@ -59,7 +59,7 @@ describe('Register component', () => {
 
     fixture = TestBed.createComponent(Register);
     component = fixture.componentInstance;
-    authService = TestBed.inject(Auth);
+    authService = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);
 
@@ -196,8 +196,8 @@ describe('Register component', () => {
   // Successful submission
   // ---------------------------------------------------------------------------
 
-  /** Should call register API, save auth response, and navigate to /store on valid submission. */
-  it('Should_navigateToStore_when_registerSucceeds', async () => {
+  /** Should call register API and navigate to login with a success message on valid submission. */
+  it('Should_navigateToLoginWithSuccessMessage_when_registerSucceeds', async () => {
     // Spy on router.navigate before submit
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
@@ -213,6 +213,10 @@ describe('Register component', () => {
     fixture.detectChanges();
 
     const req = httpMock.expectOne('/api/auth/register');
+    const loadingButton = fixture.nativeElement.querySelector('[data-testid="submit-btn"]') as HTMLButtonElement;
+    expect(loadingButton.disabled).toBe(true);
+    expect(loadingButton.getAttribute('aria-busy')).toBe('true');
+    expect(loadingButton.textContent).toContain('Creando cuenta...');
     expect(req.request.method).toBe('POST');
     expect(req.request.body.firstName).toBe('Frodo');
     expect(req.request.body.lastName).toBe('Baggins');
@@ -224,8 +228,11 @@ describe('Register component', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(authService.currentUser()).toEqual(successResponse.user);
-    expect(navigateSpy).toHaveBeenCalledWith(['/store']);
+    expect(component.registrationSucceeded()).toBe(true);
+    expect(authService.currentUser()).toBeNull();
+    expect(navigateSpy).toHaveBeenCalledWith(['/auth/login'], {
+      queryParams: { registered: 'true' },
+    });
   });
 
   /** Should omit phone from request when phone is empty. */
@@ -267,6 +274,9 @@ describe('Register component', () => {
     fixture.detectChanges();
 
     const req = httpMock.expectOne('/api/auth/register');
+    const loadingButton = fixture.nativeElement.querySelector('[data-testid="submit-btn"]') as HTMLButtonElement;
+    expect(loadingButton.disabled).toBe(true);
+    expect(loadingButton.textContent).toContain('Creando cuenta...');
     req.flush(
       {
         status: 409,
@@ -281,7 +291,9 @@ describe('Register component', () => {
 
     const errEl = fixture.nativeElement.querySelector('[data-testid="general-error"]');
     expect(errEl).toBeTruthy();
-    expect(errEl.textContent.toLowerCase()).toContain('ya existe');
+    expect(errEl.textContent).toContain('Ya existe una cuenta con este email');
+    expect(component.registrationSucceeded()).toBe(false);
+    expect(component.submitting()).toBe(false);
     // User should NOT be saved
     expect(authService.currentUser()).toBeNull();
     // Should NOT navigate
@@ -320,7 +332,8 @@ describe('Register component', () => {
 
     const errEl = fixture.nativeElement.querySelector('[data-testid="general-error"]');
     expect(errEl).toBeTruthy();
-    expect(errEl.textContent.toLowerCase()).toContain('verifique');
+    expect(errEl.textContent).toContain('Verifique los datos ingresados');
+    expect(errEl.textContent).toContain('Contrasena: size must be between 8 and 128');
     expect(authService.currentUser()).toBeNull();
     expect(navigateSpy).not.toHaveBeenCalled();
   });

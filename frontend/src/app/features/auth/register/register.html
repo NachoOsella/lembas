@@ -226,6 +226,7 @@
             icon="pi pi-user-plus"
             loadingLabel="Creando cuenta..."
             [loading]="submitting()"
+            [disabled]="submitting() || registrationSucceeded()"
             testId="submit-btn"
             class="mt-1 block"
           >

@@ -2,10 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 
-import { Auth, AuthResponse, RegisterRequest } from './auth';
+import { AuthResponse, AuthService, RegisterRequest } from './auth';
 
 describe('Auth service', () => {
-  let service: Auth;
+  let service: AuthService;
   let httpMock: HttpTestingController;
 
   const apiUrl = '/api/auth';
@@ -14,7 +14,7 @@ describe('Auth service', () => {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
-    service = TestBed.inject(Auth);
+    service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 

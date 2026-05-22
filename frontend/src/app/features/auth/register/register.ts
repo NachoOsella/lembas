@@ -9,9 +9,10 @@ import {
   minLength,
   validate,
 } from '@angular/forms/signals';
+import { HttpErrorResponse } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 
-import { Auth, RegisterRequest } from '../../../core/services/auth';
+import { ApiErrorResponse, AuthService, RegisterRequest } from '../../../core/services/auth';
 import { AppButton } from '../../../shared/components';
 
 @Component({
@@ -21,7 +22,7 @@ import { AppButton } from '../../../shared/components';
   styleUrl: './register.css',
 })
 export class Register {
-  private readonly auth = inject(Auth);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   /** Form model -- all field initial values. confirmPassword is client-side only. */
@@ -39,6 +40,9 @@ export class Register {
 
   /** Whether the submit HTTP call is in flight. Used for button loading state. */
   readonly submitting = signal(false);
+
+  /** Whether the registration finished successfully and the redirect is being resolved. */
+  readonly registrationSucceeded = signal(false);
 
   /** Toggle password field visibility. */
   readonly passwordVisible = signal(false);
@@ -92,7 +96,12 @@ export class Register {
    * success, stores the auth state and redirects to /store.
    */
   onSubmit(): void {
+    if (this.submitting()) {
+      return;
+    }
+
     this.generalError.set('');
+    this.registrationSucceeded.set(false);
     submit(this.form, async () => {
       this.submitting.set(true);
       try {
@@ -104,21 +113,68 @@ export class Register {
           password: m.password,
           phone: m.phone || null,
         };
-        const response = await lastValueFrom(this.auth.register(request));
-        this.auth.saveAuthResponse(response);
-        await this.router.navigate(['/store']);
+        await lastValueFrom(this.auth.register(request));
+        this.registrationSucceeded.set(true);
+        await this.router.navigate(['/auth/login'], {
+          queryParams: { registered: 'true' },
+        });
       } catch (err: unknown) {
-        const httpErr = err as { status?: number; error?: { code?: string } };
-        if (httpErr.status === 409) {
-          this.generalError.set('Ya existe una cuenta con este email');
-        } else if (httpErr.status === 400) {
-          this.generalError.set('Verifique los datos ingresados');
-        } else {
-          this.generalError.set('Error al registrar. Intente nuevamente');
-        }
+        this.registrationSucceeded.set(false);
+        this.generalError.set(this.buildBackendErrorMessage(err));
       } finally {
         this.submitting.set(false);
       }
     });
   }
+
+  /**
+   * Converts backend API error codes into user-facing registration messages.
+   */
+  private buildBackendErrorMessage(err: unknown): string {
+    if (!(err instanceof HttpErrorResponse)) {
+      return 'Error al registrar. Intente nuevamente';
+    }
+
+    const apiError = err.error as ApiErrorResponse | undefined;
+    switch (apiError?.code) {
+      case 'EMAIL_DUPLICATED':
+        return 'Ya existe una cuenta con este email';
+      case 'VALIDATION_ERROR':
+        return this.formatValidationError(apiError);
+      default:
+        return 'Error al registrar. Intente nuevamente';
+    }
+  }
+
+  /**
+   * Builds a concise message using backend validation details when available.
+   */
+  private formatValidationError(apiError: ApiErrorResponse): string {
+    const fieldErrors = apiError.details?.fieldErrors ?? [];
+    if (fieldErrors.length === 0) {
+      return 'Verifique los datos ingresados';
+    }
+
+    const details = fieldErrors
+      .map((fieldError) => `${this.translateFieldName(fieldError.field)}: ${fieldError.message}`)
+      .join('. ');
+
+    return `Verifique los datos ingresados. ${details}`;
+  }
+
+  /**
+   * Translates backend DTO field names to labels understood by users.
+   */
+  private translateFieldName(field: string): string {
+    const labels: Record<string, string> = {
+      firstName: 'Nombre',
+      lastName: 'Apellido',
+      email: 'Email',
+      password: 'Contrasena',
+      phone: 'Telefono',
+    };
+
+    return labels[field] ?? field;
+  }
 }
+

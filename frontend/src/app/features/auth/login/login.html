@@ -1,1 +1,30 @@
-<p>login works!</p>
+<section class="min-h-dvh bg-canvas px-4 py-10 text-text">
+  <div class="mx-auto flex w-full max-w-md flex-col gap-6 rounded-[28px] bg-surface p-6 shadow-card sm:p-8">
+    <div>
+      <p class="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-accent">Iniciar sesion</p>
+      <h1 class="text-3xl font-[760] tracking-[-0.035em] text-primary-dark">Bienvenido a Lembas</h1>
+      <p class="mt-2 text-sm leading-6 text-text-muted">Ingresa con tu cuenta para continuar con tu compra.</p>
+    </div>
+
+    @if (showRegistrationSuccess()) {
+      <div
+        class="rounded-2xl border border-green-600/25 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
+        role="status"
+        data-testid="registration-success"
+      >
+        Cuenta creada correctamente. Ya podes iniciar sesion.
+      </div>
+    }
+
+    <div class="rounded-2xl border border-border bg-canvas px-4 py-5 text-sm text-text-muted">
+      El formulario de inicio de sesion se implementara en una proxima historia.
+    </div>
+
+    <p class="text-center text-sm text-text-muted">
+      No tenes cuenta?
+      <a routerLink="/auth/register" class="font-[750] text-accent no-underline hover:text-primary hover:underline">
+        Registrate
+      </a>
+    </p>
+  </div>
+</section>

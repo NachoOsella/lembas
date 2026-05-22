@@ -22,6 +22,24 @@ export interface AuthUser {
   branchName?: string | null;
 }
 
+/** Field-level validation error returned inside ApiError.details.fieldErrors. */
+export interface ApiFieldError {
+  field: string;
+  message: string;
+}
+
+/** Standard backend API error payload. */
+export interface ApiErrorResponse {
+  status: number;
+  code: string;
+  message: string;
+  details?: {
+    fieldErrors?: ApiFieldError[];
+  } | null;
+  timestamp?: string;
+  path?: string;
+}
+
 /** Response from POST /api/auth/register and POST /api/auth/login. */
 export interface AuthResponse {
   token: string;
@@ -38,7 +56,7 @@ export interface AuthResponse {
 @Injectable({
   providedIn: 'root',
 })
-export class Auth {
+export class AuthService {
   private readonly apiUrl = '/api/auth';
 
   /** Currently authenticated user, or null if not logged in. */
