@@ -123,11 +123,11 @@
                 autocomplete="email"
                 placeholder="tucorreo@ejemplo.com"
                 class="register-input register-input--with-icon"
-                [class.register-input--error]="form.email().touched() && form.email().errors().length"
+                [class.register-input--error]="(form.email().touched() && form.email().errors().length) || showEmailRealtimeError()"
               />
               <i class="pi pi-at register-field-icon" aria-hidden="true"></i>
             </div>
-            @if (form.email().touched() && form.email().errors().length) {
+            @if ((form.email().touched() && form.email().errors().length) || showEmailRealtimeError()) {
               <p class="register-error" data-testid="email-error">
                 <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
                 {{ form.email().errors()[0].message }}
@@ -147,7 +147,7 @@
                   autocomplete="new-password"
                   placeholder="Min. 8 caracteres"
                   class="register-input pr-11"
-                  [class.register-input--error]="form.password().touched() && form.password().errors().length"
+                  [class.register-input--error]="(form.password().touched() && form.password().errors().length) || showPasswordRealtimeError()"
                 />
                 <button
                   type="button"
@@ -160,7 +160,7 @@
                   <i [class]="passwordVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'" aria-hidden="true"></i>
                 </button>
               </div>
-              @if (form.password().touched() && form.password().errors().length) {
+              @if ((form.password().touched() && form.password().errors().length) || showPasswordRealtimeError()) {
                 <p class="register-error" data-testid="password-error">
                   <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
                   {{ form.password().errors()[0].message }}
@@ -177,7 +177,7 @@
                   autocomplete="new-password"
                   placeholder="Repetir"
                   class="register-input pr-11"
-                  [class.register-input--error]="form.confirmPassword().touched() && form.confirmPassword().errors().length"
+                  [class.register-input--error]="(form.confirmPassword().touched() && form.confirmPassword().errors().length) || showConfirmPasswordRealtimeError()"
                 />
                 <button
                   type="button"
@@ -190,7 +190,7 @@
                   <i [class]="confirmPasswordVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'" aria-hidden="true"></i>
                 </button>
               </div>
-              @if (form.confirmPassword().touched() && form.confirmPassword().errors().length) {
+              @if ((form.confirmPassword().touched() && form.confirmPassword().errors().length) || showConfirmPasswordRealtimeError()) {
                 <p class="register-error" data-testid="confirmPassword-error">
                   <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
                   {{ form.confirmPassword().errors()[0].message }}

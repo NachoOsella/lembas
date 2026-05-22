@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, computed, signal, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
   form,
@@ -25,7 +25,7 @@ export class Register {
   private readonly router = inject(Router);
 
   /** Form model -- all field initial values. confirmPassword is client-side only. */
-  private readonly registrationModel = signal({
+  protected readonly registrationModel = signal({
     firstName: '',
     lastName: '',
     email: '',
@@ -45,6 +45,24 @@ export class Register {
 
   /** Toggle confirm-password field visibility. */
   readonly confirmPasswordVisible = signal(false);
+
+  /** Whether the email field has user input and currently fails validation. */
+  protected readonly showEmailRealtimeError = computed(() => {
+    const emailValue = this.registrationModel().email.trim();
+    return emailValue.length > 0 && this.form.email().errors().length > 0;
+  });
+
+  /** Whether the password field has user input and currently fails validation. */
+  protected readonly showPasswordRealtimeError = computed(() => {
+    const passwordValue = this.registrationModel().password;
+    return passwordValue.length > 0 && this.form.password().errors().length > 0;
+  });
+
+  /** Whether the confirmation field has user input and does not match the password. */
+  protected readonly showConfirmPasswordRealtimeError = computed(() => {
+    const confirmPasswordValue = this.registrationModel().confirmPassword;
+    return confirmPasswordValue.length > 0 && this.form.confirmPassword().errors().length > 0;
+  });
 
   /** Signal-based form with validation rules. */
   readonly form = form(this.registrationModel, (s) => {

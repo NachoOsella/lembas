@@ -8,6 +8,14 @@ import { Auth, AuthResponse } from '../../../core/services/auth';
 
 /** Helper: fills an input field and dispatches the events signal-forms listens to. */
 function fillField(fixture: ComponentFixture<Register>, selector: string, value: string): void {
+  typeField(fixture, selector, value);
+  const el = fixture.nativeElement.querySelector(selector) as HTMLInputElement;
+  el.dispatchEvent(new Event('blur', { bubbles: true }));
+  fixture.detectChanges();
+}
+
+/** Helper: types into an input without blurring it to verify real-time validation. */
+function typeField(fixture: ComponentFixture<Register>, selector: string, value: string): void {
   const el = fixture.nativeElement.querySelector(selector) as HTMLInputElement;
   expect(el).toBeTruthy();
   el.value = '';
@@ -15,7 +23,6 @@ function fillField(fixture: ComponentFixture<Register>, selector: string, value:
     el.value += ch;
     el.dispatchEvent(new Event('input', { bubbles: true }));
   }
-  el.dispatchEvent(new Event('blur', { bubbles: true }));
   fixture.detectChanges();
 }
 
@@ -112,6 +119,17 @@ describe('Register component', () => {
     expect(phoneErr).toBeNull();
   });
 
+  /** Should show email validation error while the user types an invalid email. */
+  it('Should_showEmailError_when_emailIsInvalidBeforeBlur', async () => {
+    typeField(fixture, '#email', 'not-an-email');
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const errEl = fixture.nativeElement.querySelector('[data-testid="email-error"]');
+    expect(errEl).toBeTruthy();
+    expect(errEl.textContent.toLowerCase()).toContain('email');
+  });
+
   /** Should show email validation error when an invalid email is entered. */
   it('Should_showEmailError_when_emailIsInvalid', async () => {
     fillField(fixture, '#email', 'not-an-email');
@@ -126,6 +144,17 @@ describe('Register component', () => {
     expect(errEl.textContent.toLowerCase()).toContain('email');
   });
 
+  /** Should show min-length error while the user types a short password. */
+  it('Should_showPasswordMinLengthError_when_passwordTooShortBeforeBlur', async () => {
+    typeField(fixture, '#password', 'Ab1');
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const errEl = fixture.nativeElement.querySelector('[data-testid="password-error"]');
+    expect(errEl).toBeTruthy();
+    expect(errEl.textContent.toLowerCase()).toContain('8');
+  });
+
   /** Should show min-length error when password is too short. */
   it('Should_showPasswordMinLengthError_when_passwordTooShort', async () => {
     fillField(fixture, '#password', 'Ab1');
@@ -136,6 +165,18 @@ describe('Register component', () => {
     const errEl = fixture.nativeElement.querySelector('[data-testid="password-error"]');
     expect(errEl).toBeTruthy();
     expect(errEl.textContent.toLowerCase()).toContain('8');
+  });
+
+  /** Should show mismatch error while the user types a non-matching confirmation. */
+  it('Should_showPasswordMismatchError_when_passwordsDontMatchBeforeBlur', async () => {
+    typeField(fixture, '#password', 'StrongPass1');
+    typeField(fixture, '#confirmPassword', 'DifferentPass1');
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const errEl = fixture.nativeElement.querySelector('[data-testid="confirmPassword-error"]');
+    expect(errEl).toBeTruthy();
+    expect(errEl.textContent.toLowerCase()).toContain('coinciden');
   });
 
   /** Should show mismatch error when passwords do not match. */
