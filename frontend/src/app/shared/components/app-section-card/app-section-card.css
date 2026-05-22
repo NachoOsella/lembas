@@ -2,28 +2,36 @@
   display: block;
 }
 
-.section-card {
-  padding: clamp(1rem, 2vw, 1.35rem);
-  border: 1px solid rgba(30, 57, 50, 0.08);
+:host ::ng-deep .section-card {
+  border: 1px solid rgba(7, 95, 54, 0.08);
   border-radius: 12px;
   box-shadow:
     0 0 0.5px 0 rgba(0, 0, 0, 0.14),
     0 1px 1px 0 rgba(0, 0, 0, 0.24);
+  overflow: hidden;
 }
 
-.section-card--surface {
+:host ::ng-deep .section-card .p-card-body {
+  padding: clamp(1rem, 2vw, 1.35rem);
+}
+
+:host ::ng-deep .section-card .p-card-content {
+  padding: 0;
+}
+
+:host ::ng-deep .section-card--surface {
   color: rgba(0, 0, 0, 0.87);
   background: #ffffff;
 }
 
-.section-card--muted {
+:host ::ng-deep .section-card--muted {
   color: rgba(0, 0, 0, 0.87);
-  background: #edebe9;
+  background: #e7dbc0;
 }
 
-.section-card--dark {
+:host ::ng-deep .section-card--dark {
   color: #ffffff;
-  background: #1e3932;
+  background: #075f36;
   border-color: rgba(255, 255, 255, 0.1);
 }
 
@@ -33,7 +41,7 @@
 
 .section-card__eyebrow {
   margin: 0 0 0.45rem;
-  color: #cba258;
+  color: #f29d52;
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -55,7 +63,7 @@
   line-height: 1.55;
 }
 
-.section-card--dark .section-card__description {
+:host ::ng-deep .section-card--dark .section-card__description {
   color: rgba(255, 255, 255, 0.7);
 }
 

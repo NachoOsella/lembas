@@ -2,23 +2,27 @@
   display: block;
 }
 
-.field-hint {
+:host ::ng-deep .field-hint {
   display: flex;
   align-items: center;
   gap: 0.35rem;
   margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
   font-size: 0.76rem;
   line-height: 1.35;
 }
 
-.field-hint--hint {
+:host ::ng-deep .field-hint--hint {
   color: rgba(0, 0, 0, 0.58);
 }
 
-.field-hint--success {
-  color: #006241;
+:host ::ng-deep .field-hint--success {
+  color: #2f8d72;
 }
 
-.field-hint--error {
+:host ::ng-deep .field-hint--error {
   color: #c82014;
 }
