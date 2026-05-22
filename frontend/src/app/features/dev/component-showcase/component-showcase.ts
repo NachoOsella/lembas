@@ -1,7 +1,18 @@
 import { Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { ConfirmDialog, EmptyState, ErrorAlert, LoadingSpinner, Skeleton } from '../../../shared/components';
+import {
+  AppBadge,
+  AppButton,
+  AppFieldHint,
+  AppPageHeader,
+  AppSectionCard,
+  ConfirmDialog,
+  EmptyState,
+  ErrorAlert,
+  LoadingSpinner,
+  Skeleton,
+} from '../../../shared/components';
 
 interface ShowcaseLink {
   readonly label: string;
@@ -11,7 +22,19 @@ interface ShowcaseLink {
 
 @Component({
   selector: 'app-component-showcase',
-  imports: [RouterLink, ConfirmDialog, EmptyState, ErrorAlert, LoadingSpinner, Skeleton],
+  imports: [
+    RouterLink,
+    AppBadge,
+    AppButton,
+    AppFieldHint,
+    AppPageHeader,
+    AppSectionCard,
+    ConfirmDialog,
+    EmptyState,
+    ErrorAlert,
+    LoadingSpinner,
+    Skeleton,
+  ],
   templateUrl: './component-showcase.html',
   styleUrl: './component-showcase.css',
 })
