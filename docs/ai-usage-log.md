@@ -18,6 +18,11 @@
 
 ## 2026-05-22
 
+- `backend/src/main/resources/db/migration/V1__core.sql`, `backend/src/main/java/com/dietetica/lembas/users/service/UserBranchPolicy.java` — enforced role/branch consistency in DB and service policy, removed redundant email index, and added policy/JPA constraint tests.
+- `backend/src/main/java/com/dietetica/lembas/auth/web/AuthController.java` — added public `POST /api/auth/register` endpoint with DTO validation and MVC tests for success, validation errors, and duplicate email.
+- `frontend/src/app/features/auth/register/register.ts`, `frontend/src/app/core/services/auth.ts` — mapped backend `EMAIL_DUPLICATED` and `VALIDATION_ERROR` responses to specific registration UI messages, including field-level validation details.
+- `frontend/src/app/features/auth/{register,login}/` — changed successful registration to redirect to login with a success query param and added the login success alert state.
+- `docker/nginx.conf` — fixed Swagger UI blank page by proxying `/swagger-ui/**` before the generic static asset regex, so Swagger CSS/JS are served by the backend.
 - `backend/src/test/java/com/dietetica/lembas/auth/service/AuthServiceTest.java` — rewrote AuthServiceTest with `Should_expected_when_condition` pattern, added password hash, email normalization, null phone, and no-side-effects-on-duplicate tests (from 2 to 7 tests).
 - `backend/src/test/java/com/dietetica/lembas/auth/integration/AuthRegistrationIntegrationTest.java` — added `@SpringBootTest` + Testcontainers integration test for the full registration flow (7 tests: persistence, BCrypt encoding, duplicate rejection, email normalization, unique constraint).
 - `frontend/src/app/core/services/auth.ts` — added `register()` method using HttpClient for `POST /api/auth/register`.
