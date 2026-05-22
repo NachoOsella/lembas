@@ -26,9 +26,9 @@ describe('Skeleton', () => {
     fixture.componentRef.setInput('height', '50px');
     fixture.detectChanges();
 
-    const element = fixture.nativeElement.querySelector('.skeleton-element');
+    const element = fixture.nativeElement.querySelector('.app-skeleton');
     expect(element).toBeTruthy();
-    expect(element.classList.contains('skeleton-circle')).toBe(true);
+    expect(element.classList.contains('app-skeleton--circle')).toBe(true);
     expect(element.style.height).toBe('50px');
   });
 });

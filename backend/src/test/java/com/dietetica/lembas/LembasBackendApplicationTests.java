@@ -1,7 +1,9 @@
 package com.dietetica.lembas;
 
+import com.dietetica.lembas.users.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 /**
  * Verifies that the application context can start without external services.
@@ -15,7 +17,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 class LembasBackendApplicationTests {
 
     /**
-     * Keeps a fast smoke test for the empty scaffold.
+     * Provides a repository collaborator while this smoke test intentionally avoids database startup.
+     */
+    @MockitoBean
+    private UserRepository userRepository;
+
+    /**
+     * Keeps a fast smoke test for the application context without external services.
      */
     @Test
     void contextLoads() {
