@@ -11,6 +11,12 @@ export interface RegisterRequest {
   phone?: string | null;
 }
 
+/** Request payload for POST /api/auth/login. */
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
 /** User DTO returned inside an AuthResponse. */
 export interface AuthUser {
   id: number;
@@ -75,6 +81,16 @@ export class AuthService {
    */
   register(request: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request);
+  }
+
+  /**
+   * Authenticates an existing user account.
+   *
+   * @param request the login credentials
+   * @returns an {@link Observable} emitting the {@link AuthResponse} with JWT tokens
+   */
+  login(request: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request);
   }
 
   /**

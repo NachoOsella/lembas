@@ -6,11 +6,11 @@
       <aside class="register-hero relative hidden lg:flex flex-col justify-between p-9 text-white">
         <div class="relative z-10 flex items-center gap-3">
           <img
-            src="/brand/lembas-logo.png"
+            src="/brand/lembas-icon.svg?v=4"
             alt="Lembas Tienda Saludable"
-            width="58"
-            height="58"
-            class="size-14 rounded-full bg-gold-wash object-cover shadow-card"
+            width="56"
+            height="56"
+            class="size-14 object-contain"
           />
           <div>
             <strong class="block text-2xl font-[700] leading-tight">Lembas</strong>
@@ -41,7 +41,7 @@
       <div class="p-6 sm:p-8 md:p-10 lg:p-12">
         <!-- Compact mobile brand, keeping the card balanced on small screens. -->
         <div class="mb-7 flex items-center justify-center gap-3 lg:hidden">
-          <img src="/brand/lembas-logo.png" alt="Lembas" width="48" height="48" class="size-12 rounded-full bg-gold-wash object-cover shadow-card" />
+          <img src="/brand/lembas-icon.svg?v=4" alt="Lembas" width="44" height="44" class="size-11 object-contain" />
           <div>
             <strong class="block text-primary text-xl font-[750] leading-tight">Lembas</strong>
             <span class="text-[0.68rem] font-bold tracking-[0.14em] uppercase text-text-muted">Tienda saludable</span>
@@ -77,6 +77,7 @@
             <div class="field-group">
               <label for="firstName" class="register-label">Nombre</label>
               <input
+                pInputText
                 [formField]="form.firstName"
                 id="firstName"
                 type="text"
@@ -95,6 +96,7 @@
             <div class="field-group">
               <label for="lastName" class="register-label">Apellido</label>
               <input
+                pInputText
                 [formField]="form.lastName"
                 id="lastName"
                 type="text"
@@ -117,6 +119,7 @@
             <label for="email" class="register-label">Email</label>
             <div class="relative">
               <input
+                pInputText
                 [formField]="form.email"
                 id="email"
                 type="email"
@@ -141,6 +144,7 @@
               <label for="password" class="register-label">Contrasena</label>
               <div class="relative">
                 <input
+                  pInputText
                   [formField]="form.password"
                   id="password"
                   [type]="passwordVisible() ? 'text' : 'password'"
@@ -150,12 +154,16 @@
                   [class.register-input--error]="(form.password().touched() && form.password().errors().length) || showPasswordRealtimeError()"
                 />
                 <button
+                  pButton
                   type="button"
-                  (click)="passwordVisible.set(!passwordVisible())"
+                  severity="secondary"
+                  text="true"
+                  rounded="true"
                   class="register-eye-btn"
                   [attr.aria-label]="passwordVisible() ? 'Ocultar contrasena' : 'Mostrar contrasena'"
                   tabindex="-1"
                   data-testid="toggle-password"
+                  (click)="passwordVisible.set(!passwordVisible())"
                 >
                   <i [class]="passwordVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'" aria-hidden="true"></i>
                 </button>
@@ -171,6 +179,7 @@
               <label for="confirmPassword" class="register-label">Confirmar</label>
               <div class="relative">
                 <input
+                  pInputText
                   [formField]="form.confirmPassword"
                   id="confirmPassword"
                   [type]="confirmPasswordVisible() ? 'text' : 'password'"
@@ -180,12 +189,16 @@
                   [class.register-input--error]="(form.confirmPassword().touched() && form.confirmPassword().errors().length) || showConfirmPasswordRealtimeError()"
                 />
                 <button
+                  pButton
                   type="button"
-                  (click)="confirmPasswordVisible.set(!confirmPasswordVisible())"
+                  severity="secondary"
+                  text="true"
+                  rounded="true"
                   class="register-eye-btn"
                   [attr.aria-label]="confirmPasswordVisible() ? 'Ocultar contrasena' : 'Mostrar contrasena'"
                   tabindex="-1"
                   data-testid="toggle-confirm-password"
+                  (click)="confirmPasswordVisible.set(!confirmPasswordVisible())"
                 >
                   <i [class]="confirmPasswordVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'" aria-hidden="true"></i>
                 </button>
@@ -206,6 +219,7 @@
             </label>
             <div class="relative">
               <input
+                pInputText
                 [formField]="form.phone"
                 id="phone"
                 type="tel"
@@ -219,19 +233,18 @@
           </div>
 
           <!-- Submit -->
-          <app-button
+          <button
+            pButton
             type="submit"
-            variant="primary"
-            size="lg"
             icon="pi pi-user-plus"
-            loadingLabel="Creando cuenta..."
-            [loading]="submitting()"
+            size="large"
+            class="auth-submit-btn mt-1"
             [disabled]="submitting() || registrationSucceeded()"
-            testId="submit-btn"
-            class="mt-1 block"
+            [attr.aria-busy]="submitting()"
+            data-testid="submit-btn"
           >
-            Crear cuenta
-          </app-button>
+            <span pButtonLabel>{{ submitting() ? 'Creando cuenta...' : 'Crear cuenta' }}</span>
+          </button>
         </form>
 
         <p class="mt-6 text-center text-sm text-text-muted">
