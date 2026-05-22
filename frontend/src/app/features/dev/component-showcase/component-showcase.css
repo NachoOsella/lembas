@@ -13,6 +13,6 @@
 }
 
 .screen-link:hover {
-  border-color: rgba(0, 117, 74, 0.35);
+  border-color: rgba(47, 141, 114, 0.35);
   transform: translateY(-1px);
 }

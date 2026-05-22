@@ -51,8 +51,8 @@
 
 .confirm-dialog__icon {
   align-items: center;
-  background: var(--color-gold-wash);
-  border: 1px solid rgba(0, 98, 65, 0.08);
+  background: var(--color-orange-wash);
+  border: 1px solid rgba(47, 141, 114, 0.08);
   border-radius: 999px;
   color: var(--color-primary);
   display: flex;

@@ -15,7 +15,7 @@
   <section class="mx-auto mb-8 max-w-[76rem]" aria-labelledby="components-title">
     <div class="flex flex-col md:flex-row items-start md:items-end justify-between gap-2 md:gap-4 mb-4">
       <div>
-        <p class="text-[#cba258] text-[0.78rem] font-bold tracking-[0.15em] uppercase m-0 mb-2 md:mb-3">Shared module</p>
+        <p class="text-[#f29d52] text-[0.78rem] font-bold tracking-[0.15em] uppercase m-0 mb-2 md:mb-3">Shared module</p>
         <h2 id="components-title" class="text-primary text-xl md:text-2xl font-semibold leading-normal m-0">Componentes base</h2>
       </div>
     </div>
@@ -97,7 +97,7 @@
   <section class="mx-auto max-w-[76rem]" aria-labelledby="screens-title">
     <div class="flex flex-col md:flex-row items-start md:items-end justify-between gap-2 md:gap-4 mb-4">
       <div>
-        <p class="text-[#cba258] text-[0.78rem] font-bold tracking-[0.15em] uppercase m-0 mb-2 md:mb-3">Screen map</p>
+        <p class="text-[#f29d52] text-[0.78rem] font-bold tracking-[0.15em] uppercase m-0 mb-2 md:mb-3">Screen map</p>
         <h2 id="screens-title" class="text-primary text-xl md:text-2xl font-semibold leading-normal m-0">Pantallas navegables</h2>
       </div>
     </div>
@@ -108,7 +108,7 @@
         <h3 class="text-lg md:text-xl font-semibold leading-normal m-0">Publicas</h3>
         <div class="grid gap-3 mt-4">
           @for (screen of publicScreens; track screen.path) {
-            <a [routerLink]="screen.path" class="screen-link bg-[#f9f9f9] text-inherit focus-visible:outline-[3px] focus-visible:outline-[rgba(0,117,74,0.28)] focus-visible:outline-offset-[3px]">
+            <a [routerLink]="screen.path" class="screen-link bg-[#f9f9f9] text-inherit focus-visible:outline-[3px] focus-visible:outline-[rgba(47,141,114,0.28)] focus-visible:outline-offset-[3px]">
               <strong class="text-primary text-sm md:text-base">{{ screen.label }}</strong>
               <span class="text-muted text-[0.85rem] md:text-[0.9rem] leading-relaxed">{{ screen.description }}</span>
               <code class="text-accent text-[0.72rem] md:text-[0.78rem] font-mono">{{ screen.path }}</code>
@@ -122,7 +122,7 @@
         <h3 class="text-lg md:text-xl font-semibold leading-normal m-0">Cliente</h3>
         <div class="grid gap-3 mt-4">
           @for (screen of customerScreens; track screen.path) {
-            <a [routerLink]="screen.path" class="screen-link bg-[#f9f9f9] text-inherit focus-visible:outline-[3px] focus-visible:outline-[rgba(0,117,74,0.28)] focus-visible:outline-offset-[3px]">
+            <a [routerLink]="screen.path" class="screen-link bg-[#f9f9f9] text-inherit focus-visible:outline-[3px] focus-visible:outline-[rgba(47,141,114,0.28)] focus-visible:outline-offset-[3px]">
               <strong class="text-primary text-sm md:text-base">{{ screen.label }}</strong>
               <span class="text-muted text-[0.85rem] md:text-[0.9rem] leading-relaxed">{{ screen.description }}</span>
               <code class="text-accent text-[0.72rem] md:text-[0.78rem] font-mono">{{ screen.path }}</code>
@@ -136,7 +136,7 @@
         <h3 class="text-lg md:text-xl font-semibold leading-normal m-0">Admin</h3>
         <div class="grid gap-3 mt-4 grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
           @for (screen of adminScreens; track screen.path) {
-            <a [routerLink]="screen.path" class="screen-link bg-[#f9f9f9] text-inherit focus-visible:outline-[3px] focus-visible:outline-[rgba(0,117,74,0.28)] focus-visible:outline-offset-[3px]">
+            <a [routerLink]="screen.path" class="screen-link bg-[#f9f9f9] text-inherit focus-visible:outline-[3px] focus-visible:outline-[rgba(47,141,114,0.28)] focus-visible:outline-offset-[3px]">
               <strong class="text-primary text-sm md:text-base">{{ screen.label }}</strong>
               <span class="text-muted text-[0.85rem] md:text-[0.9rem] leading-relaxed">{{ screen.description }}</span>
               <code class="text-accent text-[0.72rem] md:text-[0.78rem] font-mono">{{ screen.path }}</code>
