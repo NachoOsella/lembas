@@ -23,3 +23,6 @@
 - `frontend/src/app/core/services/auth.ts` — added `register()` method using HttpClient for `POST /api/auth/register`.
 - `frontend/src/app/core/services/auth.spec.ts` — rewrote auth service tests with `Should_*` covering happy path, null phone, 409 duplicated email, 400 validation error, and network failure (5 tests).
 - `frontend/src/app/features/auth/register/register.spec.ts` — enhanced Register component tests with injection verification and template assertion.
+- `frontend/src/app/features/auth/register/`, `frontend/src/app/core/services/auth.ts` — implemented polished signal-form registration flow with validation, password visibility, API submission, auth state persistence, and redirect to `/store`.
+- `frontend/src/app/shared/components/app-{button,badge,field-hint,page-header,section-card}/` — added reusable shared UI building blocks with specs and barrel exports for consistent future screens.
+- `frontend/src/app/features/dev/component-showcase/` — expanded `/dev/ui` to document and preview the new shared UI components alongside existing feedback components.
