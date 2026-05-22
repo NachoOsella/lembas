@@ -13,15 +13,13 @@
 
 .page-header--light {
   color: rgba(0, 0, 0, 0.87);
-  background: linear-gradient(135deg, #ffffff 0%, #faf6ee 100%);
-  border: 1px solid rgba(30, 57, 50, 0.08);
+  background: #ffffff;
+  border: 1px solid rgba(7, 95, 54, 0.08);
 }
 
 .page-header--dark {
   color: #ffffff;
-  background:
-    radial-gradient(circle at 90% 10%, rgba(212, 233, 226, 0.22), transparent 18rem),
-    #1e3932;
+  background: #075f36;
 }
 
 .page-header__copy {
@@ -30,7 +28,7 @@
 
 .page-header__eyebrow {
   margin: 0 0 0.55rem;
-  color: #cba258;
+  color: #f29d52;
   font-size: 0.76rem;
   font-weight: 850;
   letter-spacing: 0.15em;

@@ -4,7 +4,7 @@
 }
 
 :host ::ng-deep .app-skeleton {
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.08));
+  background: rgba(0, 0, 0, 0.06);
 }
 
 :host ::ng-deep .app-skeleton--text {
