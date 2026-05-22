@@ -14,3 +14,4 @@
 - `frontend/src/app/features/admin/admin-layout/`, `admin.routes.ts` — AdminLayout with collapsible sidebar, topbar, breadcrumbs, router-outlet.
 - `backend/src/main/java/com/dietetica/lembas/shared/{dto,web}/`, `backend/src/test/java/com/dietetica/lembas/shared/web/` — added uniform `ApiError` payload, global exception handler, and handler tests.
 - `backend/src/test/java/com/dietetica/lembas/LembasBackendApplicationTests.java`, `frontend/src/app/shared/components/skeleton/skeleton.spec.ts` — fixed backend smoke test and Skeleton component spec.
+- `backend/src/test/java/com/dietetica/lembas/auth/`, `backend/src/test/java/com/dietetica/lembas/users/`, `backend/pom.xml` — added auth service/mapper/JWT/DTO validation tests and a PostgreSQL Testcontainers `UserRepository` JPA slice test using Testcontainers 2.0.5.
