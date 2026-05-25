@@ -8,9 +8,6 @@ const ACCESS_TOKEN_KEY = 'lembas_access_token';
 /** Key used to persist the JWT refresh token in localStorage. */
 const REFRESH_TOKEN_KEY = 'lembas_refresh_token';
 
-/** Key used to persist the authenticated user in localStorage. */
-const USER_KEY = 'lembas_user';
-
 /** Request payload for POST /api/auth/register. */
 export interface RegisterRequest {
   firstName: string;
@@ -30,11 +27,26 @@ export interface LoginRequest {
 export interface AuthUser {
   id: number;
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'CUSTOMER';
   branchId?: number | null;
   branchName?: string | null;
+}
+
+/**
+ * Claims embedded in the JWT access token payload.
+ *
+ * <p>Matches the backend's {@link JwtTokenProvider#createAccessToken} output
+ * (subject = user ID, plus email, role, and tokenType claims).</p>
+ */
+interface JwtPayload {
+  sub: string;
+  email: string;
+  role: string;
+  tokenType: string;
+  iat: number;
+  exp: number;
 }
 
 /** Field-level validation error returned inside ApiError.details.fieldErrors. */
@@ -63,14 +75,58 @@ export interface AuthResponse {
 }
 
 /**
+ * Decodes the base64url-encoded payload section of a JWT.
+ *
+ * <p>No signature verification is performed; the function only extracts and
+ * JSON-parses the middle segment of a standard {@code header.payload.signature}
+ * JWT. The server is responsible for signature validation on the backend.</p>
+ *
+ * <p>Returns {@code null} when the token is malformed, not a valid JWT, or
+ * when the payload fails to parse as valid JSON.</p>
+ *
+ * @param token a raw JWT string
+ * @returns the parsed payload as any JSON value, or null
+ */
+function decodeJwtPayload(token: string): JwtPayload | null {
+  try {
+    const segments = token.split('.');
+    if (segments.length !== 3) {
+      return null;
+    }
+    // Decode base64url -> base64 -> UTF-8
+    const base64 = segments[1].replace(/-/g, '+').replace(/_/g, '/');
+    const json = atob(base64);
+    const payload: JwtPayload = JSON.parse(json);
+
+    // Validate required claims are present
+    if (
+      typeof payload.sub !== 'string' ||
+      typeof payload.email !== 'string' ||
+      typeof payload.role !== 'string'
+    ) {
+      return null;
+    }
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Authentication service for register/login and token management.
  *
  * <p>Exposes methods for the public registration and login flows.
  * All HTTP calls go through the configured {@link HttpClient}.</p>
  *
- * <p>The JWT access token, refresh token, and authenticated user are persisted
- * in {@code localStorage} so the session survives full-page reloads.
- * The access token is read by {@code AuthInterceptor} and attached to every
+ * <p>Only the JWT access token and refresh token are persisted in
+ * {@code localStorage}. Basic user data (id, email, role) is reconstructed
+ * at hydration time by decoding the JWT payload -- no separate user object is
+ * stored. Full user details (firstName, lastName, branchId, branchName)
+ * from the login/register response are kept in memory only for the current
+ * session.</p>
+ *
+ * <p>The access token is read by {@code AuthInterceptor} and attached to every
  * outgoing HTTP request via the {@code Authorization: Bearer} header.</p>
  *
  * <p>Public API: {@link register} / {@link login} for server-side auth,
@@ -99,15 +155,15 @@ export class AuthService {
 
   constructor(private readonly http: HttpClient) {
     const storedToken = this.loadStoredToken();
-    const storedUser = storedToken ? this.loadStoredUser() : null;
-    const storedRefreshToken = storedUser ? this.loadStoredRefreshToken() : null;
+    const storedRefreshToken = storedToken ? this.loadStoredRefreshToken() : null;
+    const hydratedUser = storedToken ? this.buildUserFromToken(storedToken) : null;
 
-    this.accessToken = signal<string | null>(storedUser ? storedToken : null);
-    this.refreshToken = signal<string | null>(storedUser ? storedRefreshToken : null);
-    this.currentUser = signal<AuthUser | null>(storedUser);
+    this.accessToken = signal<string | null>(hydratedUser ? storedToken : null);
+    this.refreshToken = signal<string | null>(hydratedUser ? storedRefreshToken : null);
+    this.currentUser = signal<AuthUser | null>(hydratedUser);
 
-    // If either part of the persisted session is missing or invalid, clear stale data.
-    if (!storedToken || !storedUser) {
+    // If the stored token is invalid or produces no user data, clear stale data.
+    if (storedToken && !hydratedUser) {
       this.removePersistedAuth();
     }
   }
@@ -173,6 +229,10 @@ export class AuthService {
    * Persists the authentication response (tokens and user) into the service state
    * and {@code localStorage} so the session survives full-page reloads.
    *
+   * <p>Only the JWT tokens are written to localStorage. The user object is kept
+   * in memory only; on the next page load it is reconstructed from the JWT payload
+   * via {@link #buildUserFromToken}.</p>
+   *
    * @param response the {@link AuthResponse} returned from register or login
    */
   saveAuthResponse(response: AuthResponse): void {
@@ -181,7 +241,6 @@ export class AuthService {
       this.persistRefreshToken(response.refreshToken);
       this.refreshToken.set(response.refreshToken);
     }
-    this.persistUser(response.user);
     this.accessToken.set(response.token);
     this.currentUser.set(response.user);
   }
@@ -194,6 +253,50 @@ export class AuthService {
     this.refreshToken.set(null);
     this.currentUser.set(null);
     this.removePersistedAuth();
+  }
+
+  /**
+   * Reconstructs a minimal {@link AuthUser} from JWT claims.
+   *
+   * <p>Only {@code id}, {@code email}, and {@code role} are available from the
+   * JWT payload. {@code firstName}, {@code lastName}, {@code branchId}, and
+   * {@code branchName} are set to null because the JWT does not carry them.
+   * Components that need the full name should fetch {@code GET /api/auth/me}
+   * after hydration.</p>
+   *
+   * @param token a raw JWT access token
+   * @returns a minimal AuthUser, or null if the token is invalid
+   */
+  private buildUserFromToken(token: string): AuthUser | null {
+    const payload = decodeJwtPayload(token);
+    if (!payload) {
+      return null;
+    }
+
+    // Only ACCESS tokens carry email + role claims
+    if (payload.tokenType !== 'ACCESS') {
+      return null;
+    }
+
+    const userId = Number(payload.sub);
+    if (isNaN(userId)) {
+      return null;
+    }
+
+    const role = payload.role as AuthUser['role'];
+    if (!['ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER'].includes(role)) {
+      return null;
+    }
+
+    return {
+      id: userId,
+      email: payload.email,
+      firstName: null,
+      lastName: null,
+      role,
+      branchId: null,
+      branchName: null,
+    };
   }
 
   /**
@@ -217,21 +320,11 @@ export class AuthService {
     }
   }
 
-  /** Persists the authenticated user to {@code localStorage}. */
-  private persistUser(user: AuthUser): void {
-    try {
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-    } catch {
-      /* Storage unavailable -- degrade gracefully */
-    }
-  }
-
   /** Removes all auth-related entries from {@code localStorage}. */
   private removePersistedAuth(): void {
     try {
       localStorage.removeItem(ACCESS_TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
     } catch {
       /* Storage unavailable -- degrade gracefully */
     }
@@ -251,46 +344,6 @@ export class AuthService {
     try {
       return localStorage.getItem(REFRESH_TOKEN_KEY);
     } catch {
-      return null;
-    }
-  }
-
-  /** Hydrates the stored user on service construction. */
-  private loadStoredUser(): AuthUser | null {
-    try {
-      const raw = localStorage.getItem(USER_KEY);
-      if (!raw) {
-        return null;
-      }
-
-      const parsed = JSON.parse(raw) as Partial<AuthUser>;
-
-      // Validate the shape of the persisted user before using it.
-      const branchIdValid =
-        parsed.branchId === undefined ||
-        parsed.branchId === null ||
-        typeof parsed.branchId === 'number';
-      const branchNameValid =
-        parsed.branchName === undefined ||
-        parsed.branchName === null ||
-        typeof parsed.branchName === 'string';
-
-      if (
-        typeof parsed.id !== 'number' ||
-        typeof parsed.email !== 'string' ||
-        typeof parsed.firstName !== 'string' ||
-        typeof parsed.lastName !== 'string' ||
-        !['ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER'].includes(parsed.role ?? '') ||
-        !branchIdValid ||
-        !branchNameValid
-      ) {
-        this.removePersistedAuth();
-        return null;
-      }
-
-      return parsed as AuthUser;
-    } catch {
-      this.removePersistedAuth();
       return null;
     }
   }

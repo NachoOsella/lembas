@@ -24,6 +24,21 @@ function stubLocalStorage(): Record<string, string> {
   return store;
 }
 
+/**
+ * Builds a fake JWT with a base64url-encoded payload containing the given claims.
+ *
+ * <p>The header is a static base64url of {@code {"alg":"HS256"}} and the
+ * signature is a dummy value. Only the payload varies per test.</p>
+ */
+function buildFakeJwt(payloadClaims: Record<string, unknown>): string {
+  const header = btoa(JSON.stringify({ alg: 'HS256' }));
+  const payload = btoa(JSON.stringify(payloadClaims));
+  const signature = 'fake-signature';
+  // Use base64url-safe encoding (replace +/=)
+  const toBase64Url = (s: string) => s.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `${toBase64Url(header)}.${toBase64Url(payload)}.${signature}`;
+}
+
 describe('Auth service', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
@@ -51,8 +66,18 @@ describe('Auth service', () => {
     phone: '+54 351 123 4567',
   };
 
+  /** A valid JWT access token whose payload matches the login response user. */
+  const validAccessToken = buildFakeJwt({
+    sub: '1',
+    email: 'frodo@lembas.com',
+    role: 'CUSTOMER',
+    tokenType: 'ACCESS',
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 86400,
+  });
+
   const successResponse: AuthResponse = {
-    token: 'jwt-access-token',
+    token: validAccessToken,
     refreshToken: 'jwt-refresh-token',
     user: {
       id: 1,
@@ -70,7 +95,7 @@ describe('Auth service', () => {
     it('Should_returnAuthResponse_when_registerWithValidData', () => {
       service.register(validRequest).subscribe({
         next: (response) => {
-          expect(response.token).toBe('jwt-access-token');
+          expect(response.token).toBe(validAccessToken);
           expect(response.user.email).toBe('frodo@lembas.com');
           expect(response.user.role).toBe('CUSTOMER');
         },
@@ -209,7 +234,6 @@ describe('Auth service', () => {
       expect(service.getUserRole()).toBeNull();
       expect(store['lembas_access_token']).toBeUndefined();
       expect(store['lembas_refresh_token']).toBeUndefined();
-      expect(store['lembas_user']).toBeUndefined();
     });
   });
 
@@ -278,7 +302,7 @@ describe('Auth service', () => {
     /** Should not persist refresh token when not provided in response. */
     it('Should_notPersistRefreshToken_when_refreshTokenNotProvided', () => {
       const responseWithoutRefresh: AuthResponse = {
-        token: 'jwt-access-token',
+        token: validAccessToken,
         refreshToken: null,
         user: successResponse.user,
       };
@@ -305,20 +329,20 @@ describe('Auth service', () => {
       store = stubLocalStorage();
     });
 
-    /** Should store access token and user in localStorage when saveAuthResponse is called. */
-    it('Should_persistTokenAndUser_when_saveAuthResponse', () => {
+    /** Should store only the access token in localStorage (no separate user object). */
+    it('Should_persistTokenOnly_when_saveAuthResponse', () => {
       service.saveAuthResponse(successResponse);
 
-      expect(store['lembas_access_token']).toBe('jwt-access-token');
-      const storedUser = JSON.parse(store['lembas_user']);
-      expect(storedUser).toEqual(expect.objectContaining({ email: 'frodo@lembas.com' }));
+      expect(store['lembas_access_token']).toBe(validAccessToken);
+      // The user object is NOT persisted separately
+      expect(store['lembas_user']).toBeUndefined();
     });
 
     /** Should return the stored token via getAccessToken. */
     it('Should_returnToken_when_tokenIsStored', () => {
       service.saveAuthResponse(successResponse);
 
-      expect(service.getAccessToken()).toBe('jwt-access-token');
+      expect(service.getAccessToken()).toBe(validAccessToken);
     });
 
     /** Should return null from getAccessToken when no token is stored. */
@@ -334,7 +358,7 @@ describe('Auth service', () => {
       expect(service.currentUser()?.email).toBe('frodo@lembas.com');
     });
 
-    /** Should remove token and user from localStorage when clearAuth is called. */
+    /** Should remove token and refresh token from localStorage when clearAuth is called. */
     it('Should_removePersistedAuth_onClearAuth', () => {
       service.saveAuthResponse(successResponse);
       service.clearAuth();
@@ -342,11 +366,11 @@ describe('Auth service', () => {
       expect(service.isAuthenticated()).toBe(false);
       expect(service.currentUser()).toBeNull();
       expect(store['lembas_access_token']).toBeUndefined();
-      expect(store['lembas_user']).toBeUndefined();
+      expect(store['lembas_refresh_token']).toBeUndefined();
     });
   });
 
-  describe('hydration', () => {
+  describe('hydration (JWT payload decoding)', () => {
     /** In-memory store to simulate localStorage. */
     let store: Record<string, string>;
 
@@ -363,85 +387,126 @@ describe('Auth service', () => {
       store = stubLocalStorage();
     });
 
-    /** Should hydrate the user when both token and user are stored. */
-    it('Should_hydrateUser_when_tokenAndUserExistInStorage', () => {
-      store['lembas_access_token'] = 'jwt-access-token';
-      store['lembas_user'] = JSON.stringify(successResponse.user);
+    /** Should hydrate basic user data when a valid access token is stored. */
+    it('Should_hydrateBasicUser_when_validAccessTokenExists', () => {
+      store['lembas_access_token'] = validAccessToken;
 
       const hydratedService = createHydratedService();
 
       expect(hydratedService.isAuthenticated()).toBe(true);
-      expect(hydratedService.currentUser()?.email).toBe('frodo@lembas.com');
+      expect(hydratedService.getAccessToken()).toBe(validAccessToken);
+      expect(hydratedService.currentUser()).toBeTruthy();
+      expect(hydratedService.currentUser()!.id).toBe(1);
+      expect(hydratedService.currentUser()!.email).toBe('frodo@lembas.com');
+      expect(hydratedService.currentUser()!.role).toBe('CUSTOMER');
       expect(hydratedService.getUserRole()).toBe('CUSTOMER');
+      // firstName/lastName are null because the JWT doesn't carry them
+      expect(hydratedService.currentUser()!.firstName).toBeNull();
+      expect(hydratedService.currentUser()!.lastName).toBeNull();
+      expect(hydratedService.currentUser()!.branchId).toBeNull();
+      expect(hydratedService.currentUser()!.branchName).toBeNull();
     });
 
-    /** Should hydrate refresh token when stored. */
+    /** Should hydrate refresh token when stored alongside access token. */
     it('Should_hydrateRefreshToken_when_presentInStorage', () => {
-      store['lembas_access_token'] = 'jwt-access-token';
+      store['lembas_access_token'] = validAccessToken;
       store['lembas_refresh_token'] = 'jwt-refresh-token';
-      store['lembas_user'] = JSON.stringify(successResponse.user);
 
       const hydratedService = createHydratedService();
 
       expect(hydratedService.isAuthenticated()).toBe(true);
-      expect(hydratedService.getAccessToken()).toBe('jwt-access-token');
+      expect(hydratedService.getAccessToken()).toBe(validAccessToken);
     });
 
-    /** Should not hydrate user when token is missing but stale user data exists. */
-    it('Should_notHydrateUser_when_tokenIsMissing', () => {
-      store['lembas_user'] = JSON.stringify(successResponse.user);
+    /** Should not hydrate when the stored token is not a valid JWT. */
+    it('Should_notHydrate_when_tokenIsNotJwt', () => {
+      store['lembas_access_token'] = 'not-a-valid-jwt-at-all';
 
       const hydratedService = createHydratedService();
 
       expect(hydratedService.isAuthenticated()).toBe(false);
       expect(hydratedService.currentUser()).toBeNull();
-      expect(store['lembas_user']).toBeUndefined();
+      expect(hydratedService.getAccessToken()).toBeNull();
+      expect(store['lembas_access_token']).toBeUndefined();
     });
 
-    /** Should not hydrate user when stored user data has invalid shape. */
-    it('Should_notHydrateUser_when_storedUserIsMalformed', () => {
-      store['lembas_access_token'] = 'jwt-access-token';
-      store['lembas_user'] = JSON.stringify({ id: 'not-a-number', email: 'bad' });
+    /** Should not hydrate when the JWT payload has missing required claims. */
+    it('Should_notHydrate_when_jwtPayloadIsMissingClaims', () => {
+      const missingEmailToken = buildFakeJwt({
+        sub: '1',
+        role: 'CUSTOMER',
+        tokenType: 'ACCESS',
+        iat: Date.now(),
+        exp: Date.now() + 86400,
+      });
+      store['lembas_access_token'] = missingEmailToken;
 
       const hydratedService = createHydratedService();
 
       expect(hydratedService.isAuthenticated()).toBe(false);
       expect(hydratedService.currentUser()).toBeNull();
-      expect(store['lembas_user']).toBeUndefined();
+      expect(store['lembas_access_token']).toBeUndefined();
     });
 
-    /** Should not hydrate user when stored user has an invalid role. */
-    it('Should_notHydrateUser_when_roleIsInvalid', () => {
-      store['lembas_access_token'] = 'jwt-access-token';
-      store['lembas_user'] = JSON.stringify({
-        id: 2,
+    /** Should not hydrate when the token is a refresh token, not an access token. */
+    it('Should_notHydrate_when_tokenTypeIsNotAccess', () => {
+      const refreshJwt = buildFakeJwt({
+        sub: '1',
+        tokenType: 'REFRESH',
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 604800,
+      });
+      store['lembas_access_token'] = refreshJwt;
+
+      const hydratedService = createHydratedService();
+
+      expect(hydratedService.isAuthenticated()).toBe(false);
+      expect(hydratedService.currentUser()).toBeNull();
+      expect(store['lembas_access_token']).toBeUndefined();
+    });
+
+    /** Should not hydrate when the role in the token is invalid. */
+    it('Should_notHydrate_when_roleIsInvalid', () => {
+      const badRoleToken = buildFakeJwt({
+        sub: '2',
         email: 'bad@role.com',
-        firstName: 'Bad',
-        lastName: 'Role',
         role: 'SUPER_ADMIN',
+        tokenType: 'ACCESS',
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 86400,
       });
+      store['lembas_access_token'] = badRoleToken;
 
       const hydratedService = createHydratedService();
 
       expect(hydratedService.isAuthenticated()).toBe(false);
       expect(hydratedService.currentUser()).toBeNull();
-      expect(hydratedService.getAccessToken()).toBeNull();
     });
 
-    /** Should not hydrate user when optional branch fields are malformed. */
-    it('Should_notHydrateUser_when_optionalBranchFieldsAreMalformed', () => {
-      store['lembas_access_token'] = 'jwt-access-token';
-      store['lembas_user'] = JSON.stringify({
-        ...successResponse.user,
-        branchId: 'not-a-number',
-        branchName: 123,
+    /** Should not hydrate when the subject is not a valid number. */
+    it('Should_notHydrate_when_subIsNotNumeric', () => {
+      const badSubToken = buildFakeJwt({
+        sub: 'abc-not-a-number',
+        email: 'user@lembas.com',
+        role: 'CUSTOMER',
+        tokenType: 'ACCESS',
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 86400,
       });
+      store['lembas_access_token'] = badSubToken;
 
       const hydratedService = createHydratedService();
 
       expect(hydratedService.isAuthenticated()).toBe(false);
       expect(hydratedService.currentUser()).toBeNull();
-      expect(hydratedService.getAccessToken()).toBeNull();
+    });
+
+    /** Should not hydrate when no token exists in localStorage. */
+    it('Should_notHydrate_when_noTokenInStorage', () => {
+      const hydratedService = createHydratedService();
+
+      expect(hydratedService.isAuthenticated()).toBe(false);
+      expect(hydratedService.currentUser()).toBeNull();
     });
   });
 });
