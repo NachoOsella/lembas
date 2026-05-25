@@ -44,7 +44,8 @@ SecurityFilterChain
   ├── JwtAuthenticationFilter
   └── ExceptionHandlerFilter
 
-Public routes:   /api/auth/**, /api/store/**, /api/webhooks/**, /uploads/**
+Public routes:   POST /api/auth/register, POST /api/auth/login, /api/store/**, /api/webhooks/**, /uploads/**
+Authenticated:   GET /api/auth/me
 Customer routes: /api/customer/** (role CUSTOMER)
 Admin routes:    /api/admin/** (roles ADMIN, MANAGER, EMPLOYEE)
 ```
@@ -53,7 +54,7 @@ Admin routes:    /api/admin/** (roles ADMIN, MANAGER, EMPLOYEE)
 
 ```java
 // Public
-@PermitAll on /api/store/**, /api/auth/**, /api/webhooks/**
+@PermitAll on POST /api/auth/register, POST /api/auth/login, /api/store/**, /api/webhooks/**
 
 // Customer
 @PreAuthorize("hasRole('CUSTOMER')") on /api/customer/**

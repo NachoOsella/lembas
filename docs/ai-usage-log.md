@@ -35,3 +35,20 @@
 - `frontend/src/app/features/auth/login/`, `frontend/src/app/core/services/auth.ts` — implemented the login signal form to match the register page visual system, including validation, password visibility, API submission, auth state save, and role-based redirect.
 - `frontend/src/app/features/auth/{login,register}/`, `AGENTS.md` — refactored auth form controls to use PrimeNG directives/components where compatible with Angular signal forms and documented the PrimeNG-first frontend rule.
 - `frontend/src/app/shared/components/app-{button,badge,field-hint,section-card}/` — refactored generic shared wrappers to render PrimeNG primitives internally while preserving Lembas APIs and styling.
+
+## 2026-05-25
+
+- `backend/src/main/java/com/dietetica/lembas/auth/service/LembasUserDetails.java` -- Spring Security `UserDetails` adapter tipico puenteando `User` entity a `DaoAuthenticationProvider`, mapea roles con prefijo `ROLE_`.
+- `backend/src/main/java/com/dietetica/lembas/auth/service/LembasUserDetailsService.java` -- `UserDetailsService` estandar con doble lookup por email (login) y por ID (JWT filter).
+- `backend/src/main/java/com/dietetica/lembas/auth/service/JwtAuthenticationFilter.java` -- `OncePerRequestFilter` estandar extrayendo Bearer tokens, validando y poblando `SecurityContextHolder`.
+- `backend/src/main/java/com/dietetica/lembas/auth/service/SecurityContextHelper.java` -- helper simple para obtener `User` desde `SecurityContext` para `GET /api/auth/me`.
+- `backend/src/main/java/com/dietetica/lembas/auth/service/JwtTokenProvider.java` -- agregados `validateToken()`, `getUserIdFromToken()`, `getRoleFromToken()` + `UUID.randomUUID()` como claim `jti` para garantizar unicidad de tokens en logins sucesivos.
+- `backend/src/main/java/com/dietetica/lembas/auth/service/AuthService.java` -- agregados `authenticate()` (BCrypt check + cuenta deshabilitada + emision de tokens) y `getCurrentUser()`.
+- `backend/src/main/java/com/dietetica/lembas/auth/web/AuthController.java` -- agregados `POST /api/auth/login` y `GET /api/auth/me` con inyeccion de `SecurityContextHelper`.
+- `backend/src/main/java/com/dietetica/lembas/shared/config/SecurityConfig.java` -- cableado `JwtAuthenticationFilter` antes de `UsernamePasswordAuthenticationFilter` + bean `AuthenticationManager`.
+- `backend/src/test/java/com/dietetica/lembas/auth/service/AuthServiceTest.java` -- +8 tests de login (credenciales validas, email incorrecto, password incorrecto, cuenta deshabilitada, normalizacion de email, hardening anti-enumeracion) + 1 test `getCurrentUser`.
+- `backend/src/test/java/com/dietetica/lembas/auth/service/JwtTokenProviderTest.java` -- +4 tests de validacion (token expirado, firma incorrecta, token malformado) + 2 tests de extraccion (userId, role). Requirio corregir secret key de 208 bits a 256 bits minimo para jjwt 0.12.6.
+- `backend/src/test/java/com/dietetica/lembas/auth/service/JwtAuthenticationFilterTest.java` -- 6 tests unitarios cubriendo token valido, sin header, header no-Bearer, expirado, malformado y continuidad de filter chain.
+- `backend/src/test/java/com/dietetica/lembas/auth/web/AuthControllerTest.java` -- +3 tests MVC slice de login (200, 401, 403) + 1 test `/me`; requirio `@MockitoBean JwtAuthenticationFilter` para que levante el contexto.
+- `backend/src/test/java/com/dietetica/lembas/auth/integration/AuthLoginIntegrationTest.java` -- 8 tests de integracion `@SpringBootTest` + Testcontainers postgres:16-alpine cubriendo login valido, unicidad de tokens, password incorrecto, email inexistente, cuenta deshabilitada, normalizacion de email, verificacion BCrypt, hardening contra raw passwords.
+- `backend/src/main/java/com/dietetica/lembas/{auth/service,shared/config}/`, `backend/src/test/java/com/dietetica/lembas/{auth/service,shared/config}/`, `docs/03-architecture/security-architecture.md` -- hardening post-review: refresh tokens ya no autentican endpoints API, `/api/auth/me` requiere JWT segun endpoints.md, stale JWT subjects no generan 500, y normalizacion de email usa `Locale.ROOT`.
