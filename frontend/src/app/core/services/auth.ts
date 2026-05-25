@@ -2,6 +2,12 @@ import { Injectable, signal, computed, WritableSignal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+/** Key used to persist the JWT access token in localStorage. */
+const ACCESS_TOKEN_KEY = 'lembas_access_token';
+
+/** Key used to persist the authenticated user in localStorage. */
+const USER_KEY = 'lembas_user';
+
 /** Request payload for POST /api/auth/register. */
 export interface RegisterRequest {
   firstName: string;
@@ -49,7 +55,6 @@ export interface ApiErrorResponse {
 /** Response from POST /api/auth/register and POST /api/auth/login. */
 export interface AuthResponse {
   token: string;
-  refreshToken: string;
   user: AuthUser;
 }
 
@@ -58,6 +63,11 @@ export interface AuthResponse {
  *
  * <p>Exposes methods for the public registration and login flows.
  * All HTTP calls go through the configured {@link HttpClient}.</p>
+ *
+ * <p>The JWT access token and authenticated user are persisted in
+ * {@code localStorage} so the session survives full-page reloads.
+ * The token is read by {@code AuthInterceptor} and attached to every
+ * outgoing HTTP request via the {@code Authorization: Bearer} header.</p>
  */
 @Injectable({
   providedIn: 'root',
@@ -65,13 +75,29 @@ export interface AuthResponse {
 export class AuthService {
   private readonly apiUrl = '/api/auth';
 
+  /** Current JWT access token, or null if not logged in. */
+  private readonly accessToken: WritableSignal<string | null>;
+
   /** Currently authenticated user, or null if not logged in. */
-  readonly currentUser: WritableSignal<AuthUser | null> = signal<AuthUser | null>(null);
+  readonly currentUser: WritableSignal<AuthUser | null>;
 
   /** Whether a user is currently authenticated. */
-  readonly isAuthenticated = computed(() => this.currentUser() !== null);
+  readonly isAuthenticated = computed(
+    () => this.currentUser() !== null && this.accessToken() !== null,
+  );
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {
+    const storedToken = this.loadStoredToken();
+    const storedUser = storedToken ? this.loadStoredUser() : null;
+
+    this.accessToken = signal<string | null>(storedUser ? storedToken : null);
+    this.currentUser = signal<AuthUser | null>(storedUser);
+
+    // If either part of the persisted session is missing or invalid, clear stale data.
+    if (!storedToken || !storedUser) {
+      this.removePersistedAuth();
+    }
+  }
 
   /**
    * Registers a new customer account.
@@ -94,18 +120,113 @@ export class AuthService {
   }
 
   /**
-   * Persists the authentication response (tokens and user) into the service state.
+   * Returns the current JWT access token, or null if the user is not authenticated.
+   *
+   * @returns the stored access token string, or null
+   */
+  getAccessToken(): string | null {
+    return this.accessToken();
+  }
+
+  /**
+   * Persists the authentication response (tokens and user) into the service state
+   * and {@code localStorage} so the session survives full-page reloads.
    *
    * @param response the {@link AuthResponse} returned from register or login
    */
   saveAuthResponse(response: AuthResponse): void {
+    this.persistToken(response.token);
+    this.persistUser(response.user);
+    this.accessToken.set(response.token);
     this.currentUser.set(response.user);
   }
 
   /**
-   * Clears the current authentication state (logout).
+   * Clears the current authentication state and removes all persisted data (logout).
    */
   clearAuth(): void {
+    this.accessToken.set(null);
     this.currentUser.set(null);
+    this.removePersistedAuth();
+  }
+
+  /**
+   * Persists the access token to {@code localStorage}.
+   * Wrapped so unit tests can operate without a real localStorage.
+   */
+  private persistToken(token: string): void {
+    try {
+      localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    } catch {
+      /* Storage unavailable (e.g. private browsing quota exceeded) -- degrade gracefully */
+    }
+  }
+
+  /** Persists the authenticated user to {@code localStorage}. */
+  private persistUser(user: AuthUser): void {
+    try {
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } catch {
+      /* Storage unavailable -- degrade gracefully */
+    }
+  }
+
+  /** Removes all auth-related entries from {@code localStorage}. */
+  private removePersistedAuth(): void {
+    try {
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+    } catch {
+      /* Storage unavailable -- degrade gracefully */
+    }
+  }
+
+  /** Loads the stored access token on service construction. */
+  private loadStoredToken(): string | null {
+    try {
+      return localStorage.getItem(ACCESS_TOKEN_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Hydrates the stored user on service construction. */
+  private loadStoredUser(): AuthUser | null {
+    try {
+      const raw = localStorage.getItem(USER_KEY);
+      if (!raw) {
+        return null;
+      }
+
+      const parsed = JSON.parse(raw) as Partial<AuthUser>;
+
+      // Validate the shape of the persisted user before using it.
+      const branchIdValid =
+        parsed.branchId === undefined ||
+        parsed.branchId === null ||
+        typeof parsed.branchId === 'number';
+      const branchNameValid =
+        parsed.branchName === undefined ||
+        parsed.branchName === null ||
+        typeof parsed.branchName === 'string';
+
+      if (
+        typeof parsed.id !== 'number' ||
+        typeof parsed.email !== 'string' ||
+        typeof parsed.firstName !== 'string' ||
+        typeof parsed.lastName !== 'string' ||
+        !['ADMIN', 'MANAGER', 'EMPLOYEE', 'CUSTOMER'].includes(parsed.role ?? '') ||
+        !branchIdValid ||
+        !branchNameValid
+      ) {
+        this.removePersistedAuth();
+        return null;
+      }
+
+      return parsed as AuthUser;
+    } catch {
+      this.removePersistedAuth();
+      return null;
+    }
   }
 }

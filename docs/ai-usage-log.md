@@ -52,3 +52,26 @@
 - `backend/src/test/java/com/dietetica/lembas/auth/web/AuthControllerTest.java` -- +3 tests MVC slice de login (200, 401, 403) + 1 test `/me`; requirio `@MockitoBean JwtAuthenticationFilter` para que levante el contexto.
 - `backend/src/test/java/com/dietetica/lembas/auth/integration/AuthLoginIntegrationTest.java` -- 8 tests de integracion `@SpringBootTest` + Testcontainers postgres:16-alpine cubriendo login valido, unicidad de tokens, password incorrecto, email inexistente, cuenta deshabilitada, normalizacion de email, verificacion BCrypt, hardening contra raw passwords.
 - `backend/src/main/java/com/dietetica/lembas/{auth/service,shared/config}/`, `backend/src/test/java/com/dietetica/lembas/{auth/service,shared/config}/`, `docs/03-architecture/security-architecture.md` -- hardening post-review: refresh tokens ya no autentican endpoints API, `/api/auth/me` requiere JWT segun endpoints.md, stale JWT subjects no generan 500, y normalizacion de email usa `Locale.ROOT`.
+
+### 2026-05-25 - AuthInterceptor (frontend JWT token attachment)
+
+- `frontend/src/app/core/services/auth.ts` -- modificado: persistencia de JWT access token y usuario autenticado en `localStorage` (claves `lembas_access_token`, `lembas_user`); nuevo metodo `getAccessToken()`; hidratacion de estado al construir el servicio; limpieza en `clearAuth()`.
+- `frontend/src/app/core/interceptors/auth-interceptor.ts` -- nuevo: interceptor funcional `HttpInterceptorFn` que agrega header `Authorization: Bearer <token>` a toda request saliente si hay token disponible; respeta headers `Authorization` ya existentes.
+- `frontend/src/app/app.config.ts` -- registrado `authInterceptor` en `provideHttpClient(withInterceptors([...]))` antes de `errorInterceptor`.
+- `frontend/src/app/core/interceptors/auth-interceptor.spec.ts` -- 5 tests unitarios: attach con token, sin token, preservacion de header existente, request publica sin token, POST con token.
+- `frontend/src/app/core/services/auth.spec.ts` -- agregados 5 tests: persistencia token+user, recuperacion token, null sin token, isAuthenticated=true tras persistencia, clearAuth limpia localStorage.
+- `frontend/vitest-base.config.ts` -- nuevo: configuracion base de Vitest con `environment: 'jsdom'` para disponibilidad de APIs de navegador.
+
+### 2026-05-25 - Code review fixes: interceptor scoping, auth hydration hardening, refreshToken cleanup
+
+- `frontend/src/app/core/interceptors/auth-interceptor.ts` -- restringido attachment de JWT solo a requests con URL que comienza con `/api/` para evitar fuga de token a terceros.
+- `frontend/src/app/core/services/auth.ts` -- quitado `refreshToken` de `AuthResponse` (no se usa en frontend); `isAuthenticated` ahora verifica tambien existencia de token; constructor limpia stale user data si no hay token; `loadStoredUser()` valida la forma del objeto persistido (id, email, firstName, lastName, role valido) antes de usarlo.
+- `frontend/src/app/core/services/auth.spec.ts` -- agregados 5 tests de hydration con token+user, token faltante, malformed user, rol invalido; agregado `vi.unstubAllGlobals()` en afterEach;
+- `frontend/src/app/core/interceptors/auth-interceptor.spec.ts` -- agregado test que verifica que token no se adjunta a URLs externas.
+- `frontend/src/app/features/auth/register/register.spec.ts` -- removido `refreshToken` del mock de `AuthResponse`.
+
+### 2026-05-25 - Code review fixes: reactive auth token state and test cleanup
+
+- `frontend/src/app/core/services/auth.ts` -- auth token moved to an internal signal so `isAuthenticated` depends only on reactive state; `saveAuthResponse()` now updates token/user state consistently; `clearAuth()` resets both; persisted optional branch fields are validated before hydration.
+- `frontend/src/app/core/interceptors/auth-interceptor.ts` -- extracted backend API URL check into `isBackendApiRequest()` helper for clearer future API base URL changes.
+- `frontend/src/app/core/services/auth.spec.ts` -- deduplicated localStorage test setup with `stubLocalStorage()` and added malformed optional branch field coverage.

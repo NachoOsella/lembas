@@ -35,7 +35,6 @@ describe('Register component', () => {
 
   const successResponse: AuthResponse = {
     token: 'jwt-access-token',
-    refreshToken: 'jwt-refresh-token',
     user: {
       id: 1,
       email: 'frodo@lembas.com',

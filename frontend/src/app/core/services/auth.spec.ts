@@ -4,6 +4,26 @@ import { provideHttpClient } from '@angular/common/http';
 
 import { AuthResponse, AuthService, RegisterRequest } from './auth';
 
+/** Stubs localStorage with an in-memory store and returns the backing object. */
+function stubLocalStorage(): Record<string, string> {
+  const store: Record<string, string> = {};
+
+  vi.stubGlobal('localStorage', {
+    getItem: vi.fn((key: string): string | null => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string): void => {
+      store[key] = value;
+    }),
+    removeItem: vi.fn((key: string): void => {
+      delete store[key];
+    }),
+    clear: vi.fn((): void => {
+      Object.keys(store).forEach((key) => delete store[key]);
+    }),
+  });
+
+  return store;
+}
+
 describe('Auth service', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
@@ -20,6 +40,7 @@ describe('Auth service', () => {
 
   afterEach(() => {
     httpMock.verify();
+    vi.unstubAllGlobals();
   });
 
   const validRequest: RegisterRequest = {
@@ -32,7 +53,6 @@ describe('Auth service', () => {
 
   const successResponse: AuthResponse = {
     token: 'jwt-access-token',
-    refreshToken: 'jwt-refresh-token',
     user: {
       id: 1,
       email: 'frodo@lembas.com',
@@ -50,7 +70,6 @@ describe('Auth service', () => {
       service.register(validRequest).subscribe({
         next: (response) => {
           expect(response.token).toBe('jwt-access-token');
-          expect(response.refreshToken).toBe('jwt-refresh-token');
           expect(response.user.email).toBe('frodo@lembas.com');
           expect(response.user.role).toBe('CUSTOMER');
         },
@@ -164,6 +183,141 @@ describe('Auth service', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/register`);
       req.error(new ProgressEvent('network error'));
+    });
+  });
+
+  describe('token persistence', () => {
+    /** In-memory store to simulate localStorage. */
+    let store: Record<string, string>;
+
+    beforeEach(() => {
+      store = stubLocalStorage();
+    });
+
+    /** Should store access token and user in localStorage when saveAuthResponse is called. */
+    it('Should_persistTokenAndUser_when_saveAuthResponse', () => {
+      service.saveAuthResponse(successResponse);
+
+      expect(store['lembas_access_token']).toBe('jwt-access-token');
+      const storedUser = JSON.parse(store['lembas_user']);
+      expect(storedUser).toEqual(expect.objectContaining({ email: 'frodo@lembas.com' }));
+    });
+
+    /** Should return the stored token via getAccessToken. */
+    it('Should_returnToken_when_tokenIsStored', () => {
+      service.saveAuthResponse(successResponse);
+
+      expect(service.getAccessToken()).toBe('jwt-access-token');
+    });
+
+    /** Should return null from getAccessToken when no token is stored. */
+    it('Should_returnNull_when_noToken', () => {
+      expect(service.getAccessToken()).toBeNull();
+    });
+
+    /** Should set isAuthenticated to true after saveAuthResponse. */
+    it('Should_markAuthenticated_afterSaveAuthResponse', () => {
+      service.saveAuthResponse(successResponse);
+
+      expect(service.isAuthenticated()).toBe(true);
+      expect(service.currentUser()?.email).toBe('frodo@lembas.com');
+    });
+
+    /** Should remove token and user from localStorage when clearAuth is called. */
+    it('Should_removePersistedAuth_onClearAuth', () => {
+      service.saveAuthResponse(successResponse);
+      service.clearAuth();
+
+      expect(service.isAuthenticated()).toBe(false);
+      expect(service.currentUser()).toBeNull();
+      expect(store['lembas_access_token']).toBeUndefined();
+      expect(store['lembas_user']).toBeUndefined();
+    });
+  });
+
+  describe('hydration', () => {
+    /** In-memory store to simulate localStorage. */
+    let store: Record<string, string>;
+
+    /** Creates a fresh AuthService after stubbing localStorage. */
+    function createHydratedService(): AuthService {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [provideHttpClient(), provideHttpClientTesting()],
+      });
+      return TestBed.inject(AuthService);
+    }
+
+    beforeEach(() => {
+      store = stubLocalStorage();
+    });
+
+    /** Should hydrate the user when both token and user are stored. */
+    it('Should_hydrateUser_when_tokenAndUserExistInStorage', () => {
+      store['lembas_access_token'] = 'jwt-access-token';
+      store['lembas_user'] = JSON.stringify(successResponse.user);
+
+      const hydratedService = createHydratedService();
+
+      expect(hydratedService.isAuthenticated()).toBe(true);
+      expect(hydratedService.currentUser()?.email).toBe('frodo@lembas.com');
+    });
+
+    /** Should not hydrate user when token is missing but stale user data exists. */
+    it('Should_notHydrateUser_when_tokenIsMissing', () => {
+      store['lembas_user'] = JSON.stringify(successResponse.user);
+
+      const hydratedService = createHydratedService();
+
+      expect(hydratedService.isAuthenticated()).toBe(false);
+      expect(hydratedService.currentUser()).toBeNull();
+      expect(store['lembas_user']).toBeUndefined();
+    });
+
+    /** Should not hydrate user when stored user data has invalid shape. */
+    it('Should_notHydrateUser_when_storedUserIsMalformed', () => {
+      store['lembas_access_token'] = 'jwt-access-token';
+      store['lembas_user'] = JSON.stringify({ id: 'not-a-number', email: 'bad' });
+
+      const hydratedService = createHydratedService();
+
+      expect(hydratedService.isAuthenticated()).toBe(false);
+      expect(hydratedService.currentUser()).toBeNull();
+      expect(store['lembas_user']).toBeUndefined();
+    });
+
+    /** Should not hydrate user when stored user has an invalid role. */
+    it('Should_notHydrateUser_when_roleIsInvalid', () => {
+      store['lembas_access_token'] = 'jwt-access-token';
+      store['lembas_user'] = JSON.stringify({
+        id: 2,
+        email: 'bad@role.com',
+        firstName: 'Bad',
+        lastName: 'Role',
+        role: 'SUPER_ADMIN',
+      });
+
+      const hydratedService = createHydratedService();
+
+      expect(hydratedService.isAuthenticated()).toBe(false);
+      expect(hydratedService.currentUser()).toBeNull();
+      expect(hydratedService.getAccessToken()).toBeNull();
+    });
+
+    /** Should not hydrate user when optional branch fields are malformed. */
+    it('Should_notHydrateUser_when_optionalBranchFieldsAreMalformed', () => {
+      store['lembas_access_token'] = 'jwt-access-token';
+      store['lembas_user'] = JSON.stringify({
+        ...successResponse.user,
+        branchId: 'not-a-number',
+        branchName: 123,
+      });
+
+      const hydratedService = createHydratedService();
+
+      expect(hydratedService.isAuthenticated()).toBe(false);
+      expect(hydratedService.currentUser()).toBeNull();
+      expect(hydratedService.getAccessToken()).toBeNull();
     });
   });
 });
