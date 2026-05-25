@@ -1,0 +1,20 @@
+<div class="app-tabs" role="tablist" [class.app-tabs--scrollable]="scrollable()">
+  @for (item of items(); track $index) {
+    <button
+      type="button"
+      role="tab"
+      class="app-tabs__tab"
+      [class.app-tabs__tab--active]="activeIndex() === $index"
+      [class.app-tabs__tab--disabled]="item.disabled"
+      [attr.aria-selected]="activeIndex() === $index"
+      [attr.aria-disabled]="item.disabled"
+      (click)="onTabClick($index, item)"
+    >
+      @if (item.icon) {
+        <i [class]="item.icon" aria-hidden="true" class="app-tabs__icon"></i>
+      }
+      <span>{{ item.label }}</span>
+    </button>
+  }
+  <div class="app-tabs__indicator" [style.transform]="'translateX(' + (activeIndex() * 100) + '%)'"></div>
+</div>

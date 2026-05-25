@@ -1,0 +1,25 @@
+<div class="search-bar">
+  <app-input
+    [type]="'text'"
+    [placeholder]="placeholder()"
+    [size]="size()"
+    [disabled]="disabled()"
+    [prefixIcon]="'pi pi-search'"
+    [(value)]="value"
+    (blur)="onEnter()"
+    [ariaLabel]="placeholder()"
+  />
+
+  @if (value()) {
+    <p-button
+      icon="pi pi-times"
+      severity="secondary"
+      text="true"
+      rounded="true"
+      size="small"
+      styleClass="search-bar__clear"
+      ariaLabel="Limpiar busqueda"
+      (onClick)="onClear()"
+    />
+  }
+</div>

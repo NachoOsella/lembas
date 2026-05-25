@@ -1,0 +1,81 @@
+:host {
+  display: block;
+}
+
+:host ::ng-deep .app-data-table {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+:host ::ng-deep .app-data-table .p-datatable-header,
+:host ::ng-deep .app-data-table .p-datatable-footer {
+  background: transparent;
+  border: none;
+  padding: 1rem 1.25rem;
+}
+
+:host ::ng-deep .app-data-table .p-datatable-thead > tr > th {
+  background: rgba(47, 141, 114, 0.04);
+  color: var(--color-text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+:host ::ng-deep .app-data-table .p-datatable-thead > tr > th .p-sortable-column-icon {
+  color: var(--color-primary);
+  margin-left: 0.35rem;
+}
+
+:host ::ng-deep .app-data-table .p-datatable-tbody > tr {
+  transition: background-color 0.15s ease;
+}
+
+:host ::ng-deep .app-data-table .p-datatable-tbody > tr:hover {
+  background: rgba(47, 141, 114, 0.03);
+}
+
+:host ::ng-deep .app-data-table .p-datatable-tbody > tr > td {
+  color: var(--color-text);
+  font-size: 0.92rem;
+  letter-spacing: var(--tracking-tight);
+  padding: 0.85rem 1rem;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+:host ::ng-deep .app-data-table .p-datatable-tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+:host ::ng-deep .app-data-table .p-paginator {
+  background: transparent;
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 0.75rem 1rem;
+}
+
+:host ::ng-deep .app-data-table .p-paginator-page.p-highlight {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+:host ::ng-deep .app-data-table .p-paginator-page:hover,
+:host ::ng-deep .app-data-table .p-paginator-first:hover,
+:host ::ng-deep .app-data-table .p-paginator-prev:hover,
+:host ::ng-deep .app-data-table .p-paginator-next:hover,
+:host ::ng-deep .app-data-table .p-paginator-last:hover {
+  background: rgba(47, 141, 114, 0.08);
+  color: var(--color-primary);
+}
+
+.app-data-table__row {
+  cursor: pointer;
+}

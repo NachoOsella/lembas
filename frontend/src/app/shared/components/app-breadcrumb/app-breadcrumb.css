@@ -1,0 +1,49 @@
+:host {
+  display: block;
+}
+
+:host ::ng-deep .app-breadcrumb {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0;
+}
+
+:host ::ng-deep .app-breadcrumb .p-breadcrumb-list {
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  letter-spacing: var(--tracking-tight);
+}
+
+:host ::ng-deep .app-breadcrumb .p-menuitem-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+  border-radius: 4px;
+  padding: 0.15rem 0.25rem;
+}
+
+:host ::ng-deep .app-breadcrumb .p-menuitem-link:hover {
+  color: var(--color-primary-dark);
+  background: rgba(47, 141, 114, 0.06);
+}
+
+:host ::ng-deep .app-breadcrumb .p-menuitem-text {
+  color: inherit;
+}
+
+:host ::ng-deep .app-breadcrumb .p-menuitem-separator {
+  color: rgba(0, 0, 0, 0.28);
+  font-size: 0.8rem;
+}
+
+:host ::ng-deep .app-breadcrumb .p-menuitem:last-child .p-menuitem-link {
+  color: var(--color-text-muted);
+  font-weight: 400;
+  pointer-events: none;
+  background: transparent;
+}
+
+:host ::ng-deep .app-breadcrumb .p-menuitem:last-child .p-menuitem-text {
+  color: var(--color-text-muted);
+}

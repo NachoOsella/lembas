@@ -1,0 +1,31 @@
+<article class="stat-card" [class]="'stat-card--' + tone()">
+  <div class="stat-card__header">
+    @if (icon()) {
+      <span class="stat-card__icon" aria-hidden="true">
+        <i [class]="icon()"></i>
+      </span>
+    }
+    <span class="stat-card__label">{{ label() }}</span>
+  </div>
+
+  <div class="stat-card__body">
+    <span class="stat-card__value">{{ value() }}</span>
+
+    @if (trendValue()) {
+      <span class="stat-card__trend" [class]="'stat-card__trend--' + trend()">
+        @switch (trend()) {
+          @case ('up') {
+            <i class="pi pi-arrow-up" aria-hidden="true"></i>
+          }
+          @case ('down') {
+            <i class="pi pi-arrow-down" aria-hidden="true"></i>
+          }
+          @default {
+            <i class="pi pi-minus" aria-hidden="true"></i>
+          }
+        }
+        {{ trendValue() }}
+      </span>
+    }
+  </div>
+</article>

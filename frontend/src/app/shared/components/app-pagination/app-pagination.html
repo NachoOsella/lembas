@@ -1,0 +1,10 @@
+<p-paginator
+  [totalRecords]="totalRecords()"
+  [rows]="rows()"
+  [first]="first()"
+  [rowsPerPageOptions]="rowsPerPageOptions()"
+  [showCurrentPageReport]="showCurrentPageReport()"
+  [currentPageReportTemplate]="currentPageReportTemplate()"
+  styleClass="app-pagination"
+  (onPageChange)="onPageChange($event)"
+/>
