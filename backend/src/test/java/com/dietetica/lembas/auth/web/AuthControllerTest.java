@@ -1,12 +1,16 @@
 package com.dietetica.lembas.auth.web;
 
 import com.dietetica.lembas.auth.dto.AuthResponse;
+import com.dietetica.lembas.auth.dto.LoginRequest;
 import com.dietetica.lembas.auth.dto.RegisterRequest;
 import com.dietetica.lembas.auth.dto.UserDto;
 import com.dietetica.lembas.auth.service.AuthService;
+import com.dietetica.lembas.auth.service.JwtAuthenticationFilter;
+import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
 import com.dietetica.lembas.users.model.Role;
+import com.dietetica.lembas.users.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,6 +44,12 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private SecurityContextHelper securityContextHelper;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
      * Verifies that a valid registration request delegates to the service and returns 201.
@@ -103,6 +114,91 @@ class AuthControllerTest {
     }
 
     /**
+     * Verifies that a valid login request returns 200 with tokens.
+     */
+    @Test
+    void Should_returnOkAuthResponse_when_loginCredentialsAreValid() throws Exception {
+        AuthResponse response = new AuthResponse(
+                "access-token",
+                "refresh-token",
+                new UserDto(1L, "frodo@lembas.com", "Frodo", "Baggins", Role.CUSTOMER, null, null)
+        );
+        when(authService.authenticate(any(LoginRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validLogin())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("refresh-token"))
+                .andExpect(jsonPath("$.user.email").value("frodo@lembas.com"));
+
+        verify(authService).authenticate(any(LoginRequest.class));
+    }
+
+    /**
+     * Verifies that invalid credentials return 401 with the documented error code.
+     */
+    @Test
+    void Should_returnUnauthorized_when_credentialsAreInvalid() throws Exception {
+        when(authService.authenticate(any(LoginRequest.class))).thenThrow(new DomainException(
+                "INVALID_CREDENTIALS",
+                HttpStatus.UNAUTHORIZED,
+                "Invalid email or password"
+        ));
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validLogin())))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
+    }
+
+    /**
+     * Verifies that disabled accounts return 403 with the documented error code.
+     */
+    @Test
+    void Should_returnForbidden_when_accountIsDisabled() throws Exception {
+        when(authService.authenticate(any(LoginRequest.class))).thenThrow(new DomainException(
+                "ACCOUNT_DISABLED",
+                HttpStatus.FORBIDDEN,
+                "Your account has been disabled"
+        ));
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validLogin())))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.code").value("ACCOUNT_DISABLED"));
+    }
+
+    /**
+     * Verifies GET /api/auth/me returns the authenticated user's profile.
+     */
+    @Test
+    void Should_returnUserProfile_when_meEndpointIsCalled() throws Exception {
+        User currentUser = new User(1L, null, "frodo@lembas.com", "hash", "Frodo", "Baggins",
+                null, Role.CUSTOMER, true, null, null);
+        AuthResponse response = new AuthResponse(
+                null,
+                null,
+                new UserDto(1L, "frodo@lembas.com", "Frodo", "Baggins", Role.CUSTOMER, null, null)
+        );
+
+        when(securityContextHelper.getCurrentUser()).thenReturn(currentUser);
+        when(authService.getCurrentUser(currentUser)).thenReturn(response);
+
+        mockMvc.perform(get("/api/auth/me")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").doesNotExist())
+                .andExpect(jsonPath("$.user.email").value("frodo@lembas.com"))
+                .andExpect(jsonPath("$.user.role").value("CUSTOMER"));
+    }
+
+    /**
      * Creates a valid customer registration request for controller tests.
      */
     private RegisterRequest validRequest() {
@@ -113,5 +209,12 @@ class AuthControllerTest {
                 "Str0ng!Pass",
                 "+54 351 123 4567"
         );
+    }
+
+    /**
+     * Creates a valid login request for controller tests.
+     */
+    private LoginRequest validLogin() {
+        return new LoginRequest("frodo@lembas.com", "Str0ng!Pass");
     }
 }
