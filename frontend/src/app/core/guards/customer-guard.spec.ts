@@ -1,17 +1,11 @@
-import { TestBed } from '@angular/core/testing';
-import { CanActivateFn } from '@angular/router';
-
 import { customerGuard } from './customer-guard';
 
-describe('customerGuard', () => {
-  const executeGuard: CanActivateFn = (...guardParameters) =>
-    TestBed.runInInjectionContext(() => customerGuard(...guardParameters));
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-  });
-
-  it('should be created', () => {
-    expect(executeGuard).toBeTruthy();
+/**
+ * Customer guard re-exports from the unified auth-guard module.
+ * Full behavioral tests live in auth-guard.spec.ts.
+ */
+describe('customerGuard (re-export)', () => {
+  it('should be defined', () => {
+    expect(customerGuard).toBeDefined();
   });
 });

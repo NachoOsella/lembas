@@ -5,6 +5,9 @@ import { Observable } from 'rxjs';
 /** Key used to persist the JWT access token in localStorage. */
 const ACCESS_TOKEN_KEY = 'lembas_access_token';
 
+/** Key used to persist the JWT refresh token in localStorage. */
+const REFRESH_TOKEN_KEY = 'lembas_refresh_token';
+
 /** Key used to persist the authenticated user in localStorage. */
 const USER_KEY = 'lembas_user';
 
@@ -55,6 +58,7 @@ export interface ApiErrorResponse {
 /** Response from POST /api/auth/register and POST /api/auth/login. */
 export interface AuthResponse {
   token: string;
+  refreshToken?: string | null;
   user: AuthUser;
 }
 
@@ -64,10 +68,14 @@ export interface AuthResponse {
  * <p>Exposes methods for the public registration and login flows.
  * All HTTP calls go through the configured {@link HttpClient}.</p>
  *
- * <p>The JWT access token and authenticated user are persisted in
- * {@code localStorage} so the session survives full-page reloads.
- * The token is read by {@code AuthInterceptor} and attached to every
+ * <p>The JWT access token, refresh token, and authenticated user are persisted
+ * in {@code localStorage} so the session survives full-page reloads.
+ * The access token is read by {@code AuthInterceptor} and attached to every
  * outgoing HTTP request via the {@code Authorization: Bearer} header.</p>
+ *
+ * <p>Public API: {@link register} / {@link login} for server-side auth,
+ * {@link logout} / {@link getAccessToken} / {@link isAuthenticated} / {@link getUserRole}
+ * for client-side auth state.</p>
  */
 @Injectable({
   providedIn: 'root',
@@ -77,6 +85,9 @@ export class AuthService {
 
   /** Current JWT access token, or null if not logged in. */
   private readonly accessToken: WritableSignal<string | null>;
+
+  /** Current JWT refresh token, or null if not logged in. */
+  private readonly refreshToken: WritableSignal<string | null>;
 
   /** Currently authenticated user, or null if not logged in. */
   readonly currentUser: WritableSignal<AuthUser | null>;
@@ -89,8 +100,10 @@ export class AuthService {
   constructor(private readonly http: HttpClient) {
     const storedToken = this.loadStoredToken();
     const storedUser = storedToken ? this.loadStoredUser() : null;
+    const storedRefreshToken = storedUser ? this.loadStoredRefreshToken() : null;
 
     this.accessToken = signal<string | null>(storedUser ? storedToken : null);
+    this.refreshToken = signal<string | null>(storedUser ? storedRefreshToken : null);
     this.currentUser = signal<AuthUser | null>(storedUser);
 
     // If either part of the persisted session is missing or invalid, clear stale data.
@@ -120,12 +133,40 @@ export class AuthService {
   }
 
   /**
+   * Logs out the current user by clearing all auth state and persisted data.
+   *
+   * <p>Stateless JWT logout: tokens are simply removed client-side. No backend
+   * call is needed since the server does not maintain a session or token blacklist.</p>
+   */
+  logout(): void {
+    this.clearAuth();
+  }
+
+  /**
    * Returns the current JWT access token, or null if the user is not authenticated.
    *
    * @returns the stored access token string, or null
    */
   getAccessToken(): string | null {
     return this.accessToken();
+  }
+
+  /**
+   * Returns whether a user is currently authenticated.
+   *
+   * @returns true when both the current user and access token are present
+   */
+  isAuthenticatedSync(): boolean {
+    return this.isAuthenticated();
+  }
+
+  /**
+   * Returns the role of the currently authenticated user, or null if not logged in.
+   *
+   * @returns the user role ({@code ADMIN}, {@code MANAGER}, {@code EMPLOYEE}, {@code CUSTOMER}), or null
+   */
+  getUserRole(): AuthUser['role'] | null {
+    return this.currentUser()?.role ?? null;
   }
 
   /**
@@ -136,6 +177,10 @@ export class AuthService {
    */
   saveAuthResponse(response: AuthResponse): void {
     this.persistToken(response.token);
+    if (response.refreshToken) {
+      this.persistRefreshToken(response.refreshToken);
+      this.refreshToken.set(response.refreshToken);
+    }
     this.persistUser(response.user);
     this.accessToken.set(response.token);
     this.currentUser.set(response.user);
@@ -146,6 +191,7 @@ export class AuthService {
    */
   clearAuth(): void {
     this.accessToken.set(null);
+    this.refreshToken.set(null);
     this.currentUser.set(null);
     this.removePersistedAuth();
   }
@@ -162,6 +208,15 @@ export class AuthService {
     }
   }
 
+  /** Persists the refresh token to {@code localStorage}. */
+  private persistRefreshToken(token: string): void {
+    try {
+      localStorage.setItem(REFRESH_TOKEN_KEY, token);
+    } catch {
+      /* Storage unavailable -- degrade gracefully */
+    }
+  }
+
   /** Persists the authenticated user to {@code localStorage}. */
   private persistUser(user: AuthUser): void {
     try {
@@ -175,6 +230,7 @@ export class AuthService {
   private removePersistedAuth(): void {
     try {
       localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
     } catch {
       /* Storage unavailable -- degrade gracefully */
@@ -185,6 +241,15 @@ export class AuthService {
   private loadStoredToken(): string | null {
     try {
       return localStorage.getItem(ACCESS_TOKEN_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Loads the stored refresh token on service construction. */
+  private loadStoredRefreshToken(): string | null {
+    try {
+      return localStorage.getItem(REFRESH_TOKEN_KEY);
     } catch {
       return null;
     }

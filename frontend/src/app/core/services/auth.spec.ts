@@ -53,6 +53,7 @@ describe('Auth service', () => {
 
   const successResponse: AuthResponse = {
     token: 'jwt-access-token',
+    refreshToken: 'jwt-refresh-token',
     user: {
       id: 1,
       email: 'frodo@lembas.com',
@@ -186,6 +187,116 @@ describe('Auth service', () => {
     });
   });
 
+  describe('logout', () => {
+    let store: Record<string, string>;
+
+    beforeEach(() => {
+      store = stubLocalStorage();
+    });
+
+    /** Should clear all auth state via logout(). */
+    it('Should_clearAuthState_when_logoutCalled', () => {
+      service.saveAuthResponse(successResponse);
+      expect(service.isAuthenticated()).toBe(true);
+      expect(service.getAccessToken()).not.toBeNull();
+      expect(service.getUserRole()).toBe('CUSTOMER');
+
+      service.logout();
+
+      expect(service.isAuthenticated()).toBe(false);
+      expect(service.currentUser()).toBeNull();
+      expect(service.getAccessToken()).toBeNull();
+      expect(service.getUserRole()).toBeNull();
+      expect(store['lembas_access_token']).toBeUndefined();
+      expect(store['lembas_refresh_token']).toBeUndefined();
+      expect(store['lembas_user']).toBeUndefined();
+    });
+  });
+
+  describe('getUserRole', () => {
+    let store: Record<string, string>;
+
+    beforeEach(() => {
+      store = stubLocalStorage();
+    });
+
+    /** Should return the role of the authenticated user. */
+    it('Should_returnRole_when_userIsAuthenticated', () => {
+      service.saveAuthResponse(successResponse);
+
+      expect(service.getUserRole()).toBe('CUSTOMER');
+    });
+
+    /** Should return null when no user is authenticated. */
+    it('Should_returnNull_when_noUser', () => {
+      expect(service.getUserRole()).toBeNull();
+    });
+  });
+
+  describe('isAuthenticated', () => {
+    let store: Record<string, string>;
+
+    beforeEach(() => {
+      store = stubLocalStorage();
+    });
+
+    /** Should return true after saveAuthResponse. */
+    it('Should_returnTrue_when_userAndTokenPresent', () => {
+      service.saveAuthResponse(successResponse);
+
+      expect(service.isAuthenticated()).toBe(true);
+    });
+
+    /** Should return false when no user is logged in. */
+    it('Should_returnFalse_when_noAuth', () => {
+      expect(service.isAuthenticated()).toBe(false);
+    });
+
+    /** Should return false after logout. */
+    it('Should_returnFalse_afterLogout', () => {
+      service.saveAuthResponse(successResponse);
+      service.logout();
+
+      expect(service.isAuthenticated()).toBe(false);
+    });
+  });
+
+  describe('refreshToken persistence', () => {
+    let store: Record<string, string>;
+
+    beforeEach(() => {
+      store = stubLocalStorage();
+    });
+
+    /** Should persist refresh token alongside access token. */
+    it('Should_persistRefreshToken_when_saveAuthResponseWithRefreshToken', () => {
+      service.saveAuthResponse(successResponse);
+
+      expect(store['lembas_refresh_token']).toBe('jwt-refresh-token');
+    });
+
+    /** Should not persist refresh token when not provided in response. */
+    it('Should_notPersistRefreshToken_when_refreshTokenNotProvided', () => {
+      const responseWithoutRefresh: AuthResponse = {
+        token: 'jwt-access-token',
+        refreshToken: null,
+        user: successResponse.user,
+      };
+
+      service.saveAuthResponse(responseWithoutRefresh);
+
+      expect(store['lembas_refresh_token']).toBeUndefined();
+    });
+
+    /** Should clear refresh token on clearAuth / logout. */
+    it('Should_clearRefreshToken_onClearAuth', () => {
+      service.saveAuthResponse(successResponse);
+      service.clearAuth();
+
+      expect(store['lembas_refresh_token']).toBeUndefined();
+    });
+  });
+
   describe('token persistence', () => {
     /** In-memory store to simulate localStorage. */
     let store: Record<string, string>;
@@ -261,6 +372,19 @@ describe('Auth service', () => {
 
       expect(hydratedService.isAuthenticated()).toBe(true);
       expect(hydratedService.currentUser()?.email).toBe('frodo@lembas.com');
+      expect(hydratedService.getUserRole()).toBe('CUSTOMER');
+    });
+
+    /** Should hydrate refresh token when stored. */
+    it('Should_hydrateRefreshToken_when_presentInStorage', () => {
+      store['lembas_access_token'] = 'jwt-access-token';
+      store['lembas_refresh_token'] = 'jwt-refresh-token';
+      store['lembas_user'] = JSON.stringify(successResponse.user);
+
+      const hydratedService = createHydratedService();
+
+      expect(hydratedService.isAuthenticated()).toBe(true);
+      expect(hydratedService.getAccessToken()).toBe('jwt-access-token');
     });
 
     /** Should not hydrate user when token is missing but stale user data exists. */
