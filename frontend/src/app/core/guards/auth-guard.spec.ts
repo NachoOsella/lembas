@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
-import { authGuard, adminGuard, customerGuard } from './auth-guard';
+import { authGuard, adminGuard, customerGuard, guestGuard } from './auth-guard';
 import { AuthService } from '../services/auth';
 
 /** Role abbreviations accepted by the mock service. */
@@ -98,6 +98,36 @@ describe('Admin guard', () => {
     expect(result).not.toBe(false);
     expect(result).not.toBe(true);
     expect((result as any)?.root?.children?.primary?.segments?.[0]?.path).toBe('store');
+  });
+});
+
+describe('Guest guard', () => {
+  it('Should_returnTrue_when_notAuthenticated', () => {
+    setupGuard({ isAuthenticated: false });
+
+    const result = TestBed.runInInjectionContext(() => guestGuard({} as any, {} as any));
+
+    expect(result).toBe(true);
+  });
+
+  it('Should_redirectToStore_when_roleIsCustomer', () => {
+    setupGuard({ isAuthenticated: true, role: 'CUSTOMER' });
+
+    const result = TestBed.runInInjectionContext(() => guestGuard({} as any, {} as any));
+
+    expect(result).not.toBe(false);
+    expect(result).not.toBe(true);
+    expect((result as any)?.root?.children?.primary?.segments?.[0]?.path).toBe('store');
+  });
+
+  it('Should_redirectToAdmin_when_roleIsStaff', () => {
+    setupGuard({ isAuthenticated: true, role: 'ADMIN' });
+
+    const result = TestBed.runInInjectionContext(() => guestGuard({} as any, {} as any));
+
+    expect(result).not.toBe(false);
+    expect(result).not.toBe(true);
+    expect((result as any)?.root?.children?.primary?.segments?.[0]?.path).toBe('admin');
   });
 });
 

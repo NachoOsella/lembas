@@ -49,6 +49,32 @@ export const adminGuard: CanActivateFn = (_route, _state) => {
 };
 
 /**
+ * Route guard that allows access only to unauthenticated (guest) users.
+ *
+ * <p>Authenticated users are redirected to their home area:
+ * {@code CUSTOMER} -> {@code /store}, staff -> {@code /admin}.</p>
+ *
+ * <p>Applied to {@code /auth/login} and {@code /auth/register} to prevent
+ * logged-in users from seeing the auth forms.</p>
+ *
+ * @returns true when not authenticated, a redirect UrlTree otherwise
+ */
+export const guestGuard: CanActivateFn = (_route, _state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.isAuthenticated()) {
+    return true;
+  }
+
+  const role = authService.getUserRole();
+  if (role === 'CUSTOMER') {
+    return router.createUrlTree(['/store']);
+  }
+  return router.createUrlTree(['/admin']);
+};
+
+/**
  * Route guard that allows access only to CUSTOMER users.
  *
  * @returns true when the user is authenticated and has the CUSTOMER role
