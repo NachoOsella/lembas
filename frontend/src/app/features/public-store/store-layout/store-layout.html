@@ -29,8 +29,30 @@
 
       <!-- Actions: col 3 on desktop, row 1 col 2 on mobile -->
       <div class="flex items-center gap-2 md:gap-3 justify-end min-w-0 max-md:col-start-2 max-md:row-start-1" aria-label="Acciones de cuenta y compra">
-        <a routerLink="/auth/login" class="store-header__login text-text rounded-pill text-[0.92rem] font-[650] no-underline transition-all duration-200 py-2 px-1 hover:text-accent hidden md:inline">Ingresar</a>
-        <a routerLink="/auth/register" class="bg-accent border border-accent text-white rounded-pill text-[0.85rem] md:text-[0.92rem] font-[650] no-underline transition-all duration-200 py-[0.55rem] px-3 md:px-4 active:scale-95 whitespace-nowrap">Crear cuenta</a>
+        @if (isLoggedIn()) {
+          <!-- Authenticated user: name + dropdown -->
+          <span class="store-header__user-name hidden md:inline">{{ userDisplayName() }}</span>
+          <button
+            #storeUserMenuTrigger
+            class="store-header__menu-trigger"
+            aria-label="Abrir menu de usuario"
+            (click)="userMenu.toggle($event)"
+          >
+            <i class="pi pi-user" aria-hidden="true"></i>
+            <i class="pi pi-chevron-down text-[0.7rem]" aria-hidden="true"></i>
+          </button>
+          <p-menu
+            #userMenu
+            [model]="userMenuItems"
+            [popup]="true"
+            appendTo="body"
+            aria-label="Opciones de usuario"
+          />
+        } @else {
+          <!-- Guest: login / register links -->
+          <a routerLink="/auth/login" class="store-header__login text-text rounded-pill text-[0.92rem] font-[650] no-underline transition-all duration-200 py-2 px-1 hover:text-accent hidden md:inline">Ingresar</a>
+          <a routerLink="/auth/register" class="bg-accent border border-accent text-white rounded-pill text-[0.85rem] md:text-[0.92rem] font-[650] no-underline transition-all duration-200 py-[0.55rem] px-3 md:px-4 active:scale-95 whitespace-nowrap">Crear cuenta</a>
+        }
         <a routerLink="/customer/checkout" class="relative flex items-center justify-center size-10 text-primary no-underline transition-all duration-200 hover:text-accent" aria-label="Ver carrito">
           <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="fill-none stroke-current stroke-2 [stroke-linecap:round] [stroke-linejoin:round]">
             <path d="M6.5 8.5h11l-1 10h-9l-1-10Z" />

@@ -58,13 +58,28 @@
       />
 
       <div class="topbar__user">
-        <span class="topbar__user-name">Admin</span>
+        <span class="topbar__user-name">{{ userDisplayName() }}</span>
         <p-avatar
           icon="pi pi-user"
           size="normal"
           styleClass="topbar__avatar"
           shape="circle"
           ariaLabel="Menu de usuario"
+        />
+        <button
+          #userMenuTrigger
+          class="topbar__menu-trigger"
+          aria-label="Abrir menu de usuario"
+          (click)="userMenu.toggle($event)"
+        >
+          <i class="pi pi-chevron-down" aria-hidden="true"></i>
+        </button>
+        <p-menu
+          #userMenu
+          [model]="userMenuItems"
+          [popup]="true"
+          appendTo="body"
+          aria-label="Opciones de usuario"
         />
       </div>
     </header>

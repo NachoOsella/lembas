@@ -191,6 +191,26 @@
   color: #ffffff;
 }
 
+.topbar__menu-trigger {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  font-size: 0.8rem;
+  justify-content: center;
+  height: 1.5rem;
+  margin-left: -0.25rem;
+  padding: 0;
+  width: 1.5rem;
+  transition: color 0.15s ease;
+}
+
+.topbar__menu-trigger:hover {
+  color: var(--color-text);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Page content                                                       */
 /* ------------------------------------------------------------------ */

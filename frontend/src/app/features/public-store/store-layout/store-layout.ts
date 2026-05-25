@@ -1,5 +1,10 @@
-import { Component, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
+
+import { AuthService } from '../../../core/services/auth';
 
 interface FooterLink {
   readonly label: string;
@@ -19,13 +24,44 @@ interface StoreNavItem {
 
 @Component({
   selector: 'app-store-layout',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, ButtonModule, MenuModule],
   templateUrl: './store-layout.html',
   styleUrl: './store-layout.css',
 })
 /** Provides the public store shell with branded navigation, cart access, and footer. */
 export class StoreLayout {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
   protected readonly cartItemsCount = signal(0);
+
+  /** Whether a user is currently logged in. */
+  protected readonly isLoggedIn = computed(() => this.auth.isAuthenticated());
+
+  /** Display name for the logged-in user (email or first name). */
+  protected readonly userDisplayName = computed(() => {
+    const user = this.auth.currentUser();
+    if (!user) return '';
+    if (user.firstName) return user.firstName;
+    return user.email;
+  });
+
+  /** Dropdown menu items for the user avatar in the store topbar. */
+  protected readonly userMenuItems: MenuItem[] = [
+    {
+      label: 'Mis pedidos',
+      icon: 'pi pi-receipt',
+      routerLink: '/customer/orders',
+    },
+    {
+      separator: true,
+    },
+    {
+      label: 'Cerrar sesion',
+      icon: 'pi pi-sign-out',
+      command: () => this.logout(),
+    },
+  ];
 
   protected readonly navItems: readonly StoreNavItem[] = [
     { label: 'Tienda', path: '/store' },
@@ -57,4 +93,12 @@ export class StoreLayout {
       ],
     },
   ];
+
+  /**
+   * Logs out the current user and navigates to the store home page.
+   */
+  logout(): void {
+    this.auth.logout();
+    this.router.navigate(['/store']);
+  }
 }
