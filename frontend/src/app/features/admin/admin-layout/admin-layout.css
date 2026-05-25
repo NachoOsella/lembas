@@ -2,19 +2,25 @@
   display: contents;
 }
 
-.admin-shell {
-  display: flex;
-  min-height: 100vh;
+/* ====================================================================
+   Admin Shell — Forest Green sidebar + white topbar + cream content
+   Follows Lembas DESING.md: color-block rhythm, 12px radius, pill buttons,
+   tight tracking, Forest Green (#075f36) for dark surfaces, cream canvas.
+   ==================================================================== */
+
+.admin {
   background: var(--color-canvas);
   color: var(--color-text);
   font-family: var(--font-sans);
   letter-spacing: var(--tracking-tight);
+  min-height: 100vh;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Sidebar                                                            */
+/*  Sidebar (Forest Green - #075f36)                                   */
 /* ------------------------------------------------------------------ */
-.sidebar {
+
+.admin__sidebar {
   background: var(--color-primary-dark);
   color: #ffffff;
   display: flex;
@@ -24,109 +30,121 @@
   overflow: hidden;
   position: sticky;
   top: 0;
-  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   width: 15rem;
   z-index: 30;
 }
 
-.sidebar--collapsed {
-  width: 4rem;
+.admin__sidebar--collapsed {
+  width: 4.2rem;
 }
 
-.sidebar__brand {
-  align-items: center;
+/* Sidebar brand */
+.admin__sidebar-brand {
   display: flex;
-  gap: 0.75rem;
-  height: 4rem;
-  min-height: 4rem;
-  padding: 0 0.75rem;
+  align-items: center;
+  height: 3.8rem;
+  min-height: 3.8rem;
+  padding: 0 0.85rem;
 }
 
-.sidebar__logo {
+.admin__sidebar-logo {
   flex-shrink: 0;
   object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
-.sidebar__title {
-  font-size: 1.05rem;
-  font-weight: 750;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  overflow: hidden;
-  white-space: nowrap;
+/* Subtle divider */
+.admin__sidebar-divider {
+  height: 1px;
+  margin: 0 0.85rem;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* Nav items */
-.sidebar__nav {
+.admin__sidebar-nav {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.12rem;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 0.5rem 0.5rem;
+  padding: 0.65rem 0.5rem;
 }
 
-.sidebar__link {
-  align-items: center;
-  border-radius: 0.5rem;
-  color: rgba(255, 255, 255, 0.7);
+.admin__nav-link {
   display: flex;
-  font-size: 0.9rem;
-  font-weight: 550;
-  gap: 0.75rem;
-  line-height: 1.2;
+  align-items: center;
+  gap: 0.7rem;
   min-height: 2.5rem;
-  padding: 0.45rem 0.75rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.88rem;
+  font-weight: 500;
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
   white-space: nowrap;
 }
 
-.sidebar__link:hover {
-  background: rgba(255, 255, 255, 0.08);
+.admin__nav-link:hover {
+  background: rgba(255, 255, 255, 0.07);
   color: #ffffff;
 }
 
-.sidebar__link--active {
-  background: rgba(255, 255, 255, 0.12);
+.admin__nav-link--active {
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
+  font-weight: 600;
 }
 
-.sidebar__link i {
+.admin__nav-icon {
   flex-shrink: 0;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   width: 1.25rem;
   text-align: center;
 }
 
-.sidebar__link span {
+.admin__nav-label {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Sidebar footer collapse button */
-.sidebar__footer {
-  align-items: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+/* Sidebar footer: collapse button */
+.admin__sidebar-footer {
   display: flex;
+  align-items: center;
   justify-content: center;
-  min-height: 3.5rem;
-  padding: 0.5rem;
+  min-height: 3.2rem;
+  padding: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.sidebar__footer ::ng-deep .p-button {
-  color: rgba(255, 255, 255, 0.5);
+.admin__collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.sidebar__footer ::ng-deep .p-button:hover {
+.admin__collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Main area                                                          */
+/*  Main Area                                                          */
 /* ------------------------------------------------------------------ */
-.main-area {
+
+.admin__main {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -134,103 +152,160 @@
 }
 
 /* ------------------------------------------------------------------ */
-/*  Topbar                                                             */
+/*  Topbar (White surface)                                             */
 /* ------------------------------------------------------------------ */
-.topbar {
+
+.admin__topbar {
+  display: flex;
   align-items: center;
+  gap: 1rem;
+  height: 3.8rem;
+  min-height: 3.8rem;
+  padding: 0 var(--spacing-xl);
   background: var(--color-surface);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  display: flex;
-  gap: 1rem;
-  height: 4rem;
-  justify-content: space-between;
-  min-height: 4rem;
-  padding: 0 var(--spacing-xl);
   position: sticky;
   top: 0;
   z-index: 20;
 }
 
-.topbar__breadcrumb {
-  border: 0;
+/* Custom breadcrumbs (no PrimeNG dependency) */
+.admin__breadcrumb-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   flex: 1;
   min-width: 0;
-  padding: 0;
+  overflow: auto;
+  scrollbar-width: none;
 }
 
-:host ::ng-deep .topbar__breadcrumb .p-breadcrumb-list {
-  gap: 0.25rem;
+.admin__breadcrumb-wrap::-webkit-scrollbar {
+  display: none;
 }
 
-:host ::ng-deep .topbar__breadcrumb .p-breadcrumb-item-label {
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-:host ::ng-deep .topbar__breadcrumb .p-breadcrumb-item-current .p-breadcrumb-item-label {
-  color: var(--color-text);
-  font-weight: 650;
-}
-
-.topbar__user {
-  align-items: center;
+.admin__breadcrumb-item {
   display: flex;
-  gap: 0.65rem;
-  flex-shrink: 0;
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-.topbar__user-name {
+.admin__breadcrumb-item--active {
   color: var(--color-text);
-  font-size: 0.9rem;
   font-weight: 600;
 }
 
-.topbar__avatar {
-  background: var(--color-primary);
-  color: #ffffff;
-}
-
-.topbar__menu-trigger {
-  align-items: center;
-  background: none;
-  border: 0;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  display: flex;
-  font-size: 0.8rem;
-  justify-content: center;
-  height: 1.5rem;
-  margin-left: -0.25rem;
-  padding: 0;
-  width: 1.5rem;
+.admin__breadcrumb-link {
+  color: inherit;
+  text-decoration: none;
   transition: color 0.15s ease;
 }
 
-.topbar__menu-trigger:hover {
+.admin__breadcrumb-link:hover {
+  color: var(--color-primary);
+}
+
+.admin__breadcrumb-sep {
+  font-size: 0.6rem;
+  color: rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+/* User area */
+.admin__user-area {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.admin__user-name {
+  color: var(--color-text);
+  font-size: 0.87rem;
+  font-weight: 600;
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+.admin__user-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  margin-left: -0.2rem;
+  transition: color 0.15s ease;
+}
+
+.admin__user-menu-btn:hover {
   color: var(--color-text);
 }
 
 /* ------------------------------------------------------------------ */
-/*  Page content                                                       */
+/*  Page Content                                                       */
 /* ------------------------------------------------------------------ */
-.page-content {
+
+.admin__content {
   flex: 1;
   padding: var(--spacing-xl);
 }
 
+/* ------------------------------------------------------------------ */
+/*  Responsive                                                         */
+/* ------------------------------------------------------------------ */
+
 @media (max-width: 48rem) {
-  .sidebar {
+  .admin {
+    flex-direction: column;
+  }
+
+  .admin__sidebar {
     width: 100%;
     height: auto;
     position: static;
   }
 
-  .sidebar--collapsed {
+  .admin__sidebar--collapsed {
     width: 100%;
   }
 
-  .admin-shell {
-    flex-direction: column;
+  .admin__sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    overflow-x: auto;
+    padding: 0.5rem;
+  }
+
+  .admin__nav-link {
+    padding: 0.35rem 0.6rem;
+    min-height: 2.2rem;
+    font-size: 0.8rem;
+  }
+
+  .admin__sidebar-footer {
+    display: none;
   }
 }

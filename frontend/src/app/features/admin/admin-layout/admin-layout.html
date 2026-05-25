@@ -1,74 +1,91 @@
-<div class="admin-shell">
-  <!-- Sidebar -->
+<div class="admin bg-canvas text-text font-sans tracking-tight min-h-screen flex" role="document">
+
+  <!-- ===== Sidebar (Forest Green) ===== -->
   <aside
-    class="sidebar"
-    [class.sidebar--collapsed]="collapsed()"
-    aria-label="Barra de navegacion del panel"
+    class="admin__sidebar"
+    [class.admin__sidebar--collapsed]="collapsed()"
+    aria-label="Navegacion del panel de administracion"
   >
-    <div class="sidebar__brand">
-      <img
-        src="/brand/lembas-icon.svg?v=4"
-        alt="Lembas"
-        width="40"
-        height="40"
-        class="sidebar__logo"
-      />
-      @if (!collapsed()) {
-        <span class="sidebar__title">Lembas Admin</span>
-      }
+    <!-- Brand -->
+    <div class="admin__sidebar-brand">
+      <a routerLink="/admin/dashboard"
+         class="flex items-center gap-[0.65rem] no-underline shrink-0"
+         aria-label="Ir al dashboard">
+        <img src="/brand/lembas-icon.svg?v=4" alt=""
+             width="34" height="34"
+             class="admin__sidebar-logo" />
+        @if (!collapsed()) {
+          <div class="flex flex-col leading-tight overflow-hidden">
+            <strong class="text-white text-[0.95rem] font-semibold tracking-[-0.02em] truncate">Lembas</strong>
+            <small class="text-white/45 text-[0.62rem] font-semibold tracking-[0.12em] uppercase truncate">Admin</small>
+          </div>
+        }
+      </a>
     </div>
 
-    <nav class="sidebar__nav" aria-label="Secciones de administracion">
+    <!-- Divider -->
+    <div class="admin__sidebar-divider"></div>
+
+    <!-- Nav items -->
+    <nav class="admin__sidebar-nav" aria-label="Secciones de administracion">
       @for (item of navItems; track item.route) {
         <a
           [routerLink]="item.route"
-          routerLinkActive="sidebar__link--active"
-          [routerLinkActiveOptions]="{ exact: false }"
-          class="sidebar__link"
+          routerLinkActive="admin__nav-link--active"
+          [routerLinkActiveOptions]="{ exact: item.route === '/admin/dashboard' ? true : false }"
+          class="admin__nav-link"
           [attr.aria-label]="item.label"
+          [attr.aria-current]="isActive(item.route) ? 'page' : undefined"
         >
-          <i [class]="item.icon" aria-hidden="true"></i>
+          <i [class]="item.icon" aria-hidden="true" class="admin__nav-icon"></i>
           @if (!collapsed()) {
-            <span>{{ item.label }}</span>
+            <span class="admin__nav-label">{{ item.label }}</span>
           }
         </a>
       }
     </nav>
 
-    <div class="sidebar__footer">
-      <p-button
-        [icon]="collapsed() ? 'pi pi-chevron-right' : 'pi pi-chevron-left'"
-        [rounded]="true"
-        [text]="true"
-        severity="secondary"
-        ariaLabel="Colapsar menu lateral"
-        (onClick)="toggleSidebar()"
-      />
+    <!-- Sidebar footer: collapse toggle -->
+    <div class="admin__sidebar-footer">
+      <button
+        class="admin__collapse-btn"
+        [attr.aria-label]="collapsed() ? 'Expandir menu lateral' : 'Colapsar menu lateral'"
+        (click)="toggleSidebar()"
+      >
+        <i [class]="collapsed() ? 'pi pi-chevron-right' : 'pi pi-chevron-left'" aria-hidden="true"></i>
+      </button>
     </div>
   </aside>
 
-  <!-- Main area -->
-  <div class="main-area">
+  <!-- ===== Main Area ===== -->
+  <div class="admin__main">
     <!-- Topbar -->
-    <header class="topbar">
-      <p-breadcrumb
-        [model]="breadcrumbs()"
-        styleClass="topbar__breadcrumb"
-        aria-label="Miga de pan"
-      />
+    <header class="admin__topbar">
+      <!-- Breadcrumbs -->
+      <div class="admin__breadcrumb-wrap">
+        @for (item of breadcrumbs(); track item.label; let last = $last) {
+          <span class="admin__breadcrumb-item" [class.admin__breadcrumb-item--active]="last">
+            @if (!last && item.routerLink) {
+              <a [routerLink]="item.routerLink" class="admin__breadcrumb-link">{{ item.label }}</a>
+            } @else {
+              <span>{{ item.label }}</span>
+            }
+          </span>
+          @if (!last) {
+            <i class="pi pi-chevron-right admin__breadcrumb-sep" aria-hidden="true"></i>
+          }
+        }
+      </div>
 
-      <div class="topbar__user">
-        <span class="topbar__user-name">{{ userDisplayName() }}</span>
-        <p-avatar
-          icon="pi pi-user"
-          size="normal"
-          styleClass="topbar__avatar"
-          shape="circle"
-          ariaLabel="Menu de usuario"
-        />
+      <!-- User area -->
+      <div class="admin__user-area">
+        <span class="admin__user-name">{{ userDisplayName() }}</span>
+        <div class="admin__avatar">
+          <i class="pi pi-user" aria-hidden="true"></i>
+        </div>
         <button
           #userMenuTrigger
-          class="topbar__menu-trigger"
+          class="admin__user-menu-btn"
           aria-label="Abrir menu de usuario"
           (click)="userMenu.toggle($event)"
         >
@@ -85,8 +102,9 @@
     </header>
 
     <!-- Page content -->
-    <main class="page-content">
+    <main class="admin__content">
       <router-outlet />
     </main>
   </div>
+
 </div>

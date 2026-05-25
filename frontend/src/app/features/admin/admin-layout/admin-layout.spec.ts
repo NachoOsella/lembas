@@ -1,8 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { signal, WritableSignal } from '@angular/core';
-import { Menu, MenuModule } from 'primeng/menu';
-import { Breadcrumb } from 'primeng/breadcrumb';
 
 import { AdminLayout } from './admin-layout';
 import { AuthService, AuthUser } from '../../../core/services/auth';
@@ -12,7 +10,6 @@ describe('AdminLayout', () => {
   let fixture: ComponentFixture<AdminLayout>;
   let router: Router;
   let currentUserSignal: WritableSignal<AuthUser | null>;
-  let isAuthenticatedSignal: any;
   let mockAuthService: Partial<AuthService>;
 
   const adminUser: AuthUser = {
@@ -72,7 +69,7 @@ describe('AdminLayout', () => {
   it('Should_displayFirstName_when_userHasFirstName', () => {
     setup(adminUser);
 
-    const userName = fixture.nativeElement.querySelector('.topbar__user-name');
+    const userName = fixture.nativeElement.querySelector('.admin__user-name');
     expect(userName).toBeTruthy();
     expect(userName.textContent.trim()).toBe('Gandalf');
   });
@@ -81,7 +78,7 @@ describe('AdminLayout', () => {
   it('Should_displayEmail_when_firstNameIsNull', () => {
     setup(jwtHydratedUser);
 
-    const userName = fixture.nativeElement.querySelector('.topbar__user-name');
+    const userName = fixture.nativeElement.querySelector('.admin__user-name');
     expect(userName).toBeTruthy();
     expect(userName.textContent.trim()).toBe('employee@lembas.com');
   });
@@ -102,7 +99,7 @@ describe('AdminLayout', () => {
   it('Should_renderUserMenuTrigger_when_authenticated', () => {
     setup(adminUser);
 
-    const trigger = fixture.nativeElement.querySelector('.topbar__menu-trigger');
+    const trigger = fixture.nativeElement.querySelector('.admin__user-menu-btn');
     expect(trigger).toBeTruthy();
     expect(trigger.getAttribute('aria-label')).toBe('Abrir menu de usuario');
   });

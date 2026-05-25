@@ -1,45 +1,45 @@
-<div class="bg-canvas text-text font-sans tracking-tight min-h-screen">
-  <header class="bg-surface shadow-nav sticky top-0 z-20">
-    <div class="mx-auto max-w-[1440px] px-xl py-3 grid items-center min-h-[4.5rem] md:min-h-20 gap-2 md:gap-6
-                max-md:grid-cols-[auto_1fr] max-md:grid-rows-[auto_auto]
-                md:grid-cols-[auto_1fr_auto]">
+<div class="store bg-canvas text-text font-sans tracking-tight min-h-screen flex flex-col" role="document">
 
-      <!-- Brand: col 1 on desktop, row 1 col 1 on mobile -->
-      <a routerLink="/store" class="flex items-center gap-3 text-primary min-w-0 no-underline max-md:gap-2" aria-label="Ir al inicio de Lembas">
-        <img src="/brand/lembas-icon.svg?v=4" alt="Lembas Tienda Saludable" width="48" height="48" class="size-11 object-contain md:size-12" />
-        <span class="hidden sm:block">
-          <strong class="block text-xl font-[650] leading-tight">Lembas</strong>
-          <small class="block text-[0.72rem] font-semibold tracking-[0.1em] uppercase text-muted">Tienda saludable</small>
+  <!-- ===== Global Nav ===== -->
+  <header class="store__nav bg-surface shadow-nav sticky top-0 z-30">
+    <div class="mx-auto max-w-[1440px] px-xl flex items-center justify-between min-h-[4.2rem] md:min-h-[4.8rem] gap-4">
+      <!-- Brand -->
+      <a routerLink="/store"
+         class="flex items-center gap-3 text-primary no-underline shrink-0"
+         aria-label="Ir al inicio de Lembas">
+        <img src="/brand/lembas-icon.svg?v=4" alt=""
+             width="44" height="44"
+             class="size-[2.4rem] object-contain md:size-[2.8rem]" />
+        <span class="hidden sm:flex flex-col leading-tight">
+          <strong class="text-[1.05rem] md:text-[1.15rem] font-semibold tracking-[-0.02em]">Lembas</strong>
+          <small class="text-[0.68rem] font-semibold tracking-[0.14em] uppercase text-muted">Tienda saludable</small>
         </span>
       </a>
 
-      <!-- Nav: middle column on desktop, full-width second row on mobile -->
-      <nav class="flex gap-2 md:gap-4 justify-center store-header__nav
-                  max-md:col-span-2 max-md:row-start-2 max-md:justify-start max-md:overflow-x-auto max-md:pb-0.5"
-           aria-label="Navegacion principal de tienda">
+      <!-- Nav links (center) -->
+      <nav class="hidden md:flex items-center gap-1" aria-label="Navegacion principal">
         @for (item of navItems; track item.label) {
           <a [routerLink]="item.path"
-             routerLinkActive="border-b-primary text-primary font-[650]"
+             routerLinkActive="store__nav-link--active"
              [routerLinkActiveOptions]="{ exact: item.path === '/store' }"
-             class="border-b-2 border-b-transparent text-text text-[0.9rem] md:text-[0.95rem] font-[450] py-[0.45rem] no-underline transition-all duration-200 whitespace-nowrap hover:border-b-primary hover:text-primary">
+             class="store__nav-link">
             {{ item.label }}
           </a>
         }
       </nav>
 
-      <!-- Actions: col 3 on desktop, row 1 col 2 on mobile -->
-      <div class="flex items-center gap-2 md:gap-3 justify-end min-w-0 max-md:col-start-2 max-md:row-start-1" aria-label="Acciones de cuenta y compra">
+      <!-- Actions (right) -->
+      <div class="flex items-center gap-2 md:gap-3 shrink-0">
         @if (isLoggedIn()) {
-          <!-- Authenticated user: name + dropdown -->
-          <span class="store-header__user-name hidden md:inline">{{ userDisplayName() }}</span>
+          <span class="hidden md:inline text-[0.88rem] font-semibold truncate max-w-[8rem]">{{ userDisplayName() }}</span>
           <button
             #storeUserMenuTrigger
-            class="store-header__menu-trigger"
+            class="store__menu-btn"
             aria-label="Abrir menu de usuario"
             (click)="userMenu.toggle($event)"
           >
             <i class="pi pi-user" aria-hidden="true"></i>
-            <i class="pi pi-chevron-down text-[0.7rem]" aria-hidden="true"></i>
+            <i class="pi pi-chevron-down store__menu-chevron" aria-hidden="true"></i>
           </button>
           <p-menu
             #userMenu
@@ -49,50 +49,203 @@
             aria-label="Opciones de usuario"
           />
         } @else {
-          <!-- Guest: login / register links -->
-          <a routerLink="/auth/login" class="store-header__login text-text rounded-pill text-[0.92rem] font-[650] no-underline transition-all duration-200 py-2 px-1 hover:text-accent hidden md:inline">Ingresar</a>
-          <a routerLink="/auth/register" class="bg-accent border border-accent text-white rounded-pill text-[0.85rem] md:text-[0.92rem] font-[650] no-underline transition-all duration-200 py-[0.55rem] px-3 md:px-4 active:scale-95 whitespace-nowrap">Crear cuenta</a>
+          <a routerLink="/auth/login"
+             class="hidden md:inline-flex items-center text-text text-[0.88rem] font-semibold no-underline py-[0.45rem] px-[0.35rem] transition-colors duration-200 hover:text-primary rounded-pill">
+            Ingresar
+          </a>
+          <a routerLink="/auth/register"
+             class="store__cta-btn">
+            Crear cuenta
+          </a>
         }
-        <a routerLink="/customer/checkout" class="relative flex items-center justify-center size-10 text-primary no-underline transition-all duration-200 hover:text-accent" aria-label="Ver carrito">
-          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="fill-none stroke-current stroke-2 [stroke-linecap:round] [stroke-linejoin:round]">
+
+        <!-- Cart -->
+        <a routerLink="/customer/checkout"
+           class="relative flex items-center justify-center size-[2.5rem] text-primary no-underline transition-colors duration-200 hover:text-accent"
+           aria-label="Ver carrito, {{ cartItemsCount() }} productos">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"
+               class="fill-none stroke-current stroke-2 [stroke-linecap:round] [stroke-linejoin:round]">
             <path d="M6.5 8.5h11l-1 10h-9l-1-10Z" />
             <path d="M9 8.5a3 3 0 0 1 6 0" />
           </svg>
-          <span class="absolute -top-0.5 -right-0.5 flex items-center justify-center size-[1.15rem] bg-primary-dark border-2 border-surface rounded-full text-white text-[0.68rem] font-bold" aria-label="Productos en carrito">{{ cartItemsCount() }}</span>
+          @if (cartItemsCount() > 0) {
+            <span class="store__cart-badge" aria-label="Productos en carrito">{{ cartItemsCount() }}</span>
+          }
         </a>
       </div>
-
     </div>
+
+    <!-- Mobile nav (second row) -->
+    <nav class="md:hidden flex gap-1 overflow-x-auto px-xl pb-[0.35rem] scrollbar-none"
+         aria-label="Navegacion principal movil">
+      @for (item of navItems; track item.label) {
+        <a [routerLink]="item.path"
+           routerLinkActive="store__nav-link--active"
+           [routerLinkActiveOptions]="{ exact: item.path === '/store' }"
+           class="store__nav-link text-[0.86rem]">
+          {{ item.label }}
+        </a>
+      }
+    </nav>
   </header>
 
-  <main class="min-h-[calc(100vh-17rem)]">
+  <!-- ===== Main Content ===== -->
+  <main class="flex-1">
+    <!-- Color-block: Cream canvas hero (if home route) -->
+    @if (isHome()) {
+      <section class="store__hero" aria-labelledby="hero-title">
+        <div class="mx-auto max-w-[1440px] px-xl py-[clamp(3rem,8vw,6rem)] md:py-[clamp(4rem,10vw,7rem)] grid gap-lg md:gap-xl items-center
+                    md:grid-cols-[1fr_1.2fr]">
+          <!-- Hero text -->
+          <div class="flex flex-col gap-md md:gap-lg">
+            <!-- Eyebrow -->
+            <p class="text-accent text-[0.72rem] md:text-[0.76rem] font-bold tracking-[0.16em] uppercase m-0">
+              Retiro en sucursal
+            </p>
+
+            <h1 id="hero-title"
+                class="text-primary text-[clamp(1.8rem,5vw,2.8rem)] leading-[1.15] font-semibold m-0 tracking-[-0.025em] max-w-[20ch]">
+              Productos saludables<br />
+              <span class="text-text font-normal">de tu dietetica de siempre</span>
+            </h1>
+
+            <p class="text-muted text-[clamp(0.95rem,2vw,1.1rem)] leading-relaxed max-w-[42ch] m-0">
+              Granolas artesanales, frutos secos, miel pura y mas.<br />
+              Elegi lo que quieras y retiralo en nuestra sucursal.
+            </p>
+
+            <div class="flex flex-wrap gap-3">
+              <a routerLink="/store"
+                 class="store__hero-cta">
+                Ver productos
+              </a>
+              <a routerLink="/auth/register"
+                 class="store__hero-cta--outline">
+                Crear cuenta
+              </a>
+            </div>
+
+            <!-- Trust strip -->
+            <div class="flex flex-wrap gap-x-lg gap-y-2 mt-sm text-[0.8rem] md:text-[0.84rem] text-muted">
+              <span class="flex items-center gap-1.5">
+                <i class="pi pi-check-circle text-primary text-[0.85rem]" aria-hidden="true"></i>
+                Sin cargo por servicio
+              </span>
+              <span class="flex items-center gap-1.5">
+                <i class="pi pi-check-circle text-primary text-[0.85rem]" aria-hidden="true"></i>
+                Retiro el mismo dia
+              </span>
+              <span class="flex items-center gap-1.5">
+                <i class="pi pi-check-circle text-primary text-[0.85rem]" aria-hidden="true"></i>
+                Pago seguro
+              </span>
+            </div>
+          </div>
+
+          <!-- Hero visual: decorative leaf pattern + product photography placeholder -->
+          <div class="store__hero-visual hidden md:flex items-center justify-center" aria-hidden="true">
+            <div class="store__hero-visual-inner">
+              <!-- Decorative leaf pattern made with CSS -->
+              <div class="store__hero-pattern">
+                <div class="store__hero-leaf store__hero-leaf--1"></div>
+                <div class="store__hero-leaf store__hero-leaf--2"></div>
+                <div class="store__hero-leaf store__hero-leaf--3"></div>
+                <div class="store__hero-leaf store__hero-leaf--4"></div>
+                <div class="store__hero-leaf store__hero-leaf--5"></div>
+              </div>
+              <!-- Central product image placeholder -->
+              <div class="store__hero-product-placeholder">
+                <i class="pi pi-shopping-bag" aria-hidden="true"></i>
+                <span class="text-[0.78rem] font-semibold tracking-[0.08em] uppercase opacity-40">Proximamente</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- Page content (router outlet renders catalog, etc.) -->
     <router-outlet />
   </main>
 
-  <footer class="bg-primary-dark text-white mt-2xl">
-    <div class="mx-auto max-w-[1440px] px-xl py-[clamp(1rem,3vw,1.4rem)] grid gap-xl md:gap-lg
+  <!-- ===== Feature Band (dark green) - appears after main content ===== -->
+  <section class="store__feature-band" aria-labelledby="feature-title">
+    <div class="mx-auto max-w-[1440px] px-xl py-[clamp(2.5rem,6vw,4rem)] grid gap-lg items-center
+                md:grid-cols-[1fr_1fr] md:gap-xl">
+      <div class="flex flex-col gap-md">
+        <h2 id="feature-title"
+            class="text-white text-[clamp(1.4rem,3vw,1.8rem)] leading-[1.25] font-semibold tracking-[-0.02em] m-0">
+          Tu dietetica de confianza, ahora a un clic
+        </h2>
+        <p class="text-text-on-dark-muted text-[0.94rem] md:text-[1rem] leading-relaxed max-w-[42ch] m-0">
+          Elegi entre nuestra seleccion de productos frescos y saludables. Pagas online, pasas a retirar. Sin vueltas, sin demoras.
+        </p>
+        <div class="flex flex-wrap gap-3 mt-1">
+          <a routerLink="/auth/register"
+             class="store__feature-btn">
+            Empezar compra
+          </a>
+          <a routerLink="/store"
+             class="store__feature-btn--outline">
+            Conocer mas
+          </a>
+        </div>
+      </div>
+
+      <!-- Feature visual -->
+      <div class="hidden md:flex items-center justify-center" aria-hidden="true">
+        <div class="store__feature-badge">
+          <div class="store__feature-badge-inner">
+            <i class="pi pi-shield text-[2rem] text-white/70"></i>
+            <span class="text-[0.8rem] font-bold tracking-[0.12em] uppercase text-white/50">Calidad garantizada</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="store__footer bg-primary-dark text-white">
+    <div class="mx-auto max-w-[1440px] px-xl py-[clamp(2rem,4vw,2.8rem)] grid gap-xl md:gap-lg
                 max-md:grid-cols-1
                 md:grid-cols-[minmax(14rem,1fr)_minmax(18rem,2fr)]">
-
-      <section class="flex items-start gap-4 max-md:gap-3">
-        <img src="/brand/lembas-icon.svg?v=4" alt="" width="44" height="44" aria-hidden="true" class="size-10 shrink-0 object-contain md:size-11" />
-        <div>
-          <strong class="block text-[1.15rem] font-[650] leading-tight">Lembas</strong>
-          <p class="text-text-on-dark-muted leading-relaxed mt-1 max-w-[18rem] text-sm">Productos saludables con retiro en sucursal.</p>
-        </div>
+      <!-- Footer brand -->
+      <section class="flex flex-col gap-3">
+        <a routerLink="/store" class="flex items-center gap-3 no-underline" aria-label="Ir al inicio de Lembas">
+          <img src="/brand/lembas-icon.svg?v=4" alt="" width="40" height="40"
+               class="size-[2.2rem] object-contain brightness-0 invert opacity-90" />
+          <strong class="text-white text-[1.1rem] font-semibold tracking-[-0.02em]">Lembas</strong>
+        </a>
+        <p class="text-text-on-dark-muted text-[0.88rem] leading-relaxed max-w-[20rem] m-0">
+          Dietetica saludable con productos frescos, granolas artesanales y atencion personalizada. Retiro en sucursal.
+        </p>
+        <p class="text-text-on-dark-muted text-[0.74rem] m-0 opacity-55">
+          &copy; {{ currentYear }} Lembas. Todos los derechos reservados.
+        </p>
       </section>
 
-      <nav class="grid grid-cols-3 max-md:grid-cols-2 max-md:gap-y-xl max-md:gap-x-8 gap-xl" aria-label="Enlaces secundarios de tienda">
+      <!-- Footer link groups -->
+      <nav class="grid grid-cols-3 max-md:grid-cols-2 max-md:gap-y-xl max-md:gap-x-8 gap-xl"
+           aria-label="Enlaces secundarios">
         @for (group of footerGroups; track group.label) {
           <section>
-            <h2 class="text-white text-[0.72rem] font-bold tracking-[0.12em] uppercase mb-2">{{ group.label }}</h2>
-            <ul class="grid gap-[0.4rem] list-none m-0 p-0">
+            <h2 class="text-white/90 text-[0.68rem] font-bold tracking-[0.14em] uppercase mb-[0.65rem]">
+              {{ group.label }}
+            </h2>
+            <ul class="grid gap-[0.45rem] list-none m-0 p-0">
               @for (link of group.links; track link.label) {
                 <li>
                   @if (link.external) {
-                    <a [href]="link.path" target="_blank" rel="noreferrer" class="text-text-on-dark-muted text-[0.86rem] leading-relaxed no-underline transition-all duration-200 hover:text-white hover:opacity-85">{{ link.label }}</a>
+                    <a [href]="link.path" target="_blank" rel="noopener noreferrer"
+                       class="store__footer-link">
+                      {{ link.label }}
+                      <i class="pi pi-external-link text-[0.65rem] ml-1 opacity-60" aria-hidden="true"></i>
+                    </a>
                   } @else {
-                    <a [routerLink]="link.path" class="text-text-on-dark-muted text-[0.86rem] leading-relaxed no-underline transition-all duration-200 hover:text-white hover:opacity-85">{{ link.label }}</a>
+                    <a [routerLink]="link.path"
+                       class="store__footer-link">
+                      {{ link.label }}
+                    </a>
                   }
                 </li>
               }
@@ -100,7 +253,20 @@
           </section>
         }
       </nav>
-
     </div>
   </footer>
+
+  <!-- ===== Leaf CTA Floating Button (signature element) ===== -->
+  <button
+    class="store__leaf-cta"
+    aria-label="Ir al carrito de compras"
+    (click)="goToCart()"
+  >
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"
+         class="fill-none stroke-white stroke-2 [stroke-linecap:round] [stroke-linejoin:round]">
+      <path d="M6.5 8.5h11l-1 10h-9l-1-10Z" />
+      <path d="M9 8.5a3 3 0 0 1 6 0" />
+    </svg>
+  </button>
+
 </div>

@@ -1,5 +1,7 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
@@ -28,12 +30,17 @@ interface StoreNavItem {
   templateUrl: './store-layout.html',
   styleUrl: './store-layout.css',
 })
-/** Provides the public store shell with branded navigation, cart access, and footer. */
+/** Public store shell with warm Lembas brand experience: nav, hero, feature band, footer, Leaf CTA. */
 export class StoreLayout {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly cartItemsCount = signal(0);
+  protected readonly currentYear = new Date().getFullYear();
+
+  /** Whether the current route is the store home (/store, exactly). */
+  protected readonly isHome = signal(true);
 
   /** Whether a user is currently logged in. */
   protected readonly isLoggedIn = computed(() => this.auth.isAuthenticated());
@@ -94,9 +101,23 @@ export class StoreLayout {
     },
   ];
 
-  /**
-   * Logs out the current user and navigates to the store home page.
-   */
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((e) => {
+        this.isHome.set(e.urlAfterRedirects === '/store');
+      });
+  }
+
+  /** Navigate to the cart/checkout page. */
+  goToCart(): void {
+    this.router.navigate(['/customer/checkout']);
+  }
+
+  /** Logs out the current user and navigates to the store home page. */
   logout(): void {
     this.auth.logout();
     this.router.navigate(['/store']);

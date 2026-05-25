@@ -65,28 +65,38 @@ describe('StoreLayout', () => {
   it('Should_showLoginRegisterLinks_when_guest', () => {
     setup(false);
 
-    const loginLink = fixture.nativeElement.querySelector('.store-header__login');
-    expect(loginLink).toBeTruthy();
-    expect(loginLink.textContent.trim()).toContain('Ingresar');
+    // The nav bar "Ingresar" link (hidden on mobile via CSS, but present in DOM)
+    const loginLink = fixture.nativeElement.querySelector('.store__nav .store__nav-link');
+    // Actually the login link uses routerLink and class hidden md:inline-flex, check for text
+    const allNavLinks = Array.from(
+      fixture.nativeElement.querySelectorAll('header a'),
+    ) as HTMLElement[];
+    const ingresar = allNavLinks.find((el) => el.textContent?.trim() === 'Ingresar');
+    expect(ingresar).toBeTruthy();
 
-    const registerLink = fixture.nativeElement.querySelector('a[routerlink="/auth/register"]');
-    expect(registerLink).toBeTruthy();
-    expect(registerLink.textContent.trim()).toBe('Crear cuenta');
+    const registerBtn = fixture.nativeElement.querySelector('.store__cta-btn');
+    expect(registerBtn).toBeTruthy();
+    expect(registerBtn.textContent.trim()).toBe('Crear cuenta');
   });
 
   /** Should show user name and hide login/register when authenticated. */
   it('Should_showUserNameAndHideGuestLinks_when_authenticated', () => {
     setup(true, customerUser);
 
-    const loginLink = fixture.nativeElement.querySelector('.store-header__login');
-    expect(loginLink).toBeNull();
+    // The nav bar "Ingresar" link should be hidden
+    const loginNavLinks = Array.from(
+      fixture.nativeElement.querySelectorAll('header a'),
+    ) as HTMLElement[];
+    const loginInNav = loginNavLinks.find((el) => el.textContent?.trim() === 'Ingresar');
+    expect(loginInNav).toBeUndefined();
 
-    const registerLink = fixture.nativeElement.querySelector('a[routerlink="/auth/register"]');
-    expect(registerLink).toBeNull();
+    // The nav bar CTA "Crear cuenta" should be hidden (hero link is a different element)
+    const navCta = fixture.nativeElement.querySelector('.store__cta-btn');
+    expect(navCta).toBeNull();
 
-    const userName = fixture.nativeElement.querySelector('.store-header__user-name');
-    expect(userName).toBeTruthy();
-    expect(userName.textContent.trim()).toBe('Frodo');
+    const allSpans: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('span'));
+    const userSpan = allSpans.find((el) => el.textContent?.trim() === 'Frodo');
+    expect(userSpan).toBeTruthy();
   });
 
   /** Should show email when firstName is null (JWT-hydrated user). */
@@ -103,16 +113,16 @@ describe('StoreLayout', () => {
 
     setup(true, jwtUser);
 
-    const userName = fixture.nativeElement.querySelector('.store-header__user-name');
-    expect(userName).toBeTruthy();
-    expect(userName.textContent.trim()).toBe('sam@lembas.com');
+    const allSpans: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('span'));
+    const userSpan = allSpans.find((el) => el.textContent?.trim() === 'sam@lembas.com');
+    expect(userSpan).toBeTruthy();
   });
 
   /** Should render user menu trigger when authenticated. */
   it('Should_renderUserMenuTrigger_when_authenticated', () => {
     setup(true, customerUser);
 
-    const trigger = fixture.nativeElement.querySelector('.store-header__menu-trigger');
+    const trigger = fixture.nativeElement.querySelector('.store__menu-btn');
     expect(trigger).toBeTruthy();
     expect(trigger.getAttribute('aria-label')).toBe('Abrir menu de usuario');
   });

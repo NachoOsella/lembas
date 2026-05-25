@@ -2,10 +2,7 @@ import { Component, OnDestroy, OnInit, inject, signal, computed } from '@angular
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subject, filter, takeUntil } from 'rxjs';
 import { MenuItem } from 'primeng/api';
-import { Avatar } from 'primeng/avatar';
-import { Breadcrumb } from 'primeng/breadcrumb';
-import { Button } from 'primeng/button';
-import { Menu } from 'primeng/menu';
+import { MenuModule } from 'primeng/menu';
 
 import { AuthService } from '../../../core/services/auth';
 
@@ -41,11 +38,11 @@ const LABEL_MAP: Record<string, string> = {
 
 @Component({
   selector: 'app-admin-layout',
-  imports: [Avatar, Breadcrumb, Button, Menu, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [MenuModule, RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css',
 })
-/** Provides the backoffice shell with collapsible sidebar, user topbar, and breadcrumbs. */
+/** Backoffice shell with Forest Green collapsible sidebar, breadcrumbs, and user menu. */
 export class AdminLayout implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -54,16 +51,15 @@ export class AdminLayout implements OnInit, OnDestroy {
   protected readonly breadcrumbs = signal<MenuItem[]>([]);
   protected readonly navItems = NAV_ITEMS;
 
-  /** Display name shown in the topbar: email of the currently logged-in user. */
+  /** Display name shown in the topbar. */
   protected readonly userDisplayName = computed(() => {
     const user = this.auth.currentUser();
     if (!user) return '';
-    // Prefer firstName when available (from full response), fallback to email (from JWT hydrate)
     if (user.firstName) return user.firstName;
     return user.email;
   });
 
-  /** Dropdown menu items for the user avatar area. */
+  /** Dropdown menu items for the user area. */
   protected readonly userMenuItems: MenuItem[] = [
     {
       label: 'Cerrar sesion',
@@ -89,13 +85,16 @@ export class AdminLayout implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  /** Check if the given route matches the current URL for aria-current. */
+  protected isActive(route: string): boolean {
+    return this.router.url.startsWith(route);
+  }
+
   protected toggleSidebar(): void {
     this.collapsed.update((v) => !v);
   }
 
-  /**
-   * Logs out the current user and redirects to the login page.
-   */
+  /** Logs out the current user and redirects to login. */
   protected logout(): void {
     this.auth.logout();
     this.router.navigate(['/auth/login']);
