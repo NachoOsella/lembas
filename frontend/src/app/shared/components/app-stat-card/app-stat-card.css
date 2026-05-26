@@ -1,0 +1,131 @@
+:host {
+  display: block;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-card);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-card);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0.5px 0 rgba(0, 0, 0, 0.14),
+    0 1px 1px 0 rgba(0, 0, 0, 0.24),
+    0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card--surface {
+  background: #ffffff;
+  color: var(--color-text);
+}
+
+.stat-card--muted {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.stat-card--dark {
+  background: var(--color-primary-dark);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.stat-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: rgba(47, 141, 114, 0.08);
+  color: var(--color-primary);
+  font-size: 0.9rem;
+}
+
+.stat-card--dark .stat-card__icon {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.stat-card__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.stat-card--dark .stat-card__label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.stat-card__body {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.stat-card__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: inherit;
+}
+
+.stat-card__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.stat-card__trend--up {
+  color: #2f8d72;
+  background: rgba(47, 141, 114, 0.08);
+}
+
+.stat-card__trend--down {
+  color: #c82014;
+  background: rgba(200, 32, 20, 0.08);
+}
+
+.stat-card__trend--neutral {
+  color: var(--color-text-muted);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.stat-card--dark .stat-card__trend--up {
+  color: #7dd3c0;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.stat-card--dark .stat-card__trend--down {
+  color: #fca5a5;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.stat-card--dark .stat-card__trend--neutral {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.1);
+}

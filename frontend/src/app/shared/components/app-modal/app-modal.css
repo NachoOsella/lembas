@@ -1,0 +1,76 @@
+:host {
+  display: contents;
+}
+
+:host ::ng-deep .app-modal {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-card);
+  box-shadow:
+    0 0 6px rgba(0, 0, 0, 0.24),
+    0 8px 24px rgba(0, 0, 0, 0.16);
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+:host ::ng-deep .app-modal .p-dialog-header,
+:host ::ng-deep .app-modal .p-dialog-content,
+:host ::ng-deep .app-modal .p-dialog-footer {
+  background: #ffffff;
+  color: var(--color-text);
+}
+
+:host ::ng-deep .app-modal .p-dialog-header {
+  padding: 1.25rem 1.5rem 0;
+  border: none;
+}
+
+:host ::ng-deep .app-modal .p-dialog-content {
+  padding: 1rem 1.5rem;
+}
+
+:host ::ng-deep .app-modal .p-dialog-footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 0.75rem 1.5rem 1.25rem;
+  border: none;
+}
+
+.app-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-modal__title {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.app-modal__body {
+  color: var(--color-text);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.app-modal__footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+@media (max-width: 34rem) {
+  :host ::ng-deep .app-modal .p-dialog-footer {
+    flex-direction: column-reverse;
+  }
+
+  :host ::ng-deep .app-modal .p-dialog-footer .p-button {
+    width: 100%;
+  }
+}

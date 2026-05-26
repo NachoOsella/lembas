@@ -1,11 +1,13 @@
 import { Component, computed, input } from '@angular/core';
+import { ButtonDirective, ButtonLabel } from 'primeng/button';
 
 @Component({
   selector: 'app-button',
+  imports: [ButtonDirective, ButtonLabel],
   templateUrl: './app-button.html',
   styleUrl: './app-button.css',
 })
-/** Reusable application button that centralizes visual variants and loading states. */
+/** Reusable PrimeNG-backed application button that centralizes Lembas variants. */
 export class AppButton {
   readonly type = input<'button' | 'submit' | 'reset'>('button');
   readonly variant = input<'primary' | 'secondary' | 'ghost' | 'danger'>('primary');
@@ -20,7 +22,7 @@ export class AppButton {
   /** Prevents user interaction while the button is disabled or submitting. */
   protected readonly isDisabled = computed(() => this.disabled() || this.loading());
 
-  /** Builds the CSS classes for the selected semantic variant and size. */
+  /** Builds PrimeNG-compatible classes for the selected semantic variant and size. */
   protected readonly buttonClass = computed(() => [
     'app-button',
     `app-button--${this.variant()}`,

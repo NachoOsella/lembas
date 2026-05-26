@@ -5,13 +5,13 @@
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
   --tracking-tight: -0.01em;
 
-  --color-primary: #006241;
-  --color-accent: #00754a;
-  --color-primary-dark: #1e3932;
-  --color-canvas: #f2f0eb;
+  --color-primary: #2f8d72;
+  --color-accent: #2f8d72;
+  --color-primary-dark: #075f36;
+  --color-canvas: #f6ead6;
   --color-surface: #ffffff;
-  --color-surface-muted: #edebe9;
-  --color-gold-wash: #faf6ee;
+  --color-surface-muted: #e7dbc0;
+  --color-orange-wash: #fff2df;
   --color-text: rgba(0, 0, 0, 0.87);
   --color-text-muted: rgba(0, 0, 0, 0.58);
   --color-text-on-dark-muted: rgba(255, 255, 255, 0.7);

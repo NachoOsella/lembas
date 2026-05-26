@@ -1,60 +1,89 @@
-import { Component, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
+import { MenuItem } from 'primeng/api';
 
-interface FooterLink {
-  readonly label: string;
-  readonly path: string;
-  readonly external?: boolean;
-}
-
-interface FooterGroup {
-  readonly label: string;
-  readonly links: readonly FooterLink[];
-}
-
-interface StoreNavItem {
-  readonly label: string;
-  readonly path: string;
-}
+import { AuthService } from '../../../core/services/auth';
+import { AppStoreNav, StoreBrandConfig } from '../../../shared/components/app-store-nav/app-store-nav';
+import { AppStoreFooter, StoreFooterLink } from '../../../shared/components/app-store-footer/app-store-footer';
 
 @Component({
   selector: 'app-store-layout',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [RouterOutlet, AppStoreNav, AppStoreFooter],
   templateUrl: './store-layout.html',
   styleUrl: './store-layout.css',
 })
-/** Provides the public store shell with branded navigation, cart access, and footer. */
+/** Public store shell: delegates nav and footer to generic components. */
 export class StoreLayout {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
   protected readonly cartItemsCount = signal(0);
 
-  protected readonly navItems: readonly StoreNavItem[] = [
-    { label: 'Tienda', path: '/store' },
-    { label: 'Productos', path: '/store' },
-    { label: 'Como comprar', path: '/store#como-comprar' },
+  /** Whether a user is currently logged in. */
+  protected readonly isLoggedIn = computed(() => this.auth.isAuthenticated());
+
+  /** Display name for the logged-in user (first name, or email fallback). */
+  protected readonly userDisplayName = computed(() => {
+    const user = this.auth.currentUser();
+    if (!user) return '';
+    if (user.firstName) return user.firstName;
+    return user.email;
+  });
+
+  /** Brand config for app-store-nav. */
+  protected readonly brand: StoreBrandConfig = {
+    logoUrl: '/brand/lembas-icon.svg?v=4',
+    title: 'Lembas',
+    subtitle: 'Tienda saludable',
+    homeRoute: '/store',
+  };
+
+  /** Dropdown menu items for the user avatar. */
+  protected readonly userMenuItems: MenuItem[] = [
+    {
+      label: 'Mis pedidos',
+      icon: 'pi pi-receipt',
+      routerLink: '/customer/orders',
+    },
+    {
+      separator: true,
+    },
+    {
+      label: 'Cerrar sesion',
+      icon: 'pi pi-sign-out',
+      command: () => this.logout(),
+    },
   ];
 
-  protected readonly footerGroups: readonly FooterGroup[] = [
-    {
-      label: 'Ayuda',
-      links: [
-        { label: 'Como comprar', path: '/store' },
-        { label: 'Retiro en sucursal', path: '/store' },
-        { label: 'Preguntas frecuentes', path: '/store' },
-      ],
-    },
-    {
-      label: 'Legales',
-      links: [
-        { label: 'Terminos y condiciones', path: '/store' },
-        { label: 'Privacidad', path: '/store' },
-      ],
-    },
-    {
-      label: 'Redes',
-      links: [
-        { label: 'Instagram', path: 'https://www.instagram.com/', external: true },
-        { label: 'Facebook', path: 'https://www.facebook.com/', external: true },
-      ],
-    },
+  /** Flat footer links for app-store-footer. */
+  protected readonly footerLinks: readonly StoreFooterLink[] = [
+    { label: 'Como comprar', path: '/store' },
+    { label: 'Retiro en sucursal', path: '/store' },
+    { label: 'Terminos', path: '/store' },
+    { label: 'Privacidad', path: '/store' },
+    { label: 'Instagram', path: 'https://www.instagram.com/', external: true },
+    { label: 'Facebook', path: 'https://www.facebook.com/', external: true },
   ];
+
+  /** Copyright string for app-store-footer. */
+  protected readonly copyright = `\u00a9 ${new Date().getFullYear()} Lembas`;
+
+  /** Navigate to store catalog with a search query parameter. */
+  onSearch(query: string): void {
+    const trimmed = query.trim();
+    if (trimmed) {
+      this.router.navigate(['/store'], { queryParams: { q: trimmed } });
+    }
+  }
+
+  /** Navigate to the cart/checkout page. */
+  goToCart(): void {
+    this.router.navigate(['/customer/checkout']);
+  }
+
+  /** Logs out the current user and navigates to the store home page. */
+  logout(): void {
+    this.auth.logout();
+    this.router.navigate(['/store']);
+  }
 }

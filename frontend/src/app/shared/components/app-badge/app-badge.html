@@ -1,6 +1,8 @@
-<span class="app-badge" [class]="'app-badge app-badge--' + tone()">
-  @if (icon()) {
-    <i [class]="icon()" aria-hidden="true"></i>
-  }
+<p-tag
+  [severity]="severity()"
+  [icon]="icon() ?? undefined"
+  [rounded]="true"
+  [styleClass]="'app-badge app-badge--' + tone()"
+>
   <ng-content />
-</span>
+</p-tag>

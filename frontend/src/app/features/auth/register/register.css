@@ -7,25 +7,21 @@
 }
 
 .register-page {
-  background:
-    radial-gradient(circle at 12% 16%, rgba(0, 117, 74, 0.12), transparent 26rem),
-    radial-gradient(circle at 88% 82%, rgba(212, 233, 226, 0.72), transparent 24rem),
-    linear-gradient(135deg, #f7f4ed 0%, #f2f0eb 46%, #ebe7dd 100%);
+  background: #f6ead6;
 }
 
 .register-shell {
-  filter: drop-shadow(0 28px 70px rgba(30, 57, 50, 0.16));
+  filter: drop-shadow(0 28px 70px rgba(7, 95, 54, 0.16));
 }
 
 .register-card {
-  border: 1px solid rgba(30, 57, 50, 0.1);
+  border: 1px solid rgba(7, 95, 54, 0.1);
 }
 
 .register-hero {
   min-height: 42rem;
-  background:
-    linear-gradient(145deg, rgba(30, 57, 50, 0.96), rgba(0, 98, 65, 0.92)),
-    radial-gradient(circle at 25% 20%, rgba(250, 246, 238, 0.26), transparent 20rem);
+  overflow: hidden;
+  background: #075f36;
   isolation: isolate;
 }
 
@@ -74,8 +70,8 @@
   min-height: 2.95rem;
   padding: 0.75rem 0.9rem;
   color: rgba(0, 0, 0, 0.87);
-  background: linear-gradient(180deg, #ffffff 0%, #fffdf9 100%);
-  border: 1px solid rgba(30, 57, 50, 0.18);
+  background: #ffffff;
+  border: 1px solid rgba(7, 95, 54, 0.18);
   border-radius: 15px;
   outline: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
@@ -99,24 +95,24 @@
 }
 
 .register-input:hover {
-  border-color: rgba(0, 117, 74, 0.36);
+  border-color: rgba(47, 141, 114, 0.36);
 }
 
 .register-input:focus {
-  border-color: #00754a;
+  border-color: #2f8d72;
   box-shadow:
-    0 0 0 4px rgba(0, 117, 74, 0.11),
-    0 10px 22px rgba(30, 57, 50, 0.08);
+    0 0 0 4px rgba(47, 141, 114, 0.11),
+    0 10px 22px rgba(7, 95, 54, 0.08);
   transform: translateY(-1px);
 }
 
 .register-input:not(:placeholder-shown) {
-  background: linear-gradient(180deg, #ffffff 0%, rgba(212, 233, 226, 0.23) 100%);
+  background: #ffffff;
 }
 
 .register-input.register-input--error {
   border-color: #c82014;
-  background: linear-gradient(180deg, #ffffff 0%, hsla(4, 82%, 43%, 0.05) 100%);
+  background: #ffffff;
   box-shadow: 0 0 0 4px hsla(4, 82%, 43%, 0.08);
 }
 
@@ -129,12 +125,12 @@
 }
 
 .register-field-icon {
-  color: rgba(0, 98, 65, 0.58);
+  color: rgba(47, 141, 114, 0.58);
   font-size: 0.95rem;
   pointer-events: none;
 }
 
-.register-eye-btn {
+:host ::ng-deep .register-eye-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -150,9 +146,24 @@
     background-color 0.18s ease;
 }
 
-.register-eye-btn:hover {
-  color: #00754a;
-  background: rgba(0, 117, 74, 0.08);
+:host ::ng-deep .register-eye-btn:hover {
+  color: #2f8d72;
+  background: rgba(47, 141, 114, 0.08);
+}
+
+:host ::ng-deep .auth-submit-btn {
+  width: 100%;
+  min-height: 3.25rem;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: #2f8d72;
+  box-shadow: 0 12px 26px rgba(7, 95, 54, 0.24);
+}
+
+:host ::ng-deep .auth-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(7, 95, 54, 0.28);
 }
 
 .register-error {

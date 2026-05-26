@@ -36,7 +36,7 @@
 .confirm-dialog__eyebrow {
   color: var(--color-accent);
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -51,8 +51,8 @@
 
 .confirm-dialog__icon {
   align-items: center;
-  background: var(--color-gold-wash);
-  border: 1px solid rgba(0, 98, 65, 0.08);
+  background: var(--color-orange-wash);
+  border: 1px solid rgba(47, 141, 114, 0.08);
   border-radius: 999px;
   color: var(--color-primary);
   display: flex;

@@ -1,6 +1,7 @@
 package com.dietetica.lembas.auth.service;
 
 import com.dietetica.lembas.auth.dto.AuthResponse;
+import com.dietetica.lembas.auth.dto.LoginRequest;
 import com.dietetica.lembas.auth.dto.RegisterRequest;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
@@ -8,6 +9,7 @@ import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
 import com.dietetica.lembas.users.service.UserBranchPolicy;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +18,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -199,6 +203,170 @@ class AuthServiceTest {
             verify(userRepository).save(captor.capture());
             assertThat(captor.getValue().getRole()).isEqualTo(Role.CUSTOMER);
             assertThat(captor.getValue().getBranchId()).isNull();
+        }
+    }
+
+    @Nested
+    class Authenticate {
+
+        private static final String RAW_PASSWORD = "Str0ng!Pass";
+        private static final String ENCODED_PASSWORD = "$2a$10$encoded";
+        private static final String ACCESS_TOKEN = "access-token";
+        private static final String REFRESH_TOKEN = "refresh-token";
+
+        private final LoginRequest validLogin = new LoginRequest("frodo@lembas.com", RAW_PASSWORD);
+        private final User storedUser = new User(1L, null, "frodo@lembas.com", ENCODED_PASSWORD,
+                "Frodo", "Baggins", null, Role.CUSTOMER, true, null, null);
+
+        @Test
+        void Should_returnTokensAndUser_when_credentialsAreValid() {
+            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
+            when(passwordEncoder.matches(RAW_PASSWORD, ENCODED_PASSWORD)).thenReturn(true);
+            when(jwtTokenProvider.createAccessToken(storedUser)).thenReturn(ACCESS_TOKEN);
+            when(jwtTokenProvider.createRefreshToken(storedUser)).thenReturn(REFRESH_TOKEN);
+
+            AuthResponse response = authService.authenticate(validLogin);
+
+            assertThat(response.token()).isEqualTo(ACCESS_TOKEN);
+            assertThat(response.refreshToken()).isEqualTo(REFRESH_TOKEN);
+            assertThat(response.user()).isNotNull();
+            assertThat(response.user().id()).isEqualTo(1L);
+            assertThat(response.user().email()).isEqualTo("frodo@lembas.com");
+            assertThat(response.user().role()).isEqualTo(Role.CUSTOMER);
+        }
+
+        @Test
+        void Should_throwInvalidCredentials_when_emailNotFound() {
+            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> authService.authenticate(validLogin))
+                    .isInstanceOf(DomainException.class)
+                    .hasFieldOrPropertyWithValue("code", "INVALID_CREDENTIALS")
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.UNAUTHORIZED)
+                    .hasMessage("Invalid email or password");
+
+            verify(passwordEncoder, never()).matches(anyString(), anyString());
+            verify(jwtTokenProvider, never()).createAccessToken(any());
+        }
+
+        @Test
+        void Should_throwInvalidCredentials_when_passwordDoesNotMatch() {
+            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
+            when(passwordEncoder.matches(RAW_PASSWORD, ENCODED_PASSWORD)).thenReturn(false);
+
+            assertThatThrownBy(() -> authService.authenticate(validLogin))
+                    .isInstanceOf(DomainException.class)
+                    .hasFieldOrPropertyWithValue("code", "INVALID_CREDENTIALS")
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.UNAUTHORIZED)
+                    .hasMessage("Invalid email or password");
+
+            verify(jwtTokenProvider, never()).createAccessToken(any());
+        }
+
+        @Test
+        void Should_throwAccountDisabled_when_userIsDisabled() {
+            User disabledUser = new User(1L, null, "frodo@lembas.com", ENCODED_PASSWORD,
+                    "Frodo", "Baggins", null, Role.CUSTOMER, false, null, null);
+            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(disabledUser));
+
+            assertThatThrownBy(() -> authService.authenticate(validLogin))
+                    .isInstanceOf(DomainException.class)
+                    .hasFieldOrPropertyWithValue("code", "ACCOUNT_DISABLED")
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.FORBIDDEN)
+                    .hasMessageContaining("disabled");
+
+            verify(passwordEncoder, never()).matches(anyString(), anyString());
+            verify(jwtTokenProvider, never()).createAccessToken(any());
+        }
+
+        @Test
+        void Should_normalizeEmail_when_loginWithUppercaseAndSpaces() {
+            LoginRequest request = new LoginRequest("  FRODO@LEMBAS.COM  ", RAW_PASSWORD);
+            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
+            when(passwordEncoder.matches(RAW_PASSWORD, ENCODED_PASSWORD)).thenReturn(true);
+            when(jwtTokenProvider.createAccessToken(storedUser)).thenReturn(ACCESS_TOKEN);
+            when(jwtTokenProvider.createRefreshToken(storedUser)).thenReturn(REFRESH_TOKEN);
+
+            AuthResponse response = authService.authenticate(request);
+
+            assertThat(response.token()).isEqualTo(ACCESS_TOKEN);
+            verify(userRepository).findByEmail("frodo@lembas.com");
+        }
+
+        @Test
+        void Should_notRevealRegisteredStatus_when_emailNotFound() {
+            when(userRepository.findByEmail("unknown@lembas.com")).thenReturn(Optional.empty());
+
+            DomainException exception = null;
+            try {
+                authService.authenticate(new LoginRequest("unknown@lembas.com", "any-password"));
+            } catch (DomainException ex) {
+                exception = ex;
+            }
+
+            // Message must not reveal whether the email is registered or not
+            assertThat(exception).isNotNull();
+            assertThat(exception.getMessage()).doesNotContain("not found", "missing", "unknown");
+        }
+
+        @Test
+        void Should_notRevealPasswordMatch_when_passwordIsWrong() {
+            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
+            when(passwordEncoder.matches(RAW_PASSWORD, ENCODED_PASSWORD)).thenReturn(false);
+
+            DomainException exception = null;
+            try {
+                authService.authenticate(validLogin);
+            } catch (DomainException ex) {
+                exception = ex;
+            }
+
+            // Message must not reveal which field was wrong;
+            // the generic "Invalid email or password" is used for both cases.
+            assertThat(exception).isNotNull();
+            assertThat(exception.getMessage()).isEqualTo("Invalid email or password");
+        }
+
+        /**
+         * Both wrong-email and wrong-password must produce identical error codes
+         * and status to prevent credential enumeration attacks.
+         */
+        @Test
+        @DisplayName("wrong email and wrong password must produce identical error code and status")
+        void Should_sameErrorCodeAndStatus_forWrongEmailAndWrongPassword() {
+            // Wrong email
+            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> authService.authenticate(validLogin))
+                    .isInstanceOf(DomainException.class)
+                    .satisfies(ex -> {
+                        DomainException de = (DomainException) ex;
+                        assertThat(de.getCode()).isEqualTo("INVALID_CREDENTIALS");
+                        assertThat(de.getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED);
+                    });
+
+            // The same error properties are verified in the wrong-password test above
+            // (Should_throwInvalidCredentials_when_passwordDoesNotMatch),
+            // which also asserts code=INVALID_CREDENTIALS and status=UNAUTHORIZED.
+        }
+    }
+
+    @Nested
+    class GetCurrentUser {
+
+        @Test
+        void Should_returnUserProfile_when_userIsAuthenticated() {
+            User user = new User(1L, null, "frodo@lembas.com", "hash", "Frodo", "Baggins",
+                    null, Role.CUSTOMER, true, null, null);
+
+            AuthResponse response = authService.getCurrentUser(user);
+
+            assertThat(response.token()).isNull();
+            assertThat(response.refreshToken()).isNull();
+            assertThat(response.user()).isNotNull();
+            assertThat(response.user().email()).isEqualTo("frodo@lembas.com");
+            assertThat(response.user().firstName()).isEqualTo("Frodo");
+            assertThat(response.user().role()).isEqualTo(Role.CUSTOMER);
         }
     }
 }

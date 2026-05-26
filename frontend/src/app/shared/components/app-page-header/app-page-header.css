@@ -13,15 +13,13 @@
 
 .page-header--light {
   color: rgba(0, 0, 0, 0.87);
-  background: linear-gradient(135deg, #ffffff 0%, #faf6ee 100%);
-  border: 1px solid rgba(30, 57, 50, 0.08);
+  background: #ffffff;
+  border: 1px solid rgba(7, 95, 54, 0.08);
 }
 
 .page-header--dark {
   color: #ffffff;
-  background:
-    radial-gradient(circle at 90% 10%, rgba(212, 233, 226, 0.22), transparent 18rem),
-    #1e3932;
+  background: #075f36;
 }
 
 .page-header__copy {
@@ -30,9 +28,9 @@
 
 .page-header__eyebrow {
   margin: 0 0 0.55rem;
-  color: #cba258;
+  color: #f29d52;
   font-size: 0.76rem;
-  font-weight: 850;
+  font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
@@ -41,7 +39,7 @@
   margin: 0;
   color: inherit;
   font-size: clamp(1.6rem, 4vw, 3.25rem);
-  font-weight: 760;
+  font-weight: 700;
   line-height: 1.02;
   letter-spacing: -0.045em;
 }

@@ -1,84 +1,21 @@
-<div class="bg-canvas text-text font-sans tracking-tight min-h-screen">
-  <header class="bg-surface shadow-nav sticky top-0 z-20">
-    <div class="mx-auto max-w-[1440px] px-xl py-3 grid items-center min-h-[4.5rem] md:min-h-20 gap-2 md:gap-6
-                max-md:grid-cols-[auto_1fr] max-md:grid-rows-[auto_auto]
-                md:grid-cols-[auto_1fr_auto]">
+<div class="store bg-canvas text-text font-sans tracking-tight min-h-screen flex flex-col" role="document">
+  <app-store-nav
+    [brand]="brand"
+    [cartCount]="cartItemsCount()"
+    [isLoggedIn]="isLoggedIn()"
+    [userDisplayName]="userDisplayName()"
+    [userMenuItems]="userMenuItems"
+    (searchQuery)="onSearch($event)"
+    (logout)="logout()"
+    (cartClick)="goToCart()"
+  />
 
-      <!-- Brand: col 1 on desktop, row 1 col 1 on mobile -->
-      <a routerLink="/store" class="flex items-center gap-3 text-primary min-w-0 no-underline max-md:gap-2" aria-label="Ir al inicio de Lembas">
-        <img src="/brand/lembas-logo.png" alt="Lembas Tienda Saludable" width="52" height="52" class="bg-gold-wash rounded-full shadow-card object-cover size-12 md:size-[52px]" />
-        <span class="hidden sm:block">
-          <strong class="block text-xl font-[650] leading-tight">Lembas</strong>
-          <small class="block text-[0.72rem] font-semibold tracking-[0.1em] uppercase text-muted">Tienda saludable</small>
-        </span>
-      </a>
-
-      <!-- Nav: middle column on desktop, full-width second row on mobile -->
-      <nav class="flex gap-2 md:gap-4 justify-center store-header__nav
-                  max-md:col-span-2 max-md:row-start-2 max-md:justify-start max-md:overflow-x-auto max-md:pb-0.5"
-           aria-label="Navegacion principal de tienda">
-        @for (item of navItems; track item.label) {
-          <a [routerLink]="item.path"
-             routerLinkActive="border-b-primary text-primary font-[650]"
-             [routerLinkActiveOptions]="{ exact: item.path === '/store' }"
-             class="border-b-2 border-b-transparent text-text text-[0.9rem] md:text-[0.95rem] font-[450] py-[0.45rem] no-underline transition-all duration-200 whitespace-nowrap hover:border-b-primary hover:text-primary">
-            {{ item.label }}
-          </a>
-        }
-      </nav>
-
-      <!-- Actions: col 3 on desktop, row 1 col 2 on mobile -->
-      <div class="flex items-center gap-2 md:gap-3 justify-end min-w-0 max-md:col-start-2 max-md:row-start-1" aria-label="Acciones de cuenta y compra">
-        <a routerLink="/auth/login" class="store-header__login text-text rounded-pill text-[0.92rem] font-[650] no-underline transition-all duration-200 py-2 px-1 hover:text-accent hidden md:inline">Ingresar</a>
-        <a routerLink="/auth/register" class="bg-accent border border-accent text-white rounded-pill text-[0.85rem] md:text-[0.92rem] font-[650] no-underline transition-all duration-200 py-[0.55rem] px-3 md:px-4 active:scale-95 whitespace-nowrap">Crear cuenta</a>
-        <a routerLink="/customer/checkout" class="relative flex items-center justify-center size-10 text-primary no-underline transition-all duration-200 hover:text-accent" aria-label="Ver carrito">
-          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="fill-none stroke-current stroke-2 [stroke-linecap:round] [stroke-linejoin:round]">
-            <path d="M6.5 8.5h11l-1 10h-9l-1-10Z" />
-            <path d="M9 8.5a3 3 0 0 1 6 0" />
-          </svg>
-          <span class="absolute -top-0.5 -right-0.5 flex items-center justify-center size-[1.15rem] bg-primary-dark border-2 border-surface rounded-full text-white text-[0.68rem] font-bold" aria-label="Productos en carrito">{{ cartItemsCount() }}</span>
-        </a>
-      </div>
-
-    </div>
-  </header>
-
-  <main class="min-h-[calc(100vh-17rem)]">
+  <main class="flex-1">
     <router-outlet />
   </main>
 
-  <footer class="bg-primary-dark text-white mt-2xl">
-    <div class="mx-auto max-w-[1440px] px-xl py-[clamp(1rem,3vw,1.4rem)] grid gap-xl md:gap-lg
-                max-md:grid-cols-1
-                md:grid-cols-[minmax(14rem,1fr)_minmax(18rem,2fr)]">
-
-      <section class="flex items-start gap-4 max-md:gap-3">
-        <img src="/brand/lembas-logo.png" alt="" width="48" height="48" aria-hidden="true" class="bg-gold-wash rounded-full shadow-card object-cover shrink-0 size-10 md:size-12" />
-        <div>
-          <strong class="block text-[1.15rem] font-[650] leading-tight">Lembas</strong>
-          <p class="text-text-on-dark-muted leading-relaxed mt-1 max-w-[18rem] text-sm">Productos saludables con retiro en sucursal.</p>
-        </div>
-      </section>
-
-      <nav class="grid grid-cols-3 max-md:grid-cols-2 max-md:gap-y-xl max-md:gap-x-8 gap-xl" aria-label="Enlaces secundarios de tienda">
-        @for (group of footerGroups; track group.label) {
-          <section>
-            <h2 class="text-white text-[0.72rem] font-bold tracking-[0.12em] uppercase mb-2">{{ group.label }}</h2>
-            <ul class="grid gap-[0.4rem] list-none m-0 p-0">
-              @for (link of group.links; track link.label) {
-                <li>
-                  @if (link.external) {
-                    <a [href]="link.path" target="_blank" rel="noreferrer" class="text-text-on-dark-muted text-[0.86rem] leading-relaxed no-underline transition-all duration-200 hover:text-white hover:opacity-85">{{ link.label }}</a>
-                  } @else {
-                    <a [routerLink]="link.path" class="text-text-on-dark-muted text-[0.86rem] leading-relaxed no-underline transition-all duration-200 hover:text-white hover:opacity-85">{{ link.label }}</a>
-                  }
-                </li>
-              }
-            </ul>
-          </section>
-        }
-      </nav>
-
-    </div>
-  </footer>
+  <app-store-footer
+    [links]="footerLinks"
+    [copyright]="copyright"
+  />
 </div>

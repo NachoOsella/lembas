@@ -1,11 +1,13 @@
 import { Component, input } from '@angular/core';
+import { Card } from 'primeng/card';
 
 @Component({
   selector: 'app-section-card',
+  imports: [Card],
   templateUrl: './app-section-card.html',
   styleUrl: './app-section-card.css',
 })
-/** Provides a consistent card container for dashboards, forms, and content sections. */
+/** Provides a PrimeNG-backed card container for dashboards, forms, and content sections. */
 export class AppSectionCard {
   readonly eyebrow = input<string | null>(null);
   readonly title = input<string | null>(null);

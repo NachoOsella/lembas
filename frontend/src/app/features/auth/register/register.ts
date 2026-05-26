@@ -11,13 +11,14 @@ import {
 } from '@angular/forms/signals';
 import { HttpErrorResponse } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
+import { ButtonDirective, ButtonLabel } from 'primeng/button';
+import { InputText } from 'primeng/inputtext';
 
 import { ApiErrorResponse, AuthService, RegisterRequest } from '../../../core/services/auth';
-import { AppButton } from '../../../shared/components';
 
 @Component({
   selector: 'app-register',
-  imports: [FormField, RouterLink, AppButton],
+  imports: [FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })

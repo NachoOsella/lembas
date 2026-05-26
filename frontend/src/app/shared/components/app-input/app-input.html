@@ -1,0 +1,39 @@
+@if (prefixIcon() || suffixIcon()) {
+  <p-iconField [iconPosition]="suffixIcon() ? 'right' : 'left'">
+    @if (prefixIcon()) {
+      <p-inputIcon [styleClass]="prefixIcon()" />
+    }
+    <input
+      pInputText
+      [type]="type()"
+      [placeholder]="placeholder()"
+      [disabled]="disabled()"
+      [readonly]="readonly()"
+      [value]="value()"
+      [class]="inputClass()"
+      [attr.aria-label]="ariaLabel()"
+      [attr.data-testid]="testId()"
+      (input)="onInput($event)"
+      (blur)="onBlur()"
+      (focus)="onFocus()"
+    />
+    @if (suffixIcon()) {
+      <p-inputIcon [styleClass]="suffixIcon()" />
+    }
+  </p-iconField>
+} @else {
+  <input
+    pInputText
+    [type]="type()"
+    [placeholder]="placeholder()"
+    [disabled]="disabled()"
+    [readonly]="readonly()"
+    [value]="value()"
+    [class]="inputClass()"
+    [attr.aria-label]="ariaLabel()"
+    [attr.data-testid]="testId()"
+    (input)="onInput($event)"
+    (blur)="onBlur()"
+    (focus)="onFocus()"
+  />
+}

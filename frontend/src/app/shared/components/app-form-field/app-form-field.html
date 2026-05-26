@@ -1,0 +1,28 @@
+<div class="form-field" [class.form-field--error]="hasError()">
+  <label [for]="inputId()" class="form-field__label">
+    {{ label() }}
+    @if (required()) {
+      <span class="form-field__required" aria-hidden="true">*</span>
+    }
+  </label>
+
+  <app-input
+    [id]="inputId()"
+    [type]="type()"
+    [placeholder]="placeholder()"
+    [disabled]="disabled()"
+    [readonly]="readonly()"
+    [invalid]="hasError()"
+    [size]="size()"
+    [prefixIcon]="prefixIcon()"
+    [suffixIcon]="suffixIcon()"
+    [testId]="testId()"
+    [(value)]="value"
+  />
+
+  @if (error()) {
+    <app-field-hint tone="error">{{ error() }}</app-field-hint>
+  } @else if (hint()) {
+    <app-field-hint tone="hint">{{ hint() }}</app-field-hint>
+  }
+</div>

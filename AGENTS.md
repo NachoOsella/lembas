@@ -38,6 +38,7 @@ Feature branches from main, squash-merge PRs. Conventional commits: feat fix doc
 ## FE (ANGULAR)
 
 - Standalone components, signals (no NgRx), PrimeNG+Tailwind v4 (no Material).
+- Prefer PrimeNG components/directives for UI controls whenever available (buttons, inputs, password fields, dialogs, messages, tables, menus, etc.); avoid plain HTML + Tailwind-only controls when a PrimeNG equivalent exists. Use Tailwind/custom CSS mainly for layout, spacing, and brand-specific refinements around PrimeNG components.
 - All-states pattern (loading/error/empty/data). Services hold state.
 - Functional guards CanActivateFn: admin=[authGuard,adminGuard], customer=[authGuard,customerGuard].
 - Lazy routes (loadChildren/loadComponent): /store, /auth (login/register), /customer (profile|orders|checkout), /admin (dashboard|products|inventory|orders|pos|cash|suppliers|reports|users).

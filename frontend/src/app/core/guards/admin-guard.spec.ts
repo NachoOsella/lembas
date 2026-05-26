@@ -1,17 +1,11 @@
-import { TestBed } from '@angular/core/testing';
-import { CanActivateFn } from '@angular/router';
-
 import { adminGuard } from './admin-guard';
 
-describe('adminGuard', () => {
-  const executeGuard: CanActivateFn = (...guardParameters) =>
-    TestBed.runInInjectionContext(() => adminGuard(...guardParameters));
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-  });
-
-  it('should be created', () => {
-    expect(executeGuard).toBeTruthy();
+/**
+ * Admin guard re-exports from the unified auth-guard module.
+ * Full behavioral tests live in auth-guard.spec.ts.
+ */
+describe('adminGuard (re-export)', () => {
+  it('should be defined', () => {
+    expect(adminGuard).toBeDefined();
   });
 });

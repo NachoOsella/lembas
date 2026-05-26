@@ -1,5 +1,1 @@
-import { CanActivateFn } from '@angular/router';
-
-export const adminGuard: CanActivateFn = (route, state) => {
-  return true;
-};
+export { adminGuard } from './auth-guard';
