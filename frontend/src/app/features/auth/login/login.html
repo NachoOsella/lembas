@@ -1,7 +1,10 @@
-<div class="login-page min-h-dvh bg-canvas text-text font-sans tracking-tight flex items-center justify-center px-4 py-8 md:px-8">
+<div
+  class="login-page min-h-dvh bg-canvas text-text font-sans tracking-tight flex items-center justify-center px-4 py-8 md:px-8"
+>
   <section class="login-shell w-full max-w-5xl" aria-labelledby="login-title">
-    <div class="login-card bg-surface rounded-[28px] shadow-card overflow-hidden grid lg:grid-cols-[0.95fr_1.05fr]">
-
+    <div
+      class="login-card bg-surface rounded-[28px] shadow-card overflow-hidden grid lg:grid-cols-[0.95fr_1.05fr]"
+    >
       <!-- Brand panel mirrors register while focusing the copy on returning customers. -->
       <aside class="login-hero relative hidden lg:flex flex-col justify-between p-9 text-white">
         <div class="relative z-10 flex items-center gap-3">
@@ -14,12 +17,16 @@
           />
           <div>
             <strong class="block text-2xl font-[700] leading-tight">Lembas</strong>
-            <span class="text-xs font-bold tracking-[0.16em] uppercase text-white/70">Tienda saludable</span>
+            <span class="text-xs font-bold tracking-[0.16em] uppercase text-white/70"
+              >Tienda saludable</span
+            >
           </div>
         </div>
 
         <div class="relative z-10 max-w-sm">
-          <p class="mb-4 inline-flex items-center gap-2 rounded-pill bg-white/12 px-3 py-1.5 text-xs font-bold tracking-[0.12em] uppercase backdrop-blur">
+          <p
+            class="mb-4 inline-flex items-center gap-2 rounded-pill bg-white/12 px-3 py-1.5 text-xs font-bold tracking-[0.12em] uppercase backdrop-blur"
+          >
             <i class="pi pi-sparkles" aria-hidden="true"></i>
             Compra saludable
           </p>
@@ -31,7 +38,9 @@
           </p>
         </div>
 
-        <div class="relative z-10 grid grid-cols-3 gap-3 text-center text-xs font-semibold text-white/78">
+        <div
+          class="relative z-10 grid grid-cols-3 gap-3 text-center text-xs font-semibold text-white/78"
+        >
           <span class="rounded-2xl bg-white/10 px-3 py-3 backdrop-blur">Retiro agil</span>
           <span class="rounded-2xl bg-white/10 px-3 py-3 backdrop-blur">Cuenta segura</span>
           <span class="rounded-2xl bg-white/10 px-3 py-3 backdrop-blur">Stock local</span>
@@ -41,16 +50,29 @@
       <div class="p-6 sm:p-8 md:p-10 lg:p-12 flex flex-col justify-center">
         <!-- Compact mobile brand, keeping the card balanced on small screens. -->
         <div class="mb-7 flex items-center justify-center gap-3 lg:hidden">
-          <img src="/brand/lembas-icon.svg?v=4" alt="Lembas" width="44" height="44" class="size-11 object-contain" />
+          <img
+            src="/brand/lembas-icon.svg?v=4"
+            alt="Lembas"
+            width="44"
+            height="44"
+            class="size-11 object-contain"
+          />
           <div>
             <strong class="block text-primary text-xl font-[750] leading-tight">Lembas</strong>
-            <span class="text-[0.68rem] font-bold tracking-[0.14em] uppercase text-text-muted">Tienda saludable</span>
+            <span class="text-[0.68rem] font-bold tracking-[0.14em] uppercase text-text-muted"
+              >Tienda saludable</span
+            >
           </div>
         </div>
 
         <div class="mb-6">
-          <p class="mb-2 text-xs font-bold tracking-[0.16em] uppercase text-accent">Iniciar sesion</p>
-          <h1 id="login-title" class="text-[clamp(1.75rem,3vw,2.35rem)] font-[760] leading-tight tracking-[-0.035em] text-primary-dark">
+          <p class="mb-2 text-xs font-bold tracking-[0.16em] uppercase text-accent">
+            Iniciar sesion
+          </p>
+          <h1
+            id="login-title"
+            class="text-[clamp(1.75rem,3vw,2.35rem)] font-[760] leading-tight tracking-[-0.035em] text-primary-dark"
+          >
             Bienvenido a Lembas
           </h1>
           <p class="mt-2 text-sm leading-6 text-text-muted">
@@ -93,11 +115,16 @@
                 autocomplete="email"
                 placeholder="tucorreo@ejemplo.com"
                 class="login-input login-input--with-icon"
-                [class.login-input--error]="(form.email().touched() && form.email().errors().length) || showEmailRealtimeError()"
+                [class.login-input--error]="
+                  (form.email().touched() && form.email().errors().length) ||
+                  showEmailRealtimeError()
+                "
               />
               <i class="pi pi-at login-field-icon" aria-hidden="true"></i>
             </div>
-            @if ((form.email().touched() && form.email().errors().length) || showEmailRealtimeError()) {
+            @if (
+              (form.email().touched() && form.email().errors().length) || showEmailRealtimeError()
+            ) {
               <p class="login-error" data-testid="email-error">
                 <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
                 {{ form.email().errors()[0].message }}
@@ -117,7 +144,10 @@
                 autocomplete="current-password"
                 placeholder="Tu contrasena"
                 class="login-input pr-11"
-                [class.login-input--error]="(form.password().touched() && form.password().errors().length) || showPasswordRealtimeError()"
+                [class.login-input--error]="
+                  (form.password().touched() && form.password().errors().length) ||
+                  showPasswordRealtimeError()
+                "
               />
               <button
                 pButton
@@ -131,10 +161,16 @@
                 data-testid="toggle-password"
                 (click)="passwordVisible.set(!passwordVisible())"
               >
-                <i [class]="passwordVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'" aria-hidden="true"></i>
+                <i
+                  [class]="passwordVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                  aria-hidden="true"
+                ></i>
               </button>
             </div>
-            @if ((form.password().touched() && form.password().errors().length) || showPasswordRealtimeError()) {
+            @if (
+              (form.password().touched() && form.password().errors().length) ||
+              showPasswordRealtimeError()
+            ) {
               <p class="login-error" data-testid="password-error">
                 <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
                 {{ form.password().errors()[0].message }}
@@ -159,7 +195,10 @@
 
         <p class="mt-6 text-center text-sm text-text-muted">
           No tenes cuenta?
-          <a routerLink="/auth/register" class="font-[750] text-accent no-underline transition-colors duration-200 hover:text-primary hover:underline">
+          <a
+            routerLink="/auth/register"
+            class="font-[750] text-accent no-underline transition-colors duration-200 hover:text-primary hover:underline"
+          >
             Registrate
           </a>
         </p>

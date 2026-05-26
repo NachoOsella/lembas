@@ -32,4 +32,3 @@ describe('Skeleton', () => {
     expect(element.style.height).toBe('50px');
   });
 });
-

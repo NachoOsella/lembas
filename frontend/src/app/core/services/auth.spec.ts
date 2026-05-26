@@ -124,7 +124,12 @@ describe('Auth service', () => {
       expect(req.request.body.phone).toBeNull();
       req.flush({
         ...successResponse,
-        user: { ...successResponse.user, email: 'sam@lembas.com', firstName: 'Samwise', lastName: 'Gamgee' },
+        user: {
+          ...successResponse.user,
+          email: 'sam@lembas.com',
+          firstName: 'Samwise',
+          lastName: 'Gamgee',
+        },
       });
     });
 
@@ -143,7 +148,9 @@ describe('Auth service', () => {
       };
 
       service.register(validRequest).subscribe({
-        next: () => { throw new Error('Expected error, got success'); },
+        next: () => {
+          throw new Error('Expected error, got success');
+        },
         error: (error) => {
           expect(error.status).toBe(409);
           expect(error.error.code).toBe('EMAIL_DUPLICATED');
@@ -185,7 +192,9 @@ describe('Auth service', () => {
       };
 
       service.register(invalidRequest).subscribe({
-        next: () => { throw new Error('Expected error, got success'); },
+        next: () => {
+          throw new Error('Expected error, got success');
+        },
         error: (error) => {
           expect(error.status).toBe(400);
           expect(error.error.code).toBe('VALIDATION_ERROR');
@@ -200,7 +209,9 @@ describe('Auth service', () => {
     /** Should propagate the error when a network failure occurs. */
     it('Should_throwError_when_registerWithNetworkFailure', () => {
       service.register(validRequest).subscribe({
-        next: () => { throw new Error('Expected error, got success'); },
+        next: () => {
+          throw new Error('Expected error, got success');
+        },
         error: (error) => {
           expect(error.status).toBe(0);
           expect(error.error).toBeInstanceOf(ProgressEvent);

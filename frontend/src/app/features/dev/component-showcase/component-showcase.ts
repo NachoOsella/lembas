@@ -70,7 +70,11 @@ export class ComponentShowcase {
   protected readonly tableFirst = signal(0);
 
   protected readonly publicScreens: readonly ShowcaseLink[] = [
-    { label: 'Catalogo publico', path: '/store', description: 'Listado principal de productos para clientes.' },
+    {
+      label: 'Catalogo publico',
+      path: '/store',
+      description: 'Listado principal de productos para clientes.',
+    },
     { label: 'Login', path: '/auth/login', description: 'Acceso de clientes y administradores.' },
     { label: 'Registro', path: '/auth/register', description: 'Alta de nuevos clientes.' },
   ];
@@ -78,13 +82,21 @@ export class ComponentShowcase {
   protected readonly customerScreens: readonly ShowcaseLink[] = [
     { label: 'Perfil', path: '/customer/profile', description: 'Datos de cuenta del cliente.' },
     { label: 'Pedidos', path: '/customer/orders', description: 'Historial de compras y estados.' },
-    { label: 'Checkout', path: '/customer/checkout', description: 'Confirmacion de retiro y pago online.' },
+    {
+      label: 'Checkout',
+      path: '/customer/checkout',
+      description: 'Confirmacion de retiro y pago online.',
+    },
   ];
 
   protected readonly adminScreens: readonly ShowcaseLink[] = [
     { label: 'Dashboard', path: '/admin/dashboard', description: 'Resumen operativo.' },
     { label: 'Productos', path: '/admin/products', description: 'Gestion del catalogo.' },
-    { label: 'Inventario', path: '/admin/inventory', description: 'Stock por lotes y vencimientos.' },
+    {
+      label: 'Inventario',
+      path: '/admin/inventory',
+      description: 'Stock por lotes y vencimientos.',
+    },
     { label: 'Pedidos', path: '/admin/orders', description: 'Administracion de ordenes.' },
     { label: 'POS', path: '/admin/pos', description: 'Venta presencial.' },
     { label: 'Caja', path: '/admin/cash', description: 'Apertura, cierre y arqueo fisico.' },

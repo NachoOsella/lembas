@@ -75,8 +75,22 @@
 
   <!-- ===== Main Area ===== -->
   <div class="admin__main">
+    <!-- Backdrop for mobile sidebar -->
+    @if (!collapsed()) {
+      <div class="admin__sidebar-backdrop" (click)="toggleSidebar()" aria-hidden="true"></div>
+    }
+
     <!-- Topbar -->
     <header class="admin__topbar">
+      <!-- Mobile hamburger toggle -->
+      <button
+        class="admin__mobile-toggle"
+        (click)="toggleSidebar()"
+        aria-label="Alternar menu de navegacion"
+      >
+        <i class="pi pi-bars" aria-hidden="true"></i>
+      </button>
+
       <!-- Breadcrumbs -->
       <div class="admin__breadcrumb-wrap">
         @for (item of breadcrumbs(); track item.label; let last = $last) {

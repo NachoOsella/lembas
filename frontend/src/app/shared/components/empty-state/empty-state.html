@@ -9,10 +9,6 @@
   </div>
 
   @if (actionLabel()) {
-    <p-button
-      [label]="actionLabel() ?? ''"
-      rounded="true"
-      (onClick)="onAction()"
-    />
+    <p-button [label]="actionLabel() ?? ''" rounded="true" (onClick)="onAction()" />
   }
 </section>

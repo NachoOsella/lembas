@@ -8,61 +8,63 @@
   @if (loading() && !data().length) {
     <app-loading-spinner label="Cargando datos..." surface="card" />
   } @else {
-    <p-table
-      [value]="data()"
-      [columns]="columns()"
-      [sortField]="sortable() ? columns()[0]?.field : undefined"
-      [sortMode]="sortable() ? 'single' : 'multiple'"
-      [paginator]="paginated()"
-      [rows]="rows()"
-      [first]="first()"
-      [showCurrentPageReport]="paginated()"
-      currentPageReportTemplate="{first}-{last} de {totalRecords}"
-      styleClass="app-data-table"
-      (onPage)="onPageChange($event)"
-    >
-      <ng-template #header let-columns>
-        <tr>
-          @for (col of columns; track col.field) {
-            <th
-              [pSortableColumn]="col.sortable !== false && sortable() ? col.field : undefined"
-              [style.width]="col.width"
-            >
-              {{ col.header }}
-              @if (col.sortable !== false && sortable()) {
-                <p-sortIcon [field]="col.field" />
-              }
-            </th>
-          }
-        </tr>
-      </ng-template>
-
-      <ng-template #body let-rowData let-columns="columns">
-        @if (bodyTemplate()) {
-          <ng-container
-            *ngTemplateOutlet="bodyTemplate()!; context: { $implicit: rowData, columns: columns }"
-          />
-        } @else {
-          <tr (click)="onRowClick(rowData)" class="app-data-table__row">
+    <div class="app-data-table__scroll-area">
+      <p-table
+        [value]="data()"
+        [columns]="columns()"
+        [sortField]="sortable() ? columns()[0]?.field : undefined"
+        [sortMode]="sortable() ? 'single' : 'multiple'"
+        [paginator]="paginated()"
+        [rows]="rows()"
+        [first]="first()"
+        [showCurrentPageReport]="paginated()"
+        currentPageReportTemplate="{first}-{last} de {totalRecords}"
+        styleClass="app-data-table"
+        (onPage)="onPageChange($event)"
+      >
+        <ng-template #header let-columns>
+          <tr>
             @for (col of columns; track col.field) {
-              <td>{{ rowData[col.field] }}</td>
+              <th
+                [pSortableColumn]="col.sortable !== false && sortable() ? col.field : undefined"
+                [style.width]="col.width"
+              >
+                {{ col.header }}
+                @if (col.sortable !== false && sortable()) {
+                  <p-sortIcon [field]="col.field" />
+                }
+              </th>
             }
           </tr>
-        }
-      </ng-template>
+        </ng-template>
 
-      <ng-template #emptymessage>
-        <tr>
-          <td [attr.colspan]="columns().length">
-            <app-empty-state
-              [title]="emptyTitle()"
-              [description]="emptyDescription()"
-              [actionLabel]="emptyActionLabel()"
-              (action)="onEmptyAction()"
+        <ng-template #body let-rowData let-columns="columns">
+          @if (bodyTemplate()) {
+            <ng-container
+              *ngTemplateOutlet="bodyTemplate()!; context: { $implicit: rowData, columns: columns }"
             />
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+          } @else {
+            <tr (click)="onRowClick(rowData)" class="app-data-table__row">
+              @for (col of columns; track col.field) {
+                <td>{{ rowData[col.field] }}</td>
+              }
+            </tr>
+          }
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td [attr.colspan]="columns().length">
+              <app-empty-state
+                [title]="emptyTitle()"
+                [description]="emptyDescription()"
+                [actionLabel]="emptyActionLabel()"
+                (action)="onEmptyAction()"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
   }
 </div>

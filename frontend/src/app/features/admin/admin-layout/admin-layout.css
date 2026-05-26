@@ -274,8 +274,42 @@
 .admin__content {
   flex: 1;
   min-width: 0;
+  width: 100%;
   padding: var(--spacing-xl);
   overflow-x: hidden;
+}
+
+/* Mobile Topbar Menu Toggle */
+.admin__mobile-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.admin__mobile-toggle:hover {
+  color: var(--color-text);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Mobile Sidebar Backdrop */
+.admin__sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 40;
 }
 
 /* ------------------------------------------------------------------ */
@@ -283,36 +317,45 @@
 /* ------------------------------------------------------------------ */
 
 @media (max-width: 48rem) {
-  .admin {
-    flex-direction: column;
+  .admin__mobile-toggle {
+    display: flex;
+  }
+
+  .admin__sidebar-backdrop {
+    display: block;
   }
 
   .admin__sidebar {
-    width: 100%;
-    height: auto;
-    position: static;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 16rem;
+    z-index: 50;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .admin__sidebar--collapsed {
-    width: 100%;
+    transform: translateX(-100%);
   }
 
   .admin__sidebar-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    overflow-x: auto;
-    padding: 0.5rem;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    overflow-y: auto;
+    padding: 0.65rem 0.5rem;
   }
 
   .admin__nav-link {
-    padding: 0.35rem 0.6rem;
-    min-height: 2.2rem;
-    font-size: 0.8rem;
+    min-height: 2.5rem;
+    font-size: 0.88rem;
+    padding: 0.4rem 0.75rem;
   }
 
   .admin__topbar {
     padding-inline: 1rem;
+    gap: 0.5rem;
   }
 
   .admin__content {
@@ -328,12 +371,6 @@
   .admin__sidebar-brand {
     height: 3.45rem;
     min-height: 3.45rem;
-  }
-
-  .admin__sidebar-nav {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: 0.6rem;
   }
 
   .admin__nav-link {

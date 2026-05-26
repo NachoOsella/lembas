@@ -3,7 +3,13 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 
 import { UserService } from './user';
-import { Branch, CreateUserRequest, Page, UpdateUserRequest, UserResponse } from '../../shared/models/user';
+import {
+  Branch,
+  CreateUserRequest,
+  Page,
+  UpdateUserRequest,
+  UserResponse,
+} from '../../shared/models/user';
 
 describe('UserService', () => {
   let service: UserService;

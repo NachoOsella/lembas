@@ -2,7 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { Branch, CreateUserRequest, Page, UpdateUserRequest, UserResponse } from '../../shared/models/user';
+import {
+  Branch,
+  CreateUserRequest,
+  Page,
+  UpdateUserRequest,
+  UserResponse,
+} from '../../shared/models/user';
 
 /**
  * CRUD service for admin user management and branch listing.
@@ -19,12 +25,7 @@ export class UserService {
   /**
    * Returns a paginated list of internal users, optionally filtered by role or branch.
    */
-  listUsers(
-    role?: string,
-    branchId?: number,
-    page = 0,
-    size = 20,
-  ): Observable<Page<UserResponse>> {
+  listUsers(role?: string, branchId?: number, page = 0, size = 20): Observable<Page<UserResponse>> {
     let params = new HttpParams().set('page', page).set('size', size);
     if (role) {
       params = params.set('role', role);

@@ -9,11 +9,17 @@
 
 .users-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(0.85rem, 1.8vw, 1.15rem);
-  width: min(100%, 98rem);
+  width: 100%;
+  max-width: 98rem;
   min-width: 0;
   margin: 0 auto;
   padding-bottom: clamp(2rem, 5vw, 4rem);
+}
+
+.users-page > * {
+  min-width: 0;
 }
 
 .users-page__hero {
@@ -23,6 +29,8 @@
   align-items: end;
   justify-content: space-between;
   gap: 1rem;
+  width: 100%;
+  min-width: 0;
   min-height: clamp(8.2rem, 13vw, 10.25rem);
   padding: clamp(1.25rem, 2.6vw, 2rem);
   overflow: hidden;
@@ -96,9 +104,10 @@
   flex: 0 0 auto;
 }
 
-/* ---------------------------------------------------------------------------
-   Toolbar styles (inside data-table)
-   --------------------------------------------------------------------------- */
+.users-page__directory {
+  width: 100%;
+  min-width: 0;
+}
 .table-toolbar__info {
   display: flex;
   flex-direction: column;
@@ -131,7 +140,7 @@
 }
 
 .table-toolbar__actions app-search-bar {
-  flex: 1 1 16rem;
+  flex: 1 1 auto;
   min-width: 12rem;
 }
 
@@ -185,45 +194,64 @@
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 48rem) {
   .table-toolbar__actions {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
-    min-width: 100%;
+    width: 100%;
+    min-width: 0;
   }
 
   .table-toolbar__actions app-search-bar {
+    flex: 0 0 auto;
+    width: 100%;
     min-width: 0;
   }
 }
 
 @media (max-width: 34rem) {
   .users-page {
-    gap: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-bottom: 2rem;
+    width: 100%;
+    min-width: 0;
   }
 
   .users-page__hero {
     min-height: auto;
     margin-inline: 0;
-    padding: 1.15rem;
+    padding: 1.25rem 1rem;
     border-radius: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .users-page__hero-copy {
+    width: 100%;
+    max-width: 100%;
   }
 
   .users-page__hero h1 {
-    font-size: clamp(2.15rem, 15vw, 3rem);
+    font-size: clamp(2.15rem, 10vw, 3rem);
   }
 
   .users-page__hero p:not(.users-page__eyebrow) {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    display: block;
+    margin-top: 0.5rem;
+    width: 100%;
   }
 
   .users-page__hero-actions {
     width: 100%;
     min-width: 0;
+    margin-top: 0.5rem;
   }
 
   .users-page__hero-actions app-button {

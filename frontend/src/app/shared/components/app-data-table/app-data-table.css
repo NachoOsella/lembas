@@ -5,14 +5,21 @@
 /* Shell wrapper provides the card visual and owns horizontal overflow on small screens. */
 .app-data-table-shell {
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
   background: #ffffff;
   border: 1px solid rgba(7, 95, 54, 0.11);
   border-radius: 1.35rem;
   box-shadow:
     0 1.5rem 3rem rgba(38, 30, 17, 0.08),
     0 0 0 1px rgba(255, 255, 255, 0.65) inset;
+  overflow: hidden;
+}
+
+.app-data-table__scroll-area {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: block;
 }
 
 /* Optional toolbar above the table */
@@ -42,11 +49,21 @@
   min-width: 46rem;
 }
 
-:host ::ng-deep .app-data-table .p-datatable-header,
+:host ::ng-deep .app-data-table .p-datatable-header {
+  display: none !important;
+}
+
 :host ::ng-deep .app-data-table .p-datatable-footer {
-  background: transparent;
-  border: none;
-  padding: 1rem 1.25rem;
+  display: none !important;
+}
+
+:host ::ng-deep .app-data-table .p-datatable-wrapper {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+:host ::ng-deep .app-data-table table {
+  margin: 0 !important;
 }
 
 :host ::ng-deep .app-data-table .p-datatable-thead > tr > th {
@@ -136,6 +153,7 @@
 @media (max-width: 48rem) {
   .app-data-table__toolbar {
     align-items: stretch;
+    flex-direction: column;
     padding: 0.95rem;
   }
 

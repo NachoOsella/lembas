@@ -79,13 +79,21 @@ export class AdminLayout implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   ngOnInit(): void {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      this.collapsed.set(true);
+    }
     this.buildBreadcrumbs(this.router.url);
     this.router.events
       .pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
         takeUntil(this.destroy$),
       )
-      .subscribe((e) => this.buildBreadcrumbs(e.urlAfterRedirects));
+      .subscribe((e) => {
+        this.buildBreadcrumbs(e.urlAfterRedirects);
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+          this.collapsed.set(true);
+        }
+      });
   }
 
   ngOnDestroy(): void {

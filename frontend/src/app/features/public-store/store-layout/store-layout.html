@@ -1,4 +1,7 @@
-<div class="store bg-canvas text-text font-sans tracking-tight min-h-screen flex flex-col" role="document">
+<div
+  class="store bg-canvas text-text font-sans tracking-tight min-h-screen flex flex-col"
+  role="document"
+>
   <app-store-nav
     [brand]="brand"
     [cartCount]="cartItemsCount()"
@@ -14,8 +17,5 @@
     <router-outlet />
   </main>
 
-  <app-store-footer
-    [links]="footerLinks"
-    [copyright]="copyright"
-  />
+  <app-store-footer [links]="footerLinks" [copyright]="copyright" />
 </div>

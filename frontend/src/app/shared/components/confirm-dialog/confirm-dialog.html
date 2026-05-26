@@ -30,7 +30,13 @@
   </div>
 
   <ng-template #footer>
-    <p-button [label]="cancelLabel()" severity="secondary" outlined="true" rounded="true" (onClick)="onCancel()" />
+    <p-button
+      [label]="cancelLabel()"
+      severity="secondary"
+      outlined="true"
+      rounded="true"
+      (onClick)="onCancel()"
+    />
     <p-button
       [label]="confirmLabel()"
       [severity]="destructive() ? 'danger' : 'success'"

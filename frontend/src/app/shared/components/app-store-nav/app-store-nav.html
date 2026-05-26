@@ -1,12 +1,8 @@
 <header class="app-store-nav">
   <div class="app-store-nav__inner">
     <!-- Brand -->
-    <a [routerLink]="brand().homeRoute"
-       class="app-store-nav__brand"
-       aria-label="Ir al inicio">
-      <img [src]="brand().logoUrl" alt=""
-           width="44" height="44"
-           class="app-store-nav__logo" />
+    <a [routerLink]="brand().homeRoute" class="app-store-nav__brand" aria-label="Ir al inicio">
+      <img [src]="brand().logoUrl" alt="" width="44" height="44" class="app-store-nav__logo" />
       <span class="app-store-nav__brand-text">
         <strong>{{ brand().title }}</strong>
         <small>{{ brand().subtitle }}</small>
@@ -45,29 +41,32 @@
           aria-label="Opciones de usuario"
         />
       } @else {
-        <a routerLink="/auth/login"
-           class="app-store-nav__login">
-          Ingresar
-        </a>
-        <a routerLink="/auth/register"
-           class="app-store-nav__cta">
-          Crear cuenta
-        </a>
+        <a routerLink="/auth/login" class="app-store-nav__login"> Ingresar </a>
+        <a routerLink="/auth/register" class="app-store-nav__cta"> Crear cuenta </a>
       }
 
       <!-- Cart -->
-      <a routerLink="/customer/checkout"
-         class="app-store-nav__cart"
-         aria-label="Ver carrito, {{ cartCount() }} productos"
-         (click)="cartClick.emit()">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"
-             class="app-store-nav__cart-icon">
+      <a
+        routerLink="/customer/checkout"
+        class="app-store-nav__cart"
+        aria-label="Ver carrito, {{ cartCount() }} productos"
+        (click)="cartClick.emit()"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="22"
+          height="22"
+          aria-hidden="true"
+          class="app-store-nav__cart-icon"
+        >
           <circle cx="9" cy="20" r="1.5" />
           <circle cx="18" cy="20" r="1.5" />
           <path d="M1 1h3l2.5 13h11l3.5-9H5" />
         </svg>
         @if (cartCount() > 0) {
-          <span class="app-store-nav__cart-badge" aria-label="Productos en carrito">{{ cartCount() }}</span>
+          <span class="app-store-nav__cart-badge" aria-label="Productos en carrito">{{
+            cartCount()
+          }}</span>
         }
       </a>
     </div>
