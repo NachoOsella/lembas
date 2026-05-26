@@ -7,6 +7,7 @@ import {
   CreateUserRequest,
   Page,
   UpdateUserRequest,
+  UserMetrics,
   UserResponse,
 } from '../../shared/models/user';
 
@@ -25,13 +26,23 @@ export class UserService {
   /**
    * Returns a paginated list of internal users, optionally filtered by role or branch.
    */
-  listUsers(role?: string, branchId?: number, page = 0, size = 20): Observable<Page<UserResponse>> {
+  listUsers(
+    role?: string,
+    branchId?: number,
+    page = 0,
+    size = 20,
+    search?: string,
+  ): Observable<Page<UserResponse>> {
     let params = new HttpParams().set('page', page).set('size', size);
     if (role) {
       params = params.set('role', role);
     }
     if (branchId != null) {
       params = params.set('branchId', branchId);
+    }
+    const normalizedSearch = search?.trim();
+    if (normalizedSearch) {
+      params = params.set('search', normalizedSearch);
     }
     return this.http.get<Page<UserResponse>>(this.usersUrl, { params });
   }
@@ -73,5 +84,12 @@ export class UserService {
    */
   listBranches(): Observable<Branch[]> {
     return this.http.get<Branch[]>(this.branchesUrl);
+  }
+
+  /**
+   * Returns aggregate metrics for the internal users directory.
+   */
+  getUserMetrics(): Observable<UserMetrics> {
+    return this.http.get<UserMetrics>(`${this.usersUrl}/metrics`);
   }
 }

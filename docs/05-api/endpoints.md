@@ -148,7 +148,7 @@ GET /api/admin/recommendations
 ### Users (internal)
 
 ```
-GET    /api/admin/users?role=&branchId=&page=&size=
+GET    /api/admin/users?role=&branchId=&search=&page=&size=
 POST   /api/admin/users
 PUT    /api/admin/users/{id}
 PATCH  /api/admin/users/{id}/status  Request: { enabled }

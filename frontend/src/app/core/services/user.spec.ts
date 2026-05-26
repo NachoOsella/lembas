@@ -55,10 +55,12 @@ describe('UserService', () => {
       req.flush(expectedPage);
     });
 
-    it('should include optional role and branchId params', () => {
-      service.listUsers('MANAGER', 2, 0, 10).subscribe();
+    it('should include optional role, branchId, and search params', () => {
+      service.listUsers('MANAGER', 2, 0, 10, 'gandalf').subscribe();
 
-      const req = httpMock.expectOne(`${usersUrl}?page=0&size=10&role=MANAGER&branchId=2`);
+      const req = httpMock.expectOne(
+        `${usersUrl}?page=0&size=10&role=MANAGER&branchId=2&search=gandalf`,
+      );
       expect(req.request.method).toBe('GET');
       req.flush({ content: [] });
     });

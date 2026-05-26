@@ -3,6 +3,7 @@ package com.dietetica.lembas.users.service;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
 import com.dietetica.lembas.users.dto.UpdateUserRequest;
+import com.dietetica.lembas.users.dto.UserMetricsResponse;
 import com.dietetica.lembas.users.dto.UserResponse;
 import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
@@ -43,15 +44,16 @@ public class UserAdminService {
     }
 
     /**
-     * Returns a paginated list of users, optionally filtered by role and/or branch.
+     * Returns a paginated list of users, optionally filtered by role, branch, and search text.
      *
      * @param role     optional role filter
      * @param branchId optional branch filter
+     * @param search   optional search term matched against name and email
      * @param pageable pagination parameters
      * @return a page of user responses
      */
     @Transactional(readOnly = true)
-    public Page<UserResponse> listUsers(Role role, Long branchId, Pageable pageable) {
+    public Page<UserResponse> listUsers(Role role, Long branchId, String search, Pageable pageable) {
         if (role == Role.CUSTOMER) {
             throw new DomainException(
                     "INVALID_ROLE_FILTER",
@@ -60,16 +62,32 @@ public class UserAdminService {
             );
         }
 
-        if (role != null && branchId != null) {
-            return userRepository.findByRoleAndBranchId(role, branchId, pageable).map(this::toResponse);
+        String normalizedSearch = normalizeSearch(search);
+        return userRepository.findInternalUsers(INTERNAL_ROLES, role, branchId, normalizedSearch, pageable)
+                .map(this::toResponse);
+    }
+
+    /**
+     * Normalizes a free-text search term for case-insensitive matching.
+     * The query applies {@code lower()} on column values, so the search term
+     * is lowercased here to match without wrapping the bound parameter in {@code lower()}
+     * (which causes PostgreSQL type-inference issues when the value is {@code null}).
+     */
+    private String normalizeSearch(String search) {
+        if (search == null) {
+            return null;
         }
-        if (role != null) {
-            return userRepository.findByRole(role, pageable).map(this::toResponse);
-        }
-        if (branchId != null) {
-            return userRepository.findByRoleInAndBranchId(INTERNAL_ROLES, branchId, pageable).map(this::toResponse);
-        }
-        return userRepository.findByRoleIn(INTERNAL_ROLES, pageable).map(this::toResponse);
+        String normalized = search.trim().toLowerCase(Locale.ROOT);
+        return normalized.isEmpty() ? null : normalized;
+    }
+
+    /**
+     * Returns aggregate metrics for the internal user directory via a single native query.
+     */
+    @Transactional(readOnly = true)
+    public UserMetricsResponse getUserMetrics() {
+        var m = userRepository.computeUserMetrics();
+        return new UserMetricsResponse(m.getTotalUsers(), m.getEnabledUsers(), m.getUsersWithBranch());
     }
 
     /**

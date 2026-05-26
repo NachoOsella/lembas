@@ -204,6 +204,7 @@ export class UserForm {
       })
       .subscribe({
         next: () => {
+          this.submitting.set(false);
           this.messageService.add({
             severity: 'success',
             summary: 'Usuario creado',
@@ -238,12 +239,14 @@ export class UserForm {
     if (branchId !== user.branchId) request['branchId'] = branchId;
 
     if (Object.keys(request).length === 0) {
+      this.submitting.set(false);
       this.dialogVisible.set(false);
       return;
     }
 
     this.userService.updateUser(user.id, request).subscribe({
       next: () => {
+        this.submitting.set(false);
         this.messageService.add({
           severity: 'success',
           summary: 'Usuario actualizado',
@@ -298,6 +301,9 @@ export class UserForm {
     switch (apiError?.code) {
       case 'EMAIL_DUPLICATED':
         return 'Ya existe un usuario con este email.';
+      case 'INVALID_USER_BRANCH':
+        this.showBranchPolicyToast(apiError);
+        return null;
       case 'VALIDATION_ERROR':
         return this.formatValidationError(apiError);
       default:
@@ -312,6 +318,18 @@ export class UserForm {
       .map((fe) => `${this.translateField(fe.field)}: ${fe.message}`)
       .join('. ');
     return `Revise los datos ingresados. ${details}`;
+  }
+
+  private showBranchPolicyToast(apiError: ApiErrorResponse): void {
+    const message = apiError?.message ?? '';
+    const translated = message.includes('assigned to a branch')
+      ? 'Los usuarios Gerente y Empleado deben tener una sucursal asignada.'
+      : 'El rol seleccionado no es compatible con la sucursal.';
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Conflicto de permisos',
+      detail: translated,
+    });
   }
 
   private translateField(field: string): string {

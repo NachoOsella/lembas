@@ -3,11 +3,13 @@ package com.dietetica.lembas.users.service;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
 import com.dietetica.lembas.users.dto.UpdateUserRequest;
+import com.dietetica.lembas.users.dto.UserMetricsResponse;
 import com.dietetica.lembas.users.dto.UserResponse;
 import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
+import com.dietetica.lembas.users.repository.UserRepository.UserMetricsProjection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -63,10 +65,12 @@ class UserAdminServiceTest {
         void Should_returnAllUsers_when_noFilters() {
             Pageable pageable = PageRequest.of(0, 20);
             User user = anAdmin();
-            when(userRepository.findByRoleIn(List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE), pageable))
+            when(userRepository.findInternalUsers(
+                    List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
+                    null, null, null, pageable))
                     .thenReturn(new PageImpl<>(List.of(user)));
 
-            Page<UserResponse> result = userAdminService.listUsers(null, null, pageable);
+            Page<UserResponse> result = userAdminService.listUsers(null, null, null, pageable);
 
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().getFirst().email()).isEqualTo("admin@lembas.com");
@@ -75,10 +79,12 @@ class UserAdminServiceTest {
         @Test
         void Should_filterByRole_when_roleProvided() {
             Pageable pageable = PageRequest.of(0, 20);
-            when(userRepository.findByRole(Role.MANAGER, pageable))
+            when(userRepository.findInternalUsers(
+                    List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
+                    Role.MANAGER, null, null, pageable))
                     .thenReturn(new PageImpl<>(List.of(aManager())));
 
-            Page<UserResponse> result = userAdminService.listUsers(Role.MANAGER, null, pageable);
+            Page<UserResponse> result = userAdminService.listUsers(Role.MANAGER, null, null, pageable);
 
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().getFirst().role()).isEqualTo(Role.MANAGER);
@@ -87,10 +93,12 @@ class UserAdminServiceTest {
         @Test
         void Should_filterByBranch_when_branchProvided() {
             Pageable pageable = PageRequest.of(0, 20);
-            when(userRepository.findByRoleInAndBranchId(List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE), 1L, pageable))
+            when(userRepository.findInternalUsers(
+                    List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
+                    null, 1L, null, pageable))
                     .thenReturn(new PageImpl<>(List.of(aManager())));
 
-            Page<UserResponse> result = userAdminService.listUsers(null, 1L, pageable);
+            Page<UserResponse> result = userAdminService.listUsers(null, 1L, null, pageable);
 
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().getFirst().branchId()).isEqualTo(1L);
@@ -99,10 +107,12 @@ class UserAdminServiceTest {
         @Test
         void Should_filterByRoleAndBranch_when_bothFiltersProvided() {
             Pageable pageable = PageRequest.of(0, 20);
-            when(userRepository.findByRoleAndBranchId(Role.MANAGER, 1L, pageable))
+            when(userRepository.findInternalUsers(
+                    List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
+                    Role.MANAGER, 1L, null, pageable))
                     .thenReturn(new PageImpl<>(List.of(aManager())));
 
-            Page<UserResponse> result = userAdminService.listUsers(Role.MANAGER, 1L, pageable);
+            Page<UserResponse> result = userAdminService.listUsers(Role.MANAGER, 1L, null, pageable);
 
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().getFirst().role()).isEqualTo(Role.MANAGER);
@@ -113,9 +123,42 @@ class UserAdminServiceTest {
         void Should_rejectCustomerRoleFilter_when_listingUsers() {
             Pageable pageable = PageRequest.of(0, 20);
 
-            assertThatThrownBy(() -> userAdminService.listUsers(Role.CUSTOMER, null, pageable))
+            assertThatThrownBy(() -> userAdminService.listUsers(Role.CUSTOMER, null, null, pageable))
                     .isInstanceOf(DomainException.class)
                     .hasFieldOrPropertyWithValue("code", "INVALID_ROLE_FILTER");
+        }
+
+        @Test
+        void Should_searchInternalUsers_when_searchProvided() {
+            Pageable pageable = PageRequest.of(0, 20);
+            when(userRepository.findInternalUsers(
+                    List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
+                    null,
+                    null,
+                    "gandalf",
+                    pageable
+            )).thenReturn(new PageImpl<>(List.of(anAdmin())));
+
+            Page<UserResponse> result = userAdminService.listUsers(null, null, "  Gandalf  ", pageable);
+
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().getFirst().email()).isEqualTo("admin@lembas.com");
+        }
+    }
+
+    @Nested
+    class GetUserMetrics {
+
+        @Test
+        void Should_aggregateInternalUserCountsFromRepository() {
+            var projection = mockUserMetricsProjection(30, 25, 20);
+            when(userRepository.computeUserMetrics()).thenReturn(projection);
+
+            var metrics = userAdminService.getUserMetrics();
+
+            assertThat(metrics.totalUsers()).isEqualTo(30);
+            assertThat(metrics.enabledUsers()).isEqualTo(25);
+            assertThat(metrics.usersWithBranch()).isEqualTo(20);
         }
     }
 
@@ -424,6 +467,17 @@ class UserAdminServiceTest {
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    private static UserMetricsProjection mockUserMetricsProjection(long total, long enabled, long withBranch) {
+        return new UserMetricsProjection() {
+            @Override
+            public long getTotalUsers() { return total; }
+            @Override
+            public long getEnabledUsers() { return enabled; }
+            @Override
+            public long getUsersWithBranch() { return withBranch; }
+        };
+    }
 
     private static User existingAdmin() {
         return new User(

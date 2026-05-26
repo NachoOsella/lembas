@@ -17,6 +17,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -92,33 +93,105 @@ class UserRepositoryTest {
     }
 
     /**
-     * Verifies branch filtering and enabled-user filtering queries.
+     * Verifies backend search for admin user management is paginated and excludes customers.
      */
     @Test
-    void findByBranchIdAndFindByEnabledTrueReturnExpectedUsers() {
-        Long branchId = createBranch("Enabled Test Branch");
-        User enabledBranchUser = new User(branchId, "enabled-branch@lembas.com", "hash", "Enabled", "Branch",
-                null, Role.EMPLOYEE);
-        User disabledBranchUser = new User(branchId, "disabled-branch@lembas.com", "hash", "Disabled", "Branch",
-                null, Role.EMPLOYEE);
-        disabledBranchUser.setEnabled(false);
-        User otherBranchUser = new User(null, "enabled-customer@lembas.com", "hash", "Enabled", "Customer",
-                null, Role.CUSTOMER);
-        userRepository.save(enabledBranchUser);
-        userRepository.save(disabledBranchUser);
-        userRepository.save(otherBranchUser);
+    void findInternalUsersReturnsMatchingInternalUsersOnly() {
+        Long branchId = createBranch("Search Test Branch");
+        userRepository.save(new User(null, "search-admin@lembas.com", "hash", "Gandalf", "Grey",
+                null, Role.ADMIN));
+        userRepository.save(new User(branchId, "search-employee@lembas.com", "hash", "Frodo", "Baggins",
+                null, Role.EMPLOYEE));
+        userRepository.save(new User(null, "gandalf-customer@lembas.com", "hash", "Gandalf", "Customer",
+                null, Role.CUSTOMER));
         userRepository.flush();
 
-        Page<User> branchUsers = userRepository.findByBranchId(branchId, PageRequest.of(0, 10));
+        Page<User> result = userRepository.findInternalUsers(
+                List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
+                null,
+                null,
+                "gandalf",
+                PageRequest.of(0, 10)
+        );
 
-        assertThat(branchUsers.getContent())
+        assertThat(result.getContent())
                 .extracting(User::getEmail)
-                .contains("enabled-branch@lembas.com", "disabled-branch@lembas.com")
-                .doesNotContain("enabled-customer@lembas.com");
+                .containsExactly("search-admin@lembas.com");
+    }
+
+    /**
+     * Verifies findInternalUsers works as a regular listing when search is null.
+     */
+    @Test
+    void findInternalUsersReturnsAllInternalUsersWhenSearchIsNull() {
+        Long branchId = createBranch("Null Search Branch");
+        userRepository.save(new User(null, "null-admin@lembas.com", "hash", "Null", "Admin",
+                null, Role.ADMIN));
+        userRepository.save(new User(branchId, "null-employee@lembas.com", "hash", "Null", "Employee",
+                null, Role.EMPLOYEE));
+        userRepository.save(new User(null, "null-customer@lembas.com", "hash", "Null", "Customer",
+                null, Role.CUSTOMER));
+        userRepository.flush();
+
+        Page<User> result = userRepository.findInternalUsers(
+                List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
+                null, null, null,
+                PageRequest.of(0, 10)
+        );
+
+        assertThat(result.getContent())
+                .extracting(User::getEmail)
+                .contains("null-admin@lembas.com", "null-employee@lembas.com")
+                .doesNotContain("null-customer@lembas.com");
+    }
+
+    /**
+     * Verifies single-query metrics aggregation excludes customers.
+     * Flyway V10 seed data adds an additional ADMIN user ("Admin Lembas"),
+     * so the total count includes that row in addition to the ones created here.
+     */
+    @Test
+    void computeUserMetricsExcludesCustomers() {
+        Long branchId = createBranch("Metrics Test Branch");
+        User admin = new User(null, "metrics-admin@lembas.com", "hash", "Metrics", "Admin",
+                null, Role.ADMIN);
+        User employee = new User(branchId, "metrics-employee@lembas.com", "hash", "Metrics", "Employee",
+                null, Role.EMPLOYEE);
+        employee.setEnabled(false);
+        User customer = new User(null, "metrics-customer@lembas.com", "hash", "Metrics", "Customer",
+                null, Role.CUSTOMER);
+        userRepository.save(admin);
+        userRepository.save(employee);
+        userRepository.save(customer);
+        userRepository.flush();
+
+        // 2 inserted internal users + 1 from Flyway V10 seed (admin@lembas.com) = 3
+        var metrics = userRepository.computeUserMetrics();
+
+        assertThat(metrics.getTotalUsers()).isEqualTo(3);
+        assertThat(metrics.getEnabledUsers()).isEqualTo(2);
+        assertThat(metrics.getUsersWithBranch()).isEqualTo(2);
+    }
+
+    /**
+     * Verifies enabled-user filtering query.
+     */
+    @Test
+    void findByEnabledTrueReturnsOnlyEnabledUsers() {
+        Long branchId = createBranch("Enabled Flag Branch");
+        User enabledUser = new User(branchId, "flag-enabled@lembas.com", "hash", "Flag", "Enabled",
+                null, Role.EMPLOYEE);
+        User disabledUser = new User(branchId, "flag-disabled@lembas.com", "hash", "Flag", "Disabled",
+                null, Role.EMPLOYEE);
+        disabledUser.setEnabled(false);
+        userRepository.save(enabledUser);
+        userRepository.save(disabledUser);
+        userRepository.flush();
+
         assertThat(userRepository.findByEnabledTrue())
                 .extracting(User::getEmail)
-                .contains("enabled-branch@lembas.com", "enabled-customer@lembas.com")
-                .doesNotContain("disabled-branch@lembas.com");
+                .contains("flag-enabled@lembas.com")
+                .doesNotContain("flag-disabled@lembas.com");
     }
 
     /**

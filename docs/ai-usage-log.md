@@ -85,9 +85,6 @@
 ## 2026-05-26
 
 - `frontend/src/app/features/admin/users/users.ts`, `frontend/src/app/features/admin/users/users.html`, `frontend/src/app/features/admin/users/users.css`, `frontend/src/app/features/admin/users/users.spec.ts` -- agregada validacion de formato email en frontend (regex `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`) en `isFormValid()` con 8 tests de aceptacion/rechazo; expuestos signals `formEmailValid`, `formPasswordValid`, `formBranchValid` computados con `formSubmitted` para mostrar errores inline por campo tras el primer intento de submit; errores visuales rojos (`user-form__error`) alineados con paleta de DESING.md.
-
-## 2026-05-26
-
 - `frontend/src/app/shared/components/app-data-table/` -- refactorizado componente generico para soportar toolbar opcional via content projection (`<ng-template #toolbar>`), eliminando necesidad de wrappers externos. Card visual ahora proviene del shell interno, no de contenedores anidados.
 - `frontend/src/app/features/admin/users/` -- eliminada arquitectura de "cards sobre cards" (table-shell + data-table con su propio card). Toolbar con titulo/kicker/búsqueda/contador ahora vive dentro del data-table via nuevo slot. Agregada búsqueda client-side con filtrado por nombre/email/rol/sucursal usando `app-search-bar`.
 - `backend/src/main/java/com/dietetica/lembas/shared/branch/`, `backend/src/test/java/com/dietetica/lembas/shared/branch/web/BranchAdminControllerTest.java` -- corregido registro del endpoint `GET /api/admin/branches`: removida condicion bean-temprana que dejaba el controller sin mapear en runtime y agregada cobertura MVC de ruteo/autorizacion.
@@ -97,11 +94,17 @@
 - `frontend/src/app/core/interceptors/error-interceptor.ts` -- simplificado manejo global de toasts para cubrir solo errores comunes/transversales (red, sesion expirada, acceso denegado, 5xx); errores de formulario/negocio como 400, 404, 409 y login/register quedan para la UI propietaria.
 - `frontend/src/app/features/auth/{login,register}/`, `frontend/src/app/features/admin/users/` -- alineado manejo de errores de componentes con la nueva convencion: login/register no duplican errores comunes del interceptor y Users muestra errores de negocio/validacion del backend en el dialogo o toast contextual de estado.
 - `frontend/src/app/features/admin/users/` -- redisenado modal de crear/editar usuarios con secciones Identidad/Permisos, layout responsive de dos columnas y `p-select` de sucursal mas robusto (`appendTo=body`, normalizacion number|null, disabled sin sucursales) para evitar recortes/selecciones inestables dentro del dialogo.
-
 - `frontend/src/app/features/admin/users/` -- refinado modal de usuarios: intro de Acceso interno convertida en encabezado compacto sin card, selectores de rol/sucursal con plantillas enriquecidas e indicador de alcance sin cards anidadas.
-
-## 2026-05-26
-
 - `frontend/src/app/core/interceptors/error-interceptor.ts` -- deduplicados toasts globales identicos en una ventana corta para evitar mensajes repetidos cuando fallan requests paralelas (por ejemplo Usuarios + Sucursales). Agregado test de regresion en `error-interceptor.spec.ts`.
-
 - `frontend/src/app/features/admin/users/`, `frontend/src/app/shared/components/app-{data-table,modal,page-header,metric-strip}/` -- redisenada pantalla de Usuarios con layout desktop de workspace + panel operativo, modal en dos columnas y mejoras responsive centralizadas en componentes compartidos.
+- `frontend/src/app/shared/components/app-data-table/`, `frontend/src/app/features/admin/users/user-list/` -- conectada la paginacion real de backend en el listado de usuarios internos: `app-data-table` ahora soporta lazy mode, `totalRecords` y opciones de filas; `UserList` solicita pagina/tamano al endpoint `GET /api/admin/users` al cambiar de pagina.
+- `backend/src/main/java/com/dietetica/lembas/users/{repository,service,web}/`, `frontend/src/app/{core/services/user.ts,features/admin/users/user-list/}` -- buscador de usuarios migrado a backend con parametro `search` en `GET /api/admin/users`, manteniendo paginacion real y total de resultados; frontend ahora recarga pagina 0 al buscar/limpiar y pagina sobre resultados filtrados del servidor.
+
+- `backend/src/main/java/com/dietetica/lembas/users/repository/UserRepository.java` -- unificado listado y busqueda de usuarios en un solo metodo `findInternalUsers` (JPQL con `:search is null` short-circuit); eliminados 4 derived-query methods redundantes (`findByRoleIn`, `findByRoleAndBranchId`, `findByBranchId`, `findByRoleInAndBranchId`); agregado `computeUserMetrics` (native query con `COUNT(*) FILTER`) y `UserMetricsProjection`; `cast(:search as string)` para evitar errores de inferencia de tipo de PostgreSQL con parametros nulos; nota de performance sobre indice `pg_trgm` para escala >5-10K usuarios.
+- `backend/src/main/java/com/dietetica/lembas/users/service/UserAdminService.java` -- `listUsers` simplificado a un solo camino via `findInternalUsers` en vez de 5 branches if/else; `getUserMetrics` ahora usa un solo native query en vez de 3 `countByRoleIn*` separados; `normalizeSearch` mantiene `trim().toLowerCase()` con comentario sobre type-safety.
+- `backend/src/main/java/com/dietetica/lembas/users/web/UserAdminController.java` -- nuevo endpoint `GET /api/admin/users/metrics` retornando `UserMetricsResponse`.
+- `backend/src/test/java/com/dietetica/lembas/users/repository/UserRepositoryTest.java` -- renombrado `searchInternalUsers` a `findInternalUsers`; nuevo test `findInternalUsersReturnsAllInternalUsersWhenSearchIsNull`; nuevo test `computeUserMetricsExcludesCustomers` verificando exclusion de CUSTOMER y conteo correcto incluyendo seed data; separado `findByEnabledTrue` en test propio.
+- `backend/src/test/java/com/dietetica/lembas/users/service/UserAdminServiceTest.java` -- nuevo `@Nested class GetUserMetrics` con mock de `UserMetricsProjection`; corregido mock de busqueda a `findInternalUsers` y `"gandalf"` minuscula.
+- `backend/src/test/java/com/dietetica/lembas/users/web/UserAdminControllerTest.java` -- +7 tests para `GET /api/admin/users/metrics` (200 ADMIN, 403 MANAGER, 403 EMPLOYEE, 401 unauthenticated).
+- `frontend/src/app/features/admin/users/user-list/user-list.ts` -- `loadMetrics` con `error` callback que muestra toast via `MessageService` en vez de fallar silenciosamente con ceros.
+- `docs/05-api/endpoints.md` -- documentado `search` y `metrics` en `GET /api/admin/users`.

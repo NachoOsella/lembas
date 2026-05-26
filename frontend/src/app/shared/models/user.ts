@@ -66,6 +66,15 @@ export interface Branch {
 }
 
 /**
+ * Aggregate metrics for the internal users directory.
+ */
+export interface UserMetrics {
+  totalUsers: number;
+  enabledUsers: number;
+  usersWithBranch: number;
+}
+
+/**
  * Standard Spring Data paginated response.
  */
 export interface Page<T> {

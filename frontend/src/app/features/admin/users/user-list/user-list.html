@@ -15,12 +15,16 @@
 
   <section class="users-page__directory" aria-label="Directorio de usuarios internos">
     <app-data-table
-      [data]="filteredUsers()"
+      [data]="users()"
       [columns]="userColumns"
       [loading]="loading()"
       [sortable]="true"
       [paginated]="true"
-      [rows]="20"
+      [lazy]="true"
+      [totalRecords]="displayTotalRecords()"
+      [first]="first()"
+      [rows]="pageSize()"
+      (pageChange)="onPageChange($event)"
       [emptyTitle]="searchQuery().trim() ? 'Sin resultados' : 'No hay usuarios'"
       [emptyDescription]="emptyDescription()"
     >

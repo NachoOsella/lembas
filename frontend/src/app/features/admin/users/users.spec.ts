@@ -62,6 +62,9 @@ describe('Users', () => {
       updateUser: vi.fn().mockReturnValue(of(buildUser())),
       updateUserStatus: vi.fn().mockReturnValue(of(buildUser())),
       listBranches: vi.fn().mockReturnValue(of(SAMPLE_BRANCHES)),
+      getUserMetrics: vi.fn().mockReturnValue(
+        of({ totalUsers: 0, enabledUsers: 0, usersWithBranch: 0 }),
+      ),
     };
 
     TestBed.configureTestingModule({

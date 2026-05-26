@@ -24,9 +24,7 @@
   height: 2.35rem;
   border-radius: 999px;
   color: #173f35;
-  background:
-    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.92), transparent 34%),
-    linear-gradient(135deg, #cfe9dc, #f4d29a);
+  background: #d6e6db;
   box-shadow: inset 0 0 0 1px rgba(47, 141, 114, 0.16);
 }
 
@@ -57,7 +55,6 @@
 
 .user-form__section--access {
   border-color: rgba(47, 141, 114, 0.18);
-  background: linear-gradient(180deg, #fffef9 0%, rgba(47, 141, 114, 0.035) 100%);
 }
 
 .user-form__section-heading {
@@ -179,7 +176,7 @@
 :host ::ng-deep .user-form__select.p-select {
   border-color: rgba(47, 141, 114, 0.2);
   border-radius: 0.95rem;
-  background: linear-gradient(180deg, #ffffff, #fffdf6);
+  background: #fffef9;
   box-shadow: 0 0.55rem 1.1rem rgba(23, 63, 53, 0.06);
   transition:
     border-color 160ms ease,

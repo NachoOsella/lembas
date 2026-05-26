@@ -28,13 +28,13 @@ function buildUser(overrides: Partial<UserResponse> = {}): UserResponse {
 }
 
 /** Builds a paginated response with the given users. */
-function userPage(users: UserResponse[]): Page<UserResponse> {
+function userPage(users: UserResponse[], totalElements = users.length, size = 10): Page<UserResponse> {
   return {
     content: users,
-    totalElements: users.length,
-    totalPages: 1,
+    totalElements,
+    totalPages: Math.max(1, Math.ceil(totalElements / size)),
     number: 0,
-    size: 20,
+    size,
     first: true,
     last: true,
     empty: users.length === 0,
@@ -63,9 +63,16 @@ describe('UserList', () => {
   let svc: Record<string, ReturnType<typeof vi.fn>>;
   let c: Record<string, unknown>;
 
-  function configure(users: UserResponse[] = []): void {
+  function configure(users: UserResponse[] = [], totalElements = users.length): void {
     svc = {
-      listUsers: vi.fn().mockReturnValue(of(userPage(users))),
+      listUsers: vi.fn().mockReturnValue(of(userPage(users, totalElements))),
+      getUserMetrics: vi.fn().mockReturnValue(
+        of({
+          totalUsers: totalElements,
+          enabledUsers: users.filter((u) => u.enabled).length,
+          usersWithBranch: users.filter((u) => u.branchId != null).length,
+        }),
+      ),
       updateUserStatus: vi.fn().mockReturnValue(of(buildUser())),
       listBranches: vi.fn().mockReturnValue(of(SAMPLE_BRANCHES)),
     };
@@ -100,7 +107,7 @@ describe('UserList', () => {
       const user = buildUser();
       configure([user]);
 
-      expect(svc['listUsers']).toHaveBeenCalledTimes(1);
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '');
       expect((c['users'] as () => UserResponse[])().length).toBe(1);
     });
 
@@ -121,6 +128,17 @@ describe('UserList', () => {
       expect(svc['listUsers']).toHaveBeenCalledTimes(2);
     });
 
+    it('should request the selected backend page when pagination changes', () => {
+      configure([buildUser()], 50);
+      svc['listUsers'].mockClear();
+
+      (c['onPageChange'] as (event: { first: number; rows: number }) => void)({ first: 20, rows: 20 });
+
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 1, 20, '');
+      expect((c['first'] as () => number)()).toBe(20);
+      expect((c['pageSize'] as () => number)()).toBe(20);
+    });
+
     it('should handle loading error gracefully', () => {
       svc['listUsers'] = vi.fn().mockReturnValue(throwError(() => new Error('network error')));
       configure();
@@ -130,108 +148,36 @@ describe('UserList', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Search filtering
+  // Backend search
   // ---------------------------------------------------------------------------
-  describe('search filtering', () => {
-    const users = [
-      buildUser({
-        id: 1,
-        email: 'admin@lembas.com',
-        firstName: 'Gandalf',
-        lastName: 'Grey',
-        role: 'ADMIN',
-        branchId: null,
-      }),
-      buildUser({
-        id: 2,
-        email: 'manager@lembas.com',
-        firstName: 'Saruman',
-        lastName: 'White',
-        role: 'MANAGER',
-        branchId: 1,
-      }),
-      buildUser({
-        id: 3,
-        email: 'employee@lembas.com',
-        firstName: 'Frodo',
-        lastName: 'Baggins',
-        role: 'EMPLOYEE',
-        branchId: 1,
-      }),
-    ];
+  describe('backend search', () => {
+    it('should reload the first backend page with the search term', () => {
+      const result = buildUser({ firstName: 'Gandalf', email: 'gandalf@lembas.com' });
+      configure([]);
+      svc['listUsers'].mockReturnValue(of(userPage([result], 1)));
+      svc['listUsers'].mockClear();
 
-    beforeEach(() => {
-      configure(users);
-      fixture.componentRef.setInput('branchName', branchName);
-      fixture.detectChanges();
+      (c['first'] as { set(v: number): void }).set(40);
+      (c['onSearch'] as (query: string) => void)('gandalf');
+
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, 'gandalf');
+      expect((c['first'] as () => number)()).toBe(0);
+      expect((c['users'] as () => UserResponse[])()[0].email).toBe('gandalf@lembas.com');
+      expect((c['totalRecords'] as () => number)()).toBe(1);
     });
 
-    it('should return all users when search query is empty', () => {
-      (c['searchQuery'] as { set(v: string): void }).set('');
-      fixture.detectChanges();
+    it('should clear search and reload the first backend page', () => {
+      configure([buildUser()]);
+      svc['listUsers'].mockReturnValue(of(userPage([buildUser({ id: 2 })], 50)));
+      svc['listUsers'].mockClear();
 
-      const filtered = (c['filteredUsers'] as () => UserResponse[])();
-      expect(filtered.length).toBe(3);
-    });
-
-    it('should filter by first name', () => {
       (c['searchQuery'] as { set(v: string): void }).set('gandalf');
-      fixture.detectChanges();
-
-      const filtered = (c['filteredUsers'] as () => UserResponse[])();
-      expect(filtered.length).toBe(1);
-      expect(filtered[0].firstName).toBe('Gandalf');
-    });
-
-    it('should filter by last name', () => {
-      (c['searchQuery'] as { set(v: string): void }).set('baggins');
-      fixture.detectChanges();
-
-      const filtered = (c['filteredUsers'] as () => UserResponse[])();
-      expect(filtered.length).toBe(1);
-      expect(filtered[0].lastName).toBe('Baggins');
-    });
-
-    it('should filter by email', () => {
-      (c['searchQuery'] as { set(v: string): void }).set('manager@lembas');
-      fixture.detectChanges();
-
-      const filtered = (c['filteredUsers'] as () => UserResponse[])();
-      expect(filtered.length).toBe(1);
-      expect(filtered[0].email).toBe('manager@lembas.com');
-    });
-
-    it('should filter by role label', () => {
-      (c['searchQuery'] as { set(v: string): void }).set('gerente');
-      fixture.detectChanges();
-
-      const filtered = (c['filteredUsers'] as () => UserResponse[])();
-      expect(filtered.length).toBe(1);
-      expect(filtered[0].role).toBe('MANAGER');
-    });
-
-    it('should filter by branch name', () => {
-      (c['searchQuery'] as { set(v: string): void }).set('centro');
-      fixture.detectChanges();
-
-      const filtered = (c['filteredUsers'] as () => UserResponse[])();
-      // Manager and Employee are in branch 1 (Centro)
-      expect(filtered.length).toBe(2);
-    });
-
-    it('should return empty array when no match', () => {
-      (c['searchQuery'] as { set(v: string): void }).set('nonexistent');
-      fixture.detectChanges();
-
-      const filtered = (c['filteredUsers'] as () => UserResponse[])();
-      expect(filtered.length).toBe(0);
-    });
-
-    it('should clear search via onSearchClear', () => {
-      (c['searchQuery'] as { set(v: string): void }).set('gandalf');
+      (c['first'] as { set(v: number): void }).set(20);
       (c['onSearchClear'] as () => void)();
 
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '');
       expect((c['searchQuery'] as () => string)()).toBe('');
+      expect((c['first'] as () => number)()).toBe(0);
     });
   });
 

@@ -28,6 +28,7 @@ export class AppInput {
   readonly value = model<string>('');
   readonly blur = output<void>();
   readonly focus = output<void>();
+  readonly enter = output<void>();
 
   protected readonly inputClass = computed(() =>
     ['app-input', `app-input--${this.size()}`, this.invalid() ? 'app-input--invalid' : ''].join(
@@ -46,5 +47,11 @@ export class AppInput {
 
   protected onFocus(): void {
     this.focus.emit();
+  }
+
+  protected onKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      this.enter.emit();
+    }
   }
 }

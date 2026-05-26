@@ -76,6 +76,10 @@ export class UserList implements OnInit {
   protected readonly users = signal<UserResponse[]>([]);
   protected readonly branches = signal<Branch[]>([]);
   protected readonly loading = signal(false);
+  protected readonly first = signal(0);
+  protected readonly pageSize = signal(10);
+  protected readonly totalRecords = signal(0);
+  protected readonly metrics = signal({ totalUsers: 0, enabledUsers: 0, usersWithBranch: 0 });
 
   /** Branch ID -> name map for display in the table. */
   readonly branchName = input<((id: number | null) => string | undefined) | undefined>();
@@ -85,59 +89,37 @@ export class UserList implements OnInit {
   // ---------------------------------------------------------------------------
   protected readonly searchQuery = signal('');
 
-  protected readonly filteredUsers = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const all = this.users();
-    if (!query) return all;
-
-    return all.filter((user) => {
-      const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.toLowerCase();
-      const email = user.email.toLowerCase();
-      const role = this.roleLabel(user.role).toLowerCase();
-      const branchNameFn = this.branchName();
-      const branch = (branchNameFn ? branchNameFn(user.branchId) : '')?.toLowerCase() ?? '';
-
-      return (
-        fullName.includes(query) ||
-        email.includes(query) ||
-        role.includes(query) ||
-        branch.includes(query)
-      );
-    });
-  });
-
   protected readonly emptyDescription = computed(() => {
     const query = this.searchQuery().trim();
     if (query) return `No se encontraron usuarios que coincidan con "${query}".`;
     return 'Cree el primer usuario interno para comenzar.';
   });
 
+  protected readonly displayTotalRecords = computed(() => this.totalRecords());
+
   protected readonly userColumns = USER_COLUMNS;
 
   /** Operational metrics for the metric strip. */
   protected readonly userMetrics = computed<readonly AppMetricItem[]>(() => {
-    const list = this.users();
-    const enabled = list.filter((u) => u.enabled).length;
-    const branchBound = list.filter((u) => u.branchId != null).length;
-
+    const m = this.metrics();
     return [
       {
         label: 'Usuarios',
-        value: list.length,
+        value: m.totalUsers,
         detail: 'internos cargados',
         icon: 'pi pi-users',
         tone: 'forest',
       },
       {
         label: 'Activos',
-        value: enabled,
-        detail: `${list.length - enabled} inactivos`,
+        value: m.enabledUsers,
+        detail: `${m.totalUsers - m.enabledUsers} inactivos`,
         icon: 'pi pi-shield',
         tone: 'sage',
       },
       {
         label: 'Sucursales',
-        value: branchBound,
+        value: m.usersWithBranch,
         detail: 'con asignacion operativa',
         icon: 'pi pi-building',
         tone: 'amber',
@@ -150,17 +132,33 @@ export class UserList implements OnInit {
   // ---------------------------------------------------------------------------
   ngOnInit(): void {
     this.loadUsers();
+    this.loadMetrics();
     this.loadBranches();
   }
 
   // ---------------------------------------------------------------------------
   // Data loading
   // ---------------------------------------------------------------------------
+  protected loadMetrics(): void {
+    this.userService.getUserMetrics().subscribe({
+      next: (m) => this.metrics.set(m),
+      error: () => {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Metricas no disponibles',
+          detail: 'No se pudieron cargar las metricas de usuarios.',
+        });
+      },
+    });
+  }
+
   protected loadUsers(): void {
+    const page = Math.floor(this.first() / this.pageSize());
     this.loading.set(true);
-    this.userService.listUsers().subscribe({
-      next: (page) => {
-        this.users.set(page.content);
+    this.userService.listUsers(undefined, undefined, page, this.pageSize(), this.searchQuery()).subscribe({
+      next: (response) => {
+        this.users.set(response.content);
+        this.totalRecords.set(response.totalElements);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -182,11 +180,21 @@ export class UserList implements OnInit {
   // Search handlers
   // ---------------------------------------------------------------------------
   protected onSearch(query: string): void {
+    this.first.set(0);
     this.searchQuery.set(query);
+    this.loadUsers();
   }
 
   protected onSearchClear(): void {
+    this.first.set(0);
     this.searchQuery.set('');
+    this.loadUsers();
+  }
+
+  protected onPageChange(event: { first: number; rows: number }): void {
+    this.first.set(event.first);
+    this.pageSize.set(event.rows);
+    this.loadUsers();
   }
 
   // ---------------------------------------------------------------------------
