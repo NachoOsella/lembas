@@ -85,6 +85,23 @@ describe('errorInterceptor', () => {
     });
   });
 
+  it('should suppress duplicate global toasts from parallel failing requests', async () => {
+    const firstRequest = new HttpRequest('GET', '/api/admin/users');
+    const secondRequest = new HttpRequest('GET', '/api/admin/branches');
+    const error = new HttpErrorResponse({ status: 0, error: 'Network error' });
+
+    await captureError(firstRequest, error);
+    await captureError(secondRequest, error);
+
+    expect(messageService.add).toHaveBeenCalledTimes(1);
+    expect(messageService.add).toHaveBeenCalledWith({
+      severity: 'error',
+      summary: 'Error de conexion',
+      detail: 'No se pudo conectar con el servidor. Verifique su conexion a internet.',
+      life: 5000,
+    });
+  });
+
   it('should redirect to login and clear storage for protected 401 responses', async () => {
     localStorage.setItem('lembas_access_token', 'test-token');
     localStorage.setItem('lembas_refresh_token', 'test-refresh-token');

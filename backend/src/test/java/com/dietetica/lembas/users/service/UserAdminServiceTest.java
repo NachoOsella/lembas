@@ -197,6 +197,26 @@ class UserAdminServiceTest {
         }
 
         @Test
+        void Should_throwInvalidUserBranch_when_employeeWithoutBranch() {
+            var request = new CreateInternalUserRequest(
+                    "employee@lembas.com",
+                    RAW_PASSWORD,
+                    "Employee",
+                    "User",
+                    null,
+                    Role.EMPLOYEE,
+                    null
+            );
+            when(userRepository.existsByEmail("employee@lembas.com")).thenReturn(false);
+            when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
+
+            assertThatThrownBy(() -> userAdminService.createUser(request))
+                    .isInstanceOf(DomainException.class)
+                    .hasFieldOrPropertyWithValue("code", "INVALID_USER_BRANCH")
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        }
+
+        @Test
         void Should_normalizeEmail_when_creatingUser() {
             var request = new CreateInternalUserRequest(
                     "  UPPERCASE@LEMBAS.COM  ",

@@ -70,4 +70,17 @@ class BranchAdminControllerTest {
         mockMvc.perform(get("/api/admin/branches"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void Should_return403_when_employeeListsBranches() throws Exception {
+        mockMvc.perform(get("/api/admin/branches"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void Should_return401_when_unauthenticatedUserListsBranches() throws Exception {
+        mockMvc.perform(get("/api/admin/branches"))
+                .andExpect(status().isUnauthorized());
+    }
 }

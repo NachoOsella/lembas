@@ -99,3 +99,7 @@
 - `frontend/src/app/features/admin/users/` -- redisenado modal de crear/editar usuarios con secciones Identidad/Permisos, layout responsive de dos columnas y `p-select` de sucursal mas robusto (`appendTo=body`, normalizacion number|null, disabled sin sucursales) para evitar recortes/selecciones inestables dentro del dialogo.
 
 - `frontend/src/app/features/admin/users/` -- refinado modal de usuarios: intro de Acceso interno convertida en encabezado compacto sin card, selectores de rol/sucursal con plantillas enriquecidas e indicador de alcance sin cards anidadas.
+
+## 2026-05-26
+
+- `frontend/src/app/core/interceptors/error-interceptor.ts` -- deduplicados toasts globales identicos en una ventana corta para evitar mensajes repetidos cuando fallan requests paralelas (por ejemplo Usuarios + Sucursales). Agregado test de regresion en `error-interceptor.spec.ts`.
