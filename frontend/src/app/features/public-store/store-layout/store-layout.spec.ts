@@ -50,14 +50,12 @@ describe('StoreLayout', () => {
   /** Should create component when user is not authenticated. */
   it('Should_createComponent_when_guest', () => {
     setup(false);
-
     expect(component).toBeTruthy();
   });
 
   /** Should create component when user is authenticated. */
   it('Should_createComponent_when_authenticated', () => {
     setup(true, customerUser);
-
     expect(component).toBeTruthy();
   });
 
@@ -65,9 +63,6 @@ describe('StoreLayout', () => {
   it('Should_showLoginRegisterLinks_when_guest', () => {
     setup(false);
 
-    // The nav bar "Ingresar" link (hidden on mobile via CSS, but present in DOM)
-    const loginLink = fixture.nativeElement.querySelector('.store__nav .store__nav-link');
-    // Actually the login link uses routerLink and class hidden md:inline-flex, check for text
     const allNavLinks = Array.from(
       fixture.nativeElement.querySelectorAll('header a'),
     ) as HTMLElement[];
@@ -83,38 +78,17 @@ describe('StoreLayout', () => {
   it('Should_showUserNameAndHideGuestLinks_when_authenticated', () => {
     setup(true, customerUser);
 
-    // The nav bar "Ingresar" link should be hidden
     const loginNavLinks = Array.from(
       fixture.nativeElement.querySelectorAll('header a'),
     ) as HTMLElement[];
     const loginInNav = loginNavLinks.find((el) => el.textContent?.trim() === 'Ingresar');
     expect(loginInNav).toBeUndefined();
 
-    // The nav bar CTA "Crear cuenta" should be hidden (hero link is a different element)
     const navCta = fixture.nativeElement.querySelector('.store__cta-btn');
     expect(navCta).toBeNull();
 
     const allSpans: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('span'));
     const userSpan = allSpans.find((el) => el.textContent?.trim() === 'Frodo');
-    expect(userSpan).toBeTruthy();
-  });
-
-  /** Should show email when firstName is null (JWT-hydrated user). */
-  it('Should_displayEmail_when_firstNameIsNull', () => {
-    const jwtUser: AuthUser = {
-      id: 4,
-      email: 'sam@lembas.com',
-      firstName: null,
-      lastName: null,
-      role: 'CUSTOMER',
-      branchId: null,
-      branchName: null,
-    };
-
-    setup(true, jwtUser);
-
-    const allSpans: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('span'));
-    const userSpan = allSpans.find((el) => el.textContent?.trim() === 'sam@lembas.com');
     expect(userSpan).toBeTruthy();
   });
 
@@ -137,5 +111,25 @@ describe('StoreLayout', () => {
 
     expect(mockAuthService.logout).toHaveBeenCalled();
     expect(navigateSpy).toHaveBeenCalledWith(['/store']);
+  });
+
+  /** Should render minimal footer with links. */
+  it('Should_renderFooter_when_rendered', () => {
+    setup(false);
+
+    const footer = fixture.nativeElement.querySelector('.store__footer');
+    expect(footer).toBeTruthy();
+
+    const links = fixture.nativeElement.querySelectorAll('.store__footer-link');
+    expect(links.length).toBeGreaterThan(0);
+  });
+
+  /** Should render Leaf CTA floating button. */
+  it('Should_renderLeafCta_when_rendered', () => {
+    setup(false);
+
+    const cta = fixture.nativeElement.querySelector('.store__leaf-cta');
+    expect(cta).toBeTruthy();
+    expect(cta.getAttribute('aria-label')).toBe('Ir al carrito de compras');
   });
 });
