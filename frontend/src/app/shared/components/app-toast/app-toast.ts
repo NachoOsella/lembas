@@ -11,7 +11,6 @@ import { MessageService } from 'primeng/api';
   imports: [Toast],
   templateUrl: './app-toast.html',
   styleUrl: './app-toast.css',
-  providers: [MessageService],
 })
 export class AppToast {
   readonly position = input<'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center'>('top-right');

@@ -89,6 +89,16 @@ describe('AuthInterceptor', () => {
     expect(capturedRequest!.headers.has('Authorization')).toBe(false);
   });
 
+  /** Should not attach stale tokens to public login/register endpoints. */
+  it('Should_notAttachHeader_onPublicAuthRequests', () => {
+    mockAuthService.getAccessToken.mockReturnValue('stale-token');
+
+    run(new HttpRequest<unknown>('POST', '/api/auth/login', { email: 'admin@lembas.com' }));
+
+    expect(capturedRequest).toBeTruthy();
+    expect(capturedRequest!.headers.has('Authorization')).toBe(false);
+  });
+
   /** Should attach token to POST requests (not just GET). */
   it('Should_attachBearerHeader_onPostRequest', () => {
     const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.def';

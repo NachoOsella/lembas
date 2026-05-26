@@ -80,9 +80,17 @@ export class Login {
         };
         const response = await lastValueFrom(this.auth.login(request));
         this.auth.saveAuthResponse(response);
-        await this.router.navigate([this.buildRedirectPath(response.user.role)]);
+
+        try {
+          await this.router.navigate([this.buildRedirectPath(response.user.role)]);
+        } catch (navigationError) {
+          // Keep the authenticated session even if a lazy route chunk fails to load.
+          console.error('Login succeeded, but post-login navigation failed.', navigationError);
+          this.generalError.set('Sesion iniciada. Recargue la pagina si no fue redirigido.');
+        }
       } catch (err: unknown) {
         this.auth.clearAuth();
+        console.error('Login request failed before authentication completed.', err);
         this.generalError.set(this.buildBackendErrorMessage(err));
       } finally {
         this.submitting.set(false);

@@ -7,6 +7,11 @@ function isBackendApiRequest(url: string): boolean {
   return url.startsWith('/api/');
 }
 
+/** Returns true for public auth endpoints that must never receive stale tokens. */
+function isPublicAuthRequest(url: string): boolean {
+  return url === '/api/auth/login' || url === '/api/auth/register';
+}
+
 /**
  * Attaches the JWT access token as a Bearer header to outgoing HTTP requests
  * targeting the backend API.
@@ -31,6 +36,11 @@ export const authInterceptor: HttpInterceptorFn = (
 ) => {
   // Only attach tokens to requests targeting the backend API.
   if (!isBackendApiRequest(req.url)) {
+    return next(req);
+  }
+
+  // Never attach stale credentials to public login/register requests.
+  if (isPublicAuthRequest(req.url)) {
     return next(req);
   }
 
