@@ -91,7 +91,10 @@ export class Login {
       } catch (err: unknown) {
         this.auth.clearAuth();
         console.error('Login request failed before authentication completed.', err);
-        this.generalError.set(this.buildBackendErrorMessage(err));
+        const message = this.buildBackendErrorMessage(err);
+        if (message) {
+          this.generalError.set(message);
+        }
       } finally {
         this.submitting.set(false);
       }
@@ -99,9 +102,13 @@ export class Login {
   }
 
   /** Converts backend API error codes into user-facing login messages. */
-  private buildBackendErrorMessage(err: unknown): string {
+  private buildBackendErrorMessage(err: unknown): string | null {
     if (!(err instanceof HttpErrorResponse)) {
       return 'Error al iniciar sesion. Intente nuevamente';
+    }
+
+    if (err.status === 0 || err.status >= 500) {
+      return null;
     }
 
     const apiError = err.error as ApiErrorResponse | undefined;

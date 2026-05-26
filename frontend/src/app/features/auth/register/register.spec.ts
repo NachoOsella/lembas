@@ -49,11 +49,7 @@ describe('Register component', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Register],
-      providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideRouter([]),
-      ],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Register);
@@ -101,7 +97,9 @@ describe('Register component', () => {
 
   /** Should display required errors for all mandatory fields on empty submit. */
   it('Should_showRequiredErrors_when_submitEmptyForm', async () => {
-    const btn = fixture.nativeElement.querySelector('[data-testid="submit-btn"]') as HTMLButtonElement;
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="submit-btn"]',
+    ) as HTMLButtonElement;
     btn.click();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -207,12 +205,16 @@ describe('Register component', () => {
     fillField(fixture, '#confirmPassword', 'StrongPass1');
     fillField(fixture, '#phone', '+54 351 1234567');
 
-    const btn = fixture.nativeElement.querySelector('[data-testid="submit-btn"]') as HTMLButtonElement;
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="submit-btn"]',
+    ) as HTMLButtonElement;
     btn.click();
     fixture.detectChanges();
 
     const req = httpMock.expectOne('/api/auth/register');
-    const loadingButton = fixture.nativeElement.querySelector('[data-testid="submit-btn"]') as HTMLButtonElement;
+    const loadingButton = fixture.nativeElement.querySelector(
+      '[data-testid="submit-btn"]',
+    ) as HTMLButtonElement;
     expect(loadingButton.disabled).toBe(true);
     expect(loadingButton.getAttribute('aria-busy')).toBe('true');
     expect(loadingButton.textContent).toContain('Creando cuenta...');
@@ -245,7 +247,9 @@ describe('Register component', () => {
     fillField(fixture, '#confirmPassword', 'StrongPass1');
     // Do NOT fill phone -- it stays as empty string
 
-    const btn = fixture.nativeElement.querySelector('[data-testid="submit-btn"]') as HTMLButtonElement;
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="submit-btn"]',
+    ) as HTMLButtonElement;
     btn.click();
     fixture.detectChanges();
 
@@ -268,12 +272,16 @@ describe('Register component', () => {
     fillField(fixture, '#password', 'StrongPass1');
     fillField(fixture, '#confirmPassword', 'StrongPass1');
 
-    const btn = fixture.nativeElement.querySelector('[data-testid="submit-btn"]') as HTMLButtonElement;
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="submit-btn"]',
+    ) as HTMLButtonElement;
     btn.click();
     fixture.detectChanges();
 
     const req = httpMock.expectOne('/api/auth/register');
-    const loadingButton = fixture.nativeElement.querySelector('[data-testid="submit-btn"]') as HTMLButtonElement;
+    const loadingButton = fixture.nativeElement.querySelector(
+      '[data-testid="submit-btn"]',
+    ) as HTMLButtonElement;
     expect(loadingButton.disabled).toBe(true);
     expect(loadingButton.textContent).toContain('Creando cuenta...');
     req.flush(
@@ -309,7 +317,9 @@ describe('Register component', () => {
     fillField(fixture, '#password', 'StrongPass1');
     fillField(fixture, '#confirmPassword', 'StrongPass1');
 
-    const btn = fixture.nativeElement.querySelector('[data-testid="submit-btn"]') as HTMLButtonElement;
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="submit-btn"]',
+    ) as HTMLButtonElement;
     btn.click();
     fixture.detectChanges();
 
@@ -337,8 +347,8 @@ describe('Register component', () => {
     expect(navigateSpy).not.toHaveBeenCalled();
   });
 
-  /** Should display a generic error when a network failure occurs. */
-  it('Should_showGenericError_when_networkFails', async () => {
+  /** Should leave network failures to the global error interceptor. */
+  it('Should_notShowLocalError_when_networkFails', async () => {
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     fillField(fixture, '#firstName', 'Frodo');
@@ -347,7 +357,9 @@ describe('Register component', () => {
     fillField(fixture, '#password', 'StrongPass1');
     fillField(fixture, '#confirmPassword', 'StrongPass1');
 
-    const btn = fixture.nativeElement.querySelector('[data-testid="submit-btn"]') as HTMLButtonElement;
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="submit-btn"]',
+    ) as HTMLButtonElement;
     btn.click();
     fixture.detectChanges();
 
@@ -358,8 +370,7 @@ describe('Register component', () => {
     fixture.detectChanges();
 
     const errEl = fixture.nativeElement.querySelector('[data-testid="general-error"]');
-    expect(errEl).toBeTruthy();
-    expect(errEl.textContent.toLowerCase()).toContain('error');
+    expect(errEl).toBeNull();
     expect(authService.currentUser()).toBeNull();
     expect(navigateSpy).not.toHaveBeenCalled();
   });
@@ -371,7 +382,9 @@ describe('Register component', () => {
   /** Should toggle password input type when eye icon is clicked. */
   it('Should_togglePasswordVisibility_when_clickEyeIcon', () => {
     const passwordInput = fixture.nativeElement.querySelector('#password') as HTMLInputElement;
-    const toggleBtn = fixture.nativeElement.querySelector('[data-testid="toggle-password"]') as HTMLButtonElement;
+    const toggleBtn = fixture.nativeElement.querySelector(
+      '[data-testid="toggle-password"]',
+    ) as HTMLButtonElement;
 
     expect(passwordInput.type).toBe('password');
 
@@ -386,8 +399,12 @@ describe('Register component', () => {
 
   /** Should toggle confirm-password input type when eye icon is clicked. */
   it('Should_toggleConfirmPasswordVisibility_when_clickEyeIcon', () => {
-    const confirmInput = fixture.nativeElement.querySelector('#confirmPassword') as HTMLInputElement;
-    const toggleBtn = fixture.nativeElement.querySelector('[data-testid="toggle-confirm-password"]') as HTMLButtonElement;
+    const confirmInput = fixture.nativeElement.querySelector(
+      '#confirmPassword',
+    ) as HTMLInputElement;
+    const toggleBtn = fixture.nativeElement.querySelector(
+      '[data-testid="toggle-confirm-password"]',
+    ) as HTMLButtonElement;
 
     expect(confirmInput.type).toBe('password');
 

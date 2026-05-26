@@ -4,6 +4,8 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 
+import { MessageService } from 'primeng/api';
+
 import { Users } from './users';
 import { UserService } from '../../../core/services/user';
 import { Branch, Page, UserResponse } from '../../../shared/models/user';
@@ -72,6 +74,7 @@ describe('Users', () => {
         provideNoopAnimations(),
         provideHttpClient(),
         provideHttpClientTesting(),
+        MessageService,
         { provide: UserService, useValue: svc },
       ],
     }).compileComponents();
@@ -98,6 +101,78 @@ describe('Users', () => {
       configureTestingModule();
       expect(svc['listBranches']).toHaveBeenCalledTimes(1);
       expect((c['branches'] as () => Branch[])().length).toBe(2);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Email validation
+  // ---------------------------------------------------------------------------
+  describe('email validation', () => {
+    beforeEach(() => configureTestingModule());
+
+    it('should accept a well-formed email', () => {
+      (c['formEmail'] as { set(v: string): void }).set('user@example.com');
+      expect((c['formEmailValid'] as () => boolean)()).toBeTruthy();
+    });
+
+    it('should accept email with subdomain', () => {
+      (c['formEmail'] as { set(v: string): void }).set('user@sub.example.co.uk');
+      expect((c['formEmailValid'] as () => boolean)()).toBeTruthy();
+    });
+
+    it('should reject email without @', () => {
+      (c['formEmail'] as { set(v: string): void }).set('notanemail');
+      expect((c['formEmailValid'] as () => boolean)()).toBeFalsy();
+    });
+
+    it('should reject email without domain', () => {
+      (c['formEmail'] as { set(v: string): void }).set('user@');
+      expect((c['formEmailValid'] as () => boolean)()).toBeFalsy();
+    });
+
+    it('should reject email without TLD', () => {
+      (c['formEmail'] as { set(v: string): void }).set('user@domain');
+      expect((c['formEmailValid'] as () => boolean)()).toBeFalsy();
+    });
+
+    it('should reject email with spaces', () => {
+      (c['formEmail'] as { set(v: string): void }).set('user @example.com');
+      expect((c['formEmailValid'] as () => boolean)()).toBeFalsy();
+    });
+
+    it('should reject empty email', () => {
+      (c['formEmail'] as { set(v: string): void }).set('');
+      expect((c['formEmailValid'] as () => boolean)()).toBeFalsy();
+    });
+
+    it('should set formSubmitted when submit is called', () => {
+      (c['formSubmitted'] as { set(v: boolean): void }).set(false);
+      (c['formEmail'] as { set(v: string): void }).set('');
+      (c['formFirstName'] as { set(v: string): void }).set('');
+      (c['formLastName'] as { set(v: string): void }).set('');
+      (c['formPassword'] as { set(v: string): void }).set('');
+      (c['formRole'] as { set(v: string): void }).set('EMPLOYEE');
+      (c['formBranchId'] as { set(v: number | null): void }).set(null);
+
+      (c['submit'] as () => void)();
+
+      expect((c['formSubmitted'] as () => boolean)()).toBeTruthy();
+    });
+
+    it('should block create submit when email is malformed and show inline feedback', () => {
+      (c['openCreateDialog'] as () => void)();
+      (c['formEmail'] as { set(v: string): void }).set('bad-email');
+      (c['formPassword'] as { set(v: string): void }).set('Str0ng!Pass');
+      (c['formFirstName'] as { set(v: string): void }).set('Test');
+      (c['formLastName'] as { set(v: string): void }).set('User');
+      (c['formRole'] as { set(v: string): void }).set('EMPLOYEE');
+      (c['formBranchId'] as { set(v: number | null): void }).set(1);
+
+      (c['submit'] as () => void)();
+      fixture.detectChanges();
+
+      expect(svc['createUser']).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.textContent).toContain('Ingrese un email valido');
     });
   });
 
@@ -133,6 +208,14 @@ describe('Users', () => {
       expect((c['showBranchField'] as () => boolean)()).toBeFalsy();
       expect((c['formBranchId'] as () => number | null)()).toBeNull();
     });
+
+    it('should normalize branch select values to numbers or null', () => {
+      (c['onBranchChange'] as (v: number | string | null) => void)('2');
+      expect((c['formBranchId'] as () => number | null)()).toBe(2);
+
+      (c['onBranchChange'] as (v: number | string | null) => void)(null);
+      expect((c['formBranchId'] as () => number | null)()).toBeNull();
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -141,22 +224,28 @@ describe('Users', () => {
   describe('dialog', () => {
     beforeEach(() => configureTestingModule());
 
-    it('should open create dialog with empty form', () => {
+    it('should open create dialog with empty form and reset validation state', () => {
+      (c['formSubmitted'] as { set(v: boolean): void }).set(true);
+
       (c['openCreateDialog'] as () => void)();
 
       expect((c['dialogVisible'] as () => boolean)()).toBeTruthy();
       expect((c['editingUser'] as () => unknown)()).toBeNull();
       expect((c['formRole'] as () => string)()).toBe('EMPLOYEE');
+      expect((c['formSubmitted'] as () => boolean)()).toBeFalsy();
     });
 
-    it('should open edit dialog with pre-populated form', () => {
+    it('should open edit dialog with pre-populated form and reset validation state', () => {
       const user = buildUser({ id: 2, role: 'MANAGER', branchId: 1 });
+      (c['formSubmitted'] as { set(v: boolean): void }).set(true);
+
       (c['openEditDialog'] as (u: UserResponse) => void)(user);
 
       expect((c['dialogVisible'] as () => boolean)()).toBeTruthy();
       expect((c['formEmail'] as () => string)()).toBe(user.email);
       expect((c['formRole'] as () => string)()).toBe('MANAGER');
       expect((c['formBranchId'] as () => number | null)()).toBe(1);
+      expect((c['formSubmitted'] as () => boolean)()).toBeFalsy();
     });
 
     it('should close dialog and reset submitting state', () => {
@@ -232,6 +321,20 @@ describe('Users', () => {
 
       expect(svc['createUser']).not.toHaveBeenCalled();
     });
+
+    it('should show inline feedback when first name and last name are missing', () => {
+      (c['formEmail'] as { set(v: string): void }).set('new@lembas.com');
+      (c['formPassword'] as { set(v: string): void }).set('Str0ng!Pass');
+      (c['formRole'] as { set(v: string): void }).set('EMPLOYEE');
+      (c['formBranchId'] as { set(v: number | null): void }).set(1);
+
+      (c['submit'] as () => void)();
+      fixture.detectChanges();
+
+      expect(svc['createUser']).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.textContent).toContain('El nombre es obligatorio');
+      expect(fixture.nativeElement.textContent).toContain('El apellido es obligatorio');
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -261,7 +364,12 @@ describe('Users', () => {
     });
 
     it('should send blank phone to clear an existing phone number', () => {
-      const userWithPhone = buildUser({ id: 2, role: 'MANAGER', branchId: 1, phone: '+54 351 123 4567' });
+      const userWithPhone = buildUser({
+        id: 2,
+        role: 'MANAGER',
+        branchId: 1,
+        phone: '+54 351 123 4567',
+      });
       (c['editingUser'] as { set(v: UserResponse): void }).set(userWithPhone);
       (c['formPhone'] as { set(v: string): void }).set('');
       svc['updateUser'].mockReturnValue(of({ ...userWithPhone, phone: null }));
@@ -270,6 +378,18 @@ describe('Users', () => {
 
       expect(svc['updateUser']).toHaveBeenCalledWith(2, { phone: '' });
     });
+
+    it('should not submit an update request when a new password is too short', () => {
+      (c['formPassword'] as { set(v: string): void }).set('short');
+
+      (c['submit'] as () => void)();
+      fixture.detectChanges();
+
+      expect(svc['updateUser']).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.textContent).toContain(
+        'La contrasena debe tener al menos 8 caracteres',
+      );
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -277,7 +397,12 @@ describe('Users', () => {
   // ---------------------------------------------------------------------------
   describe('status toggle', () => {
     it('should toggle user enabled state', () => {
-      const user = buildUser({ id: 3, email: 'employee@lembas.com', role: 'EMPLOYEE', enabled: true });
+      const user = buildUser({
+        id: 3,
+        email: 'employee@lembas.com',
+        role: 'EMPLOYEE',
+        enabled: true,
+      });
       configureTestingModule([user]);
 
       const updated = { ...user, enabled: false };

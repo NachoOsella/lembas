@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
-import { authGuard, adminGuard, customerGuard, guestGuard } from './auth-guard';
+import { authGuard, adminGuard, adminOnlyGuard, customerGuard, guestGuard } from './auth-guard';
 import { AuthService } from '../services/auth';
 
 /** Role abbreviations accepted by the mock service. */
@@ -20,6 +20,7 @@ function setupGuard({
         { path: 'auth/login', component: {} as any },
         { path: 'store', component: {} as any },
         { path: 'admin', component: {} as any },
+        { path: 'admin/dashboard', component: {} as any },
       ]),
       {
         provide: AuthService,
@@ -158,5 +159,47 @@ describe('Customer guard', () => {
     expect(result).not.toBe(false);
     expect(result).not.toBe(true);
     expect((result as any)?.root?.children?.primary?.segments?.[0]?.path).toBe('admin');
+  });
+});
+
+describe('Admin-only guard', () => {
+  it('Should_returnTrue_when_roleIsAdmin', () => {
+    setupGuard({ isAuthenticated: true, role: 'ADMIN' });
+
+    const result = TestBed.runInInjectionContext(() => adminOnlyGuard({} as any, {} as any));
+
+    expect(result).toBe(true);
+  });
+
+  it('Should_redirectToDashboard_when_roleIsManager', () => {
+    setupGuard({ isAuthenticated: true, role: 'MANAGER' });
+
+    const result = TestBed.runInInjectionContext(() => adminOnlyGuard({} as any, {} as any));
+
+    expect(result).not.toBe(false);
+    expect(result).not.toBe(true);
+    expect((result as any)?.root?.children?.primary?.segments?.[0]?.path).toBe('admin');
+    expect((result as any)?.root?.children?.primary?.segments?.[1]?.path).toBe('dashboard');
+  });
+
+  it('Should_redirectToDashboard_when_roleIsEmployee', () => {
+    setupGuard({ isAuthenticated: true, role: 'EMPLOYEE' });
+
+    const result = TestBed.runInInjectionContext(() => adminOnlyGuard({} as any, {} as any));
+
+    expect(result).not.toBe(false);
+    expect(result).not.toBe(true);
+    expect((result as any)?.root?.children?.primary?.segments?.[0]?.path).toBe('admin');
+    expect((result as any)?.root?.children?.primary?.segments?.[1]?.path).toBe('dashboard');
+  });
+
+  it('Should_redirectToLogin_when_notAuthenticated', () => {
+    setupGuard({ isAuthenticated: false });
+
+    const result = TestBed.runInInjectionContext(() => adminOnlyGuard({} as any, {} as any));
+
+    expect(result).not.toBe(false);
+    expect(result).not.toBe(true);
+    expect((result as any)?.root?.children?.primary?.segments?.[0]?.path).toBe('auth');
   });
 });

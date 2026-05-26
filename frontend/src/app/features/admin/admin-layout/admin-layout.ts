@@ -5,6 +5,7 @@ import { MenuItem } from 'primeng/api';
 import { MenuModule } from 'primeng/menu';
 
 import { AuthService } from '../../../core/services/auth';
+import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
 interface AdminNavItem {
   readonly label: string;
@@ -38,7 +39,7 @@ const LABEL_MAP: Record<string, string> = {
 
 @Component({
   selector: 'app-admin-layout',
-  imports: [MenuModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [MenuModule, RouterLink, RouterLinkActive, RouterOutlet, AppToast],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css',
 })
@@ -49,7 +50,14 @@ export class AdminLayout implements OnInit, OnDestroy {
 
   protected readonly collapsed = signal(false);
   protected readonly breadcrumbs = signal<MenuItem[]>([]);
-  protected readonly navItems = NAV_ITEMS;
+
+  /** Sidebar nav items filtered by role: "Usuarios" is ADMIN-only. */
+  protected readonly navItems = computed(() => {
+    if (this.auth.getUserRole() === 'ADMIN') {
+      return NAV_ITEMS;
+    }
+    return NAV_ITEMS.filter((item) => item.route !== '/admin/users');
+  });
 
   /** Display name shown in the topbar. */
   protected readonly userDisplayName = computed(() => {

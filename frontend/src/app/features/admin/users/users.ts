@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Select } from 'primeng/select';
@@ -7,19 +8,18 @@ import { ButtonDirective } from 'primeng/button';
 import { Ripple } from 'primeng/ripple';
 import { MessageService } from 'primeng/api';
 
+import { ApiErrorResponse } from '../../../core/services/auth';
 import { UserService } from '../../../core/services/user';
-import {
-  Branch,
-  InternalRole,
-  UserResponse,
-} from '../../../shared/models/user';
+import { Branch, InternalRole, UserResponse } from '../../../shared/models/user';
 import { ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
 import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
 import { AppDataTable } from '../../../shared/components/app-data-table/app-data-table';
-import { AppMetricItem, AppMetricStrip } from '../../../shared/components/app-metric-strip/app-metric-strip';
+import {
+  AppMetricItem,
+  AppMetricStrip,
+} from '../../../shared/components/app-metric-strip/app-metric-strip';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppModal } from '../../../shared/components/app-modal/app-modal';
-import { AppToast } from '../../../shared/components/app-toast/app-toast';
 import { AppBadge } from '../../../shared/components/app-badge/app-badge';
 import { AppSearchBar } from '../../../shared/components/app-search-bar/app-search-bar';
 
@@ -44,6 +44,20 @@ const ROLE_LABEL: Record<string, string> = {
   MANAGER: 'Gerente',
   EMPLOYEE: 'Empleado',
   CUSTOMER: 'Cliente',
+};
+
+/** Maps a role to a compact operational description for select templates. */
+const ROLE_DESCRIPTION: Record<InternalRole, string> = {
+  ADMIN: 'Alcance global, configuracion y auditoria.',
+  MANAGER: 'Gestiona una sucursal y sus operaciones.',
+  EMPLOYEE: 'Opera ventas, stock y tareas de mostrador.',
+};
+
+/** Maps a role to a PrimeIcons glyph for select templates. */
+const ROLE_ICON: Record<InternalRole, string> = {
+  ADMIN: 'pi pi-shield',
+  MANAGER: 'pi pi-briefcase',
+  EMPLOYEE: 'pi pi-id-card',
 };
 
 /**
@@ -73,17 +87,44 @@ const USER_COLUMNS: ColumnDef[] = [
     AppMetricStrip,
     AppButton,
     AppModal,
-    AppToast,
     AppBadge,
     AppSearchBar,
   ],
   templateUrl: './users.html',
   styleUrl: './users.css',
-  providers: [MessageService],
 })
 export class Users implements OnInit {
   private readonly userService = inject(UserService);
   private readonly messageService = inject(MessageService);
+
+  // ---------------------------------------------------------------------------
+  // Validation
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Basic email format regex. Matches the Jakarta {@code @Email} constraint
+   * behavior at the backend boundary.
+   */
+  private static readonly EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  /** True after the first submit attempt, used to reveal inline errors. */
+  protected readonly formSubmitted = signal(false);
+
+  /** True when the email value is non-empty and matches the expected format. */
+  protected readonly formEmailValid = computed(
+    () => this.formEmail().trim().length > 0 && Users.EMAIL_REGEX.test(this.formEmail().trim()),
+  );
+
+  /** True when password is blank in edit mode or meets the minimum-length constraint. */
+  protected readonly formPasswordValid = computed(() => {
+    const password = this.formPassword();
+    return this.isEditMode() ? password.length === 0 || password.length >= 8 : password.length >= 8;
+  });
+
+  /** True when a branch is selected and the current role requires one. */
+  protected readonly formBranchValid = computed(
+    () => this.formRole() === 'ADMIN' || this.formBranchId() !== null,
+  );
 
   // ---------------------------------------------------------------------------
   // Data state
@@ -106,7 +147,7 @@ export class Users implements OnInit {
   protected readonly filteredUsers = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     const users = this.users();
-    
+
     if (!query) {
       return users;
     }
@@ -116,7 +157,7 @@ export class Users implements OnInit {
       const email = user.email.toLowerCase();
       const role = this.roleLabel(user.role).toLowerCase();
       const branch = this.branchName(user.branchId)?.toLowerCase() ?? '';
-      
+
       return (
         fullName.includes(query) ||
         email.includes(query) ||
@@ -142,6 +183,7 @@ export class Users implements OnInit {
   protected readonly dialogVisible = signal(false);
   protected readonly editingUser = signal<UserResponse | null>(null);
   protected readonly submitting = signal(false);
+  protected readonly dialogError = signal('');
 
   // ---------------------------------------------------------------------------
   // Form signals
@@ -247,6 +289,8 @@ export class Users implements OnInit {
   }
 
   protected openEditDialog(user: UserResponse): void {
+    this.formSubmitted.set(false);
+    this.dialogError.set('');
     this.editingUser.set(user);
     this.formEmail.set(user.email);
     this.formPassword.set('');
@@ -262,10 +306,13 @@ export class Users implements OnInit {
   protected closeDialog(): void {
     this.dialogVisible.set(false);
     this.submitting.set(false);
+    this.dialogError.set('');
   }
 
-  /** Resets every form field to its default value. */
+  /** Resets every form field and validation state to its default value. */
   private resetForm(): void {
+    this.formSubmitted.set(false);
+    this.dialogError.set('');
     this.formEmail.set('');
     this.formPassword.set('');
     this.formFirstName.set('');
@@ -285,6 +332,17 @@ export class Users implements OnInit {
     }
   }
 
+  /** Normalizes PrimeNG select output so branch validation always receives a number or null. */
+  protected onBranchChange(value: number | string | null): void {
+    if (value === null || value === '') {
+      this.formBranchId.set(null);
+      return;
+    }
+
+    const branchId = Number(value);
+    this.formBranchId.set(Number.isFinite(branchId) ? branchId : null);
+  }
+
   // ---------------------------------------------------------------------------
   // Submit
   // ---------------------------------------------------------------------------
@@ -294,14 +352,17 @@ export class Users implements OnInit {
     }
 
     // Build payload, clearing branchId for ADMIN.
-    const branchId: number | null =
-      this.formRole() === 'ADMIN' ? null : this.formBranchId();
+    const branchId: number | null = this.formRole() === 'ADMIN' ? null : this.formBranchId();
+
+    // Mark that the user attempted to submit (reveals inline errors).
+    this.formSubmitted.set(true);
+    this.dialogError.set('');
 
     if (!this.isFormValid(branchId)) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Formulario incompleto',
-        detail: 'Revise email, nombre, apellido, contrasena y sucursal antes de continuar.',
+        detail: 'Revise los campos marcados en rojo antes de continuar.',
       });
       return;
     }
@@ -314,16 +375,12 @@ export class Users implements OnInit {
   }
 
   /** Validates required form fields before sending admin user changes. */
-  private isFormValid(branchId: number | null): boolean {
-    const hasIdentity = Boolean(
-      this.formEmail().trim() &&
-        this.formFirstName().trim() &&
-        this.formLastName().trim(),
-    );
-    const hasPassword = this.isEditMode() || this.formPassword().length >= 8;
-    const hasRequiredBranch = this.formRole() === 'ADMIN' || branchId !== null;
+  private isFormValid(_branchId: number | null): boolean {
+    const hasIdentity = Boolean(this.formFirstName().trim() && this.formLastName().trim());
 
-    return hasIdentity && hasPassword && hasRequiredBranch;
+    return (
+      hasIdentity && this.formEmailValid() && this.formPasswordValid() && this.formBranchValid()
+    );
   }
 
   private submitCreate(branchId: number | null): void {
@@ -348,8 +405,9 @@ export class Users implements OnInit {
         this.closeDialog();
         this.loadUsers();
       },
-      error: () => {
+      error: (err: unknown) => {
         this.submitting.set(false);
+        this.setDialogError(err);
       },
     });
   }
@@ -400,8 +458,9 @@ export class Users implements OnInit {
         this.closeDialog();
         this.loadUsers();
       },
-      error: () => {
+      error: (err: unknown) => {
         this.submitting.set(false);
+        this.setDialogError(err);
       },
     });
   }
@@ -413,21 +472,106 @@ export class Users implements OnInit {
     const newStatus = !user.enabled;
     this.userService.updateUserStatus(user.id, newStatus).subscribe({
       next: (updated) => {
-        this.users.update((list) =>
-          list.map((u) => (u.id === updated.id ? updated : u)),
-        );
+        this.users.update((list) => list.map((u) => (u.id === updated.id ? updated : u)));
         this.messageService.add({
           severity: 'success',
           summary: newStatus ? 'Usuario habilitado' : 'Usuario deshabilitado',
-          detail: `${user.email} ${
-            newStatus ? 'habilitado' : 'deshabilitado'
-          } correctamente.`,
+          detail: `${user.email} ${newStatus ? 'habilitado' : 'deshabilitado'} correctamente.`,
         });
       },
-      error: () => {
+      error: (err: unknown) => {
         this.loadUsers();
+        this.showStatusError(err);
       },
     });
+  }
+
+  /** Shows a contextual dialog error for component-owned save failures. */
+  private setDialogError(err: unknown): void {
+    const message = this.buildUserOperationErrorMessage(err);
+    if (message) {
+      this.dialogError.set(message);
+    }
+  }
+
+  /** Shows a contextual toast for status toggle failures not handled by the interceptor. */
+  private showStatusError(err: unknown): void {
+    const message = this.buildUserOperationErrorMessage(err);
+    if (!message) {
+      return;
+    }
+
+    this.messageService.add({
+      severity: 'error',
+      summary: 'No se pudo cambiar el estado',
+      detail: message,
+    });
+  }
+
+  /** Converts backend API errors into admin-user messages without duplicating global toasts. */
+  private buildUserOperationErrorMessage(err: unknown): string | null {
+    if (!(err instanceof HttpErrorResponse)) {
+      return 'No se pudo completar la operacion. Intente nuevamente.';
+    }
+
+    if (err.status === 0 || err.status >= 500) {
+      return null;
+    }
+
+    const apiError = err.error as ApiErrorResponse | undefined;
+    switch (apiError?.code) {
+      case 'EMAIL_DUPLICATED':
+        return 'Ya existe un usuario con este email.';
+      case 'VALIDATION_ERROR':
+        return this.formatValidationError(apiError);
+      default:
+        return apiError?.message || this.defaultUserOperationMessage(err.status);
+    }
+  }
+
+  /** Builds a concise validation message from backend field errors when available. */
+  private formatValidationError(apiError: ApiErrorResponse): string {
+    const fieldErrors = apiError.details?.fieldErrors ?? [];
+    if (fieldErrors.length === 0) {
+      return 'Revise los datos ingresados.';
+    }
+
+    const details = fieldErrors
+      .map((fieldError) => `${this.translateFieldName(fieldError.field)}: ${fieldError.message}`)
+      .join('. ');
+
+    return `Revise los datos ingresados. ${details}`;
+  }
+
+  /** Translates backend DTO field names into labels used by admins. */
+  private translateFieldName(field: string): string {
+    const labels: Record<string, string> = {
+      email: 'Email',
+      password: 'Contrasena',
+      firstName: 'Nombre',
+      lastName: 'Apellido',
+      phone: 'Telefono',
+      role: 'Rol',
+      branchId: 'Sucursal',
+      enabled: 'Estado',
+    };
+
+    return labels[field] ?? field;
+  }
+
+  /** Returns a fallback message for component-owned user operation failures. */
+  private defaultUserOperationMessage(status: number): string {
+    switch (status) {
+      case 400:
+      case 422:
+        return 'Revise los datos ingresados.';
+      case 404:
+        return 'El usuario ya no existe o fue eliminado.';
+      case 409:
+        return 'La operacion no se puede completar por una regla de negocio.';
+      default:
+        return 'No se pudo completar la operacion. Intente nuevamente.';
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -439,6 +583,16 @@ export class Users implements OnInit {
 
   protected roleLabel(role: string): string {
     return ROLE_LABEL[role] ?? role;
+  }
+
+  /** Returns the explanatory copy used by the role selector. */
+  protected roleDescription(role: InternalRole): string {
+    return ROLE_DESCRIPTION[role];
+  }
+
+  /** Returns the PrimeIcons class used by the role selector. */
+  protected roleIcon(role: InternalRole): string {
+    return ROLE_ICON[role];
   }
 
   protected branchName(branchId: number | null): string | undefined {

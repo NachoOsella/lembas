@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { signal, WritableSignal } from '@angular/core';
+import { MessageService } from 'primeng/api';
 
 import { AdminLayout } from './admin-layout';
 import { AuthService, AuthUser } from '../../../core/services/auth';
@@ -22,6 +23,26 @@ describe('AdminLayout', () => {
     branchName: null,
   };
 
+  const managerUser: AuthUser = {
+    id: 4,
+    email: 'manager@lembas.com',
+    firstName: 'Saruman',
+    lastName: 'White',
+    role: 'MANAGER',
+    branchId: 1,
+    branchName: null,
+  };
+
+  const employeeUser: AuthUser = {
+    id: 5,
+    email: 'employee@lembas.com',
+    firstName: 'Frodo',
+    lastName: 'Baggins',
+    role: 'EMPLOYEE',
+    branchId: 1,
+    branchName: null,
+  };
+
   const jwtHydratedUser: AuthUser = {
     id: 3,
     email: 'employee@lembas.com',
@@ -37,6 +58,7 @@ describe('AdminLayout', () => {
     mockAuthService = {
       currentUser: currentUserSignal,
       isAuthenticated: signal(currentUserValue !== null),
+      getUserRole: vi.fn(() => currentUserValue?.role ?? null),
       logout: vi.fn(),
     };
 
@@ -48,6 +70,7 @@ describe('AdminLayout', () => {
           { path: 'admin/dashboard', component: {} as any },
           { path: 'auth/login', component: {} as any },
         ]),
+        MessageService,
         { provide: AuthService, useValue: mockAuthService },
       ],
     }).compileComponents();
@@ -102,5 +125,47 @@ describe('AdminLayout', () => {
     const trigger = fixture.nativeElement.querySelector('.admin__user-menu-btn');
     expect(trigger).toBeTruthy();
     expect(trigger.getAttribute('aria-label')).toBe('Abrir menu de usuario');
+  });
+
+  /** Should show all 9 nav items including Usuarios when role is ADMIN. */
+  it('Should_showUsersInSidebar_when_roleIsAdmin', () => {
+    setup(adminUser);
+
+    const navLinks: Element[] = Array.from(
+      fixture.nativeElement.querySelectorAll('.admin__nav-link'),
+    );
+    expect(navLinks.length).toBe(9);
+    const labels = navLinks.map(
+      (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
+    );
+    expect(labels).toContain('Usuarios');
+  });
+
+  /** Should hide Usuarios from sidebar when role is MANAGER. */
+  it('Should_hideUsersFromSidebar_when_roleIsManager', () => {
+    setup(managerUser);
+
+    const navLinks: Element[] = Array.from(
+      fixture.nativeElement.querySelectorAll('.admin__nav-link'),
+    );
+    expect(navLinks.length).toBe(8);
+    const labels = navLinks.map(
+      (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
+    );
+    expect(labels).not.toContain('Usuarios');
+  });
+
+  /** Should hide Usuarios from sidebar when role is EMPLOYEE. */
+  it('Should_hideUsersFromSidebar_when_roleIsEmployee', () => {
+    setup(employeeUser);
+
+    const navLinks: Element[] = Array.from(
+      fixture.nativeElement.querySelectorAll('.admin__nav-link'),
+    );
+    expect(navLinks.length).toBe(8);
+    const labels = navLinks.map(
+      (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
+    );
+    expect(labels).not.toContain('Usuarios');
   });
 });

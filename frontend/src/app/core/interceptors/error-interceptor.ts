@@ -1,12 +1,22 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { catchError, throwError } from 'rxjs';
 
+/** API paths whose errors are handled directly by their owning forms. */
+const FORM_OWNED_AUTH_PATHS = ['/api/auth/login', '/api/auth/register'];
+
+/** Returns true when a request error should be translated by the page/component. */
+function isFormOwnedRequest(url: string): boolean {
+  return FORM_OWNED_AUTH_PATHS.some((path) => url.startsWith(path));
+}
+
 /**
- * Interceptor global que captura errores HTTP y muestra toasts automáticos.
- * Maneja casos especiales según el código de estado HTTP.
+ * Global HTTP error interceptor for cross-cutting infrastructure errors only.
+ *
+ * Form validation, conflicts, not-found states, and login/register failures are
+ * propagated without a toast so the owning component can show contextual UI.
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -14,103 +24,59 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Extraer el mensaje del backend si está disponible
-      const apiError = error.error as { message?: string; code?: string } | undefined;
-      const backendMessage = apiError?.message;
+      const handledByComponent = isFormOwnedRequest(req.url);
 
-      // Manejar según el código de estado HTTP
       switch (error.status) {
         case 0:
-          // Error de red (sin respuesta del servidor)
+          // Network errors are global because no component can recover with field-level feedback.
           messageService.add({
             severity: 'error',
-            summary: 'Error de conexión',
-            detail: 'No se pudo conectar con el servidor. Verifique su conexión a internet.',
+            summary: 'Error de conexion',
+            detail: 'No se pudo conectar con el servidor. Verifique su conexion a internet.',
             life: 5000,
           });
           break;
 
         case 401:
-          // No autenticado - limpiar sesión y redirigir a login
-          messageService.add({
-            severity: 'warn',
-            summary: 'Sesión expirada',
-            detail: 'Su sesión ha expirado. Por favor, inicie sesión nuevamente.',
-            life: 5000,
-          });
-          localStorage.removeItem('lembas_access_token');
-          localStorage.removeItem('lembas_refresh_token');
-          localStorage.removeItem('lembas_user_first_name');
-          router.navigate(['/auth/login']);
+          // Login/register 401 responses are business feedback, not expired-session events.
+          if (!handledByComponent) {
+            messageService.add({
+              severity: 'warn',
+              summary: 'Sesion expirada',
+              detail: 'Su sesion ha expirado. Por favor, inicie sesion nuevamente.',
+              life: 5000,
+            });
+            localStorage.removeItem('lembas_access_token');
+            localStorage.removeItem('lembas_refresh_token');
+            localStorage.removeItem('lembas_user_first_name');
+            router.navigate(['/auth/login']);
+          }
           break;
 
         case 403:
-          // Acceso denegado
+          // Authorization failures are global because they are independent of form validation.
           messageService.add({
             severity: 'error',
             summary: 'Acceso denegado',
-            detail: backendMessage || 'No tiene permisos para realizar esta acción.',
-            life: 5000,
-          });
-          break;
-
-        case 404:
-          // Recurso no encontrado
-          messageService.add({
-            severity: 'error',
-            summary: 'No encontrado',
-            detail: backendMessage || 'El recurso solicitado no existe.',
-            life: 5000,
-          });
-          break;
-
-        case 409:
-          // Conflicto - violación de regla de negocio
-          messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: backendMessage || 'Se produjo un conflicto con la operación.',
-            life: 5000,
-          });
-          break;
-
-        case 422:
-        case 400:
-          // Error de validación
-          const validationDetails = apiError?.code === 'VALIDATION_ERROR' && error.error?.details?.fieldErrors
-            ? `Revise los campos del formulario.`
-            : (backendMessage || 'Los datos enviados no son válidos.');
-          messageService.add({
-            severity: 'error',
-            summary: 'Error de validación',
-            detail: validationDetails,
-            life: 5000,
-          });
-          break;
-
-        case 500:
-          // Error interno del servidor
-          messageService.add({
-            severity: 'error',
-            summary: 'Error del servidor',
-            detail: 'Ocurrió un error inesperado. Por favor, intente nuevamente más tarde.',
+            detail: 'No tiene permisos para realizar esta accion.',
             life: 5000,
           });
           break;
 
         default:
-          // Otros errores
-          messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: backendMessage || 'Ocurrió un error inesperado.',
-            life: 5000,
-          });
+          // Only unexpected server failures are global. 4xx business errors stay local.
+          if (error.status >= 500) {
+            messageService.add({
+              severity: 'error',
+              summary: 'Error del servidor',
+              detail: 'Ocurrio un error inesperado. Por favor, intente nuevamente mas tarde.',
+              life: 5000,
+            });
+          }
           break;
       }
 
-      // Propagar el error para que los componentes puedan manejarlo si es necesario
       return throwError(() => error);
-    })
+    }),
   );
 };

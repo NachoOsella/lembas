@@ -84,8 +84,18 @@
 
 ## 2026-05-26
 
+- `frontend/src/app/features/admin/users/users.ts`, `frontend/src/app/features/admin/users/users.html`, `frontend/src/app/features/admin/users/users.css`, `frontend/src/app/features/admin/users/users.spec.ts` -- agregada validacion de formato email en frontend (regex `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`) en `isFormValid()` con 8 tests de aceptacion/rechazo; expuestos signals `formEmailValid`, `formPasswordValid`, `formBranchValid` computados con `formSubmitted` para mostrar errores inline por campo tras el primer intento de submit; errores visuales rojos (`user-form__error`) alineados con paleta de DESING.md.
+
+## 2026-05-26
+
 - `frontend/src/app/shared/components/app-data-table/` -- refactorizado componente generico para soportar toolbar opcional via content projection (`<ng-template #toolbar>`), eliminando necesidad de wrappers externos. Card visual ahora proviene del shell interno, no de contenedores anidados.
 - `frontend/src/app/features/admin/users/` -- eliminada arquitectura de "cards sobre cards" (table-shell + data-table con su propio card). Toolbar con titulo/kicker/búsqueda/contador ahora vive dentro del data-table via nuevo slot. Agregada búsqueda client-side con filtrado por nombre/email/rol/sucursal usando `app-search-bar`.
 - `backend/src/main/java/com/dietetica/lembas/shared/branch/`, `backend/src/test/java/com/dietetica/lembas/shared/branch/web/BranchAdminControllerTest.java` -- corregido registro del endpoint `GET /api/admin/branches`: removida condicion bean-temprana que dejaba el controller sin mapear en runtime y agregada cobertura MVC de ruteo/autorizacion.
 - `docker/compose.yml` -- corregido healthcheck del contenedor web usando `127.0.0.1` en lugar de `localhost` para evitar fallo por resolucion IPv6 contra Nginx escuchando IPv4.
 - `docker/nginx.conf`, `frontend/src/app/{app.config.ts,core/interceptors/{auth,error}-interceptor.ts,features/auth/login/login.ts}` -- corregidos problemas de login en navegador: CSP permite Google Fonts, `MessageService` global evita fallo síncrono del interceptor antes de enviar HTTP, login/register no reciben tokens stale, 401 redirige a `/auth/login`, y una falla de navegación post-login ya no se reporta como credenciales/API fallidas ni borra la sesión.
+- `frontend/src/app/features/admin/users/` -- ajustada validacion inline post-review: passwords cortas tambien se bloquean al editar, nombre/apellido muestran errores visuales, el estado de validacion se reinicia al abrir dialogos y se removieron dependencias de toast duplicadas.
+- `frontend/src/app/core/interceptors/error-interceptor.ts` -- simplificado manejo global de toasts para cubrir solo errores comunes/transversales (red, sesion expirada, acceso denegado, 5xx); errores de formulario/negocio como 400, 404, 409 y login/register quedan para la UI propietaria.
+- `frontend/src/app/features/auth/{login,register}/`, `frontend/src/app/features/admin/users/` -- alineado manejo de errores de componentes con la nueva convencion: login/register no duplican errores comunes del interceptor y Users muestra errores de negocio/validacion del backend en el dialogo o toast contextual de estado.
+- `frontend/src/app/features/admin/users/` -- redisenado modal de crear/editar usuarios con secciones Identidad/Permisos, layout responsive de dos columnas y `p-select` de sucursal mas robusto (`appendTo=body`, normalizacion number|null, disabled sin sucursales) para evitar recortes/selecciones inestables dentro del dialogo.
+
+- `frontend/src/app/features/admin/users/` -- refinado modal de usuarios: intro de Acceso interno convertida en encabezado compacto sin card, selectores de rol/sucursal con plantillas enriquecidas e indicador de alcance sin cards anidadas.
