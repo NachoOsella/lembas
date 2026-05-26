@@ -16,7 +16,7 @@
 }
 
 .page-header::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 1.25rem;
   right: 1.25rem;
@@ -65,7 +65,7 @@
 }
 
 .page-header__eyebrow::before {
-  content: "";
+  content: '';
   width: 1.7rem;
   height: 1px;
   background: currentColor;
@@ -106,5 +106,12 @@
   .page-header {
     align-items: stretch;
     flex-direction: column;
+    min-height: auto;
+    padding: clamp(1.15rem, 5vw, 1.5rem);
+  }
+
+  .page-header__actions,
+  .page-header__actions > * {
+    width: 100%;
   }
 }

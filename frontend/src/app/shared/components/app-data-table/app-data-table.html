@@ -39,7 +39,9 @@
 
       <ng-template #body let-rowData let-columns="columns">
         @if (bodyTemplate()) {
-          <ng-container *ngTemplateOutlet="bodyTemplate()!; context: { $implicit: rowData, columns: columns }" />
+          <ng-container
+            *ngTemplateOutlet="bodyTemplate()!; context: { $implicit: rowData, columns: columns }"
+          />
         } @else {
           <tr (click)="onRowClick(rowData)" class="app-data-table__row">
             @for (col of columns; track col.field) {

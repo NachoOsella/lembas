@@ -2,9 +2,11 @@
   display: block;
 }
 
-/* Shell wrapper provides the card visual */
+/* Shell wrapper provides the card visual and owns horizontal overflow on small screens. */
 .app-data-table-shell {
-  overflow: hidden;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
   background: #ffffff;
   border: 1px solid rgba(7, 95, 54, 0.11);
   border-radius: 1.35rem;
@@ -18,6 +20,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 1rem;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid rgba(7, 95, 54, 0.09);
@@ -26,10 +29,17 @@
 
 /* The p-table inside is flat — no border, no radius, no shadow */
 :host ::ng-deep .app-data-table {
+  width: max-content;
+  min-width: 100%;
   background: transparent;
   border: none;
   border-radius: 0;
   box-shadow: none;
+}
+
+:host ::ng-deep .app-data-table .p-datatable-table {
+  width: 100%;
+  min-width: 46rem;
 }
 
 :host ::ng-deep .app-data-table .p-datatable-header,
@@ -121,4 +131,35 @@
 
 .app-data-table__row {
   cursor: pointer;
+}
+
+@media (max-width: 48rem) {
+  .app-data-table__toolbar {
+    align-items: stretch;
+    padding: 0.95rem;
+  }
+
+  :host ::ng-deep .app-data-table {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  :host ::ng-deep .app-data-table .p-datatable-table {
+    width: 100%;
+    min-width: 44rem;
+    table-layout: auto;
+  }
+
+  :host ::ng-deep .app-data-table .p-datatable-thead > tr > th,
+  :host ::ng-deep .app-data-table .p-datatable-tbody > tr > td {
+    padding: 0.85rem 0.9rem;
+    font-size: 0.84rem;
+  }
+
+  :host ::ng-deep .app-data-table .p-paginator {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 0.15rem;
+    min-width: 44rem;
+  }
 }

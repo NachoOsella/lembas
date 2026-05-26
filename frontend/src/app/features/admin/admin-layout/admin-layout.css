@@ -83,7 +83,9 @@
   font-size: 0.88rem;
   font-weight: 500;
   text-decoration: none;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
   white-space: nowrap;
 }
 
@@ -132,7 +134,9 @@
   color: rgba(255, 255, 255, 0.45);
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .admin__collapse-btn:hover {
@@ -269,7 +273,9 @@
 
 .admin__content {
   flex: 1;
+  min-width: 0;
   padding: var(--spacing-xl);
+  overflow-x: hidden;
 }
 
 /* ------------------------------------------------------------------ */
@@ -305,7 +311,45 @@
     font-size: 0.8rem;
   }
 
+  .admin__topbar {
+    padding-inline: 1rem;
+  }
+
+  .admin__content {
+    padding: 1rem;
+  }
+
   .admin__sidebar-footer {
     display: none;
+  }
+}
+
+@media (max-width: 34rem) {
+  .admin__sidebar-brand {
+    height: 3.45rem;
+    min-height: 3.45rem;
+  }
+
+  .admin__sidebar-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0.6rem;
+  }
+
+  .admin__nav-link {
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  .admin__topbar {
+    padding-inline: 0.85rem;
+  }
+
+  .admin__content {
+    padding: 0.85rem;
+  }
+
+  .admin__user-name {
+    max-width: 5rem;
   }
 }

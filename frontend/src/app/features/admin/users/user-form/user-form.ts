@@ -36,7 +36,7 @@ const ROLE_ICON: Record<InternalRole, string> = {
   selector: 'app-user-form',
   imports: [FormsModule, Select, InputText, AppButton, AppModal],
   templateUrl: './user-form.html',
-  styleUrl: '../users.css',
+  styleUrl: './user-form.css',
 })
 /** Create / Edit dialog for internal users with role-aware branch selection and inline validation. */
 export class UserForm {
@@ -67,8 +67,7 @@ export class UserForm {
   protected readonly formSubmitted = signal(false);
 
   protected readonly formEmailValid = computed(
-    () =>
-      this.formEmail().trim().length > 0 && UserForm.EMAIL_REGEX.test(this.formEmail().trim()),
+    () => this.formEmail().trim().length > 0 && UserForm.EMAIL_REGEX.test(this.formEmail().trim()),
   );
 
   protected readonly formPasswordValid = computed(() => {

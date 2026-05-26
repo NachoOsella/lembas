@@ -65,9 +65,7 @@
             autocomplete="new-password"
           />
           @if (formSubmitted() && !formPasswordValid()) {
-            <small class="user-form__error"
-              >La contrasena debe tener al menos 8 caracteres.</small
-            >
+            <small class="user-form__error">La contrasena debe tener al menos 8 caracteres.</small>
           }
           @if (isEditMode()) {
             <small class="user-form__hint"
@@ -223,7 +221,9 @@
             @if (branches().length === 0) {
               <small class="user-form__hint">No hay sucursales disponibles.</small>
             } @else {
-              <small class="user-form__hint">La seleccion define el alcance local del usuario.</small>
+              <small class="user-form__hint"
+                >La seleccion define el alcance local del usuario.</small
+              >
             }
           </div>
         }

@@ -4,7 +4,7 @@
 
 .metric-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(10.5rem, 100%), 1fr));
   gap: 0.8rem;
 }
 
@@ -25,7 +25,7 @@
 }
 
 .metric-strip__item::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: auto -2.5rem -3.2rem auto;
   z-index: -1;
@@ -97,4 +97,22 @@
   color: color-mix(in srgb, var(--metric-ink, #12372a) 62%, transparent);
   font-size: 0.78rem;
   font-weight: 600;
+}
+
+@media (max-width: 34rem) {
+  .metric-strip {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .metric-strip__item {
+    min-height: 5.15rem;
+    padding: 0.85rem;
+    border-radius: 1rem;
+  }
+
+  .metric-strip__icon {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
 }

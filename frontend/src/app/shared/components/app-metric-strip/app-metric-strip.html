@@ -1,6 +1,9 @@
 <section class="metric-strip" aria-label="Resumen de metricas">
   @for (metric of metrics(); track metric.label) {
-    <article class="metric-strip__item" [class]="'metric-strip__item metric-strip__item--' + (metric.tone ?? 'forest')">
+    <article
+      class="metric-strip__item"
+      [class]="'metric-strip__item metric-strip__item--' + (metric.tone ?? 'forest')"
+    >
       @if (metric.icon) {
         <span class="metric-strip__icon" aria-hidden="true">
           <i [class]="metric.icon"></i>

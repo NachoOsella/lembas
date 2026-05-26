@@ -103,3 +103,5 @@
 ## 2026-05-26
 
 - `frontend/src/app/core/interceptors/error-interceptor.ts` -- deduplicados toasts globales identicos en una ventana corta para evitar mensajes repetidos cuando fallan requests paralelas (por ejemplo Usuarios + Sucursales). Agregado test de regresion en `error-interceptor.spec.ts`.
+
+- `frontend/src/app/features/admin/users/`, `frontend/src/app/shared/components/app-{data-table,modal,page-header,metric-strip}/` -- redisenada pantalla de Usuarios con layout desktop de workspace + panel operativo, modal en dos columnas y mejoras responsive centralizadas en componentes compartidos.

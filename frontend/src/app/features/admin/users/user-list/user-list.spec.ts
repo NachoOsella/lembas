@@ -112,7 +112,9 @@ describe('UserList', () => {
 
     it('should refresh users when refresh() is called', () => {
       configure([buildUser()]);
-      svc['listUsers'].mockReturnValue(of(userPage([buildUser({ id: 2, email: 'second@lembas.com' })])));
+      svc['listUsers'].mockReturnValue(
+        of(userPage([buildUser({ id: 2, email: 'second@lembas.com' })])),
+      );
 
       component.refresh();
 
@@ -132,9 +134,30 @@ describe('UserList', () => {
   // ---------------------------------------------------------------------------
   describe('search filtering', () => {
     const users = [
-      buildUser({ id: 1, email: 'admin@lembas.com', firstName: 'Gandalf', lastName: 'Grey', role: 'ADMIN', branchId: null }),
-      buildUser({ id: 2, email: 'manager@lembas.com', firstName: 'Saruman', lastName: 'White', role: 'MANAGER', branchId: 1 }),
-      buildUser({ id: 3, email: 'employee@lembas.com', firstName: 'Frodo', lastName: 'Baggins', role: 'EMPLOYEE', branchId: 1 }),
+      buildUser({
+        id: 1,
+        email: 'admin@lembas.com',
+        firstName: 'Gandalf',
+        lastName: 'Grey',
+        role: 'ADMIN',
+        branchId: null,
+      }),
+      buildUser({
+        id: 2,
+        email: 'manager@lembas.com',
+        firstName: 'Saruman',
+        lastName: 'White',
+        role: 'MANAGER',
+        branchId: 1,
+      }),
+      buildUser({
+        id: 3,
+        email: 'employee@lembas.com',
+        firstName: 'Frodo',
+        lastName: 'Baggins',
+        role: 'EMPLOYEE',
+        branchId: 1,
+      }),
     ];
 
     beforeEach(() => {
@@ -225,9 +248,9 @@ describe('UserList', () => {
       configure(users);
 
       const metrics = (c['userMetrics'] as () => { label: string; value: number }[])();
-      expect(metrics[0].value).toBe(3);  // total usuarios
-      expect(metrics[1].value).toBe(2);  // activos
-      expect(metrics[2].value).toBe(2);  // con sucursal asignada
+      expect(metrics[0].value).toBe(3); // total usuarios
+      expect(metrics[1].value).toBe(2); // activos
+      expect(metrics[2].value).toBe(2); // con sucursal asignada
     });
 
     it('should show zero counts for empty user list', () => {

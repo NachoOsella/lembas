@@ -4,6 +4,7 @@
 
 :host {
   display: inline-block;
+  max-width: 100%;
 }
 
 .app-button {
@@ -12,12 +13,16 @@
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   border: 1px solid transparent;
   border-radius: 999px;
   font-family: inherit;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -79,7 +84,7 @@
 
 .app-button--ghost:hover:not(:disabled) {
   color: #075f36;
-  background: rgba(47, 141, 114, 0.10);
+  background: rgba(47, 141, 114, 0.1);
 }
 
 .app-button--danger {
@@ -108,4 +113,20 @@
   cursor: not-allowed;
   opacity: 0.55;
   box-shadow: none;
+}
+
+.app-button :is(span, i) {
+  min-width: 0;
+}
+
+.app-button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 34rem) {
+  :host {
+    display: block;
+    width: 100%;
+  }
 }

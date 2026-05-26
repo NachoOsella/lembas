@@ -8,7 +8,6 @@ import { MessageService } from 'primeng/api';
 import { UserService } from '../../../../core/services/user';
 import { Branch, UserResponse } from '../../../../shared/models/user';
 import { ColumnDef } from '../../../../shared/components/app-data-table/app-data-table';
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
 import { AppDataTable } from '../../../../shared/components/app-data-table/app-data-table';
 import {
   AppMetricItem,
@@ -51,7 +50,6 @@ const USER_COLUMNS: ColumnDef[] = [
     ToggleSwitch,
     ButtonDirective,
     Ripple,
-    AppPageHeader,
     AppDataTable,
     AppMetricStrip,
     AppButton,
@@ -59,7 +57,7 @@ const USER_COLUMNS: ColumnDef[] = [
     AppSearchBar,
   ],
   templateUrl: './user-list.html',
-  styleUrl: '../users.css',
+  styleUrl: './user-list.css',
 })
 /** Displays the internal user directory with search, metrics, and status toggling. */
 export class UserList implements OnInit {
