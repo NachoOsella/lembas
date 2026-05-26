@@ -8,6 +8,9 @@ const ACCESS_TOKEN_KEY = 'lembas_access_token';
 /** Key used to persist the JWT refresh token in localStorage. */
 const REFRESH_TOKEN_KEY = 'lembas_refresh_token';
 
+/** Key used to persist the user's first name in localStorage (JWT does not carry it). */
+const FIRST_NAME_KEY = 'lembas_user_first_name';
+
 /** Request payload for POST /api/auth/register. */
 export interface RegisterRequest {
   firstName: string;
@@ -243,6 +246,7 @@ export class AuthService {
     }
     this.accessToken.set(response.token);
     this.currentUser.set(response.user);
+    this.persistFirstName(response.user.firstName);
   }
 
   /**
@@ -291,7 +295,7 @@ export class AuthService {
     return {
       id: userId,
       email: payload.email,
-      firstName: null,
+      firstName: this.loadStoredFirstName(),
       lastName: null,
       role,
       branchId: null,
@@ -325,6 +329,7 @@ export class AuthService {
     try {
       localStorage.removeItem(ACCESS_TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
+      localStorage.removeItem(FIRST_NAME_KEY);
     } catch {
       /* Storage unavailable -- degrade gracefully */
     }
@@ -343,6 +348,28 @@ export class AuthService {
   private loadStoredRefreshToken(): string | null {
     try {
       return localStorage.getItem(REFRESH_TOKEN_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Persists the user's first name to {@code localStorage}. */
+  private persistFirstName(firstName: string | null): void {
+    try {
+      if (firstName) {
+        localStorage.setItem(FIRST_NAME_KEY, firstName);
+      } else {
+        localStorage.removeItem(FIRST_NAME_KEY);
+      }
+    } catch {
+      /* Storage unavailable -- degrade gracefully */
+    }
+  }
+
+  /** Loads the stored first name on service construction. */
+  private loadStoredFirstName(): string | null {
+    try {
+      return localStorage.getItem(FIRST_NAME_KEY);
     } catch {
       return null;
     }
