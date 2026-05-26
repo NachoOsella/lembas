@@ -1,0 +1,48 @@
+:host {
+  display: block;
+}
+
+.app-store-footer {
+  background: var(--color-primary-dark);
+}
+
+.app-store-footer__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  column-gap: 1.5rem;
+  row-gap: 0.4rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-xl);
+  min-height: 3.2rem;
+}
+
+.app-store-footer__copy {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.app-store-footer__links {
+  display: flex;
+  align-items: center;
+  column-gap: 1.25rem;
+  row-gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.app-store-footer__link {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.76rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.app-store-footer__link:hover {
+  color: #ffffff;
+}

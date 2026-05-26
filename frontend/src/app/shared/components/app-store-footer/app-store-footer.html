@@ -1,0 +1,20 @@
+<footer class="app-store-footer">
+  <div class="app-store-footer__inner">
+    <span class="app-store-footer__copy">{{ copyright() }}</span>
+    <nav class="app-store-footer__links" aria-label="Enlaces del pie de pagina">
+      @for (link of links(); track link.label) {
+        @if (link.external) {
+          <a [href]="link.path" target="_blank" rel="noopener noreferrer"
+             class="app-store-footer__link">
+            {{ link.label }}
+          </a>
+        } @else {
+          <a [routerLink]="link.path"
+             class="app-store-footer__link">
+            {{ link.label }}
+          </a>
+        }
+      }
+    </nav>
+  </div>
+</footer>

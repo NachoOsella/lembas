@@ -18,3 +18,5 @@ export * from './empty-state/empty-state';
 export * from './error-alert/error-alert';
 export * from './loading-spinner/loading-spinner';
 export * from './skeleton/skeleton';
+export * from './app-store-nav/app-store-nav';
+export * from './app-store-footer/app-store-footer';

@@ -1,35 +1,23 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { MenuModule } from 'primeng/menu';
+import { Router, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 
 import { AuthService } from '../../../core/services/auth';
-
-interface FooterLink {
-  readonly label: string;
-  readonly path: string;
-  readonly external?: boolean;
-}
-
-interface StoreNavItem {
-  readonly label: string;
-  readonly path: string;
-}
+import { AppStoreNav, StoreNavLink, StoreBrandConfig } from '../../../shared/components/app-store-nav/app-store-nav';
+import { AppStoreFooter, StoreFooterLink } from '../../../shared/components/app-store-footer/app-store-footer';
 
 @Component({
   selector: 'app-store-layout',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, ButtonModule, MenuModule],
+  imports: [RouterOutlet, AppStoreNav, AppStoreFooter],
   templateUrl: './store-layout.html',
   styleUrl: './store-layout.css',
 })
-/** Public store shell with Lembas brand: sticky nav, minimal footer. */
+/** Public store shell: delegates nav and footer to generic components. */
 export class StoreLayout {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   protected readonly cartItemsCount = signal(0);
-  protected readonly currentYear = new Date().getFullYear();
 
   /** Whether a user is currently logged in. */
   protected readonly isLoggedIn = computed(() => this.auth.isAuthenticated());
@@ -42,7 +30,15 @@ export class StoreLayout {
     return user.email;
   });
 
-  /** Dropdown menu items for the user avatar in the store topbar. */
+  /** Brand config for app-store-nav. */
+  protected readonly brand: StoreBrandConfig = {
+    logoUrl: '/brand/lembas-icon.svg?v=4',
+    title: 'Lembas',
+    subtitle: 'Tienda saludable',
+    homeRoute: '/store',
+  };
+
+  /** Dropdown menu items for the user avatar. */
   protected readonly userMenuItems: MenuItem[] = [
     {
       label: 'Mis pedidos',
@@ -59,14 +55,14 @@ export class StoreLayout {
     },
   ];
 
-  protected readonly navItems: readonly StoreNavItem[] = [
+  protected readonly navItems: readonly StoreNavLink[] = [
     { label: 'Tienda', path: '/store' },
     { label: 'Productos', path: '/store' },
     { label: 'Como comprar', path: '/store#como-comprar' },
   ];
 
-  /** Flat footer links rendered inline in a single row. */
-  protected readonly footerLinks: readonly FooterLink[] = [
+  /** Flat footer links for app-store-footer. */
+  protected readonly footerLinks: readonly StoreFooterLink[] = [
     { label: 'Como comprar', path: '/store' },
     { label: 'Retiro en sucursal', path: '/store' },
     { label: 'Terminos', path: '/store' },
@@ -74,6 +70,14 @@ export class StoreLayout {
     { label: 'Instagram', path: 'https://www.instagram.com/', external: true },
     { label: 'Facebook', path: 'https://www.facebook.com/', external: true },
   ];
+
+  /** Copyright string for app-store-footer. */
+  protected readonly copyright = `\u00a9 ${new Date().getFullYear()} Lembas`;
+
+  /** Navigate to the cart/checkout page. */
+  goToCart(): void {
+    this.router.navigate(['/customer/checkout']);
+  }
 
   /** Logs out the current user and navigates to the store home page. */
   logout(): void {

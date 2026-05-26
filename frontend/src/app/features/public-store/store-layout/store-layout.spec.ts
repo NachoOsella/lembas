@@ -47,62 +47,29 @@ describe('StoreLayout', () => {
     fixture.detectChanges();
   }
 
-  /** Should create component when user is not authenticated. */
-  it('Should_createComponent_when_guest', () => {
+  it('should create when guest', () => {
     setup(false);
     expect(component).toBeTruthy();
   });
 
-  /** Should create component when user is authenticated. */
-  it('Should_createComponent_when_authenticated', () => {
+  it('should create when authenticated', () => {
     setup(true, customerUser);
     expect(component).toBeTruthy();
   });
 
-  /** Should show login/register links when not authenticated. */
-  it('Should_showLoginRegisterLinks_when_guest', () => {
+  it('should render app-store-nav', () => {
     setup(false);
-
-    const allNavLinks = Array.from(
-      fixture.nativeElement.querySelectorAll('header a'),
-    ) as HTMLElement[];
-    const ingresar = allNavLinks.find((el) => el.textContent?.trim() === 'Ingresar');
-    expect(ingresar).toBeTruthy();
-
-    const registerBtn = fixture.nativeElement.querySelector('.store__cta-btn');
-    expect(registerBtn).toBeTruthy();
-    expect(registerBtn.textContent.trim()).toBe('Crear cuenta');
+    const nav = fixture.nativeElement.querySelector('app-store-nav');
+    expect(nav).toBeTruthy();
   });
 
-  /** Should show user name and hide login/register when authenticated. */
-  it('Should_showUserNameAndHideGuestLinks_when_authenticated', () => {
-    setup(true, customerUser);
-
-    const loginNavLinks = Array.from(
-      fixture.nativeElement.querySelectorAll('header a'),
-    ) as HTMLElement[];
-    const loginInNav = loginNavLinks.find((el) => el.textContent?.trim() === 'Ingresar');
-    expect(loginInNav).toBeUndefined();
-
-    const navCta = fixture.nativeElement.querySelector('.store__cta-btn');
-    expect(navCta).toBeNull();
-
-    const allSpans: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('span'));
-    const userSpan = allSpans.find((el) => el.textContent?.trim() === 'Frodo');
-    expect(userSpan).toBeTruthy();
+  it('should render app-store-footer', () => {
+    setup(false);
+    const footer = fixture.nativeElement.querySelector('app-store-footer');
+    expect(footer).toBeTruthy();
   });
 
-  /** Should render user menu trigger when authenticated. */
-  it('Should_renderUserMenuTrigger_when_authenticated', () => {
-    setup(true, customerUser);
-
-    const trigger = fixture.nativeElement.querySelector('.store__menu-btn');
-    expect(trigger).toBeTruthy();
-    expect(trigger.getAttribute('aria-label')).toBe('Abrir menu de usuario');
-  });
-
-  /** Should call logout() and navigate to /store when logout is triggered. */
-  it('Should_logoutAndRedirectToStore_when_logoutCalled', async () => {
+  it('should call logout() and navigate to /store', async () => {
     setup(true, customerUser);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
@@ -113,17 +80,13 @@ describe('StoreLayout', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/store']);
   });
 
-  /** Should render minimal footer with links. */
-  it('Should_renderFooter_when_rendered', () => {
+  it('should navigate to checkout on cart click', async () => {
     setup(false);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
-    const footer = fixture.nativeElement.querySelector('.store__footer');
-    expect(footer).toBeTruthy();
+    component.goToCart();
+    await fixture.whenStable();
 
-    const links = fixture.nativeElement.querySelectorAll('.store__footer-link');
-    expect(links.length).toBeGreaterThan(0);
+    expect(navigateSpy).toHaveBeenCalledWith(['/customer/checkout']);
   });
-
-  /** Should render Leaf CTA floating button. */
-
 });
