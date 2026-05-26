@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { AppStoreNav, StoreBrandConfig, StoreNavLink } from './app-store-nav';
+import { AppStoreNav, StoreBrandConfig } from './app-store-nav';
 
 describe('AppStoreNav', () => {
   let component: AppStoreNav;
@@ -13,12 +13,6 @@ describe('AppStoreNav', () => {
     homeRoute: '/store',
   };
 
-  const navItems: StoreNavLink[] = [
-    { label: 'Tienda', path: '/store' },
-    { label: 'Productos', path: '/store' },
-    { label: 'Como comprar', path: '/store' },
-  ];
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppStoreNav],
@@ -28,7 +22,6 @@ describe('AppStoreNav', () => {
     fixture = TestBed.createComponent(AppStoreNav);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('brand', brand);
-    fixture.componentRef.setInput('navItems', navItems);
     fixture.detectChanges();
   });
 
@@ -42,9 +35,17 @@ describe('AppStoreNav', () => {
     expect(strong.textContent.trim()).toBe('Lembas');
   });
 
-  it('should render nav links', () => {
-    const links = fixture.nativeElement.querySelectorAll('.app-store-nav__link');
-    expect(links.length).toBe(6); // 3 desktop + 3 mobile
+  it('should render search bar by default (showSearch=true)', () => {
+    const searchBars = fixture.nativeElement.querySelectorAll('app-search-bar');
+    expect(searchBars.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should hide search bar when showSearch=false', () => {
+    fixture.componentRef.setInput('showSearch', false);
+    fixture.detectChanges();
+
+    const searchBars = fixture.nativeElement.querySelectorAll('app-search-bar');
+    expect(searchBars.length).toBe(0);
   });
 
   it('should show login and register when not logged in', () => {
@@ -64,6 +65,15 @@ describe('AppStoreNav', () => {
     const name = fixture.nativeElement.querySelector('.app-store-nav__user-name');
     expect(name).toBeTruthy();
     expect(name.textContent.trim()).toBe('Frodo');
+  });
+
+  it('should emit searchQuery when search is triggered', () => {
+    const spy = vi.fn();
+    component.searchQuery.subscribe(spy);
+
+    component.searchQuery.emit('granola');
+
+    expect(spy).toHaveBeenCalledWith('granola');
   });
 
   it('should emit cartClick when cart is clicked', () => {

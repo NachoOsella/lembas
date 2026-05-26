@@ -3,7 +3,7 @@ import { Router, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 
 import { AuthService } from '../../../core/services/auth';
-import { AppStoreNav, StoreNavLink, StoreBrandConfig } from '../../../shared/components/app-store-nav/app-store-nav';
+import { AppStoreNav, StoreBrandConfig } from '../../../shared/components/app-store-nav/app-store-nav';
 import { AppStoreFooter, StoreFooterLink } from '../../../shared/components/app-store-footer/app-store-footer';
 
 @Component({
@@ -55,12 +55,6 @@ export class StoreLayout {
     },
   ];
 
-  protected readonly navItems: readonly StoreNavLink[] = [
-    { label: 'Tienda', path: '/store' },
-    { label: 'Productos', path: '/store' },
-    { label: 'Como comprar', path: '/store#como-comprar' },
-  ];
-
   /** Flat footer links for app-store-footer. */
   protected readonly footerLinks: readonly StoreFooterLink[] = [
     { label: 'Como comprar', path: '/store' },
@@ -73,6 +67,14 @@ export class StoreLayout {
 
   /** Copyright string for app-store-footer. */
   protected readonly copyright = `\u00a9 ${new Date().getFullYear()} Lembas`;
+
+  /** Navigate to store catalog with a search query parameter. */
+  onSearch(query: string): void {
+    const trimmed = query.trim();
+    if (trimmed) {
+      this.router.navigate(['/store'], { queryParams: { q: trimmed } });
+    }
+  }
 
   /** Navigate to the cart/checkout page. */
   goToCart(): void {

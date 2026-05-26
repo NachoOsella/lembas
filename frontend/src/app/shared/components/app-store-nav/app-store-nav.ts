@@ -1,13 +1,8 @@
 import { Component, input, output } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
-
-/** A single navigation link in the store nav. */
-export interface StoreNavLink {
-  readonly label: string;
-  readonly path: string;
-}
+import { AppSearchBar } from '../app-search-bar/app-search-bar';
 
 /** Brand display configuration. */
 export interface StoreBrandConfig {
@@ -20,18 +15,15 @@ export interface StoreBrandConfig {
 @Component({
   selector: 'app-store-nav',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, MenuModule],
+  imports: [RouterLink, MenuModule, AppSearchBar],
   templateUrl: './app-store-nav.html',
   styleUrl: './app-store-nav.css',
 })
 /**
  * Generic Lembas store top navigation bar.
- * Displays brand logo, nav links, auth state, user menu, and cart icon.
+ * Displays brand logo, optional search bar, auth state, user menu, and cart icon.
  */
 export class AppStoreNav {
-  /** Navigation links displayed in the center. */
-  readonly navItems = input.required<readonly StoreNavLink[]>();
-
   /** Brand display configuration. */
   readonly brand = input.required<StoreBrandConfig>();
 
@@ -46,6 +38,15 @@ export class AppStoreNav {
 
   /** Dropdown menu items shown in the user avatar popup. */
   readonly userMenuItems = input<MenuItem[]>([]);
+
+  /** Whether to show the search bar (default true). */
+  readonly showSearch = input(true);
+
+  /** Placeholder text for the search bar. */
+  readonly searchPlaceholder = input('Buscar productos...');
+
+  /** Emitted when the user submits a search query. */
+  readonly searchQuery = output<string>();
 
   /** Emitted when the user clicks "Cerrar sesión" or triggers logout. */
   readonly logout = output<void>();

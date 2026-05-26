@@ -13,17 +13,16 @@
       </span>
     </a>
 
-    <!-- Nav links (desktop center) -->
-    <nav class="app-store-nav__links" aria-label="Navegacion principal">
-      @for (item of navItems(); track item.label) {
-        <a [routerLink]="item.path"
-           routerLinkActive="app-store-nav__link--active"
-           [routerLinkActiveOptions]="{ exact: item.path === '/store' }"
-           class="app-store-nav__link">
-          {{ item.label }}
-        </a>
-      }
-    </nav>
+    <!-- Search bar (desktop center) -->
+    @if (showSearch()) {
+      <div class="app-store-nav__search">
+        <app-search-bar
+          [placeholder]="searchPlaceholder()"
+          size="sm"
+          (search)="searchQuery.emit($event)"
+        />
+      </div>
+    }
 
     <!-- Actions (right) -->
     <div class="app-store-nav__actions">
@@ -74,15 +73,14 @@
     </div>
   </div>
 
-  <!-- Mobile nav (second row) -->
-  <nav class="app-store-nav__links--mobile" aria-label="Navegacion principal movil">
-    @for (item of navItems(); track item.label) {
-      <a [routerLink]="item.path"
-         routerLinkActive="app-store-nav__link--active"
-         [routerLinkActiveOptions]="{ exact: item.path === '/store' }"
-         class="app-store-nav__link app-store-nav__link--sm">
-        {{ item.label }}
-      </a>
-    }
-  </nav>
+  <!-- Mobile search bar (second row) -->
+  @if (showSearch()) {
+    <div class="app-store-nav__search--mobile">
+      <app-search-bar
+        [placeholder]="searchPlaceholder()"
+        size="sm"
+        (search)="searchQuery.emit($event)"
+      />
+    </div>
+  }
 </header>

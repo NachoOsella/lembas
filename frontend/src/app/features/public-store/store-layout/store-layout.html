@@ -1,11 +1,11 @@
 <div class="store bg-canvas text-text font-sans tracking-tight min-h-screen flex flex-col" role="document">
   <app-store-nav
     [brand]="brand"
-    [navItems]="navItems"
     [cartCount]="cartItemsCount()"
     [isLoggedIn]="isLoggedIn()"
     [userDisplayName]="userDisplayName()"
     [userMenuItems]="userMenuItems"
+    (searchQuery)="onSearch($event)"
     (logout)="logout()"
     (cartClick)="goToCart()"
   />
