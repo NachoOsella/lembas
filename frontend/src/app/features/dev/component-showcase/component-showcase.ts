@@ -3,7 +3,6 @@ import { RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import {
   TabItem,
-
   AppBadge,
   AppBreadcrumb,
   AppButton,
@@ -15,7 +14,6 @@ import {
   AppPageHeader,
   AppPagination,
   AppSearchBar,
-  AppSectionCard,
   AppStatCard,
   AppTabs,
   AppToast,
@@ -48,7 +46,6 @@ interface ShowcaseLink {
     AppPageHeader,
     AppPagination,
     AppSearchBar,
-    AppSectionCard,
     AppStatCard,
     AppTabs,
     AppToast,

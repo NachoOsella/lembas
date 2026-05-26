@@ -53,9 +53,10 @@
 }
 
 .app-button--primary:hover:not(:disabled) {
-  background: #2f8d72;
-  border-color: #2f8d72;
-  box-shadow: 0 14px 28px rgba(47, 141, 114, 0.24);
+  color: #ffffff;
+  background: #075f36;
+  border-color: #075f36;
+  box-shadow: 0 14px 28px rgba(47, 141, 114, 0.28);
 }
 
 .app-button--secondary {
@@ -65,7 +66,8 @@
 }
 
 .app-button--secondary:hover:not(:disabled) {
-  background: rgba(212, 233, 226, 0.32);
+  color: #075f36;
+  background: rgba(47, 141, 114, 0.08);
   border-color: #2f8d72;
 }
 
@@ -76,13 +78,22 @@
 }
 
 .app-button--ghost:hover:not(:disabled) {
-  background: rgba(47, 141, 114, 0.08);
+  color: #075f36;
+  background: rgba(47, 141, 114, 0.10);
 }
 
 .app-button--danger {
   color: #ffffff;
   background: #c82014;
   border-color: #c82014;
+  box-shadow: 0 10px 22px rgba(200, 32, 20, 0.15);
+}
+
+.app-button--danger:hover:not(:disabled) {
+  color: #ffffff;
+  background: #a41810;
+  border-color: #a41810;
+  box-shadow: 0 14px 28px rgba(200, 32, 20, 0.22);
 }
 
 .app-button:hover:not(:disabled) {

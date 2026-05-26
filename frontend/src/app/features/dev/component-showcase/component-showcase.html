@@ -1,8 +1,10 @@
-<main class="bg-canvas text-text font-sans tracking-tight min-h-screen p-4 md:p-8">
+<main class="showcase-root">
 
-  <!-- Hero -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Hero                                                          -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
   <app-page-header
-    class="mx-auto mb-8 block max-w-[76rem]"
+    class="showcase-hero"
     tone="dark"
     eyebrow="Lembas UI Lab"
     title="Componentes y pantallas en un solo lugar"
@@ -11,22 +13,22 @@
     <app-badge tone="success" icon="pi pi-check-circle">Shared UI</app-badge>
   </app-page-header>
 
-  <!-- Components section -->
-  <section class="mx-auto mb-8 max-w-[76rem]" aria-labelledby="components-title">
-    <div class="flex flex-col md:flex-row items-start md:items-end justify-between gap-2 md:gap-4 mb-4">
-      <div>
-        <p class="text-[#f29d52] text-[0.78rem] font-bold tracking-[0.15em] uppercase m-0 mb-2 md:mb-3">Shared module</p>
-        <h2 id="components-title" class="text-primary text-xl md:text-2xl font-semibold leading-normal m-0">Componentes base</h2>
-      </div>
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Feedback                                                      -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-feedback">
+    <div class="showcase-section-head">
+      <h2 id="sec-feedback" class="showcase-section-title">Feedback y estados</h2>
+      <p class="showcase-section-desc">Loading, vacio y error: los tres estados que toda pantalla necesita.</p>
     </div>
 
-    <div class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(16rem,1fr))]">
-      <!-- Feedback -->
-      <app-section-card eyebrow="Feedback" title="LoadingSpinner">
+    <div class="showcase-row showcase-row--3col">
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">LoadingSpinner</span>
         <app-loading-spinner label="Buscando productos frescos..." surface="card" />
-      </app-section-card>
-
-      <app-section-card eyebrow="Estado vacio" title="EmptyState" tone="muted">
+      </div>
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">EmptyState</span>
         <app-empty-state
           icon="pi pi-shopping-bag"
           title="Todavia no hay productos"
@@ -34,86 +36,140 @@
           actionLabel="Crear producto"
           (action)="handleEmptyAction()"
         />
-      </app-section-card>
-
-      <app-section-card eyebrow="Feedback" title="ErrorAlert">
+      </div>
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">ErrorAlert</span>
         <app-error-alert
           title="No pudimos sincronizar el stock"
           message="Revisa tu conexion y vuelve a intentarlo."
           [dismissible]="true"
           (dismissed)="handleAlertDismiss()"
         />
-      </app-section-card>
+      </div>
+    </div>
+  </section>
 
-      <!-- Actions -->
-      <app-section-card eyebrow="Acciones" title="ConfirmDialog" description="Usalo para bajas, cancelaciones o cambios que necesiten confirmacion." tone="dark">
-        <app-button variant="primary" size="md" icon="pi pi-external-link" (click)="openDialog()">Abrir dialogo</app-button>
-        <small class="block leading-relaxed mt-4 text-white/70 text-sm">{{ lastAction() }}</small>
-      </app-section-card>
-
-      <app-section-card eyebrow="Acciones" title="AppModal" description="Modal generico con slots para header, body y footer.">
-        <app-button variant="secondary" size="md" icon="pi pi-window-maximize" (click)="openModal()">Abrir modal</app-button>
-      </app-section-card>
-
-      <app-section-card eyebrow="Carga" title="Skeleton">
-        <div class="flex flex-col gap-4">
-          <div class="flex items-center gap-3">
-            <app-skeleton shape="circle" height="40px" />
-            <div class="flex-1 flex flex-col gap-2">
-              <app-skeleton shape="text" width="65%" height="0.85rem" />
-              <app-skeleton shape="text" width="45%" height="0.7rem" />
-            </div>
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Skeleton                                                      -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-skel">
+    <div class="showcase-section-head">
+      <h2 id="sec-skel" class="showcase-section-title">Esqueletos de carga</h2>
+      <p class="showcase-section-desc">Placeholders animados mientras se resuelven los datos.</p>
+    </div>
+    <div class="showcase-row showcase-row--2col">
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">Skeleton -- perfil</span>
+        <div class="flex items-center gap-3 w-full">
+          <app-skeleton shape="circle" height="40px" />
+          <div class="flex-1 flex flex-col gap-2">
+            <app-skeleton shape="text" width="65%" height="0.85rem" />
+            <app-skeleton shape="text" width="45%" height="0.7rem" />
           </div>
-          <app-skeleton shape="rect" height="70px" />
         </div>
-      </app-section-card>
+      </div>
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">Skeleton -- bloque</span>
+        <app-skeleton shape="rect" height="70px" />
+      </div>
+    </div>
+  </section>
 
-      <!-- Buttons -->
-      <app-section-card eyebrow="Sistema" title="Button">
-        <div class="grid gap-3">
-          <app-button variant="primary" icon="pi pi-plus">Primario</app-button>
-          <app-button variant="secondary" icon="pi pi-pencil">Secundario</app-button>
-          <app-button variant="ghost" icon="pi pi-filter">Ghost</app-button>
-          <app-button variant="danger" icon="pi pi-trash">Peligro</app-button>
-        </div>
-      </app-section-card>
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Botones                                                       -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-buttons">
+    <div class="showcase-section-head">
+      <h2 id="sec-buttons" class="showcase-section-title">Botones</h2>
+      <p class="showcase-section-desc">Las cuatro variantes del sistema: primario, secundario, ghost y peligro.</p>
+    </div>
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">Button -- variantes</span>
+      <div class="flex flex-wrap items-center gap-3">
+        <app-button variant="primary" icon="pi pi-plus">Primario</app-button>
+        <app-button variant="secondary" icon="pi pi-pencil">Secundario</app-button>
+        <app-button variant="ghost" icon="pi pi-filter">Ghost</app-button>
+        <app-button variant="danger" icon="pi pi-trash">Peligro</app-button>
+      </div>
+    </div>
+  </section>
 
-      <!-- Badges -->
-      <app-section-card eyebrow="Etiquetas" title="Badge">
-        <div class="flex flex-wrap gap-2">
-          <app-badge tone="success" icon="pi pi-check">Pagado</app-badge>
-          <app-badge tone="warning" icon="pi pi-clock">Pendiente</app-badge>
-          <app-badge tone="danger" icon="pi pi-exclamation-triangle">Vencido</app-badge>
-          <app-badge tone="info" icon="pi pi-box">Stock</app-badge>
-          <app-badge tone="neutral">Borrador</app-badge>
-        </div>
-      </app-section-card>
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Badges                                                        -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-badges">
+    <div class="showcase-section-head">
+      <h2 id="sec-badges" class="showcase-section-title">Etiquetas</h2>
+      <p class="showcase-section-desc">Badges semanticos para estados, categorias y avisos.</p>
+    </div>
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">Badge -- todos los tonos</span>
+      <div class="flex flex-wrap gap-2">
+        <app-badge tone="success" icon="pi pi-check">Pagado</app-badge>
+        <app-badge tone="warning" icon="pi pi-clock">Pendiente</app-badge>
+        <app-badge tone="danger" icon="pi pi-exclamation-triangle">Vencido</app-badge>
+        <app-badge tone="info" icon="pi pi-box">Stock</app-badge>
+        <app-badge tone="neutral">Borrador</app-badge>
+      </div>
+    </div>
+  </section>
 
-      <!-- Form hints -->
-      <app-section-card eyebrow="Formularios" title="FieldHint">
-        <div class="grid gap-3">
-          <app-field-hint>Usa este texto para ayudas cortas debajo de inputs.</app-field-hint>
-          <app-field-hint tone="success">El dato se guardo correctamente.</app-field-hint>
-          <app-field-hint tone="error">Este campo necesita revision.</app-field-hint>
-        </div>
-      </app-section-card>
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Dialogs / Modals                                              -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-dialogs">
+    <div class="showcase-section-head">
+      <h2 id="sec-dialogs" class="showcase-section-title">Dialogos y modales</h2>
+      <p class="showcase-section-desc">Confirmaciones destructivas y modales genericos con slots.</p>
+    </div>
+    <div class="showcase-row showcase-row--2col">
+      <div class="showcase-spot showcase-spot--elevated-dark">
+        <span class="showcase-spot-label--dark">ConfirmDialog</span>
+        <p class="showcase-spot-hint--dark">Para bajas, cancelaciones o cambios que necesiten confirmacion.</p>
+        <app-button variant="primary" size="md" icon="pi pi-external-link" (click)="openDialog()">Abrir dialogo</app-button>
+        <span class="showcase-spot-feedback--dark">{{ lastAction() }}</span>
+      </div>
+      <div class="showcase-spot showcase-spot--elevated">
+        <span class="showcase-spot-label">AppModal</span>
+        <p class="showcase-spot-hint">Modal generico con slots para header, body y footer.</p>
+        <app-button variant="secondary" size="md" icon="pi pi-window-maximize" (click)="openModal()">Abrir modal</app-button>
+      </div>
+    </div>
+  </section>
 
-      <!-- Inputs -->
-      <app-section-card eyebrow="Formularios" title="AppInput">
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Formularios                                                   -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-forms">
+    <div class="showcase-section-head">
+      <h2 id="sec-forms" class="showcase-section-title">Formularios</h2>
+      <p class="showcase-section-desc">Inputs, hints y campos compuestos para formularios del sistema.</p>
+    </div>
+    <div class="showcase-row showcase-row--3col">
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">AppInput</span>
         <div class="grid gap-3">
           <app-input placeholder="Texto libre" size="md" />
           <app-input placeholder="Con icono" size="md" prefixIcon="pi pi-search" />
           <app-input placeholder="Invalido" size="md" [invalid]="true" />
         </div>
-      </app-section-card>
-
-      <app-section-card eyebrow="Formularios" title="AppFormField">
+      </div>
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">FieldHint</span>
+        <div class="grid gap-3">
+          <app-field-hint>Ayuda breve debajo de inputs.</app-field-hint>
+          <app-field-hint tone="success">Dato guardado correctamente.</app-field-hint>
+          <app-field-hint tone="error">Este campo necesita revision.</app-field-hint>
+        </div>
+      </div>
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">AppFormField</span>
         <div class="grid gap-4">
           <app-form-field
             label="Email"
             type="email"
             placeholder="tu@email.com"
-            hint="Usamos este email para enviarte notificaciones."
+            hint="Usamos este email para notificaciones."
             [(value)]="formValue"
           />
           <app-form-field
@@ -125,144 +181,174 @@
           />
           <app-button variant="primary" size="sm" (click)="validateForm()">Validar</app-button>
         </div>
-      </app-section-card>
-
-      <!-- Navigation -->
-      <app-section-card eyebrow="Navegacion" title="AppBreadcrumb">
-        <app-breadcrumb [items]="breadcrumbItems" />
-      </app-section-card>
-
-      <app-section-card eyebrow="Navegacion" title="AppTabs">
-        <app-tabs [items]="tabItems" [activeIndex]="activeTab()" (tabChange)="handleTabChange($event)" />
-        <p class="text-sm text-muted mt-3">Tab activo: <strong>{{ tabItems[activeTab()]?.label }}</strong></p>
-      </app-section-card>
-
-      <!-- Search -->
-      <app-section-card eyebrow="Busqueda" title="AppSearchBar">
-        <app-search-bar
-          placeholder="Buscar productos..."
-          [(value)]="searchValue"
-          (search)="handleSearch($event)"
-          (clear)="handleSearchClear()"
-        />
-      </app-section-card>
-
-      <!-- Data -->
-      <app-section-card eyebrow="Datos" title="AppPagination">
-        <app-pagination
-          [totalRecords]="50"
-          [rows]="10"
-          [(first)]="tableFirst"
-          (pageChange)="handlePageChange($event)"
-        />
-      </app-section-card>
-
-      <app-section-card eyebrow="Datos" title="AppDataTable" description="Tabla con sorting, paginacion y empty state integrado.">
-        <app-data-table
-          [data]="tableData"
-          [columns]="tableColumns"
-          [sortable]="true"
-          [paginated]="false"
-          emptyTitle="Sin productos"
-          emptyDescription="No se encontraron productos en el catalogo."
-        />
-      </app-section-card>
-
-      <!-- Stats -->
-      <app-section-card eyebrow="Dashboard" title="AppStatCard">
-        <div class="grid gap-3 grid-cols-1 sm:grid-cols-2">
-          <app-stat-card
-            value="$12.450"
-            label="Ventas hoy"
-            icon="pi pi-shopping-cart"
-            trend="up"
-            trendValue="+12%"
-          />
-          <app-stat-card
-            value="47"
-            label="Pedidos"
-            icon="pi pi-receipt"
-            trend="neutral"
-            trendValue="0%"
-            tone="muted"
-          />
-          <app-stat-card
-            value="128"
-            label="Productos"
-            icon="pi pi-box"
-            trend="down"
-            trendValue="-3%"
-            tone="dark"
-          />
-          <app-stat-card
-            value="98.5%"
-            label="Satisfaccion"
-            icon="pi pi-star"
-            trend="up"
-            trendValue="+2.1%"
-          />
-        </div>
-      </app-section-card>
-
-      <!-- Toast -->
-      <app-section-card eyebrow="Notificaciones" title="AppToast">
-        <app-toast />
-        <p class="text-sm text-muted mt-2">Inyecta MessageService en tu feature para mostrar toasts.</p>
-      </app-section-card>
+      </div>
     </div>
   </section>
 
-  <!-- Screens section -->
-  <section class="mx-auto max-w-[76rem]" aria-labelledby="screens-title">
-    <div class="flex flex-col md:flex-row items-start md:items-end justify-between gap-2 md:gap-4 mb-4">
-      <div>
-        <p class="text-[#f29d52] text-[0.78rem] font-bold tracking-[0.15em] uppercase m-0 mb-2 md:mb-3">Screen map</p>
-        <h2 id="screens-title" class="text-primary text-xl md:text-2xl font-semibold leading-normal m-0">Pantallas navegables</h2>
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Navegacion                                                    -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-nav">
+    <div class="showcase-section-head">
+      <h2 id="sec-nav" class="showcase-section-title">Navegacion</h2>
+      <p class="showcase-section-desc">Breadcrumbs y tabs para orientar al usuario dentro de la aplicacion.</p>
+    </div>
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">AppBreadcrumb</span>
+      <app-breadcrumb [items]="breadcrumbItems" />
+    </div>
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">AppTabs</span>
+      <app-tabs [items]="tabItems" [activeIndex]="activeTab()" (tabChange)="handleTabChange($event)" />
+      <p class="showcase-spot-feedback">Tab activo: <strong>{{ tabItems[activeTab()]?.label }}</strong></p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Busqueda                                                      -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-search">
+    <div class="showcase-section-head">
+      <h2 id="sec-search" class="showcase-section-title">Busqueda</h2>
+      <p class="showcase-section-desc">Barra de busqueda con debounce y boton de limpiar.</p>
+    </div>
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">AppSearchBar</span>
+      <app-search-bar
+        placeholder="Buscar productos..."
+        [(value)]="searchValue"
+        (search)="handleSearch($event)"
+        (clear)="handleSearchClear()"
+      />
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Datos                                                         -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-data">
+    <div class="showcase-section-head">
+      <h2 id="sec-data" class="showcase-section-title">Datos</h2>
+      <p class="showcase-section-desc">Tablas, paginacion y tarjetas estadisticas para visualizar informacion.</p>
+    </div>
+
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">AppDataTable</span>
+      <p class="showcase-spot-hint">Tabla con sorting, paginacion y empty state integrado.</p>
+      <app-data-table
+        [data]="tableData"
+        [columns]="tableColumns"
+        [sortable]="true"
+        [paginated]="false"
+        emptyTitle="Sin productos"
+        emptyDescription="No se encontraron productos en el catalogo."
+      />
+    </div>
+
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">AppPagination</span>
+      <app-pagination
+        [totalRecords]="50"
+        [rows]="10"
+        [(first)]="tableFirst"
+        (pageChange)="handlePageChange($event)"
+      />
+    </div>
+
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">AppStatCard</span>
+      <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+        <app-stat-card
+          value="$12.450"
+          label="Ventas hoy"
+          icon="pi pi-shopping-cart"
+          trend="up"
+          trendValue="+12%"
+        />
+        <app-stat-card
+          value="47"
+          label="Pedidos"
+          icon="pi pi-receipt"
+          trend="neutral"
+          trendValue="0%"
+          tone="muted"
+        />
+        <app-stat-card
+          value="128"
+          label="Productos"
+          icon="pi pi-box"
+          trend="down"
+          trendValue="-3%"
+          tone="dark"
+        />
+        <app-stat-card
+          value="98.5%"
+          label="Satisfaccion"
+          icon="pi pi-star"
+          trend="up"
+          trendValue="+2.1%"
+        />
       </div>
     </div>
 
-    <div class="grid gap-4 grid-cols-1 md:grid-cols-2">
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">AppToast</span>
+      <p class="showcase-spot-hint">Inyecta MessageService en tu feature para mostrar toasts.</p>
+      <app-toast />
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Pantallas navegables                                          -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-screens">
+    <div class="showcase-section-head">
+      <h2 id="sec-screens" class="showcase-section-title">Pantallas navegables</h2>
+      <p class="showcase-section-desc">Acceso directo a las pantallas principales del sistema por rol.</p>
+    </div>
+
+    <div class="screen-grid">
       <!-- Publicas -->
-      <article class="bg-surface rounded-card shadow-card p-4 md:p-5">
-        <h3 class="text-lg md:text-xl font-semibold leading-normal m-0">Publicas</h3>
-        <div class="grid gap-3 mt-4">
+      <div class="screen-group">
+        <h3 class="screen-group-title">Publicas</h3>
+        <div class="screen-list">
           @for (screen of publicScreens; track screen.path) {
-            <a [routerLink]="screen.path" class="screen-link bg-[#f9f9f9] text-inherit focus-visible:outline-[3px] focus-visible:outline-[rgba(47,141,114,0.28)] focus-visible:outline-offset-[3px]">
-              <strong class="text-primary text-sm md:text-base">{{ screen.label }}</strong>
-              <span class="text-muted text-[0.85rem] md:text-[0.9rem] leading-relaxed">{{ screen.description }}</span>
-              <code class="text-accent text-[0.72rem] md:text-[0.78rem] font-mono">{{ screen.path }}</code>
+            <a [routerLink]="screen.path" class="screen-link">
+              <strong class="screen-link-label">{{ screen.label }}</strong>
+              <span class="screen-link-desc">{{ screen.description }}</span>
+              <code class="screen-link-route">{{ screen.path }}</code>
             </a>
           }
         </div>
-      </article>
+      </div>
 
       <!-- Cliente -->
-      <article class="bg-surface rounded-card shadow-card p-4 md:p-5">
-        <h3 class="text-lg md:text-xl font-semibold leading-normal m-0">Cliente</h3>
-        <div class="grid gap-3 mt-4">
+      <div class="screen-group">
+        <h3 class="screen-group-title">Cliente</h3>
+        <div class="screen-list">
           @for (screen of customerScreens; track screen.path) {
-            <a [routerLink]="screen.path" class="screen-link bg-[#f9f9f9] text-inherit focus-visible:outline-[3px] focus-visible:outline-[rgba(47,141,114,0.28)] focus-visible:outline-offset-[3px]">
-              <strong class="text-primary text-sm md:text-base">{{ screen.label }}</strong>
-              <span class="text-muted text-[0.85rem] md:text-[0.9rem] leading-relaxed">{{ screen.description }}</span>
-              <code class="text-accent text-[0.72rem] md:text-[0.78rem] font-mono">{{ screen.path }}</code>
+            <a [routerLink]="screen.path" class="screen-link">
+              <strong class="screen-link-label">{{ screen.label }}</strong>
+              <span class="screen-link-desc">{{ screen.description }}</span>
+              <code class="screen-link-route">{{ screen.path }}</code>
             </a>
           }
         </div>
-      </article>
+      </div>
 
-      <!-- Admin (full width) -->
-      <article class="bg-surface rounded-card shadow-card p-4 md:p-5 col-span-1 md:col-span-2">
-        <h3 class="text-lg md:text-xl font-semibold leading-normal m-0">Admin</h3>
-        <div class="grid gap-3 mt-4 grid-cols-[repeat(auto-fit,minmax(14rem,1fr))]">
+      <!-- Admin -->
+      <div class="screen-group screen-group--full">
+        <h3 class="screen-group-title">Admin</h3>
+        <div class="screen-list screen-list--dense">
           @for (screen of adminScreens; track screen.path) {
-            <a [routerLink]="screen.path" class="screen-link bg-[#f9f9f9] text-inherit focus-visible:outline-[3px] focus-visible:outline-[rgba(47,141,114,0.28)] focus-visible:outline-offset-[3px]">
-              <strong class="text-primary text-sm md:text-base">{{ screen.label }}</strong>
-              <span class="text-muted text-[0.85rem] md:text-[0.9rem] leading-relaxed">{{ screen.description }}</span>
-              <code class="text-accent text-[0.72rem] md:text-[0.78rem] font-mono">{{ screen.path }}</code>
+            <a [routerLink]="screen.path" class="screen-link">
+              <strong class="screen-link-label">{{ screen.label }}</strong>
+              <span class="screen-link-desc">{{ screen.description }}</span>
+              <code class="screen-link-route">{{ screen.path }}</code>
             </a>
           }
         </div>
-      </article>
+      </div>
     </div>
   </section>
 </main>
