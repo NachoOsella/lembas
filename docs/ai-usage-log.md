@@ -1,49 +1,49 @@
-# AI Usage Log
+# Registro de uso de IA
 
 ## 2026-05-21
 
-- `backend/src/main/resources/db/migration/V1__core.sql`, `V2__catalog.sql` -- Flyway initial migrations for S1-US03 (LEMBAS-73, LEMBAS-74, LEMBAS-75): branches, users with role CHECK, categories, products with online_status CHECK and sale_price CHECK.
-- `backend/src/main/resources/db/migration/V10__seed_data.sql` -- partial seed data for local dev (LEMBAS-77): branch Centro, admin demo user, base categories.
+- `backend/src/main/resources/db/migration/V1__core.sql`, `V2__catalog.sql` -- migraciones iniciales Flyway para S1-US03 (LEMBAS-73, LEMBAS-74, LEMBAS-75): sucursales, usuarios con CHECK de rol, categorias, productos con CHECK de online_status y sale_price.
+- `backend/src/main/resources/db/migration/V10__seed_data.sql` -- datos semilla parciales para desarrollo local (LEMBAS-77): sucursal Centro, usuario admin demo, categorias base.
 
-- `frontend/src/styles.css`, `index.html`, `angular.json` -- theme tokens, font preconnect, budget bump.
-- `frontend/public/brand/lembas-logo.png` -- brand logo asset.
-- `frontend/src/app/app.config.ts` -- disable PrimeNG dark mode.
-- `frontend/src/app/shared/components/*` -- migrate LoadingSpinner, EmptyState, ErrorAlert, ConfirmDialog, Skeleton to PrimeNG with brand styles.
-- `frontend/src/app/features/public-store/store-layout/`, `public-store.routes.ts` -- store layout shell (header + footer + router-outlet).
-- `frontend/src/app/features/dev/component-showcase/` -- update to exercise new shared components.
-- `frontend/src/app/features/admin/admin-layout/`, `admin.routes.ts` -- AdminLayout with collapsible sidebar, topbar, breadcrumbs, router-outlet.
-- `backend/src/main/java/com/dietetica/lembas/shared/{dto,web}/`, `backend/src/test/java/com/dietetica/lembas/shared/web/` -- added uniform `ApiError` payload, global exception handler, and handler tests.
-- `backend/src/test/java/com/dietetica/lembas/LembasBackendApplicationTests.java`, `frontend/src/app/shared/components/skeleton/skeleton.spec.ts` -- fixed backend smoke test and Skeleton component spec.
-- `backend/src/test/java/com/dietetica/lembas/auth/`, `backend/src/test/java/com/dietetica/lembas/users/`, `backend/pom.xml` -- added auth service/mapper/JWT/DTO validation tests and a PostgreSQL Testcontainers `UserRepository` JPA slice test using Testcontainers 2.0.5.
+- `frontend/src/styles.css`, `index.html`, `angular.json` -- tokens de tema, preconnect de fuente, ajuste de budget.
+- `frontend/public/brand/lembas-logo.png` -- asset de logo de marca.
+- `frontend/src/app/app.config.ts` -- desactivado modo oscuro de PrimeNG.
+- `frontend/src/app/shared/components/*` -- migrados LoadingSpinner, EmptyState, ErrorAlert, ConfirmDialog, Skeleton a PrimeNG con estilos de marca.
+- `frontend/src/app/features/public-store/store-layout/`, `public-store.routes.ts` -- shell de layout de tienda (header + footer + router-outlet).
+- `frontend/src/app/features/dev/component-showcase/` -- actualizado para ejercitar los nuevos componentes compartidos.
+- `frontend/src/app/features/admin/admin-layout/`, `admin.routes.ts` -- AdminLayout con sidebar colapsable, topbar, breadcrumbs, router-outlet.
+- `backend/src/main/java/com/dietetica/lembas/shared/{dto,web}/`, `backend/src/test/java/com/dietetica/lembas/shared/web/` -- agregado payload uniforme `ApiError`, manejador global de excepciones y tests del handler.
+- `backend/src/test/java/com/dietetica/lembas/LembasBackendApplicationTests.java`, `frontend/src/app/shared/components/skeleton/skeleton.spec.ts` -- arreglado smoke test de backend y spec de Skeleton.
+- `backend/src/test/java/com/dietetica/lembas/auth/`, `backend/src/test/java/com/dietetica/lembas/users/`, `backend/pom.xml` -- agregados tests de servicio/mapper/JWT/DTO de auth y un test JPA slice de `UserRepository` con PostgreSQL Testcontainers usando Testcontainers 2.0.5.
 
 ## 2026-05-22
 
-- `backend/src/main/resources/db/migration/V1__core.sql`, `backend/src/main/java/com/dietetica/lembas/users/service/UserBranchPolicy.java` -- enforced role/branch consistency in DB and service policy, removed redundant email index, and added policy/JPA constraint tests.
-- `backend/src/main/java/com/dietetica/lembas/auth/web/AuthController.java` -- added public `POST /api/auth/register` endpoint with DTO validation and MVC tests for success, validation errors, and duplicate email.
-- `frontend/src/app/features/auth/register/register.ts`, `frontend/src/app/core/services/auth.ts` -- mapped backend `EMAIL_DUPLICATED` and `VALIDATION_ERROR` responses to specific registration UI messages, including field-level validation details.
-- `frontend/src/app/features/auth/{register,login}/` -- changed successful registration to redirect to login with a success query param and added the login success alert state.
-- `docker/nginx.conf` -- fixed Swagger UI blank page by proxying `/swagger-ui/**` before the generic static asset regex, so Swagger CSS/JS are served by the backend.
-- `backend/src/test/java/com/dietetica/lembas/auth/service/AuthServiceTest.java` -- rewrote AuthServiceTest with `Should_expected_when_condition` pattern, added password hash, email normalization, null phone, and no-side-effects-on-duplicate tests (from 2 to 7 tests).
-- `backend/src/test/java/com/dietetica/lembas/auth/integration/AuthRegistrationIntegrationTest.java` -- added `@SpringBootTest` + Testcontainers integration test for the full registration flow (7 tests: persistence, BCrypt encoding, duplicate rejection, email normalization, unique constraint).
-- `frontend/src/app/core/services/auth.ts` -- added `register()` method using HttpClient for `POST /api/auth/register`.
-- `frontend/src/app/core/services/auth.spec.ts` -- rewrote auth service tests with `Should_*` covering happy path, null phone, 409 duplicated email, 400 validation error, and network failure (5 tests).
-- `frontend/src/app/features/auth/register/register.spec.ts` -- enhanced Register component tests with injection verification and template assertion.
-- `frontend/src/app/features/auth/register/`, `frontend/src/app/core/services/auth.ts` -- implemented polished signal-form registration flow with validation, password visibility, API submission, auth state persistence, and redirect to `/store`.
-- `frontend/src/app/shared/components/app-{button,badge,field-hint,page-header,section-card}/` -- added reusable shared UI building blocks with specs and barrel exports for consistent future screens.
-- `frontend/src/app/features/dev/component-showcase/` -- expanded `/dev/ui` to document and preview the new shared UI components alongside existing feedback components.
-- `frontend/src/styles.css`, `frontend/src/app/**/*.css`, `frontend/src/app/**/*.html`, `frontend/DESING.md`, `frontend/public/brand/lembas-icon.svg`, `frontend/public/favicon.ico` -- retuned frontend brand palette to a muted IG-aligned Lembas green system, switched to a transparent leaf-only SVG icon/favicon with stronger strokes, replaced old logo usages, and removed prior Starbucks-inspired references.
-- `frontend/src/app/features/auth/login/`, `frontend/src/app/core/services/auth.ts` -- implemented the login signal form to match the register page visual system, including validation, password visibility, API submission, auth state save, and role-based redirect.
-- `frontend/src/app/features/auth/{login,register}/`, `AGENTS.md` -- refactored auth form controls to use PrimeNG directives/components where compatible with Angular signal forms and documented the PrimeNG-first frontend rule.
-- `frontend/src/app/shared/components/app-{button,badge,field-hint,section-card}/` -- refactored generic shared wrappers to render PrimeNG primitives internally while preserving Lembas APIs and styling.
+- `backend/src/main/resources/db/migration/V1__core.sql`, `backend/src/main/java/com/dietetica/lembas/users/service/UserBranchPolicy.java` -- reforzada consistencia rol/sucursal en BD y politica de servicio, eliminado indice de email redundante, agregados tests de politica y restricciones JPA.
+- `backend/src/main/java/com/dietetica/lembas/auth/web/AuthController.java` -- agregado endpoint publico `POST /api/auth/register` con validacion DTO y tests MVC para exito, errores de validacion y email duplicado.
+- `frontend/src/app/features/auth/register/register.ts`, `frontend/src/app/core/services/auth.ts` -- mapeadas respuestas `EMAIL_DUPLICATED` y `VALIDATION_ERROR` del backend a mensajes especificos de UI de registro, incluyendo detalles de validacion por campo.
+- `frontend/src/app/features/auth/{register,login}/` -- cambiado registro exitoso para redirigir a login con query param de exito y agregado estado de alerta de login exitoso.
+- `docker/nginx.conf` -- arreglada pagina en blanco de Swagger UI proxyando `/swagger-ui/**` antes de la regex generica de assets estaticos, para que CSS/JS de Swagger sean servidos por el backend.
+- `backend/src/test/java/com/dietetica/lembas/auth/service/AuthServiceTest.java` -- reescrito AuthServiceTest con patron `Should_esperado_cuando_condicion`, agregados tests de hash de password, normalizacion de email, phone nulo y sin efectos secundarios en duplicado (de 2 a 7 tests).
+- `backend/src/test/java/com/dietetica/lembas/auth/integration/AuthRegistrationIntegrationTest.java` -- agregado test de integracion `@SpringBootTest` + Testcontainers para el flujo completo de registro (7 tests: persistencia, encoding BCrypt, rechazo de duplicado, normalizacion de email, restriccion unique).
+- `frontend/src/app/core/services/auth.ts` -- agregado metodo `register()` usando HttpClient para `POST /api/auth/register`.
+- `frontend/src/app/core/services/auth.spec.ts` -- reescritos tests de auth service con `Should_*` cubriendo camino feliz, phone nulo, 409 email duplicado, 400 error de validacion y fallo de red (5 tests).
+- `frontend/src/app/features/auth/register/register.spec.ts` -- mejorados tests de Register con verificacion de inyeccion y asercion de template.
+- `frontend/src/app/features/auth/register/`, `frontend/src/app/core/services/auth.ts` -- implementado flujo de registro pulido con signal forms, validacion, visibilidad de password, envio API, persistencia de estado auth y redireccion a `/store`.
+- `frontend/src/app/shared/components/app-{button,badge,field-hint,page-header,section-card}/` -- agregados bloques de UI compartidos reutilizables con specs y barrel exports para pantallas futuras consistentes.
+- `frontend/src/app/features/dev/component-showcase/` -- expandido `/dev/ui` para documentar y previsualizar los nuevos componentes compartidos junto a los de feedback existentes.
+- `frontend/src/styles.css`, `frontend/src/app/**/*.css`, `frontend/src/app/**/*.html`, `frontend/DESING.md`, `frontend/public/brand/lembas-icon.svg`, `frontend/public/favicon.ico` -- reajustada paleta de marca del frontend a un sistema de verdes Lembas alineado a IG, cambiado a icono/favicon SVG transparente de solo hoja con trazos mas fuertes, reemplazados usos de logo viejo y eliminadas referencias previas inspiradas en Starbucks.
+- `frontend/src/app/features/auth/login/`, `frontend/src/app/core/services/auth.ts` -- implementado login con signal form para igualar el sistema visual de registro, incluyendo validacion, visibilidad de password, envio API, guardado de estado auth y redireccion basada en rol.
+- `frontend/src/app/features/auth/{login,register}/`, `AGENTS.md` -- refactorizados controles de formulario auth para usar directivas/componentes PrimeNG donde son compatibles con Angular signal forms y documentada la regla PrimeNG-first de frontend.
+- `frontend/src/app/shared/components/app-{button,badge,field-hint,section-card}/` -- refactorizados wrappers compartidos genericos para renderizar primitivas PrimeNG internamente preservando APIs y estilos Lembas.
 
 ## 2026-05-25
 
-- `backend/src/main/java/com/dietetica/lembas/auth/service/LembasUserDetails.java` -- Spring Security `UserDetails` adapter tipico puenteando `User` entity a `DaoAuthenticationProvider`, mapea roles con prefijo `ROLE_`.
-- `backend/src/main/java/com/dietetica/lembas/auth/service/LembasUserDetailsService.java` -- `UserDetailsService` estandar con doble lookup por email (login) y por ID (JWT filter).
-- `backend/src/main/java/com/dietetica/lembas/auth/service/JwtAuthenticationFilter.java` -- `OncePerRequestFilter` estandar extrayendo Bearer tokens, validando y poblando `SecurityContextHolder`.
+- `backend/src/main/java/com/dietetica/lembas/auth/service/LembasUserDetails.java` -- adaptador Spring Security `UserDetails` tipico puenteando entidad `User` a `DaoAuthenticationProvider`, mapea roles con prefijo `ROLE_`.
+- `backend/src/main/java/com/dietetica/lembas/auth/service/LembasUserDetailsService.java` -- `UserDetailsService` estandar con doble lookup por email (login) y por ID (filtro JWT).
+- `backend/src/main/java/com/dietetica/lembas/auth/service/JwtAuthenticationFilter.java` -- `OncePerRequestFilter` estandar extrayendo tokens Bearer, validando y poblando `SecurityContextHolder`.
 - `backend/src/main/java/com/dietetica/lembas/auth/service/SecurityContextHelper.java` -- helper simple para obtener `User` desde `SecurityContext` para `GET /api/auth/me`.
 - `backend/src/main/java/com/dietetica/lembas/auth/service/JwtTokenProvider.java` -- agregados `validateToken()`, `getUserIdFromToken()`, `getRoleFromToken()` + `UUID.randomUUID()` como claim `jti` para garantizar unicidad de tokens en logins sucesivos.
-- `backend/src/main/java/com/dietetica/lembas/auth/service/AuthService.java` -- agregados `authenticate()` (BCrypt check + cuenta deshabilitada + emision de tokens) y `getCurrentUser()`.
+- `backend/src/main/java/com/dietetica/lembas/auth/service/AuthService.java` -- agregados `authenticate()` (verificacion BCrypt + cuenta deshabilitada + emision de tokens) y `getCurrentUser()`.
 - `backend/src/main/java/com/dietetica/lembas/auth/web/AuthController.java` -- agregados `POST /api/auth/login` y `GET /api/auth/me` con inyeccion de `SecurityContextHelper`.
 - `backend/src/main/java/com/dietetica/lembas/shared/config/SecurityConfig.java` -- cableado `JwtAuthenticationFilter` antes de `UsernamePasswordAuthenticationFilter` + bean `AuthenticationManager`.
 - `backend/src/test/java/com/dietetica/lembas/auth/service/AuthServiceTest.java` -- +8 tests de login (credenciales validas, email incorrecto, password incorrecto, cuenta deshabilitada, normalizacion de email, hardening anti-enumeracion) + 1 test `getCurrentUser`.
@@ -60,18 +60,18 @@
 - `frontend/vitest-base.config.ts` -- nuevo: configuracion base de Vitest con `environment: 'jsdom'` para disponibilidad de APIs de navegador.
 - `frontend/src/app/core/interceptors/auth-interceptor.ts` -- restringido attachment de JWT solo a requests con URL que comienza con `/api/` para evitar fuga de token a terceros.
 - `frontend/src/app/core/services/auth.ts` -- quitado `refreshToken` de `AuthResponse` (no se usa en frontend); `isAuthenticated` ahora verifica tambien existencia de token; constructor limpia stale user data si no hay token; `loadStoredUser()` valida la forma del objeto persistido (id, email, firstName, lastName, role valido) antes de usarlo.
-- `frontend/src/app/core/services/auth.spec.ts` -- agregados 5 tests de hydration con token+user, token faltante, malformed user, rol invalido; agregado `vi.unstubAllGlobals()` en afterEach.
+- `frontend/src/app/core/services/auth.spec.ts` -- agregados 5 tests de hidratacion con token+user, token faltante, user malformado, rol invalido; agregado `vi.unstubAllGlobals()` en afterEach.
 - `frontend/src/app/core/interceptors/auth-interceptor.spec.ts` -- agregado test que verifica que token no se adjunta a URLs externas.
 - `frontend/src/app/features/auth/register/register.spec.ts` -- removido `refreshToken` del mock de `AuthResponse`.
-- `frontend/src/app/core/services/auth.ts` -- auth token moved to an internal signal so `isAuthenticated` depends only on reactive state; `saveAuthResponse()` now updates token/user state consistently; `clearAuth()` resets both; persisted optional branch fields are validated before hydration.
-- `frontend/src/app/core/interceptors/auth-interceptor.ts` -- extracted backend API URL check into `isBackendApiRequest()` helper for clearer future API base URL changes.
-- `frontend/src/app/core/services/auth.spec.ts` -- deduplicated localStorage test setup with `stubLocalStorage()` and added malformed optional branch field coverage.
-- `frontend/src/app/shared/components/app-{input,form-field,modal,toast,breadcrumb,tabs,pagination,search-bar,data-table,stat-card}/` -- 10 new generic shared components, all PrimeNG-based wrappers with Lembas design styling (DESING.md tokens).
-- `frontend/src/app/shared/components/app-{button,page-header,section-card}/`, `confirm-dialog/` -- fixed invalid font-weights (>700) to 700 (Plus Jakarta Sans max) and unified CSS variable usage.
-- `frontend/src/app/shared/components/index.ts` -- exported all 20 shared components.
-- `frontend/src/app/features/dev/component-showcase/` -- updated with live demos of all new components.
-- `frontend/src/app/features/public-store/store-layout/` -- redesigned with warm cream canvas, Pill-nav links, cart badge, minimal single-row Forest Green footer. Removed hero section and Leaf CTA floating button. Cart icon changed from basket SVG to shopping cart SVG.
-- `frontend/src/app/features/admin/admin-layout/` -- redesigned sidebar with Forest Green brand, custom breadcrumbs (no PrimeNG dependency), user avatar with primary green. Kept existing collapsible sidebar and logout logic.
-- `frontend/src/app/shared/components/app-store-nav/` -- extracted generic Lembas-branded sticky nav bar: brand config, nav links, auth state (login/register vs user dropdown), cart icon with badge. Inputs for brand/links/cart/auth, outputs for logout/cartClick.
-- `frontend/src/app/shared/components/app-store-footer/` -- extracted generic minimal single-row footer: copyright left, inline flat links right. Inputs for links array and copyright string.
-- `frontend/src/app/features/public-store/store-layout/` -- refactored into thin shell delegating to both new generic components.
+- `frontend/src/app/core/services/auth.ts` -- token de auth movido a un signal interno para que `isAuthenticated` dependa solo de estado reactivo; `saveAuthResponse()` ahora actualiza estado token/user consistentemente; `clearAuth()` resetea ambos; campos opcionales de sucursal persistidos se validan antes de hidratar.
+- `frontend/src/app/core/interceptors/auth-interceptor.ts` -- extraida verificacion de URL de API backend en helper `isBackendApiRequest()` para cambios futuros de URL base mas claros.
+- `frontend/src/app/core/services/auth.spec.ts` -- deduplicado setup de localStorage con `stubLocalStorage()` y agregada cobertura de campos opcionales de sucursal malformados.
+- `frontend/src/app/shared/components/app-{input,form-field,modal,toast,breadcrumb,tabs,pagination,search-bar,data-table,stat-card}/` -- 10 nuevos componentes compartidos genericos, todos wrappers basados en PrimeNG con estilos de disenio Lembas (tokens de DESING.md).
+- `frontend/src/app/shared/components/app-{button,page-header,section-card}/`, `confirm-dialog/` -- corregidos font-weights invalidos (>700) a 700 (maximo de Plus Jakarta Sans) y unificado uso de variables CSS.
+- `frontend/src/app/shared/components/index.ts` -- exportados los 20 componentes compartidos.
+- `frontend/src/app/features/dev/component-showcase/` -- actualizado con demos vivos de todos los componentes nuevos.
+- `frontend/src/app/features/public-store/store-layout/` -- rediseniado con canvas crema calido, links de nav pill, badge de carrito, footer Forest Green minimal de una sola fila. Eliminados hero section y Leaf CTA flotante. Icono de carrito cambiado de SVG de canasta a SVG de carrito de compras.
+- `frontend/src/app/features/admin/admin-layout/` -- rediseniada sidebar con marca Forest Green, breadcrumbs custom (sin dependencia de PrimeNG), avatar de usuario con verde primario. Mantenida sidebar colapsable y logica de logout existente.
+- `frontend/src/app/shared/components/app-store-nav/` -- extraida barra de navegacion generica con marca Lembas: config de marca, links de nav, estado de auth (login/register vs dropdown de usuario), icono de carrito con badge. Inputs para marca/links/carrito/auth, outputs para logout/clickCarrito.
+- `frontend/src/app/shared/components/app-store-footer/` -- extraido footer generico minimal de una fila: copyright a la izquierda, links planos inline a la derecha. Inputs para array de links y string de copyright.
+- `frontend/src/app/features/public-store/store-layout/` -- refactorizado a shell fino delegando a ambos componentes genericos nuevos.
