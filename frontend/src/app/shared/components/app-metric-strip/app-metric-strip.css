@@ -5,7 +5,7 @@
 .metric-strip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(10.5rem, 100%), 1fr));
-  gap: 0.8rem;
+  gap: 0.65rem;
 }
 
 .metric-strip__item {
@@ -13,9 +13,9 @@
   isolation: isolate;
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  min-height: 6.1rem;
-  padding: 1rem;
+  gap: 0.7rem;
+  min-height: 5.2rem;
+  padding: 0.8rem 0.95rem;
   overflow: hidden;
   color: var(--metric-ink, #12372a);
   background: var(--metric-wash, #ecf7f1);
@@ -62,8 +62,8 @@
 .metric-strip__icon {
   display: grid;
   flex: 0 0 auto;
-  width: 2.65rem;
-  height: 2.65rem;
+  width: 2.35rem;
+  height: 2.35rem;
   place-items: center;
   color: #ffffff;
   background: var(--metric-color, #2f8d72);
@@ -87,7 +87,7 @@
 
 .metric-strip__value {
   color: var(--metric-ink, #12372a);
-  font-size: clamp(1.45rem, 3vw, 2.1rem);
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.06em;

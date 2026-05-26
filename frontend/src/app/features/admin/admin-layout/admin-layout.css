@@ -275,7 +275,7 @@
   flex: 1;
   min-width: 0;
   width: 100%;
-  padding: var(--spacing-xl);
+  padding: clamp(1rem, 1.8vw, 1.6rem) var(--spacing-xl) var(--spacing-xl);
   overflow-x: hidden;
 }
 

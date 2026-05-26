@@ -26,7 +26,7 @@
 }
 
 :host ::ng-deep .app-modal .p-dialog-content {
-  max-height: min(72vh, 44rem);
+  max-height: min(80vh, 50rem);
   padding: 1rem 1.5rem;
   overflow-y: auto;
 }

@@ -118,16 +118,6 @@
   position: relative;
 }
 
-.user-form__access-field::before {
-  content: '';
-  position: absolute;
-  inset: 1.85rem auto auto -0.45rem;
-  width: 0.22rem;
-  height: 2.45rem;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #2f8d72, rgba(244, 179, 80, 0.8));
-}
-
 .user-form__admin-scope {
   display: inline-flex;
   align-items: center;
