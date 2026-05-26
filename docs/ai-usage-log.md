@@ -75,3 +75,6 @@
 - `frontend/src/app/shared/components/app-store-nav/` -- extraida barra de navegacion generica con marca Lembas: config de marca, links de nav, estado de auth (login/register vs dropdown de usuario), icono de carrito con badge. Inputs para marca/links/carrito/auth, outputs para logout/clickCarrito.
 - `frontend/src/app/shared/components/app-store-footer/` -- extraido footer generico minimal de una fila: copyright a la izquierda, links planos inline a la derecha. Inputs para array de links y string de copyright.
 - `frontend/src/app/features/public-store/store-layout/` -- refactorizado a shell fino delegando a ambos componentes genericos nuevos.
+- `frontend/src/app/shared/components/app-store-nav/` -- reemplazados links de navegacion redundantes (Tienda/Productos) por barra de busqueda `app-search-bar` generica. Agregados inputs `showSearch`, `searchPlaceholder` y output `searchQuery`.
+- `frontend/src/app/features/public-store/store-layout/`, `frontend/src/app/features/admin/admin-layout/` -- corregido `userDisplayName` para mostrar solo `firstName` en lugar del email.
+- `frontend/src/app/core/services/auth.ts` -- persistido `firstName` en localStorage (`lembas_user_first_name`) para que sobreviva recargas de pagina, ya que el JWT no lo incluye.
