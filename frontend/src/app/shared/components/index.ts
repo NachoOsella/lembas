@@ -20,3 +20,4 @@ export * from './loading-spinner/loading-spinner';
 export * from './skeleton/skeleton';
 export * from './app-store-nav/app-store-nav';
 export * from './app-store-footer/app-store-footer';
+export * from './app-metric-strip/app-metric-strip';

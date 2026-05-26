@@ -1,1 +1,252 @@
-<p>users works!</p>
+<div class="users-page">
+  <!-- Toast notifications -->
+  <app-toast />
+
+  <!-- Page header -->
+  <app-page-header eyebrow="Panel interno" title="Usuarios" description="Gestion de usuarios internos del sistema">
+    <app-button
+      icon="pi pi-plus"
+      (click)="openCreateDialog()"
+    >
+      Crear usuario
+    </app-button>
+  </app-page-header>
+
+  <app-metric-strip [metrics]="userMetrics()" />
+
+  <app-data-table
+    [data]="filteredUsers()"
+    [columns]="userColumns"
+    [loading]="loading()"
+    [sortable]="true"
+    [paginated]="true"
+    [rows]="20"
+    [emptyTitle]="searchQuery().trim() ? 'Sin resultados' : 'No hay usuarios'"
+    [emptyDescription]="emptyDescription()"
+  >
+    <ng-template #toolbar>
+      <div class="table-toolbar__info">
+        <p class="table-toolbar__kicker">Directorio operativo</p>
+        <h2 class="table-toolbar__title">Equipo con acceso al sistema</h2>
+      </div>
+      <div class="table-toolbar__actions">
+        <app-search-bar
+          [(value)]="searchQuery"
+          placeholder="Buscar por nombre, email..."
+          (search)="onSearch($event)"
+          (clear)="onSearchClear()"
+        />
+        <span class="table-toolbar__count">{{ filteredUsers().length }} registros</span>
+      </div>
+    </ng-template>
+
+    <ng-template #body let-user let-columns="columns">
+      <tr>
+        <!-- Nombre (firstName + lastName) -->
+        <td>
+          <span class="user-name">
+            {{ user.firstName ?? '' }} {{ user.lastName ?? '' }}
+          </span>
+        </td>
+        <!-- Email -->
+        <td>
+          <span>{{ user.email }}</span>
+        </td>
+        <!-- Rol -->
+        <td>
+          <app-badge [tone]="roleTone(user.role)">
+            {{ roleLabel(user.role) }}
+          </app-badge>
+        </td>
+        <!-- Sucursal -->
+        <td>
+          <span>{{ branchName(user.branchId) ?? '—' }}</span>
+        </td>
+        <!-- Estado -->
+        <td>
+          <p-toggleswitch
+            [ngModel]="user.enabled"
+            (ngModelChange)="toggleStatus(user)"
+            [disabled]="user.id === 1"
+            [attr.aria-label]="'Cambiar estado de ' + user.email"
+          />
+        </td>
+        <!-- Acciones -->
+        <td>
+          <button
+            pButton
+            pRipple
+            icon="pi pi-pencil"
+            class="p-button-text p-button-sm p-button-rounded"
+            [attr.aria-label]="'Editar ' + user.email"
+            (click)="openEditDialog(user)"
+          ></button>
+        </td>
+      </tr>
+    </ng-template>
+  </app-data-table>
+
+  <!-- Create / Edit dialog -->
+  <app-modal
+    [(visible)]="dialogVisible"
+    [title]="dialogTitle()"
+    [width]="'min(92vw, 32rem)'"
+  >
+    <div class="user-form">
+      <!-- Email -->
+      <div class="user-form__field">
+        <label for="user-email" class="user-form__label">
+          Email <span class="user-form__required" aria-hidden="true">*</span>
+        </label>
+        <input
+          id="user-email"
+          pInputText
+          type="email"
+          [ngModel]="formEmail()"
+          (ngModelChange)="formEmail.set($event)"
+          placeholder="correo@ejemplo.com"
+          class="w-full"
+          autocomplete="email"
+          [disabled]="isEditMode()"
+        />
+      </div>
+
+      <!-- Password -->
+      <div class="user-form__field">
+        <label for="user-password" class="user-form__label">
+          Contrasena
+          @if (!isEditMode()) {
+            <span class="user-form__required" aria-hidden="true">*</span>
+          }
+        </label>
+        <input
+          id="user-password"
+          pInputText
+          type="password"
+          [ngModel]="formPassword()"
+          (ngModelChange)="formPassword.set($event)"
+          [placeholder]="isEditMode() ? 'Dejar en blanco para mantener' : 'Min. 8 caracteres'"
+          class="w-full"
+          autocomplete="new-password"
+        />
+        @if (isEditMode()) {
+          <small class="user-form__hint">Deje en blanco para mantener la contrasena actual.</small>
+        }
+      </div>
+
+      <!-- First name -->
+      <div class="user-form__field">
+        <label for="user-first-name" class="user-form__label">
+          Nombre <span class="user-form__required" aria-hidden="true">*</span>
+        </label>
+        <input
+          id="user-first-name"
+          pInputText
+          type="text"
+          [ngModel]="formFirstName()"
+          (ngModelChange)="formFirstName.set($event)"
+          placeholder="Nombre"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Last name -->
+      <div class="user-form__field">
+        <label for="user-last-name" class="user-form__label">
+          Apellido <span class="user-form__required" aria-hidden="true">*</span>
+        </label>
+        <input
+          id="user-last-name"
+          pInputText
+          type="text"
+          [ngModel]="formLastName()"
+          (ngModelChange)="formLastName.set($event)"
+          placeholder="Apellido"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Phone -->
+      <div class="user-form__field">
+        <label for="user-phone" class="user-form__label">Telefono</label>
+        <input
+          id="user-phone"
+          pInputText
+          type="tel"
+          [ngModel]="formPhone()"
+          (ngModelChange)="formPhone.set($event)"
+          placeholder="+54 351 123 4567"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Role (always shown) -->
+      <div class="user-form__field">
+        <label for="user-role" class="user-form__label">
+          Rol <span class="user-form__required" aria-hidden="true">*</span>
+        </label>
+        <p-select
+          id="user-role"
+          [options]="roleOptions"
+          [ngModel]="formRole()"
+          (ngModelChange)="onRoleChange($event)"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar rol"
+          class="w-full"
+          [style]="{ width: '100%' }"
+        />
+        <small class="user-form__hint">
+          @if (formRole() === 'ADMIN') {
+            Acceso global a todas las sucursales y modulos.
+          } @else if (formRole() === 'MANAGER') {
+            Acceso de gestion a una sucursal especifica.
+          } @else {
+            Acceso operativo a una sucursal especifica.
+          }
+        </small>
+      </div>
+
+      <!-- Branch (conditional: shown only for MANAGER and EMPLOYEE) -->
+      @if (showBranchField()) {
+        <div class="user-form__field">
+          <label for="user-branch" class="user-form__label">
+            Sucursal <span class="user-form__required" aria-hidden="true">*</span>
+          </label>
+          <p-select
+            id="user-branch"
+            [options]="branches()"
+            [ngModel]="formBranchId()"
+            (ngModelChange)="formBranchId.set($event)"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Seleccionar sucursal"
+            class="w-full"
+            [style]="{ width: '100%' }"
+            [showClear]="true"
+          />
+          @if (branches().length === 0) {
+            <small class="user-form__hint">
+              No hay sucursales disponibles.
+            </small>
+          }
+        </div>
+      }
+
+      <!-- Footer: form actions -->
+      <div class="user-form__actions" modalFooter>
+        <app-button variant="ghost" (click)="closeDialog()" [disabled]="submitting()">
+          Cancelar
+        </app-button>
+        <app-button
+          [icon]="'pi pi-check'"
+          (click)="submit()"
+          [disabled]="submitting()"
+          [loading]="submitting()"
+        >
+          {{ isEditMode() ? 'Guardar cambios' : 'Crear usuario' }}
+        </app-button>
+      </div>
+    </div>
+  </app-modal>
+</div>

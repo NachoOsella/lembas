@@ -2,12 +2,34 @@
   display: block;
 }
 
-:host ::ng-deep .app-data-table {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+/* Shell wrapper provides the card visual */
+.app-data-table-shell {
   overflow: hidden;
+  background: #ffffff;
+  border: 1px solid rgba(7, 95, 54, 0.11);
+  border-radius: 1.35rem;
+  box-shadow:
+    0 1.5rem 3rem rgba(38, 30, 17, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset;
+}
+
+/* Optional toolbar above the table */
+.app-data-table__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(7, 95, 54, 0.09);
+  background: #fafcfa;
+}
+
+/* The p-table inside is flat — no border, no radius, no shadow */
+:host ::ng-deep .app-data-table {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 :host ::ng-deep .app-data-table .p-datatable-header,
@@ -18,15 +40,23 @@
 }
 
 :host ::ng-deep .app-data-table .p-datatable-thead > tr > th {
-  background: rgba(47, 141, 114, 0.04);
-  color: var(--color-text);
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: var(--tracking-tight);
+  background: #eef6f1;
+  color: rgba(18, 55, 42, 0.86);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.1rem;
   border: none;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(7, 95, 54, 0.1);
+}
+
+:host ::ng-deep .app-data-table .p-datatable-thead > tr > th:first-child {
+  border-top-left-radius: 0;
+}
+
+:host ::ng-deep .app-data-table .p-datatable-thead > tr > th:last-child {
+  border-top-right-radius: 0;
 }
 
 :host ::ng-deep .app-data-table .p-datatable-thead > tr > th .p-sortable-column-icon {
@@ -35,20 +65,23 @@
 }
 
 :host ::ng-deep .app-data-table .p-datatable-tbody > tr {
-  transition: background-color 0.15s ease;
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 :host ::ng-deep .app-data-table .p-datatable-tbody > tr:hover {
-  background: rgba(47, 141, 114, 0.03);
+  background: rgba(47, 141, 114, 0.045);
+  box-shadow: inset 0.25rem 0 0 rgba(47, 141, 114, 0.75);
 }
 
 :host ::ng-deep .app-data-table .p-datatable-tbody > tr > td {
   color: var(--color-text);
-  font-size: 0.92rem;
+  font-size: 0.93rem;
   letter-spacing: var(--tracking-tight);
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.1rem;
   border: none;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(7, 95, 54, 0.075);
 }
 
 :host ::ng-deep .app-data-table .p-datatable-tbody > tr:last-child > td {
@@ -56,15 +89,25 @@
 }
 
 :host ::ng-deep .app-data-table .p-paginator {
-  background: transparent;
+  background: #f6fbf7;
   border: none;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(7, 95, 54, 0.09);
+  padding: 0.85rem 1rem;
 }
 
-:host ::ng-deep .app-data-table .p-paginator-page.p-highlight {
-  background: var(--color-primary);
-  color: #ffffff;
+:host ::ng-deep .app-data-table .p-paginator-page,
+:host ::ng-deep .app-data-table .p-paginator-first,
+:host ::ng-deep .app-data-table .p-paginator-prev,
+:host ::ng-deep .app-data-table .p-paginator-next,
+:host ::ng-deep .app-data-table .p-paginator-last {
+  border-radius: 999px;
+}
+
+:host ::ng-deep .app-data-table .p-paginator-page.p-highlight,
+:host ::ng-deep .app-data-table .p-paginator-page.p-paginator-page-selected {
+  color: #075f36;
+  background: #dff6ea;
+  box-shadow: inset 0 0 0 1px rgba(47, 141, 114, 0.12);
 }
 
 :host ::ng-deep .app-data-table .p-paginator-page:hover,

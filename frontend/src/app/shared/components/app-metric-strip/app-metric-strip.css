@@ -1,0 +1,100 @@
+:host {
+  display: block;
+}
+
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 0.8rem;
+}
+
+.metric-strip__item {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 6.1rem;
+  padding: 1rem;
+  overflow: hidden;
+  color: var(--metric-ink, #12372a);
+  background: var(--metric-wash, #ecf7f1);
+  border: 1px solid color-mix(in srgb, var(--metric-color, #2f8d72) 18%, transparent);
+  border-radius: 1.25rem;
+  box-shadow: 0 0.9rem 2.4rem rgba(18, 55, 42, 0.07);
+}
+
+.metric-strip__item::before {
+  content: "";
+  position: absolute;
+  inset: auto -2.5rem -3.2rem auto;
+  z-index: -1;
+  width: 7rem;
+  height: 7rem;
+  background: color-mix(in srgb, var(--metric-color, #2f8d72) 16%, transparent);
+  border-radius: 999px;
+}
+
+.metric-strip__item--forest {
+  --metric-color: #2f8d72;
+  --metric-ink: #0b3f2a;
+  --metric-wash: #eaf7f0;
+}
+
+.metric-strip__item--amber {
+  --metric-color: #d9822b;
+  --metric-ink: #623709;
+  --metric-wash: #fff1d7;
+}
+
+.metric-strip__item--ink {
+  --metric-color: #243a31;
+  --metric-ink: #18251f;
+  --metric-wash: #edf1ed;
+}
+
+.metric-strip__item--sage {
+  --metric-color: #6f8d67;
+  --metric-ink: #31452e;
+  --metric-wash: #f0f5e9;
+}
+
+.metric-strip__icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 2.65rem;
+  height: 2.65rem;
+  place-items: center;
+  color: #ffffff;
+  background: var(--metric-color, #2f8d72);
+  border-radius: 999px;
+  box-shadow: 0 0.65rem 1.4rem color-mix(in srgb, var(--metric-color, #2f8d72) 22%, transparent);
+}
+
+.metric-strip__copy {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.metric-strip__label {
+  color: color-mix(in srgb, var(--metric-ink, #12372a) 64%, transparent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.metric-strip__value {
+  color: var(--metric-ink, #12372a);
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.metric-strip__detail {
+  color: color-mix(in srgb, var(--metric-ink, #12372a) 62%, transparent);
+  font-size: 0.78rem;
+  font-weight: 600;
+}

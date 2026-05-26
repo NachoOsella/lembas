@@ -39,6 +39,7 @@ export class AppDataTable<T = unknown> {
   readonly emptyAction = output<void>();
 
   protected readonly bodyTemplate = contentChild<TemplateRef<unknown>>('body');
+  protected readonly toolbarTemplate = contentChild<TemplateRef<unknown>>('toolbar');
 
   protected onRowClick(row: T): void {
     this.rowClick.emit(row);
