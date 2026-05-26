@@ -22,7 +22,7 @@ export class StoreLayout {
   /** Whether a user is currently logged in. */
   protected readonly isLoggedIn = computed(() => this.auth.isAuthenticated());
 
-  /** Display name for the logged-in user (email or first name). */
+  /** Display name for the logged-in user (first name, or email fallback). */
   protected readonly userDisplayName = computed(() => {
     const user = this.auth.currentUser();
     if (!user) return '';
