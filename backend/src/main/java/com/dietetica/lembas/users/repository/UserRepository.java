@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +44,25 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findByRole(Role role, Pageable pageable);
 
     /**
+     * Returns a paginated list of users filtered by the allowed roles.
+     *
+     * @param roles allowed roles
+     * @param pageable pagination parameters
+     * @return a page of users with one of the given roles
+     */
+    Page<User> findByRoleIn(Collection<Role> roles, Pageable pageable);
+
+    /**
+     * Returns a paginated list of users filtered by role and branch.
+     *
+     * @param role the role to filter by
+     * @param branchId the branch ID
+     * @param pageable pagination parameters
+     * @return a page of users with the given role and branch
+     */
+    Page<User> findByRoleAndBranchId(Role role, Long branchId, Pageable pageable);
+
+    /**
      * Returns a paginated list of users assigned to a branch.
      *
      * @param branchId the branch ID
@@ -50,6 +70,24 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return a page of users for the given branch
      */
     Page<User> findByBranchId(Long branchId, Pageable pageable);
+
+    /**
+     * Returns a paginated list of users filtered by allowed roles and branch.
+     *
+     * @param roles allowed roles
+     * @param branchId the branch ID
+     * @param pageable pagination parameters
+     * @return a page of users with one of the given roles and branch
+     */
+    Page<User> findByRoleInAndBranchId(Collection<Role> roles, Long branchId, Pageable pageable);
+
+    /**
+     * Counts enabled users with the given role.
+     *
+     * @param role the role to count
+     * @return the number of enabled users with that role
+     */
+    long countByRoleAndEnabledTrue(Role role);
 
     /**
      * Returns all enabled users.
