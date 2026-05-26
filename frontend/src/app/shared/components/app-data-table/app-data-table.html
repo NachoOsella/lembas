@@ -12,7 +12,8 @@
       <p-table
         [value]="data()"
         [columns]="columns()"
-        [sortField]="sortable() ? columns()[0]?.field : undefined"
+        [sortField]="sortField() ?? (sortable() ? columns()[0]?.field : undefined)"
+        [sortOrder]="sortOrder() ?? 0"
         [sortMode]="sortable() ? 'single' : 'multiple'"
         [paginator]="paginated()"
         [lazy]="lazy()"
@@ -24,6 +25,7 @@
         currentPageReportTemplate="{first}-{last} de {totalRecords}"
         styleClass="app-data-table"
         (onPage)="onPageChange($event)"
+        (onSort)="onSortChange($event)"
       >
         <ng-template #header let-columns>
           <tr>

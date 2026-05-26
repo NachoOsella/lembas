@@ -43,6 +43,9 @@ const USER_COLUMNS: ColumnDef[] = [
   { field: 'id', header: 'Acciones', sortable: false, width: '20%' },
 ];
 
+/** Backend-supported user fields that can be used for server-side sorting. */
+const USER_SORT_FIELDS = new Set(['firstName', 'email', 'role', 'enabled']);
+
 @Component({
   selector: 'app-user-list',
   imports: [
@@ -79,6 +82,8 @@ export class UserList implements OnInit {
   protected readonly first = signal(0);
   protected readonly pageSize = signal(10);
   protected readonly totalRecords = signal(0);
+  protected readonly sortField = signal<string | undefined>(undefined);
+  protected readonly sortOrder = signal<number | undefined>(undefined);
   protected readonly metrics = signal({ totalUsers: 0, enabledUsers: 0, usersWithBranch: 0 });
 
   /** Branch ID -> name map for display in the table. */
@@ -154,8 +159,9 @@ export class UserList implements OnInit {
 
   protected loadUsers(): void {
     const page = Math.floor(this.first() / this.pageSize());
+    const sort = this.buildSortParam();
     this.loading.set(true);
-    this.userService.listUsers(undefined, undefined, page, this.pageSize(), this.searchQuery()).subscribe({
+    this.userService.listUsers(undefined, undefined, page, this.pageSize(), this.searchQuery(), sort).subscribe({
       next: (response) => {
         this.users.set(response.content);
         this.totalRecords.set(response.totalElements);
@@ -195,6 +201,33 @@ export class UserList implements OnInit {
     this.first.set(event.first);
     this.pageSize.set(event.rows);
     this.loadUsers();
+  }
+
+  protected onSort(event: { field: string; order: number }): void {
+    this.first.set(0);
+
+    if (!USER_SORT_FIELDS.has(event.field) || ![1, -1].includes(event.order)) {
+      this.sortField.set(undefined);
+      this.sortOrder.set(undefined);
+      this.loadUsers();
+      return;
+    }
+
+    this.sortField.set(event.field);
+    this.sortOrder.set(event.order);
+    this.loadUsers();
+  }
+
+  /** Builds the Spring Data sort parameter from the current validated table state. */
+  private buildSortParam(): string | undefined {
+    const field = this.sortField();
+    const order = this.sortOrder();
+
+    if (!field || ![1, -1].includes(order ?? 0)) {
+      return undefined;
+    }
+
+    return `${field},${order === 1 ? 'asc' : 'desc'}`;
   }
 
   // ---------------------------------------------------------------------------

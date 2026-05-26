@@ -36,9 +36,12 @@ export class AppDataTable<T = unknown> {
   readonly emptyTitle = input('No hay resultados');
   readonly emptyDescription = input('Todavia no hay informacion para mostrar.');
   readonly emptyActionLabel = input<string | null>(null);
+  readonly sortField = input<string | undefined>(undefined);
+  readonly sortOrder = input<number | undefined>(undefined);
 
   readonly rowClick = output<T>();
   readonly pageChange = output<{ first: number; rows: number; page?: number; pageCount?: number }>();
+  readonly sortChange = output<{ field: string; order: number }>();
   readonly emptyAction = output<void>();
 
   protected readonly bodyTemplate = contentChild<TemplateRef<unknown>>('body');
@@ -58,6 +61,14 @@ export class AppDataTable<T = unknown> {
     const rows = event.rows ?? this.rows();
     this.first.set(first);
     this.pageChange.emit({ first, rows, page: event.page, pageCount: event.pageCount });
+  }
+
+  protected onSortChange(event: { field?: string; order?: number }): void {
+    if (!event.field) {
+      return;
+    }
+
+    this.sortChange.emit({ field: event.field, order: event.order ?? 1 });
   }
 
   protected onEmptyAction(): void {

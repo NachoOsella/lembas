@@ -24,7 +24,10 @@
       [totalRecords]="displayTotalRecords()"
       [first]="first()"
       [rows]="pageSize()"
+      [sortField]="sortField()"
+      [sortOrder]="sortOrder()"
       (pageChange)="onPageChange($event)"
+      (sortChange)="onSort($event)"
       [emptyTitle]="searchQuery().trim() ? 'Sin resultados' : 'No hay usuarios'"
       [emptyDescription]="emptyDescription()"
     >

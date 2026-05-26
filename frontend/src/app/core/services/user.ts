@@ -32,6 +32,7 @@ export class UserService {
     page = 0,
     size = 20,
     search?: string,
+    sort?: string,
   ): Observable<Page<UserResponse>> {
     let params = new HttpParams().set('page', page).set('size', size);
     if (role) {
@@ -43,6 +44,9 @@ export class UserService {
     const normalizedSearch = search?.trim();
     if (normalizedSearch) {
       params = params.set('search', normalizedSearch);
+    }
+    if (sort) {
+      params = params.set('sort', sort);
     }
     return this.http.get<Page<UserResponse>>(this.usersUrl, { params });
   }

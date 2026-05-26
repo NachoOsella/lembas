@@ -107,7 +107,7 @@ describe('UserList', () => {
       const user = buildUser();
       configure([user]);
 
-      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '');
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '', undefined);
       expect((c['users'] as () => UserResponse[])().length).toBe(1);
     });
 
@@ -134,7 +134,7 @@ describe('UserList', () => {
 
       (c['onPageChange'] as (event: { first: number; rows: number }) => void)({ first: 20, rows: 20 });
 
-      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 1, 20, '');
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 1, 20, '', undefined);
       expect((c['first'] as () => number)()).toBe(20);
       expect((c['pageSize'] as () => number)()).toBe(20);
     });
@@ -160,7 +160,7 @@ describe('UserList', () => {
       (c['first'] as { set(v: number): void }).set(40);
       (c['onSearch'] as (query: string) => void)('gandalf');
 
-      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, 'gandalf');
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, 'gandalf', undefined);
       expect((c['first'] as () => number)()).toBe(0);
       expect((c['users'] as () => UserResponse[])()[0].email).toBe('gandalf@lembas.com');
       expect((c['totalRecords'] as () => number)()).toBe(1);
@@ -175,9 +175,51 @@ describe('UserList', () => {
       (c['first'] as { set(v: number): void }).set(20);
       (c['onSearchClear'] as () => void)();
 
-      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '');
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '', undefined);
       expect((c['searchQuery'] as () => string)()).toBe('');
       expect((c['first'] as () => number)()).toBe(0);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Backend sorting
+  // ---------------------------------------------------------------------------
+  describe('backend sorting', () => {
+    it('should reload the first backend page with ascending sort', () => {
+      configure([buildUser()]);
+      svc['listUsers'].mockClear();
+
+      (c['onSort'] as (event: { field: string; order: number }) => void)({ field: 'email', order: 1 });
+
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '', 'email,asc');
+      expect((c['first'] as () => number)()).toBe(0);
+    });
+
+    it('should reload the first backend page with descending sort', () => {
+      configure([buildUser()]);
+      svc['listUsers'].mockClear();
+
+      (c['onSort'] as (event: { field: string; order: number }) => void)({ field: 'role', order: -1 });
+
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '', 'role,desc');
+    });
+
+    it('should clear sorting when PrimeNG emits an unsorted state', () => {
+      configure([buildUser()]);
+      svc['listUsers'].mockClear();
+
+      (c['onSort'] as (event: { field: string; order: number }) => void)({ field: 'email', order: 0 });
+
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '', undefined);
+    });
+
+    it('should ignore unsupported sort fields', () => {
+      configure([buildUser()]);
+      svc['listUsers'].mockClear();
+
+      (c['onSort'] as (event: { field: string; order: number }) => void)({ field: 'branchId', order: 1 });
+
+      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '', undefined);
     });
   });
 

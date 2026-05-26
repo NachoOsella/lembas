@@ -64,6 +64,14 @@ describe('UserService', () => {
       expect(req.request.method).toBe('GET');
       req.flush({ content: [] });
     });
+
+    it('should include sort param when provided', () => {
+      service.listUsers(undefined, undefined, 0, 10, undefined, 'email,asc').subscribe();
+
+      const req = httpMock.expectOne(`${usersUrl}?page=0&size=10&sort=email,asc`);
+      expect(req.request.method).toBe('GET');
+      req.flush({ content: [] });
+    });
   });
 
   // ---------------------------------------------------------------------------
