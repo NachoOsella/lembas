@@ -65,8 +65,9 @@
            aria-label="Ver carrito, {{ cartItemsCount() }} productos">
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"
                class="fill-none stroke-current stroke-2 [stroke-linecap:round] [stroke-linejoin:round]">
-            <path d="M6.5 8.5h11l-1 10h-9l-1-10Z" />
-            <path d="M9 8.5a3 3 0 0 1 6 0" />
+            <circle cx="9" cy="20" r="1.5" />
+            <circle cx="18" cy="20" r="1.5" />
+            <path d="M1 1h3l2.5 13h11l3.5-9H5" />
           </svg>
           @if (cartItemsCount() > 0) {
             <span class="store__cart-badge" aria-label="Productos en carrito">{{ cartItemsCount() }}</span>
@@ -118,18 +119,5 @@
       </nav>
     </div>
   </footer>
-
-  <!-- ===== Leaf CTA Floating Button (signature element) ===== -->
-  <button
-    class="store__leaf-cta"
-    aria-label="Ir al carrito de compras"
-    (click)="goToCart()"
-  >
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"
-         class="fill-none stroke-white stroke-2 [stroke-linecap:round] [stroke-linejoin:round]">
-      <path d="M6.5 8.5h11l-1 10h-9l-1-10Z" />
-      <path d="M9 8.5a3 3 0 0 1 6 0" />
-    </svg>
-  </button>
 
 </div>

@@ -3,8 +3,8 @@
 }
 
 /* ====================================================================
-   Store Shell — Lembas Dietetica Brand
-   Sticky nav, cream canvas, minimal single-row footer, Leaf CTA button.
+   Store Shell - Lembas Dietetica Brand
+   Sticky nav, cream canvas, minimal single-row footer.
    ==================================================================== */
 
 .store {
@@ -154,57 +154,4 @@
   color: #ffffff;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Leaf CTA Floating Button (signature element)                       */
-/* ------------------------------------------------------------------ */
 
-.store__leaf-cta {
-  position: fixed;
-  bottom: 1.2rem;
-  right: 1.2rem;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border: none;
-  border-radius: 50%;
-  background: var(--color-primary);
-  color: #ffffff;
-  cursor: pointer;
-  touch-action: manipulation;
-  box-shadow:
-    0 0 6px rgba(0, 0, 0, 0.24),
-    0 8px 12px rgba(0, 0, 0, 0.14);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.store__leaf-cta::after {
-  content: '';
-  position: absolute;
-  inset: -0.5rem;
-  border-radius: 50%;
-}
-
-.store__leaf-cta:hover {
-  transform: scale(1.06);
-}
-
-.store__leaf-cta:active {
-  transform: scale(0.95);
-  box-shadow:
-    0 0 6px rgba(0, 0, 0, 0.24),
-    0 8px 12px rgba(0, 0, 0, 0);
-}
-
-@media (min-width: 48rem) {
-  .store__leaf-cta {
-    bottom: 1.6rem;
-    right: 1.6rem;
-    width: 3.5rem;
-    height: 3.5rem;
-  }
-}

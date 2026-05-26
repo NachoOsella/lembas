@@ -125,11 +125,5 @@ describe('StoreLayout', () => {
   });
 
   /** Should render Leaf CTA floating button. */
-  it('Should_renderLeafCta_when_rendered', () => {
-    setup(false);
 
-    const cta = fixture.nativeElement.querySelector('.store__leaf-cta');
-    expect(cta).toBeTruthy();
-    expect(cta.getAttribute('aria-label')).toBe('Ir al carrito de compras');
-  });
 });

@@ -23,7 +23,7 @@ interface StoreNavItem {
   templateUrl: './store-layout.html',
   styleUrl: './store-layout.css',
 })
-/** Public store shell with Lembas brand: sticky nav, minimal footer, Leaf CTA floating button. */
+/** Public store shell with Lembas brand: sticky nav, minimal footer. */
 export class StoreLayout {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -74,11 +74,6 @@ export class StoreLayout {
     { label: 'Instagram', path: 'https://www.instagram.com/', external: true },
     { label: 'Facebook', path: 'https://www.facebook.com/', external: true },
   ];
-
-  /** Navigate to the cart/checkout page. */
-  goToCart(): void {
-    this.router.navigate(['/customer/checkout']);
-  }
 
   /** Logs out the current user and navigates to the store home page. */
   logout(): void {
