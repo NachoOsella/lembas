@@ -75,3 +75,21 @@
 - `frontend/src/app/core/services/auth.ts` -- auth token moved to an internal signal so `isAuthenticated` depends only on reactive state; `saveAuthResponse()` now updates token/user state consistently; `clearAuth()` resets both; persisted optional branch fields are validated before hydration.
 - `frontend/src/app/core/interceptors/auth-interceptor.ts` -- extracted backend API URL check into `isBackendApiRequest()` helper for clearer future API base URL changes.
 - `frontend/src/app/core/services/auth.spec.ts` -- deduplicated localStorage test setup with `stubLocalStorage()` and added malformed optional branch field coverage.
+
+### 2026-05-25 - Shared UI component library expansion
+
+- `frontend/src/app/shared/components/app-{input,form-field,modal,toast,breadcrumb,tabs,pagination,search-bar,data-table,stat-card}/` -- 10 new generic shared components, all PrimeNG-based wrappers with Lembas design styling (DESING.md tokens).
+- `frontend/src/app/shared/components/app-{button,page-header,section-card}/`, `confirm-dialog/` -- fixed invalid font-weights (>700) to 700 (Plus Jakarta Sans max) and unified CSS variable usage.
+- `frontend/src/app/shared/components/index.ts` -- exported all 20 shared components.
+- `frontend/src/app/features/dev/component-showcase/` -- updated with live demos of all new components.
+
+### 2026-05-25 - Store and admin layout redesign (Lembas brand system)
+
+- `frontend/src/app/features/public-store/store-layout/` -- redesigned with warm cream canvas, Pill-nav links, cart badge, minimal single-row Forest Green footer. Removed hero section and Leaf CTA floating button per user feedback. Cart icon changed from basket SVG to shopping cart SVG (wheels + trolley).
+- `frontend/src/app/features/admin/admin-layout/` -- redesigned sidebar with Forest Green brand, custom breadcrumbs (no PrimeNG dependency), user avatar with primary green. Kept existing collapsible sidebar and logout logic.
+
+### 2026-05-25 - Extracted app-store-nav and app-store-footer as generic components
+
+- `frontend/src/app/shared/components/app-store-nav/` -- generic Lembas-branded sticky nav bar: brand config, nav links, auth state (login/register vs user dropdown), cart icon with badge. Inputs for brand/links/cart/auth, outputs for logout/cartClick.
+- `frontend/src/app/shared/components/app-store-footer/` -- generic minimal single-row footer: copyright left, inline flat links right. Inputs for links array and copyright string.
+- `frontend/src/app/features/public-store/store-layout/` -- refactored into thin shell (3 HTML lines) delegating to both new components.
