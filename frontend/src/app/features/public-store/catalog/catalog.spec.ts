@@ -146,7 +146,7 @@ describe('Catalog', () => {
     configure();
     const h1: HTMLElement | null = fixture.nativeElement.querySelector('#catalog-title');
     expect(h1).toBeTruthy();
-    expect(h1!.textContent?.trim()).toBe('Productos');
+    expect(h1!.textContent?.trim()).toBe('Nuestra góndola digital');
   });
 
   // -------------------------------------------------------------------------

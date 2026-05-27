@@ -12,28 +12,31 @@ import { ProductSummary } from '../../../shared/models/product';
   imports: [RouterLink, ButtonDirective, Ripple, StoreProductCard],
   template: `
     <div class="home-page min-h-screen overflow-hidden bg-[#f5ead8] text-stone-950">
-      <!-- Solid editorial hero: no gradients, only flat color and layered cards. -->
+      <!-- Editorial hero with organic depth -->
       <header
-        class="home-hero relative isolate border-b border-emerald-950/15 px-4 py-14 sm:px-6 md:py-20 lg:px-8"
+        class="home-hero relative isolate overflow-hidden px-4 py-16 sm:px-6 md:py-24 lg:px-8"
       >
-        <div class="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1fr_0.82fr]">
-          <section class="max-w-3xl">
+        <!-- Decorative organic shapes -->
+        <div class="pointer-events-none absolute -right-20 -top-20 h-[500px] w-[500px] rounded-full bg-[#f29d52]/10 blur-3xl" aria-hidden="true"></div>
+        <div class="pointer-events-none absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-[#2f8d72]/10 blur-3xl" aria-hidden="true"></div>
+
+        <div class="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1fr_0.85fr]">
+          <section class="w-full max-w-3xl min-w-0">
             <span
-              class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-emerald-50"
+              class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-50/90"
             >
-              <i class="pi pi-leaf text-[0.75rem]" aria-hidden="true"></i>
+              <i class="pi pi-leaf text-[0.7rem]" aria-hidden="true"></i>
               Dietética Lembas
             </span>
 
             <h1
-              class="mt-7 max-w-4xl text-5xl font-black leading-[0.94] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl"
+              class="mt-8 max-w-[760px] text-5xl font-semibold leading-[1.05] tracking-[-0.04em] text-white sm:text-6xl lg:text-[5rem]"
             >
               Tu despensa natural, lista para retirar
             </h1>
 
-            <p class="mt-7 max-w-2xl text-lg font-medium leading-8 text-emerald-50/90 sm:text-xl">
-              Catálogo saludable con productos de dietética, orgánicos e integrales. Elegí online y
-              pasá por la sucursal sin vueltas.
+            <p class="mt-6 w-full max-w-[660px] text-base font-medium leading-7 text-emerald-50/80 sm:text-lg">
+              Productos saludables para comprar online y retirar en sucursal.
             </p>
 
             <div class="mt-10 flex flex-col gap-3 sm:flex-row">
@@ -41,55 +44,52 @@ import { ProductSummary } from '../../../shared/models/product';
                 pButton
                 pRipple
                 routerLink="/store/catalog"
-                class="!rounded-full !border-0 !bg-white !px-7 !py-4 !font-black !text-emerald-950 shadow-xl shadow-emerald-950/20 transition-transform hover:-translate-y-0.5"
+                class="!rounded-full !border-0 !bg-white !px-8 !py-4 !font-bold !text-[#075f36] shadow-xl shadow-emerald-950/20 transition-all hover:-translate-y-0.5 hover:shadow-2xl"
               >
-                Ver catálogo
+                Explorar catálogo
                 <i class="pi pi-arrow-right ml-2" aria-hidden="true"></i>
-              </a>
-              <a
-                routerLink="/store/catalog"
-                class="inline-flex items-center justify-center rounded-full border border-white/25 px-7 py-4 font-black text-white transition hover:bg-white/10"
-              >
-                Cómo comprar
               </a>
             </div>
           </section>
 
           <aside class="hidden lg:block" aria-label="Resumen de compra">
             <div
-              class="home-ticket ml-auto max-w-md rounded-[2.25rem] border border-emerald-950/15 bg-[#fffaf0] p-6 shadow-2xl shadow-emerald-950/25"
+              class="home-ticket relative ml-auto max-w-sm rounded-[2rem] border border-white/10 bg-[#fffaf0]/95 p-7 shadow-2xl shadow-emerald-950/30 backdrop-blur-sm"
             >
+              <div class="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#064e3b]" aria-hidden="true"></div>
+              <div class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#064e3b]" aria-hidden="true"></div>
+
               <div
-                class="flex items-center justify-between border-b border-dashed border-stone-300 pb-4"
+                class="flex items-center justify-between border-b-2 border-dashed border-stone-300 pb-5"
               >
-                <span class="text-xs font-black uppercase tracking-[0.2em] text-emerald-900/70">
+                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-900/60">
                   Pedido simple
                 </span>
-                <span class="rounded-full bg-emerald-800 px-3 py-1 text-xs font-black text-white">
+                <span class="rounded-full bg-[#075f36] px-3 py-1 text-[11px] font-bold text-white tracking-wide">
                   Pickup
                 </span>
               </div>
-              <ul class="mt-5 space-y-4 text-sm font-bold text-stone-700">
-                <li class="flex items-center gap-3">
+              <ul class="mt-6 space-y-5 text-sm font-semibold text-stone-700">
+                <li class="flex items-center gap-4">
                   <span
-                    class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-800"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm"
                     >1</span
                   >
-                  Mirá recomendados o entrá al catálogo
+                  Explorá el catálogo y filtrá por categoría
                 </li>
-                <li class="flex items-center gap-3">
+                <li class="flex items-center gap-4">
                   <span
-                    class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-800"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm"
                     >2</span
                   >
-                  Filtrá por categoría desde la góndola
+                  Armá tu pedido y confirmá el pago
                 </li>
-                <li class="flex items-center gap-3">
+                <li class="flex items-center gap-4">
                   <span
-                    class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-800"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm"
                     >3</span
                   >
-                  Retirá tu compra en sucursal
+                  Retirá en sucursal sin filas
                 </li>
               </ul>
             </div>
@@ -97,27 +97,27 @@ import { ProductSummary } from '../../../shared/models/product';
         </div>
       </header>
 
-      <main class="relative py-14 lg:py-20">
-        <!-- Recommendations use a reusable product card and move continuously from right to left. -->
+      <main class="relative py-16 lg:py-24">
+        <!-- Recommendations marquee -->
         <section
           class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
           aria-labelledby="home-products-title"
         >
-          <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div class="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p class="text-sm font-black uppercase tracking-[0.22em] text-emerald-700">
+              <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">
                 Selección curada
               </p>
               <h2
                 id="home-products-title"
-                class="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl"
+                class="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl"
               >
                 Recomendados de la semana
               </h2>
             </div>
             <a
               routerLink="/store/catalog"
-              class="inline-flex items-center gap-2 font-black text-emerald-800 transition hover:text-emerald-950"
+              class="inline-flex items-center gap-2 text-sm font-bold text-emerald-800 transition hover:text-emerald-950"
             >
               Ver catálogo completo <i class="pi pi-arrow-right" aria-hidden="true"></i>
             </a>
@@ -125,7 +125,7 @@ import { ProductSummary } from '../../../shared/models/product';
 
           @if (featuredProducts().length > 0) {
             <div
-              class="home-marquee rounded-[2rem] border border-emerald-950/10 bg-[#fffaf0] p-4 shadow-sm shadow-stone-900/5"
+              class="home-marquee rounded-[2rem] border border-emerald-950/8 bg-[#fffaf0] p-5 shadow-sm"
               aria-label="Productos recomendados en movimiento"
             >
               <div class="home-marquee__track">
@@ -148,34 +148,37 @@ import { ProductSummary } from '../../../shared/models/product';
           }
         </section>
 
+        <!-- Catalog access block -->
         <section
-          class="mx-auto mt-14 max-w-7xl px-4 sm:px-6 lg:px-8"
+          class="mx-auto mt-20 max-w-7xl px-4 sm:px-6 lg:px-8"
           aria-label="Acceso al catálogo"
         >
           <div
-            class="flex flex-col gap-5 rounded-[2rem] border border-emerald-950/10 bg-white p-6 shadow-sm shadow-stone-900/5 sm:flex-row sm:items-center sm:justify-between"
+            class="relative overflow-hidden rounded-[2rem] border border-emerald-950/8 bg-white p-8 shadow-sm sm:flex-row sm:items-center sm:justify-between lg:flex"
           >
+            <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#2f8d72]/5" aria-hidden="true"></div>
             <div>
-              <p class="text-sm font-black uppercase tracking-[0.22em] text-emerald-700">
+              <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">
                 Catálogo completo
               </p>
-              <h2 class="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">
-                Todas las categorías viven en la góndola
+              <h2 class="mt-3 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
+                Todas las categorías en la góndola
               </h2>
-              <p class="mt-3 max-w-2xl font-medium leading-7 text-stone-600">
-                Para evitar una home interminable, el filtrado por categorías queda concentrado en
-                el catálogo.
+              <p class="mt-3 w-full max-w-[620px] text-sm font-medium leading-6 text-stone-600 sm:text-base">
+                Buscá por categoría, marca o nombre del producto.
               </p>
             </div>
-            <a
-              pButton
-              pRipple
-              routerLink="/store/catalog"
-              class="!rounded-full !border-0 !bg-emerald-800 !px-7 !py-4 !font-black !text-white hover:!bg-emerald-950"
-            >
-              Abrir catálogo
-              <i class="pi pi-arrow-right ml-2" aria-hidden="true"></i>
-            </a>
+            <div class="mt-6 flex shrink-0 lg:mt-0 lg:ml-8">
+              <a
+                pButton
+                pRipple
+                routerLink="/store/catalog"
+                class="!rounded-full !border-0 !bg-[#075f36] !px-8 !py-4 !font-bold !text-white transition-all hover:!bg-[#06402a] hover:-translate-y-0.5"
+              >
+                Abrir catálogo
+                <i class="pi pi-arrow-right ml-2" aria-hidden="true"></i>
+              </a>
+            </div>
           </div>
         </section>
       </main>
@@ -191,7 +194,7 @@ import { ProductSummary } from '../../../shared/models/product';
     }
 
     .home-ticket {
-      transform: rotate(1.5deg);
+      transform: rotate(1deg);
     }
 
     .home-marquee {
@@ -201,8 +204,8 @@ import { ProductSummary } from '../../../shared/models/product';
     .home-marquee__track {
       display: flex;
       width: max-content;
-      gap: 1rem;
-      animation: home-marquee-slide 34s linear infinite;
+      gap: 1.25rem;
+      animation: home-marquee-slide 38s linear infinite;
     }
 
     .home-marquee:hover .home-marquee__track {
@@ -231,7 +234,6 @@ export class Home implements OnInit {
   protected readonly featuredProducts = signal<ProductSummary[]>([]);
 
   ngOnInit(): void {
-    // Load a compact product selection for the home recommendations marquee.
     this.catalogService.getProducts(undefined, undefined, undefined, 0, 8).subscribe((res) => {
       this.featuredProducts.set(res.content);
     });

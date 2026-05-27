@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 import { AppSearchBar } from '../app-search-bar/app-search-bar';
@@ -15,7 +15,7 @@ export interface StoreBrandConfig {
 @Component({
   selector: 'app-store-nav',
   standalone: true,
-  imports: [RouterLink, MenuModule, AppSearchBar],
+  imports: [RouterLink, RouterLinkActive, MenuModule, AppSearchBar],
   templateUrl: './app-store-nav.html',
   styleUrl: './app-store-nav.css',
 })
