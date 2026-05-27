@@ -17,10 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.Instant;
 
 /**
  * Product category entity mapped to the {@code categories} table.
@@ -76,14 +72,6 @@ public class Category {
     @Column(columnDefinition = "TEXT")
     @Setter
     private String description;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
 
     /**
      * Constructs a root category (no parent).

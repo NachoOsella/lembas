@@ -7,12 +7,12 @@
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  font-family: var(--font-sans);
-  letter-spacing: var(--tracking-tight);
-  color: var(--color-text);
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  color: rgba(0,0,0,0.87);
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.14);
-  border-radius: 8px;
+  border: 1px solid #d6dbde;
+  border-radius: 50px;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
@@ -25,8 +25,8 @@
 
 .app-input:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(47, 141, 114, 0.12);
+  border-color: #2f8d72;
+  box-shadow: 0 0 0 1px #2f8d72;
 }
 
 .app-input:disabled {
@@ -42,26 +42,26 @@
 
 .app-input--invalid:focus {
   border-color: #c82014;
-  box-shadow: 0 0 0 3px rgba(200, 32, 20, 0.1);
+  box-shadow: 0 0 0 1px #c82014;
 }
 
 /* Size variants */
 .app-input--sm {
-  padding: 0.45rem 0.75rem;
-  font-size: 0.85rem;
-  min-height: 2.25rem;
+  padding: 0.35rem 1rem;
+  font-size: 14px;
+  min-height: 40px;
 }
 
 .app-input--md {
-  padding: 0.6rem 0.9rem;
-  font-size: 0.95rem;
-  min-height: 2.65rem;
+  padding: 0.5rem 1rem;
+  font-size: 16px;
+  min-height: 48px;
 }
 
 .app-input--lg {
-  padding: 0.75rem 1.1rem;
-  font-size: 1rem;
-  min-height: 3rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 16px;
+  min-height: 56px;
 }
 
 /* IconField integration */
@@ -72,3 +72,8 @@
 :host ::ng-deep .p-icon-field .p-input-icon {
   color: rgba(0, 0, 0, 0.38);
 }
+
+:host ::ng-deep .p-icon-field .app-input {
+  padding-left: 2.5rem;
+}
+

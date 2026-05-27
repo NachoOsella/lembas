@@ -1,0 +1,13 @@
+:host {
+  display: block;
+}
+
+.store-product-card a:focus-visible {
+  outline: 3px solid rgba(4, 120, 87, 0.35);
+  outline-offset: 3px;
+}
+
+/* Compact cards are used in moving recommendation rails. */
+.store-product-card--compact {
+  width: 18rem;
+}

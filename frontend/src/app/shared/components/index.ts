@@ -21,3 +21,4 @@ export * from './skeleton/skeleton';
 export * from './app-store-nav/app-store-nav';
 export * from './app-store-footer/app-store-footer';
 export * from './app-metric-strip/app-metric-strip';
+export * from './store-product-card/store-product-card';

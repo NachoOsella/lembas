@@ -78,7 +78,7 @@ export class StoreLayout {
   onSearch(query: string): void {
     const trimmed = query.trim();
     if (trimmed) {
-      this.router.navigate(['/store'], { queryParams: { q: trimmed } });
+      this.router.navigate(['/store/catalog'], { queryParams: { q: trimmed } });
     }
   }
 

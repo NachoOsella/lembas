@@ -87,14 +87,14 @@ describe('StoreLayout', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/customer/checkout']);
   });
 
-  it('should navigate to /store with query param on search', async () => {
+  it('should navigate to /store/catalog with query param on search', async () => {
     setup(false);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     component.onSearch('granola');
     await fixture.whenStable();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/store'], { queryParams: { q: 'granola' } });
+    expect(navigateSpy).toHaveBeenCalledWith(['/store/catalog'], { queryParams: { q: 'granola' } });
   });
 
   it('should not navigate on empty search query', async () => {

@@ -7,6 +7,10 @@ export default [
     children: [
       {
         path: '',
+        loadComponent: () => import('./home/home').then((m) => m.Home),
+      },
+      {
+        path: 'catalog',
         loadComponent: () => import('./catalog/catalog').then((m) => m.Catalog),
       },
       {

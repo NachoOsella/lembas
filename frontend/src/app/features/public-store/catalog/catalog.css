@@ -1,0 +1,39 @@
+:host {
+  display: block;
+}
+
+.catalog-page__pill:focus-visible,
+.catalog-page__card a:focus-visible {
+  outline: 3px solid rgba(4, 120, 87, 0.35);
+  outline-offset: 3px;
+}
+
+/* PrimeNG paginator overrides scoped to the catalog page. */
+:host ::ng-deep .p-paginator {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page,
+:host ::ng-deep .p-paginator .p-paginator-first,
+:host ::ng-deep .p-paginator .p-paginator-prev,
+:host ::ng-deep .p-paginator .p-paginator-next,
+:host ::ng-deep .p-paginator .p-paginator-last {
+  min-width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  color: #57534e;
+  font-weight: 800;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+  background: #065f46;
+  color: #ffffff;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-current {
+  color: #78716c;
+  font-size: 0.875rem;
+  font-weight: 700;
+}

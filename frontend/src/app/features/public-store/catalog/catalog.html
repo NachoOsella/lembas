@@ -1,1 +1,171 @@
-<p>catalog works!</p>
+<!-- frontend/src/app/features/public-store/catalog/catalog.html -->
+<div class="catalog-page min-h-screen bg-[#f6ead6] pb-16 text-[rgba(0,0,0,0.87)]">
+  <header
+    class="catalog-page__hero relative overflow-hidden bg-[#075f36] px-4 py-16 text-white sm:px-6 lg:px-8"
+  >
+    <div class="relative mx-auto grid max-w-[1440px] gap-6 lg:grid-cols-[60%_40%] lg:items-center">
+      <div class="pr-8">
+        <p class="text-[1.4rem] font-medium uppercase tracking-[0.1em] text-[rgba(255,255,255,0.70)] mb-2">
+          Catálogo online
+        </p>
+        <h1
+          id="catalog-title"
+          class="text-[45px] font-semibold leading-[1.2] tracking-[-0.01em] sm:text-[58px]"
+        >
+          Productos
+        </h1>
+        <p class="mt-6 max-w-2xl text-[19px] font-normal leading-[1.75] tracking-[-0.01em] text-[rgba(255,255,255,0.70)]">
+          Una góndola digital simple: elegí categoría, revisá precios y abrí el detalle del producto
+          antes de armar tu pedido.
+        </p>
+      </div>
+
+      <aside
+        class="hidden lg:flex justify-end"
+        aria-hidden="true"
+      >
+        <!-- Decorative element matching brand feel rather than raw numbers -->
+        <div class="w-64 h-64 rounded-full border border-white/10 bg-white/5 flex items-center justify-center relative shadow-[0_8px_12px_rgba(0,0,0,0.14)]">
+           <i class="pi pi-sparkles text-6xl text-[rgba(255,255,255,0.2)]"></i>
+           <div class="absolute -bottom-4 -left-4 w-24 h-24 rounded-full bg-[#f29d52]/20 flex items-center justify-center">
+              <i class="pi pi-star text-3xl text-[#f29d52]"></i>
+           </div>
+        </div>
+      </aside>
+    </div>
+  </header>
+
+  <main class="mx-auto grid max-w-[1440px] gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[343px_1fr] lg:px-8">
+    <aside class="lg:sticky lg:top-[120px] lg:self-start">
+      <section
+        class="rounded-[12px] bg-white p-6 shadow-[0_0_0.5px_rgba(0,0,0,0.14),_0_1px_1px_rgba(0,0,0,0.24)]"
+        aria-label="Filtros del catálogo"
+      >
+        <div class="mb-6 flex items-center gap-3 border-b border-[#e7e7e7] pb-4">
+          <span
+            class="flex h-10 w-10 items-center justify-center rounded-full bg-[#2f8d72] text-white"
+          >
+            <i class="pi pi-sliders-h" aria-hidden="true"></i>
+          </span>
+          <div>
+            <h2 class="text-[16px] font-semibold tracking-[-0.01em] text-[rgba(0,0,0,0.87)]">Categorías</h2>
+            <p class="text-[13px] font-normal text-[rgba(0,0,0,0.58)] tracking-[-0.01em]">Filtrá la góndola</p>
+          </div>
+        </div>
+
+        @if (categoriesLoading()) {
+          <div class="space-y-3" aria-hidden="true">
+            @for (_ of [1, 2, 3, 4, 5, 6]; track _) {
+              <div class="h-12 animate-pulse rounded-[12px] bg-[#e7dbc0]/40"></div>
+            }
+          </div>
+        } @else if (categoriesError()) {
+          <div
+            class="catalog-page__filter-error flex items-start gap-3 rounded-[12px] border border-[#c82014]/20 bg-[hsl(4_82%_43%_/_5%)] p-4 text-[14px] font-medium text-[#c82014]"
+          >
+            <i class="pi pi-exclamation-circle mt-0.5" aria-hidden="true"></i>
+            <p>No se pudieron cargar las categorías.</p>
+          </div>
+        } @else if (showFilter()) {
+          <nav class="space-y-2" aria-label="Filtro de categorías">
+            <button
+              type="button"
+              class="catalog-page__pill flex w-full items-center justify-between rounded-[50px] px-5 py-3 text-left text-[14px] font-semibold tracking-[-0.01em] transition-[all_0.2s_ease]"
+              [class.catalog-page__pill--active]="selectedCategoryId() === null"
+              [class.bg-[#2f8d72]]="selectedCategoryId() === null"
+              [class.text-white]="selectedCategoryId() === null"
+              [class.bg-transparent]="selectedCategoryId() !== null"
+              [class.text-[rgba(0,0,0,0.87)]]="selectedCategoryId() !== null"
+              [class.hover:bg-[#f6ead6]]="selectedCategoryId() !== null"
+              (click)="selectAllCategories()"
+              [attr.aria-pressed]="selectedCategoryId() === null"
+            >
+              <span>Todas</span>
+              <i class="pi pi-arrow-right text-[12px]" aria-hidden="true"></i>
+            </button>
+
+            @for (cat of categories(); track cat.id) {
+              <button
+                type="button"
+                class="catalog-page__pill flex w-full items-center justify-between rounded-[50px] px-5 py-3 text-left text-[14px] font-semibold tracking-[-0.01em] transition-[all_0.2s_ease]"
+                [class.catalog-page__pill--active]="isCategorySelected(cat.id)"
+                [class.bg-[#2f8d72]]="isCategorySelected(cat.id)"
+                [class.text-white]="isCategorySelected(cat.id)"
+                [class.bg-transparent]="!isCategorySelected(cat.id)"
+                [class.text-[rgba(0,0,0,0.87)]]="!isCategorySelected(cat.id)"
+                [class.hover:bg-[#f6ead6]]="!isCategorySelected(cat.id)"
+                (click)="selectCategory(cat.id)"
+                [attr.aria-pressed]="isCategorySelected(cat.id)"
+              >
+                <span>{{ cat.name }}</span>
+                <i class="pi pi-arrow-right text-[12px]" aria-hidden="true"></i>
+              </button>
+            }
+          </nav>
+        }
+      </section>
+    </aside>
+
+    <section class="min-w-0">
+      <div
+        class="mb-8 flex flex-col gap-4 rounded-[12px] bg-white p-6 shadow-[0_0_0.5px_rgba(0,0,0,0.14),_0_1px_1px_rgba(0,0,0,0.24)] sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <p class="text-[13px] font-medium uppercase tracking-[0.1em] text-[#2f8d72]">Góndola</p>
+          <h2 class="mt-1 text-[24px] font-semibold tracking-[-0.01em] text-[rgba(0,0,0,0.87)]">Productos disponibles</h2>
+        </div>
+        @if (searchQuery()) {
+          <div
+            class="inline-flex items-center gap-2 rounded-[50px] border border-[#d7eadf] bg-[#d7eadf]/33 px-4 py-2 text-[14px] font-semibold text-[rgba(0,0,0,0.87)] tracking-[-0.01em]"
+          >
+            <i class="pi pi-search text-[#2f8d72]" aria-hidden="true"></i>
+            Buscando: <strong class="text-[#075f36]">{{ searchQuery() }}</strong>
+          </div>
+        }
+      </div>
+
+      @if (productsLoading() && !products().length) {
+        <div class="rounded-[12px] bg-white p-16 shadow-[0_0_0.5px_rgba(0,0,0,0.14),_0_1px_1px_rgba(0,0,0,0.24)]">
+          <app-loading-spinner label="Preparando estantes..." size="lg" surface="card" />
+        </div>
+      } @else if (productsError()) {
+        <app-error-alert
+          title="No pudimos cargar el catálogo"
+          message="Intentá nuevamente en unos segundos."
+          [dismissible]="false"
+        />
+      } @else if (initialLoadDone() && products().length === 0) {
+        <div class="rounded-[12px] bg-white p-12 text-center shadow-[0_0_0.5px_rgba(0,0,0,0.14),_0_1px_1px_rgba(0,0,0,0.24)]">
+          <app-empty-state
+            icon="pi pi-shop"
+            [title]="
+              searchQuery().trim() ? 'No encontramos lo que buscás' : 'Catálogo en preparación'
+            "
+            [description]="emptyDescription()"
+          />
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 gap-[24px] sm:grid-cols-2 xl:grid-cols-3" aria-label="Productos">
+          @for (product of products(); track product.id) {
+            <app-store-product-card [product]="product" cardClass="catalog-page__card" />
+          }
+        </div>
+
+        @if (totalRecords() > 0) {
+          <div
+            class="mt-12 rounded-[12px] bg-white p-6 shadow-[0_0_0.5px_rgba(0,0,0,0.14),_0_1px_1px_rgba(0,0,0,0.24)]"
+          >
+            <app-pagination
+              [totalRecords]="totalRecords()"
+              [rows]="20"
+              [first]="first()"
+              (pageChange)="onPageChange($event)"
+              [showCurrentPageReport]="true"
+              currentPageReportTemplate="Mostrando {first}-{last} de {totalRecords} productos"
+            />
+          </div>
+        }
+      }
+    </section>
+  </main>
+</div>

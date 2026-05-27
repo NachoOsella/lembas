@@ -15,6 +15,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/public-store/public-store.routes'),
   },
   {
+    path: 'catalog',
+    redirectTo: '/store/catalog',
+    pathMatch: 'full',
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes'),
   },
