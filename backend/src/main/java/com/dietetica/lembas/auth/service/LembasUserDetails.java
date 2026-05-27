@@ -1,6 +1,5 @@
 package com.dietetica.lembas.auth.service;
 
-import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

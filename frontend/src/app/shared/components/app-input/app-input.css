@@ -1,9 +1,12 @@
 :host {
   display: block;
+  min-width: 0;
 }
 
 .app-input {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   font-family: var(--font-sans);
   letter-spacing: var(--tracking-tight);
   color: var(--color-text);

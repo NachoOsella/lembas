@@ -3,8 +3,14 @@ import { Router, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 
 import { AuthService } from '../../../core/services/auth';
-import { AppStoreNav, StoreBrandConfig } from '../../../shared/components/app-store-nav/app-store-nav';
-import { AppStoreFooter, StoreFooterLink } from '../../../shared/components/app-store-footer/app-store-footer';
+import {
+  AppStoreNav,
+  StoreBrandConfig,
+} from '../../../shared/components/app-store-nav/app-store-nav';
+import {
+  AppStoreFooter,
+  StoreFooterLink,
+} from '../../../shared/components/app-store-footer/app-store-footer';
 
 @Component({
   selector: 'app-store-layout',

@@ -1,0 +1,248 @@
+<!-- Create / Edit dialog -->
+<app-modal [(visible)]="dialogVisible" [title]="dialogTitle()" [width]="'min(94vw, 44rem)'">
+  <div class="user-form">
+    @if (dialogError()) {
+      <div class="user-form__alert" role="alert" data-testid="user-dialog-error">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <span>{{ dialogError() }}</span>
+      </div>
+    }
+
+    <div class="user-form__section">
+      <div class="user-form__section-heading">
+        <span class="user-form__section-index">01</span>
+        <div>
+          <h3>Identidad</h3>
+          <p>Datos visibles para auditoria y operacion diaria.</p>
+        </div>
+      </div>
+
+      <div class="user-form__grid">
+        <!-- Email -->
+        <div class="user-form__field user-form__field--wide">
+          <label for="user-email" class="user-form__label">
+            Email <span class="user-form__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="user-email"
+            pInputText
+            type="email"
+            [ngModel]="formEmail()"
+            (ngModelChange)="formEmail.set($event); formSubmitted.set(false)"
+            placeholder="correo@ejemplo.com"
+            class="w-full"
+            [class.ng-invalid]="formSubmitted() && !formEmailValid()"
+            autocomplete="email"
+            [disabled]="isEditMode()"
+          />
+          @if (formSubmitted() && !formEmailValid() && formEmail().trim().length > 0) {
+            <small class="user-form__error"
+              >Ingrese un email valido (ej: correo@ejemplo.com).</small
+            >
+          }
+          @if (formSubmitted() && !formEmail().trim()) {
+            <small class="user-form__error">El email es obligatorio.</small>
+          }
+        </div>
+
+        <!-- Password -->
+        <div class="user-form__field user-form__field--wide">
+          <label for="user-password" class="user-form__label">
+            Contrasena
+            @if (!isEditMode()) {
+              <span class="user-form__required" aria-hidden="true">*</span>
+            }
+          </label>
+          <input
+            id="user-password"
+            pInputText
+            type="password"
+            [ngModel]="formPassword()"
+            (ngModelChange)="formPassword.set($event); formSubmitted.set(false)"
+            [placeholder]="isEditMode() ? 'Dejar en blanco para mantener' : 'Min. 8 caracteres'"
+            class="w-full"
+            [class.ng-invalid]="formSubmitted() && !formPasswordValid()"
+            autocomplete="new-password"
+          />
+          @if (formSubmitted() && !formPasswordValid()) {
+            <small class="user-form__error">La contrasena debe tener al menos 8 caracteres.</small>
+          }
+          @if (isEditMode()) {
+            <small class="user-form__hint"
+              >Deje en blanco para mantener la contrasena actual.</small
+            >
+          }
+        </div>
+
+        <!-- First name -->
+        <div class="user-form__field">
+          <label for="user-first-name" class="user-form__label">
+            Nombre <span class="user-form__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="user-first-name"
+            pInputText
+            type="text"
+            [ngModel]="formFirstName()"
+            (ngModelChange)="formFirstName.set($event); formSubmitted.set(false)"
+            placeholder="Nombre"
+            class="w-full"
+            [class.ng-invalid]="formSubmitted() && !formFirstName().trim()"
+          />
+          @if (formSubmitted() && !formFirstName().trim()) {
+            <small class="user-form__error">El nombre es obligatorio.</small>
+          }
+        </div>
+
+        <!-- Last name -->
+        <div class="user-form__field">
+          <label for="user-last-name" class="user-form__label">
+            Apellido <span class="user-form__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="user-last-name"
+            pInputText
+            type="text"
+            [ngModel]="formLastName()"
+            (ngModelChange)="formLastName.set($event); formSubmitted.set(false)"
+            placeholder="Apellido"
+            class="w-full"
+            [class.ng-invalid]="formSubmitted() && !formLastName().trim()"
+          />
+          @if (formSubmitted() && !formLastName().trim()) {
+            <small class="user-form__error">El apellido es obligatorio.</small>
+          }
+        </div>
+
+        <!-- Phone -->
+        <div class="user-form__field user-form__field--wide">
+          <label for="user-phone" class="user-form__label">Telefono</label>
+          <input
+            id="user-phone"
+            pInputText
+            type="tel"
+            [ngModel]="formPhone()"
+            (ngModelChange)="formPhone.set($event)"
+            placeholder="+54 351 123 4567"
+            class="w-full"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="user-form__section user-form__section--access">
+      <div class="user-form__section-heading">
+        <span class="user-form__section-index">02</span>
+        <div>
+          <h3>Permisos y alcance</h3>
+          <p>El rol define permisos; la sucursal limita la operacion local.</p>
+        </div>
+      </div>
+
+      <div class="user-form__access-grid">
+        <!-- Role (always shown) -->
+        <div class="user-form__field user-form__access-field">
+          <label for="user-role" class="user-form__label">
+            Rol <span class="user-form__required" aria-hidden="true">*</span>
+          </label>
+          <p-select
+            inputId="user-role"
+            [options]="roleOptions"
+            [ngModel]="formRole()"
+            (ngModelChange)="onRoleChange($event); formSubmitted.set(false)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar rol"
+            class="w-full user-form__select user-form__select--rich"
+            [style]="{ width: '100%' }"
+            [appendTo]="'body'"
+            panelStyleClass="user-form__select-panel"
+          >
+            <ng-template #selectedItem let-option>
+              <span class="user-form__selected-option">
+                <i [class]="roleIcon(option.value)" aria-hidden="true"></i>
+                <span>{{ option.label }}</span>
+              </span>
+            </ng-template>
+            <ng-template #item let-option>
+              <div class="user-form__option">
+                <i [class]="roleIcon(option.value)" aria-hidden="true"></i>
+                <div>
+                  <strong>{{ option.label }}</strong>
+                  <span>{{ roleDescription(option.value) }}</span>
+                </div>
+              </div>
+            </ng-template>
+          </p-select>
+          <small class="user-form__hint">{{ roleDescription(formRole()) }}</small>
+        </div>
+
+        <!-- Branch (conditional: shown only for MANAGER and EMPLOYEE) -->
+        @if (showBranchField()) {
+          <div class="user-form__field user-form__access-field">
+            <label for="user-branch" class="user-form__label">
+              Sucursal <span class="user-form__required" aria-hidden="true">*</span>
+            </label>
+            <p-select
+              inputId="user-branch"
+              [options]="branches()"
+              [ngModel]="formBranchId()"
+              (ngModelChange)="onBranchChange($event); formSubmitted.set(false)"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Seleccionar sucursal"
+              class="w-full user-form__select user-form__select--rich"
+              [style]="{ width: '100%' }"
+              [showClear]="true"
+              [disabled]="branches().length === 0"
+              [appendTo]="'body'"
+              panelStyleClass="user-form__select-panel user-form__branch-panel"
+              [class.ng-invalid]="formSubmitted() && !formBranchValid()"
+            >
+              <ng-template #selectedItem let-branch>
+                <span class="user-form__selected-option">
+                  <i class="pi pi-building" aria-hidden="true"></i>
+                  <span>{{ branch.name }}</span>
+                </span>
+              </ng-template>
+              <ng-template #item let-branch>
+                <div class="user-form__option">
+                  <i class="pi pi-building" aria-hidden="true"></i>
+                  <div>
+                    <strong>{{ branch.name }}</strong>
+                    <span>{{ branch.address || 'Sucursal operativa' }}</span>
+                  </div>
+                </div>
+              </ng-template>
+            </p-select>
+            @if (formSubmitted() && !formBranchValid()) {
+              <small class="user-form__error">Debe seleccionar una sucursal para este rol.</small>
+            }
+            @if (branches().length === 0) {
+              <small class="user-form__hint">No hay sucursales disponibles.</small>
+            } @else {
+              <small class="user-form__hint"
+                >La seleccion define el alcance local del usuario.</small
+              >
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Footer: form actions -->
+    <div class="user-form__actions" modalFooter>
+      <app-button variant="ghost" (click)="closeDialog()" [disabled]="submitting()">
+        Cancelar
+      </app-button>
+      <app-button
+        [icon]="'pi pi-check'"
+        (click)="submit()"
+        [disabled]="submitting()"
+        [loading]="submitting()"
+      >
+        {{ isEditMode() ? 'Guardar cambios' : 'Crear usuario' }}
+      </app-button>
+    </div>
+  </div>
+</app-modal>

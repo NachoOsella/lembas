@@ -3,6 +3,8 @@ package com.dietetica.lembas.auth.service;
 import com.dietetica.lembas.auth.dto.AuthResponse;
 import com.dietetica.lembas.auth.dto.LoginRequest;
 import com.dietetica.lembas.auth.dto.RegisterRequest;
+import com.dietetica.lembas.auth.model.RefreshToken;
+import com.dietetica.lembas.auth.repository.RefreshTokenRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
@@ -19,12 +21,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,12 +54,15 @@ class AuthServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private RefreshTokenRepository refreshTokenRepository;
+
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
         authService = new AuthService(userRepository, new AuthMapper(), jwtTokenProvider, passwordEncoder,
-                new UserBranchPolicy());
+                new UserBranchPolicy(), refreshTokenRepository);
     }
 
     @Nested
@@ -348,6 +356,83 @@ class AuthServiceTest {
             // The same error properties are verified in the wrong-password test above
             // (Should_throwInvalidCredentials_when_passwordDoesNotMatch),
             // which also asserts code=INVALID_CREDENTIALS and status=UNAUTHORIZED.
+        }
+    }
+
+    @Nested
+    class Refresh {
+
+        private static final String OLD_REFRESH_TOKEN = "old-refresh-token";
+        private static final String NEW_REFRESH_TOKEN = "new-refresh-token";
+        private static final String NEW_ACCESS_TOKEN = "new-access-token";
+
+        private final User storedUser = new User(1L, null, "frodo@lembas.com", "hash",
+                "Frodo", "Baggins", null, Role.CUSTOMER, true, null, null);
+
+        @Test
+        void Should_rotateRefreshToken_when_refreshTokenIsActive() {
+            io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
+            RefreshToken storedToken = new RefreshToken(storedUser, hashForTest(OLD_REFRESH_TOKEN),
+                    Instant.now().plusSeconds(600), Instant.now().minusSeconds(60));
+
+            when(jwtTokenProvider.validateToken(OLD_REFRESH_TOKEN)).thenReturn(claims);
+            when(jwtTokenProvider.isRefreshToken(claims)).thenReturn(true);
+            when(claims.getSubject()).thenReturn("1");
+            when(refreshTokenRepository.findByTokenHash(hashForTest(OLD_REFRESH_TOKEN))).thenReturn(Optional.of(storedToken));
+            when(jwtTokenProvider.createAccessToken(storedUser)).thenReturn(NEW_ACCESS_TOKEN);
+            when(jwtTokenProvider.createRefreshToken(storedUser)).thenReturn(NEW_REFRESH_TOKEN);
+
+            AuthResponse response = authService.refresh(OLD_REFRESH_TOKEN);
+
+            assertThat(response.token()).isEqualTo(NEW_ACCESS_TOKEN);
+            assertThat(response.refreshToken()).isEqualTo(NEW_REFRESH_TOKEN);
+            assertThat(response.user().email()).isEqualTo("frodo@lembas.com");
+            assertThat(storedToken.getRevokedAt()).isNotNull();
+            assertThat(storedToken.getRotatedAt()).isNotNull();
+            verify(refreshTokenRepository).save(any(RefreshToken.class));
+        }
+
+        @Test
+        void Should_rejectRefreshToken_when_tokenWasAlreadyRevoked() {
+            io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
+            RefreshToken storedToken = new RefreshToken(storedUser, hashForTest(OLD_REFRESH_TOKEN),
+                    Instant.now().plusSeconds(600), Instant.now().minusSeconds(60));
+            storedToken.revoke(Instant.now().minusSeconds(5));
+
+            when(jwtTokenProvider.validateToken(OLD_REFRESH_TOKEN)).thenReturn(claims);
+            when(jwtTokenProvider.isRefreshToken(claims)).thenReturn(true);
+            when(refreshTokenRepository.findByTokenHash(hashForTest(OLD_REFRESH_TOKEN))).thenReturn(Optional.of(storedToken));
+
+            assertThatThrownBy(() -> authService.refresh(OLD_REFRESH_TOKEN))
+                    .isInstanceOf(DomainException.class)
+                    .hasFieldOrPropertyWithValue("code", "INVALID_REFRESH_TOKEN")
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.UNAUTHORIZED);
+
+            verify(refreshTokenRepository).revokeActiveTokensByUser(eq(storedUser), any(Instant.class));
+            verify(jwtTokenProvider, never()).createAccessToken(any());
+        }
+
+        @Test
+        void Should_rejectRefreshToken_when_tokenTypeIsNotRefresh() {
+            io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
+            when(jwtTokenProvider.validateToken(OLD_REFRESH_TOKEN)).thenReturn(claims);
+            when(jwtTokenProvider.isRefreshToken(claims)).thenReturn(false);
+
+            assertThatThrownBy(() -> authService.refresh(OLD_REFRESH_TOKEN))
+                    .isInstanceOf(DomainException.class)
+                    .hasFieldOrPropertyWithValue("code", "INVALID_REFRESH_TOKEN");
+
+            verify(refreshTokenRepository, never()).findByTokenHash(anyString());
+        }
+
+        /** Hashes tokens the same way as AuthService for repository lookup assertions. */
+        private String hashForTest(String rawToken) {
+            try {
+                java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+                return java.util.HexFormat.of().formatHex(digest.digest(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+            } catch (java.security.NoSuchAlgorithmException e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 

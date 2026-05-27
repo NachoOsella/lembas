@@ -23,9 +23,7 @@ export class AppButton {
   protected readonly isDisabled = computed(() => this.disabled() || this.loading());
 
   /** Builds PrimeNG-compatible classes for the selected semantic variant and size. */
-  protected readonly buttonClass = computed(() => [
-    'app-button',
-    `app-button--${this.variant()}`,
-    `app-button--${this.size()}`,
-  ].join(' '));
+  protected readonly buttonClass = computed(() =>
+    ['app-button', `app-button--${this.variant()}`, `app-button--${this.size()}`].join(' '),
+  );
 }

@@ -80,10 +80,21 @@ export class Login {
         };
         const response = await lastValueFrom(this.auth.login(request));
         this.auth.saveAuthResponse(response);
-        await this.router.navigate([this.buildRedirectPath(response.user.role)]);
+
+        try {
+          await this.router.navigate([this.buildRedirectPath(response.user.role)]);
+        } catch (navigationError) {
+          // Keep the authenticated session even if a lazy route chunk fails to load.
+          console.error('Login succeeded, but post-login navigation failed.', navigationError);
+          this.generalError.set('Sesion iniciada. Recargue la pagina si no fue redirigido.');
+        }
       } catch (err: unknown) {
         this.auth.clearAuth();
-        this.generalError.set(this.buildBackendErrorMessage(err));
+        console.error('Login request failed before authentication completed.', err);
+        const message = this.buildBackendErrorMessage(err);
+        if (message) {
+          this.generalError.set(message);
+        }
       } finally {
         this.submitting.set(false);
       }
@@ -91,9 +102,13 @@ export class Login {
   }
 
   /** Converts backend API error codes into user-facing login messages. */
-  private buildBackendErrorMessage(err: unknown): string {
+  private buildBackendErrorMessage(err: unknown): string | null {
     if (!(err instanceof HttpErrorResponse)) {
       return 'Error al iniciar sesion. Intente nuevamente';
+    }
+
+    if (err.status === 0 || err.status >= 500) {
+      return null;
     }
 
     const apiError = err.error as ApiErrorResponse | undefined;

@@ -121,7 +121,10 @@ export class Register {
         });
       } catch (err: unknown) {
         this.registrationSucceeded.set(false);
-        this.generalError.set(this.buildBackendErrorMessage(err));
+        const message = this.buildBackendErrorMessage(err);
+        if (message) {
+          this.generalError.set(message);
+        }
       } finally {
         this.submitting.set(false);
       }
@@ -131,9 +134,13 @@ export class Register {
   /**
    * Converts backend API error codes into user-facing registration messages.
    */
-  private buildBackendErrorMessage(err: unknown): string {
+  private buildBackendErrorMessage(err: unknown): string | null {
     if (!(err instanceof HttpErrorResponse)) {
       return 'Error al registrar. Intente nuevamente';
+    }
+
+    if (err.status === 0 || err.status >= 500) {
+      return null;
     }
 
     const apiError = err.error as ApiErrorResponse | undefined;
@@ -178,4 +185,3 @@ export class Register {
     return labels[field] ?? field;
   }
 }
-

@@ -1,5 +1,7 @@
 package com.dietetica.lembas;
 
+import com.dietetica.lembas.auth.repository.RefreshTokenRepository;
+import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.users.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +23,18 @@ class LembasBackendApplicationTests {
      */
     @MockitoBean
     private UserRepository userRepository;
+
+    /**
+     * Provides a refresh token repository collaborator while JPA repositories are disabled.
+     */
+    @MockitoBean
+    private RefreshTokenRepository refreshTokenRepository;
+
+    /**
+     * Provides a branch repository collaborator while JPA repositories are disabled.
+     */
+    @MockitoBean
+    private BranchRepository branchRepository;
 
     /**
      * Keeps a fast smoke test for the application context without external services.

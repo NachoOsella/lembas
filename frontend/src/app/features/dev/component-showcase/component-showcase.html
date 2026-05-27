@@ -1,5 +1,4 @@
 <main class="showcase-root">
-
   <!-- ════════════════════════════════════════════════════════════════ -->
   <!--  Hero                                                          -->
   <!-- ════════════════════════════════════════════════════════════════ -->
@@ -19,7 +18,9 @@
   <section class="showcase-section" aria-labelledby="sec-feedback">
     <div class="showcase-section-head">
       <h2 id="sec-feedback" class="showcase-section-title">Feedback y estados</h2>
-      <p class="showcase-section-desc">Loading, vacio y error: los tres estados que toda pantalla necesita.</p>
+      <p class="showcase-section-desc">
+        Loading, vacio y error: los tres estados que toda pantalla necesita.
+      </p>
     </div>
 
     <div class="showcase-row showcase-row--3col">
@@ -81,7 +82,9 @@
   <section class="showcase-section" aria-labelledby="sec-buttons">
     <div class="showcase-section-head">
       <h2 id="sec-buttons" class="showcase-section-title">Botones</h2>
-      <p class="showcase-section-desc">Las cuatro variantes del sistema: primario, secundario, ghost y peligro.</p>
+      <p class="showcase-section-desc">
+        Las cuatro variantes del sistema: primario, secundario, ghost y peligro.
+      </p>
     </div>
     <div class="showcase-spot">
       <span class="showcase-spot-label">Button -- variantes</span>
@@ -120,19 +123,27 @@
   <section class="showcase-section" aria-labelledby="sec-dialogs">
     <div class="showcase-section-head">
       <h2 id="sec-dialogs" class="showcase-section-title">Dialogos y modales</h2>
-      <p class="showcase-section-desc">Confirmaciones destructivas y modales genericos con slots.</p>
+      <p class="showcase-section-desc">
+        Confirmaciones destructivas y modales genericos con slots.
+      </p>
     </div>
     <div class="showcase-row showcase-row--2col">
       <div class="showcase-spot showcase-spot--elevated-dark">
         <span class="showcase-spot-label--dark">ConfirmDialog</span>
-        <p class="showcase-spot-hint--dark">Para bajas, cancelaciones o cambios que necesiten confirmacion.</p>
-        <app-button variant="primary" size="md" icon="pi pi-external-link" (click)="openDialog()">Abrir dialogo</app-button>
+        <p class="showcase-spot-hint--dark">
+          Para bajas, cancelaciones o cambios que necesiten confirmacion.
+        </p>
+        <app-button variant="primary" size="md" icon="pi pi-external-link" (click)="openDialog()"
+          >Abrir dialogo</app-button
+        >
         <span class="showcase-spot-feedback--dark">{{ lastAction() }}</span>
       </div>
       <div class="showcase-spot showcase-spot--elevated">
         <span class="showcase-spot-label">AppModal</span>
         <p class="showcase-spot-hint">Modal generico con slots para header, body y footer.</p>
-        <app-button variant="secondary" size="md" icon="pi pi-window-maximize" (click)="openModal()">Abrir modal</app-button>
+        <app-button variant="secondary" size="md" icon="pi pi-window-maximize" (click)="openModal()"
+          >Abrir modal</app-button
+        >
       </div>
     </div>
   </section>
@@ -143,7 +154,9 @@
   <section class="showcase-section" aria-labelledby="sec-forms">
     <div class="showcase-section-head">
       <h2 id="sec-forms" class="showcase-section-title">Formularios</h2>
-      <p class="showcase-section-desc">Inputs, hints y campos compuestos para formularios del sistema.</p>
+      <p class="showcase-section-desc">
+        Inputs, hints y campos compuestos para formularios del sistema.
+      </p>
     </div>
     <div class="showcase-row showcase-row--3col">
       <div class="showcase-spot">
@@ -191,7 +204,9 @@
   <section class="showcase-section" aria-labelledby="sec-nav">
     <div class="showcase-section-head">
       <h2 id="sec-nav" class="showcase-section-title">Navegacion</h2>
-      <p class="showcase-section-desc">Breadcrumbs y tabs para orientar al usuario dentro de la aplicacion.</p>
+      <p class="showcase-section-desc">
+        Breadcrumbs y tabs para orientar al usuario dentro de la aplicacion.
+      </p>
     </div>
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppBreadcrumb</span>
@@ -199,8 +214,14 @@
     </div>
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppTabs</span>
-      <app-tabs [items]="tabItems" [activeIndex]="activeTab()" (tabChange)="handleTabChange($event)" />
-      <p class="showcase-spot-feedback">Tab activo: <strong>{{ tabItems[activeTab()]?.label }}</strong></p>
+      <app-tabs
+        [items]="tabItems"
+        [activeIndex]="activeTab()"
+        (tabChange)="handleTabChange($event)"
+      />
+      <p class="showcase-spot-feedback">
+        Tab activo: <strong>{{ tabItems[activeTab()]?.label }}</strong>
+      </p>
     </div>
   </section>
 
@@ -229,7 +250,9 @@
   <section class="showcase-section" aria-labelledby="sec-data">
     <div class="showcase-section-head">
       <h2 id="sec-data" class="showcase-section-title">Datos</h2>
-      <p class="showcase-section-desc">Tablas, paginacion y tarjetas estadisticas para visualizar informacion.</p>
+      <p class="showcase-section-desc">
+        Tablas, paginacion y tarjetas estadisticas para visualizar informacion.
+      </p>
     </div>
 
     <div class="showcase-spot">
@@ -304,7 +327,9 @@
   <section class="showcase-section" aria-labelledby="sec-screens">
     <div class="showcase-section-head">
       <h2 id="sec-screens" class="showcase-section-title">Pantallas navegables</h2>
-      <p class="showcase-section-desc">Acceso directo a las pantallas principales del sistema por rol.</p>
+      <p class="showcase-section-desc">
+        Acceso directo a las pantallas principales del sistema por rol.
+      </p>
     </div>
 
     <div class="screen-grid">
@@ -364,15 +389,16 @@
   (cancelled)="cancelDialog()"
 />
 
-<app-modal
-  [(visible)]="modalVisible"
-  title="Modal generico"
-  width="min(92vw, 32rem)"
->
-  <p>Este es un modal generico reutilizable. Podes proyectar cualquier contenido en el body y usar el slot <code>modalFooter</code> para acciones personalizadas.</p>
+<app-modal [(visible)]="modalVisible" title="Modal generico" width="min(92vw, 32rem)">
+  <p>
+    Este es un modal generico reutilizable. Podes proyectar cualquier contenido en el body y usar el
+    slot <code>modalFooter</code> para acciones personalizadas.
+  </p>
 
   <div modalFooter>
     <app-button variant="ghost" size="sm" (click)="modalVisible.set(false)">Cerrar</app-button>
-    <app-button variant="primary" size="sm" icon="pi pi-check" (click)="modalVisible.set(false)">Aceptar</app-button>
+    <app-button variant="primary" size="sm" icon="pi pi-check" (click)="modalVisible.set(false)"
+      >Aceptar</app-button
+    >
   </div>
 </app-modal>

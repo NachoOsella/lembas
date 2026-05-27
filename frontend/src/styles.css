@@ -1,8 +1,8 @@
-@import "tailwindcss";
-@import "primeicons/primeicons.css";
+@import 'tailwindcss';
+@import 'primeicons/primeicons.css';
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
   --tracking-tight: -0.01em;
 
   --color-primary: #2f8d72;
@@ -19,13 +19,9 @@
   --radius-card: 12px;
   --radius-pill: 50px;
 
-  --shadow-card:
-    0 0 0.5px 0 rgba(0, 0, 0, 0.14),
-    0 1px 1px 0 rgba(0, 0, 0, 0.24);
+  --shadow-card: 0 0 0.5px 0 rgba(0, 0, 0, 0.14), 0 1px 1px 0 rgba(0, 0, 0, 0.24);
   --shadow-nav:
-    0 1px 3px rgba(0, 0, 0, 0.1),
-    0 2px 2px rgba(0, 0, 0, 0.06),
-    0 0 2px rgba(0, 0, 0, 0.07);
+    0 1px 3px rgba(0, 0, 0, 0.1), 0 2px 2px rgba(0, 0, 0, 0.06), 0 0 2px rgba(0, 0, 0, 0.07);
 
   --spacing-xl: clamp(1.25rem, 4vw, 3rem);
   --spacing-2xl: clamp(2rem, 6vw, 4rem);

@@ -1,16 +1,20 @@
 :host {
   display: block;
+  min-width: 0;
 }
 
 .search-bar {
   position: relative;
   display: flex;
+  min-width: 0;
+  width: 100%;
   align-items: center;
   gap: 0.35rem;
 }
 
 .search-bar app-input {
   flex: 1;
+  min-width: 0;
 }
 
 .search-bar__clear {
@@ -21,7 +25,9 @@
   color: rgba(0, 0, 0, 0.38);
   width: 2rem;
   height: 2rem;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 :host ::ng-deep .search-bar__clear .p-button:hover {

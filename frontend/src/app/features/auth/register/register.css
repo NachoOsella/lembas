@@ -29,7 +29,7 @@
 .register-hero::before,
 .register-hero::after {
   position: absolute;
-  content: "";
+  content: '';
   border-radius: 999px;
   pointer-events: none;
 }

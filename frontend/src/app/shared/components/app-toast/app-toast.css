@@ -62,7 +62,9 @@
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 50%;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 :host ::ng-deep .app-toast .p-toast-icon-close:hover {

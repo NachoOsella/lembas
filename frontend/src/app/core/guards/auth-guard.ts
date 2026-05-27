@@ -75,6 +75,33 @@ export const guestGuard: CanActivateFn = (_route, _state) => {
 };
 
 /**
+ * Route guard that allows access only to ADMIN users within the admin area.
+ *
+ * <p>MANAGER and EMPLOYEE roles are silently redirected to the admin
+ * dashboard. This guard is applied on admin child routes that only an
+ * ADMIN should access (e.g. {@code /admin/users}).</p>
+ *
+ * @returns true when the user is authenticated and has the ADMIN role, a
+ *          redirect to {@code /admin/dashboard} for non-ADMIN staff, or a
+ *          redirect to {@code /auth/login} for unauthenticated users
+ */
+export const adminOnlyGuard: CanActivateFn = (_route, _state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.isAuthenticated()) {
+    return router.createUrlTree(['/auth/login']);
+  }
+
+  if (authService.getUserRole() === 'ADMIN') {
+    return true;
+  }
+
+  // MANAGER or EMPLOYEE -- silently redirect to dashboard
+  return router.createUrlTree(['/admin/dashboard']);
+};
+
+/**
  * Route guard that allows access only to CUSTOMER users.
  *
  * @returns true when the user is authenticated and has the CUSTOMER role

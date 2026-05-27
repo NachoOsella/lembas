@@ -30,7 +30,10 @@ export const routes: Routes = [
   },
   {
     path: 'dev/ui',
-    loadComponent: () => import('./features/dev/component-showcase/component-showcase').then((m) => m.ComponentShowcase),
+    loadComponent: () =>
+      import('./features/dev/component-showcase/component-showcase').then(
+        (m) => m.ComponentShowcase,
+      ),
   },
   {
     path: '**',

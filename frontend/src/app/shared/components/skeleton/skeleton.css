@@ -16,7 +16,7 @@
 }
 
 :host-context(.bg-primary-dark) ::ng-deep .app-skeleton,
-:host-context([class*="bg-primary-dark"]) ::ng-deep .app-skeleton,
+:host-context([class*='bg-primary-dark']) ::ng-deep .app-skeleton,
 :host-context(.text-white) ::ng-deep .app-skeleton {
   background: rgba(255, 255, 255, 0.12);
 }

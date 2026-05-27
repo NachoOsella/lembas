@@ -1,0 +1,88 @@
+<div class="users-page">
+  <section class="users-page__hero" aria-labelledby="users-title">
+    <div class="users-page__hero-copy">
+      <p class="users-page__eyebrow">Panel interno</p>
+      <h1 id="users-title">Usuarios</h1>
+      <p>Gestion de accesos internos, roles operativos y alcance por sucursal.</p>
+    </div>
+
+    <div class="users-page__hero-actions">
+      <app-button icon="pi pi-plus" (click)="createUser.emit()"> Crear usuario </app-button>
+    </div>
+  </section>
+
+  <app-metric-strip class="users-page__metrics" [metrics]="userMetrics()" />
+
+  <section class="users-page__directory" aria-label="Directorio de usuarios internos">
+    <app-data-table
+      [data]="users()"
+      [columns]="userColumns"
+      [loading]="loading()"
+      [sortable]="true"
+      [paginated]="true"
+      [lazy]="true"
+      [totalRecords]="displayTotalRecords()"
+      [first]="first()"
+      [rows]="pageSize()"
+      [sortField]="sortField()"
+      [sortOrder]="sortOrder()"
+      (pageChange)="onPageChange($event)"
+      (sortChange)="onSort($event)"
+      [emptyTitle]="searchQuery().trim() ? 'Sin resultados' : 'No hay usuarios'"
+      [emptyDescription]="emptyDescription()"
+    >
+      <ng-template #toolbar>
+        <div class="table-toolbar__info">
+          <p class="table-toolbar__kicker">Directorio operativo</p>
+          <h2 class="table-toolbar__title">Equipo con acceso al sistema</h2>
+        </div>
+        <div class="table-toolbar__actions">
+          <app-search-bar
+            [(value)]="searchQuery"
+            placeholder="Buscar por nombre, email..."
+            (search)="onSearch($event)"
+            (clear)="onSearchClear()"
+          />
+        </div>
+      </ng-template>
+
+      <ng-template #body let-user let-columns="columns">
+        <tr>
+          <!-- Name cell keeps person identity scannable on wide tables. -->
+          <td>
+            <span class="user-name"> {{ user.firstName ?? '' }} {{ user.lastName ?? '' }} </span>
+          </td>
+          <td>
+            <span>{{ user.email }}</span>
+          </td>
+          <td>
+            <app-badge [tone]="roleTone(user.role)">
+              {{ roleLabel(user.role) }}
+            </app-badge>
+          </td>
+          <td>
+            <span>{{ branchName()?.(user.branchId) ?? '—' }}</span>
+          </td>
+          <td>
+            <p-toggleswitch
+              [ngModel]="user.enabled"
+              (ngModelChange)="toggleStatus(user)"
+              [disabled]="user.id === 1"
+              [attr.aria-label]="'Cambiar estado de ' + user.email"
+            />
+          </td>
+          <td>
+            <button
+              pButton
+              pRipple
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm p-button-rounded"
+              [attr.aria-label]="'Editar ' + user.email"
+              (click)="editUser.emit(user)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+    </app-data-table>
+  </section>
+</div>

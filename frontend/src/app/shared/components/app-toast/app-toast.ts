@@ -1,6 +1,5 @@
 import { Component, input } from '@angular/core';
 import { Toast } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
 
 /**
  * Lembas-styled toast notification wrapper over PrimeNG Toast.
@@ -11,9 +10,10 @@ import { MessageService } from 'primeng/api';
   imports: [Toast],
   templateUrl: './app-toast.html',
   styleUrl: './app-toast.css',
-  providers: [MessageService],
 })
 export class AppToast {
-  readonly position = input<'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center'>('top-right');
+  readonly position = input<
+    'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center'
+  >('top-right');
   readonly life = input(4000);
 }

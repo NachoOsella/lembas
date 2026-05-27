@@ -18,9 +18,19 @@ export class AppPagination {
   readonly showCurrentPageReport = input(true);
   readonly currentPageReportTemplate = input('{first}-{last} de {totalRecords}');
 
-  readonly pageChange = output<{ first: number; rows: number; page?: number; pageCount?: number }>();
+  readonly pageChange = output<{
+    first: number;
+    rows: number;
+    page?: number;
+    pageCount?: number;
+  }>();
 
-  protected onPageChange(event: { first?: number; rows?: number; page?: number; pageCount?: number }): void {
+  protected onPageChange(event: {
+    first?: number;
+    rows?: number;
+    page?: number;
+    pageCount?: number;
+  }): void {
     const first = event.first ?? 0;
     const rows = event.rows ?? this.rows();
     this.first.set(first);

@@ -2,6 +2,7 @@ package com.dietetica.lembas.auth.web;
 
 import com.dietetica.lembas.auth.dto.AuthResponse;
 import com.dietetica.lembas.auth.dto.LoginRequest;
+import com.dietetica.lembas.auth.dto.RefreshTokenRequest;
 import com.dietetica.lembas.auth.dto.RegisterRequest;
 import com.dietetica.lembas.auth.dto.UserDto;
 import com.dietetica.lembas.auth.service.AuthService;
@@ -172,6 +173,48 @@ class AuthControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.code").value("ACCOUNT_DISABLED"));
+    }
+
+    /**
+     * Verifies that a valid refresh request returns a rotated token pair.
+     */
+    @Test
+    void Should_returnOkAuthResponse_when_refreshTokenIsValid() throws Exception {
+        AuthResponse response = new AuthResponse(
+                "new-access-token",
+                "new-refresh-token",
+                new UserDto(1L, "frodo@lembas.com", "Frodo", "Baggins", Role.CUSTOMER, null, null)
+        );
+        when(authService.refresh("old-refresh-token")).thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RefreshTokenRequest("old-refresh-token"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("new-access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"))
+                .andExpect(jsonPath("$.user.email").value("frodo@lembas.com"));
+
+        verify(authService).refresh("old-refresh-token");
+    }
+
+    /**
+     * Verifies invalid refresh tokens return 401 with the documented error code.
+     */
+    @Test
+    void Should_returnUnauthorized_when_refreshTokenIsInvalid() throws Exception {
+        when(authService.refresh("bad-refresh-token")).thenThrow(new DomainException(
+                "INVALID_REFRESH_TOKEN",
+                HttpStatus.UNAUTHORIZED,
+                "Invalid or expired refresh token"
+        ));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RefreshTokenRequest("bad-refresh-token"))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.code").value("INVALID_REFRESH_TOKEN"));
     }
 
     /**

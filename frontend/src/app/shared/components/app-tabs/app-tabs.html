@@ -16,5 +16,8 @@
       <span>{{ item.label }}</span>
     </button>
   }
-  <div class="app-tabs__indicator" [style.transform]="'translateX(' + (activeIndex() * 100) + '%)'"></div>
+  <div
+    class="app-tabs__indicator"
+    [style.transform]="'translateX(' + activeIndex() * 100 + '%)'"
+  ></div>
 </div>

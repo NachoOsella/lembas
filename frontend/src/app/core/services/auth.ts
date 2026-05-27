@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, WritableSignal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap, throwError } from 'rxjs';
 
 /** Key used to persist the JWT access token in localStorage. */
 const ACCESS_TOKEN_KEY = 'lembas_access_token';
@@ -75,6 +75,11 @@ export interface AuthResponse {
   token: string;
   refreshToken?: string | null;
   user: AuthUser;
+}
+
+/** Request payload for POST /api/auth/refresh. */
+export interface RefreshTokenRequest {
+  refreshToken: string;
 }
 
 /**
@@ -192,6 +197,27 @@ export class AuthService {
   }
 
   /**
+   * Exchanges the stored refresh token for a rotated token pair.
+   *
+   * <p>The backend invalidates the presented refresh token and returns a new
+   * access token plus a replacement refresh token. The response is persisted
+   * immediately so subsequent requests use the fresh credentials.</p>
+   *
+   * @returns an Observable emitting the rotated authentication response
+   */
+  refreshSession(): Observable<AuthResponse> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    const request: RefreshTokenRequest = { refreshToken };
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/refresh`, request)
+      .pipe(tap((response) => this.saveAuthResponse(response)));
+  }
+
+  /**
    * Logs out the current user by clearing all auth state and persisted data.
    *
    * <p>Stateless JWT logout: tokens are simply removed client-side. No backend
@@ -208,6 +234,11 @@ export class AuthService {
    */
   getAccessToken(): string | null {
     return this.accessToken();
+  }
+
+  /** Returns the current refresh token, or null if none is available. */
+  getRefreshToken(): string | null {
+    return this.refreshToken();
   }
 
   /**

@@ -3,18 +3,39 @@
 }
 
 .page-header {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 1rem;
-  padding: clamp(1.25rem, 4vw, 2.25rem);
-  border-radius: 12px;
+  gap: clamp(1rem, 3vw, 2rem);
+  min-height: clamp(10.5rem, 22vw, 13.25rem);
+  padding: clamp(1.45rem, 4vw, 2.75rem);
+  overflow: hidden;
+  border-radius: 1.45rem;
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: -1;
+  width: min(10rem, 28vw);
+  aspect-ratio: 1;
+  background: #e9f3ea;
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: 37% 63% 45% 55%;
+  transform: rotate(-10deg);
 }
 
 .page-header--light {
   color: rgba(0, 0, 0, 0.87);
   background: #ffffff;
-  border: 1px solid rgba(7, 95, 54, 0.08);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  box-shadow:
+    0 1.25rem 3rem rgba(48, 38, 20, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .page-header--dark {
@@ -22,33 +43,49 @@
   background: #075f36;
 }
 
+.page-header--dark::after {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
 .page-header__copy {
   max-width: 46rem;
 }
 
 .page-header__eyebrow {
-  margin: 0 0 0.55rem;
-  color: #f29d52;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.8rem;
+  color: #9a5b19;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.17em;
   text-transform: uppercase;
+}
+
+.page-header__eyebrow::before {
+  content: '';
+  width: 1.7rem;
+  height: 1px;
+  background: currentColor;
 }
 
 .page-header__title {
   margin: 0;
   color: inherit;
-  font-size: clamp(1.6rem, 4vw, 3.25rem);
-  font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.045em;
+  font-size: clamp(2.1rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.07em;
 }
 
 .page-header__description {
   max-width: 42rem;
-  margin: 0.9rem 0 0;
-  color: rgba(0, 0, 0, 0.6);
-  font-size: clamp(0.95rem, 2vw, 1.12rem);
+  margin: 1rem 0 0;
+  color: rgba(0, 0, 0, 0.58);
+  font-size: clamp(0.98rem, 2vw, 1.16rem);
+  font-weight: 500;
   line-height: 1.65;
 }
 
@@ -57,14 +94,24 @@
 }
 
 .page-header__actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  align-items: center;
 }
 
 @media (max-width: 720px) {
   .page-header {
     align-items: stretch;
     flex-direction: column;
+    min-height: auto;
+    padding: clamp(1.15rem, 5vw, 1.5rem);
+  }
+
+  .page-header__actions,
+  .page-header__actions > * {
+    width: 100%;
   }
 }

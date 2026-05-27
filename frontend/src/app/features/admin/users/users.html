@@ -1,1 +1,10 @@
-<p>users works!</p>
+<!-- Toast notifications -->
+<app-toast />
+
+<app-user-list
+  [branchName]="branchNameFn"
+  (createUser)="onOpenCreate()"
+  (editUser)="onOpenEdit($event)"
+/>
+
+<app-user-form [branches]="branches()" (saved)="onSaved()" />
