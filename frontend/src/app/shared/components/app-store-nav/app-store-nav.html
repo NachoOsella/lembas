@@ -1,5 +1,5 @@
 <header class="app-store-nav sticky top-0 z-[100] w-full border-b border-[#e7e7e7] bg-[#fffaf0]/95 backdrop-blur-md transition-all duration-300">
-  <div class="app-store-nav__inner mx-auto flex h-[64px] max-w-[1440px] items-center justify-between px-4 sm:px-6 md:h-[72px] lg:px-10">
+  <div class="app-store-nav__inner mx-auto flex h-[64px] w-full max-w-[1600px] items-center justify-between px-4 sm:px-6 md:h-[72px] lg:px-10">
     <!-- Brand -->
     <a [routerLink]="brand().homeRoute" class="app-store-nav__brand group flex items-center gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f8d72] rounded-[4px]" aria-label="Ir al inicio">
       <img [src]="brand().logoUrl" alt="" width="32" height="32" class="app-store-nav__logo transition-transform duration-300 group-hover:rotate-[-8deg]" />
@@ -9,16 +9,14 @@
       </span>
     </a>
 
-    <!-- Center Navigation Links -->
-    <nav class="hidden flex-1 justify-center gap-1 md:flex" aria-label="Navegación principal">
-       <a routerLink="/store" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{exact: true}" class="nav-link rounded-full px-5 py-2 text-[14px] font-semibold tracking-[-0.01em] text-[rgba(0,0,0,0.6)] transition-all duration-200 hover:bg-[#2f8d72]/8 hover:text-[#075f36]">Inicio</a>
-       <a routerLink="/store/catalog" routerLinkActive="nav-link--active" class="nav-link rounded-full px-5 py-2 text-[14px] font-semibold tracking-[-0.01em] text-[rgba(0,0,0,0.6)] transition-all duration-200 hover:bg-[#2f8d72]/8 hover:text-[#075f36]">Catálogo</a>
-    </nav>
-
-    <!-- Actions (right) -->
-    <div class="app-store-nav__actions flex items-center gap-3">
+    <!-- Center Navigation + Search -->
+    <div class="hidden flex-1 items-center justify-center gap-5 md:flex">
+      <nav class="flex items-center gap-5" aria-label="Navegación principal">
+         <a routerLink="/store" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{exact: true}" class="nav-link rounded-full px-5 py-2 text-[14px] font-semibold tracking-[-0.01em] text-[rgba(0,0,0,0.6)] transition-all duration-200 hover:bg-[#2f8d72]/8 hover:text-[#075f36]">Inicio</a>
+         <a routerLink="/store/catalog" routerLinkActive="nav-link--active" class="nav-link rounded-full px-5 py-2 text-[14px] font-semibold tracking-[-0.01em] text-[rgba(0,0,0,0.6)] transition-all duration-200 hover:bg-[#2f8d72]/8 hover:text-[#075f36]">Catálogo</a>
+      </nav>
       @if (showSearch()) {
-        <div class="app-store-nav__search hidden lg:block mr-1 w-56">
+        <div class="app-store-nav__search w-56">
           <app-search-bar
             [placeholder]="searchPlaceholder()"
             size="sm"
@@ -26,6 +24,10 @@
           />
         </div>
       }
+    </div>
+
+    <!-- Actions (right) -->
+    <div class="app-store-nav__actions flex items-center gap-3">
 
       @if (isLoggedIn()) {
         <span class="app-store-nav__user-name hidden text-[13px] font-semibold text-[rgba(0,0,0,0.6)] md:inline-block">{{ userDisplayName() }}</span>

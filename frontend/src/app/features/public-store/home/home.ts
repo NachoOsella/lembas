@@ -20,7 +20,7 @@ import { ProductSummary } from '../../../shared/models/product';
         <div class="pointer-events-none absolute -right-20 -top-20 h-[500px] w-[500px] rounded-full bg-[#f29d52]/10 blur-3xl" aria-hidden="true"></div>
         <div class="pointer-events-none absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-[#2f8d72]/10 blur-3xl" aria-hidden="true"></div>
 
-        <div class="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1fr_0.85fr]">
+        <div class="relative mx-auto grid w-full max-w-[1600px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_0.85fr] lg:px-10">
           <section class="w-full max-w-3xl min-w-0">
             <span
               class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-50/90"
@@ -100,7 +100,7 @@ import { ProductSummary } from '../../../shared/models/product';
       <main class="relative py-16 lg:py-24">
         <!-- Recommendations marquee -->
         <section
-          class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+          class="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10"
           aria-labelledby="home-products-title"
         >
           <div class="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -150,7 +150,7 @@ import { ProductSummary } from '../../../shared/models/product';
 
         <!-- Catalog access block -->
         <section
-          class="mx-auto mt-20 max-w-7xl px-4 sm:px-6 lg:px-8"
+          class="mx-auto mt-20 w-full max-w-[1600px] px-4 sm:px-6 lg:px-10"
           aria-label="Acceso al catálogo"
         >
           <div
