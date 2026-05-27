@@ -1,6 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
+import { ButtonDirective } from 'primeng/button';
+import { Ripple } from 'primeng/ripple';
 import {
   TabItem,
   AppBadge,
@@ -10,11 +12,17 @@ import {
   AppFieldHint,
   AppFormField,
   AppInput,
+  AppMetricItem,
   AppModal,
   AppPageHeader,
   AppPagination,
   AppSearchBar,
+  AppSectionCard,
   AppStatCard,
+  AppStoreFooter,
+  AppStoreNav,
+  StoreBrandConfig,
+  StoreFooterLink,
   AppTabs,
   AppToast,
   ColumnDef,
@@ -23,7 +31,9 @@ import {
   ErrorAlert,
   LoadingSpinner,
   Skeleton,
+  StoreProductCard,
 } from '../../../shared/components';
+import { ProductSummary } from '../../../shared/models/product';
 
 interface ShowcaseLink {
   readonly label: string;
@@ -38,6 +48,7 @@ interface ShowcaseLink {
     AppBadge,
     AppBreadcrumb,
     AppButton,
+    ButtonDirective,
     AppDataTable,
     AppFieldHint,
     AppFormField,
@@ -45,8 +56,12 @@ interface ShowcaseLink {
     AppModal,
     AppPageHeader,
     AppPagination,
+    Ripple,
     AppSearchBar,
+    AppSectionCard,
     AppStatCard,
+    AppStoreFooter,
+    AppStoreNav,
     AppTabs,
     AppToast,
     ConfirmDialog,
@@ -54,6 +69,7 @@ interface ShowcaseLink {
     ErrorAlert,
     LoadingSpinner,
     Skeleton,
+    StoreProductCard,
   ],
   templateUrl: './component-showcase.html',
   styleUrl: './component-showcase.css',
@@ -111,6 +127,72 @@ export class ComponentShowcase {
     { label: 'Granola artesanal' },
   ];
 
+  // ---------------------------------------------------------------------------
+  // Section Card demo
+  // ---------------------------------------------------------------------------
+  protected readonly sectionCardTones = ['surface', 'muted', 'dark'] as const;
+
+  // ---------------------------------------------------------------------------
+  // Metrics demo
+  // ---------------------------------------------------------------------------
+  protected readonly showcaseMetrics: AppMetricItem[] = [
+    { label: 'Ventas hoy', value: '$12.450', detail: '+12% vs ayer', icon: 'pi pi-shopping-cart', tone: 'forest' },
+    { label: 'Pedidos pendientes', value: '8', detail: '3 requieren atencion', icon: 'pi pi-clock', tone: 'amber' },
+    { label: 'Stock critico', value: '5', detail: 'productos por reponer', icon: 'pi pi-exclamation-triangle', tone: 'ink' },
+    { label: 'Clientes nuevos', value: '+23', detail: 'este mes', icon: 'pi pi-user-plus', tone: 'sage' },
+  ];
+
+  // ---------------------------------------------------------------------------
+  // Store product card demo
+  // ---------------------------------------------------------------------------
+  protected readonly sampleProduct: ProductSummary = {
+    id: 1,
+    name: 'Granola artesanal con almendras',
+    description: 'Granola crocante horneada con miel organica, almendras y coco.',
+    brandName: 'Lembas',
+    salePrice: 1200,
+    onlineStatus: 'PUBLISHED',
+    imageUrl: undefined,
+    availableStock: 45,
+    categoryId: 1,
+    categoryName: 'Cereales',
+  };
+
+  protected readonly sampleProductCompact: ProductSummary = {
+    ...this.sampleProduct,
+    id: 2,
+    name: 'Miel organica de montana',
+    brandName: 'Colmenar del Valle',
+    salePrice: 850,
+    categoryName: 'Endulzantes',
+  };
+
+  // ---------------------------------------------------------------------------
+  // Store nav / footer demo
+  // ---------------------------------------------------------------------------
+  protected readonly brandConfig: StoreBrandConfig = {
+    logoUrl: '/brand/lembas-icon.svg',
+    title: 'Dietetica Lembas',
+    subtitle: 'Naturaleza en casa',
+    homeRoute: '/store',
+  };
+
+  protected readonly storeUserMenuItems: MenuItem[] = [
+    { label: 'Mi perfil', icon: 'pi pi-user', routerLink: '/customer/profile' },
+    { label: 'Mis pedidos', icon: 'pi pi-receipt', routerLink: '/customer/orders' },
+    { separator: true },
+    { label: 'Cerrar sesion', icon: 'pi pi-sign-out' },
+  ];
+
+  protected readonly footerLinks: StoreFooterLink[] = [
+    { label: 'Terminos y condiciones', path: '/terminos' },
+    { label: 'Politica de privacidad', path: '/privacidad' },
+    { label: 'Contacto', path: '/contacto' },
+    { label: '@lembasok', path: 'https://instagram.com/lembasok', external: true },
+  ];
+
+  protected readonly footerCopyright = '2026 Dietetica Lembas. Todos los derechos reservados.';
+
   protected readonly tabItems: TabItem[] = [
     { label: 'General', icon: 'pi pi-home' },
     { label: 'Pedidos', icon: 'pi pi-receipt' },
@@ -122,15 +204,29 @@ export class ComponentShowcase {
     { field: 'category', header: 'Categoria', sortable: true },
     { field: 'price', header: 'Precio', sortable: true, width: '8rem' },
     { field: 'stock', header: 'Stock', sortable: true, width: '6rem' },
+    { field: 'status', header: 'Estado', sortable: false, width: '8rem' },
+    { field: 'actions', header: 'Acciones', sortable: false, width: '7rem' },
   ];
 
+  /** Product row shape used by the showcase table. */
   protected readonly tableData = [
-    { name: 'Granola artesanal', category: 'Cereales', price: '$1.200', stock: 45 },
-    { name: 'Miel organica', category: 'Endulzantes', price: '$850', stock: 32 },
-    { name: 'Almendras tostadas', category: 'Frutos secos', price: '$2.100', stock: 18 },
-    { name: 'Yerba mate premium', category: 'Bebidas', price: '$1.450', stock: 67 },
-    { name: 'Chia organica', category: 'Semillas', price: '$780', stock: 12 },
+    { name: 'Granola artesanal', category: 'Cereales', price: '$1.200', stock: 45, status: 'PUBLISHED' },
+    { name: 'Miel organica', category: 'Endulzantes', price: '$850', stock: 32, status: 'PUBLISHED' },
+    { name: 'Almendras tostadas', category: 'Frutos secos', price: '$2.100', stock: 18, status: 'PAUSED' },
+    { name: 'Yerba mate premium', category: 'Bebidas', price: '$1.450', stock: 67, status: 'PUBLISHED' },
+    { name: 'Chia organica', category: 'Semillas', price: '$780', stock: 12, status: 'DRAFT' },
   ];
+
+  /** Maps a status to a badge tone for the table demo. */
+  protected tableStatusTone(status: string): 'success' | 'warning' | 'neutral' {
+    if (status === 'PUBLISHED') return 'success';
+    if (status === 'PAUSED') return 'warning';
+    return 'neutral';
+  }
+
+  protected tableActions(row: unknown): void {
+    this.lastAction.set(`Editar: ${(row as Record<string, string>)['name']}`);
+  }
 
   /** Opens the confirmation dialog demo. */
   protected openDialog(): void {

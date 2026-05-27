@@ -118,6 +118,31 @@
   </section>
 
   <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Contenedores                                                  -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-cards">
+    <div class="showcase-section-head">
+      <h2 id="sec-cards" class="showcase-section-title">Contenedores</h2>
+      <p class="showcase-section-desc">
+        Tarjetas contenedoras con niveles de fondo: surface, muted y dark.
+      </p>
+    </div>
+
+    <div class="showcase-row showcase-row--3col">
+      @for (tone of sectionCardTones; track tone) {
+        <div class="showcase-spot">
+          <span class="showcase-spot-label">AppSectionCard -- {{ tone }}</span>
+          <app-section-card [tone]="tone" title="{{ tone === 'dark' ? 'Fondo oscuro' : 'Fondo claro' }}" description="Tarjeta con tono {{ tone }} ideal para paneles y dashboards.">
+            <p class="text-sm" [class.text-white]="tone === 'dark'">
+              Contenido del card. Usa cualquier contenido proyectado aqui.
+            </p>
+          </app-section-card>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
   <!--  Dialogs / Modals                                              -->
   <!-- ════════════════════════════════════════════════════════════════ -->
   <section class="showcase-section" aria-labelledby="sec-dialogs">
@@ -257,15 +282,55 @@
 
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppDataTable</span>
-      <p class="showcase-spot-hint">Tabla con sorting, paginacion y empty state integrado.</p>
+      <p class="showcase-spot-hint">
+        Tabla generica con toolbar, body template personalizado, sorting y paginacion.
+        Asi se usa en categorias, usuarios y demas modulos del admin.
+      </p>
       <app-data-table
         [data]="tableData"
         [columns]="tableColumns"
+        [loading]="false"
         [sortable]="true"
-        [paginated]="false"
+        [paginated]="true"
+        [rows]="5"
+        [rowsPerPageOptions]="[5, 10, 20]"
         emptyTitle="Sin productos"
         emptyDescription="No se encontraron productos en el catalogo."
-      />
+      >
+        <ng-template #toolbar>
+          <div class="table-toolbar__info">
+            <p class="table-toolbar__kicker">Catalogo de ejemplo</p>
+            <h2 class="table-toolbar__title">Productos destacados</h2>
+          </div>
+        </ng-template>
+
+        <ng-template #body let-row>
+          <tr>
+            <td><span class="font-semibold">{{ row.name }}</span></td>
+            <td>{{ row.category }}</td>
+            <td>{{ row.price }}</td>
+            <td>
+              <span [class.text-red-600]="row.stock < 20">{{ row.stock }}</span>
+            </td>
+            <td>
+              <app-badge [tone]="tableStatusTone(row.status)">
+                {{ row.status === 'PUBLISHED' ? 'Publicado' : row.status === 'PAUSED' ? 'Pausado' : 'Borrador' }}
+              </app-badge>
+            </td>
+            <td>
+              <button
+                pButton
+                pRipple
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-rounded"
+                aria-label="Editar"
+                (click)="tableActions(row)"
+              ></button>
+            </td>
+          </tr>
+        </ng-template>
+      </app-data-table>
+      <p class="showcase-spot-feedback">{{ lastAction() }}</p>
     </div>
 
     <div class="showcase-spot">
@@ -280,44 +345,79 @@
 
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppStatCard</span>
-      <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-        <app-stat-card
-          value="$12.450"
-          label="Ventas hoy"
-          icon="pi pi-shopping-cart"
-          trend="up"
-          trendValue="+12%"
-        />
-        <app-stat-card
-          value="47"
-          label="Pedidos"
-          icon="pi pi-receipt"
-          trend="neutral"
-          trendValue="0%"
-          tone="muted"
-        />
-        <app-stat-card
-          value="128"
-          label="Productos"
-          icon="pi pi-box"
-          trend="down"
-          trendValue="-3%"
-          tone="dark"
-        />
-        <app-stat-card
-          value="98.5%"
-          label="Satisfaccion"
-          icon="pi pi-star"
-          trend="up"
-          trendValue="+2.1%"
-        />
-      </div>
+      <p class="showcase-spot-hint">
+        Strip responsivo de indicadores numericos con tonos semanticos.
+        Reemplaza al anterior componente de tarjeta individual.
+      </p>
+      <app-stat-card [metrics]="showcaseMetrics" />
     </div>
 
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppToast</span>
       <p class="showcase-spot-hint">Inyecta MessageService en tu feature para mostrar toasts.</p>
       <app-toast />
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Catalogo                                                      -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-catalog">
+    <div class="showcase-section-head">
+      <h2 id="sec-catalog" class="showcase-section-title">Catalogo</h2>
+      <p class="showcase-section-desc">
+        Tarjeta de producto para la tienda publica con densidad regular y compacta.
+      </p>
+    </div>
+
+    <div class="showcase-row showcase-row--2col">
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">StoreProductCard -- regular</span>
+        <app-store-product-card [product]="sampleProduct" density="regular" />
+      </div>
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">StoreProductCard -- compact</span>
+        <app-store-product-card [product]="sampleProductCompact" density="compact" />
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Layout de tienda                                              -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-layout">
+    <div class="showcase-section-head">
+      <h2 id="sec-layout" class="showcase-section-title">Layout de tienda</h2>
+      <p class="showcase-section-desc">
+        Componentes de navegacion y pie de pagina usados en la tienda publica.
+      </p>
+    </div>
+
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">AppStoreNav</span>
+      <p class="showcase-spot-hint">
+        Barra de navegacion superior con marca, busqueda, estado de sesion y menu de usuario.
+      </p>
+      <div class="showcase-layout-preview">
+        <app-store-nav
+          [brand]="brandConfig"
+          [isLoggedIn]="true"
+          userDisplayName="Admin"
+          [userMenuItems]="storeUserMenuItems"
+          [showSearch]="true"
+          searchPlaceholder="Buscar productos..."
+        />
+      </div>
+    </div>
+
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">AppStoreFooter</span>
+      <p class="showcase-spot-hint">
+        Pie de pagina minimalista con copyright y enlaces.
+      </p>
+      <app-store-footer [links]="footerLinks" [copyright]="footerCopyright" />
     </div>
   </section>
 

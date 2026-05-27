@@ -172,12 +172,12 @@
   box-shadow: inset 0 0 0 1px rgba(7, 95, 54, 0.08);
 }
 
-:host ::ng-deep .p-button-text.p-button-rounded {
+:host ::ng-deep .users-page .p-datatable-tbody .p-button-text.p-button-rounded {
   color: #2f8d72;
   background: rgba(47, 141, 114, 0.08);
 }
 
-:host ::ng-deep .p-button-text.p-button-rounded:hover {
+:host ::ng-deep .users-page .p-datatable-tbody .p-button-text.p-button-rounded:hover {
   color: #ffffff;
   background: #2f8d72;
 }

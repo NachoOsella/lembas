@@ -1,20 +1,22 @@
 import { Component, input } from '@angular/core';
 
+/** Describes one compact metric shown in a reusable metric strip. */
+export interface AppMetricItem {
+  readonly label: string;
+  readonly value: string | number;
+  readonly detail?: string;
+  readonly icon?: string;
+  readonly tone?: 'forest' | 'amber' | 'ink' | 'sage';
+}
+
 /**
- * Lembas-styled stat card for dashboards and summary sections.
- * Displays a metric value, label, and optional trend indicator.
+ * Reusable responsive strip for small dashboard metrics and page summaries.
  */
 @Component({
   selector: 'app-stat-card',
-  imports: [],
   templateUrl: './app-stat-card.html',
   styleUrl: './app-stat-card.css',
 })
 export class AppStatCard {
-  readonly value = input.required<string>();
-  readonly label = input.required<string>();
-  readonly icon = input<string | null>(null);
-  readonly trend = input<'up' | 'down' | 'neutral'>('neutral');
-  readonly trendValue = input<string>('');
-  readonly tone = input<'surface' | 'muted' | 'dark'>('surface');
+  readonly metrics = input.required<readonly AppMetricItem[]>();
 }

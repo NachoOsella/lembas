@@ -24,6 +24,27 @@
   padding: 1.25rem 1.5rem 0;
 }
 
+:host ::ng-deep .confirm-dialog .p-dialog-header-icon {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: rgba(0, 0, 0, 0.4);
+  transition: all 0.18s ease;
+}
+
+:host ::ng-deep .confirm-dialog .p-dialog-header-icon:hover {
+  background: rgba(47, 141, 114, 0.1);
+  color: #075f36;
+}
+
+:host ::ng-deep .confirm-dialog .p-dialog-header-icon:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 2px;
+}
+
 :host ::ng-deep .confirm-dialog .p-dialog-content {
   padding: 1.25rem 1.5rem 0.5rem;
 }
