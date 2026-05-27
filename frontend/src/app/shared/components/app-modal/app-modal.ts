@@ -2,10 +2,6 @@ import { Component, input, model, output } from '@angular/core';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
 
-/**
- * Generic Lembas-styled modal wrapper over PrimeNG Dialog.
- * Provides a reusable shell with header, body, and footer slots.
- */
 @Component({
   selector: 'app-modal',
   imports: [Dialog],

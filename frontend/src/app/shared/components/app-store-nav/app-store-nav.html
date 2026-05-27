@@ -1,22 +1,22 @@
 <header class="app-store-nav sticky top-0 z-[100] w-full border-b border-[#e7e7e7] bg-[#fffaf0]/95 backdrop-blur-md transition-all duration-300">
   <div class="app-store-nav__inner mx-auto flex h-[64px] w-full max-w-[1600px] items-center justify-between px-4 sm:px-6 md:h-[72px] lg:px-10">
     <!-- Brand -->
-    <a [routerLink]="brand().homeRoute" class="app-store-nav__brand group flex items-center gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f8d72] rounded-[4px]" aria-label="Ir al inicio">
-      <img [src]="brand().logoUrl" alt="" width="32" height="32" class="app-store-nav__logo transition-transform duration-300 group-hover:rotate-[-8deg]" />
-      <span class="app-store-nav__brand-text flex min-w-0 flex-col">
-        <strong class="text-[18px] font-semibold leading-tight tracking-[-0.01em] text-[rgba(0,0,0,0.87)] sm:text-[20px]">{{ brand().title }}</strong>
-        <span class="text-[10px] font-medium uppercase tracking-[0.13em] text-[rgba(0,0,0,0.45)] sm:text-[11px] sm:tracking-[0.15em]">{{ brand().subtitle }}</span>
+    <a [routerLink]="brand().homeRoute" class="app-store-nav__brand" aria-label="Ir al inicio">
+      <img [src]="brand().logoUrl" alt="" width="32" height="32" class="app-store-nav__logo" />
+      <span class="app-store-nav__brand-text">
+        <strong>{{ brand().title }}</strong>
+        <span>{{ brand().subtitle }}</span>
       </span>
     </a>
 
     <!-- Center Navigation + Search -->
-    <div class="hidden flex-1 items-center justify-center gap-5 md:flex">
-      <nav class="flex items-center gap-5" aria-label="Navegación principal">
-         <a routerLink="/store" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{exact: true}" class="nav-link rounded-full px-5 py-2 text-[14px] font-semibold tracking-[-0.01em] text-[rgba(0,0,0,0.6)] transition-all duration-200 hover:bg-[#2f8d72]/8 hover:text-[#075f36]">Inicio</a>
-         <a routerLink="/store/catalog" routerLinkActive="nav-link--active" class="nav-link rounded-full px-5 py-2 text-[14px] font-semibold tracking-[-0.01em] text-[rgba(0,0,0,0.6)] transition-all duration-200 hover:bg-[#2f8d72]/8 hover:text-[#075f36]">Catálogo</a>
+    <div class="app-store-nav__center">
+      <nav class="app-store-nav__links" aria-label="Navegación principal">
+         <a routerLink="/store" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">Inicio</a>
+         <a routerLink="/store/catalog" routerLinkActive="nav-link--active" class="nav-link">Catálogo</a>
       </nav>
       @if (showSearch()) {
-        <div class="app-store-nav__search w-56">
+        <div class="app-store-nav__search">
           <app-search-bar
             [placeholder]="searchPlaceholder()"
             size="sm"
@@ -27,17 +27,16 @@
     </div>
 
     <!-- Actions (right) -->
-    <div class="app-store-nav__actions flex items-center gap-3">
-
+    <div class="app-store-nav__actions">
       @if (isLoggedIn()) {
-        <span class="app-store-nav__user-name hidden text-[13px] font-semibold text-[rgba(0,0,0,0.6)] md:inline-block">{{ userDisplayName() }}</span>
+        <span class="app-store-nav__user-name">{{ userDisplayName() }}</span>
         <button
           #storeUserMenuTrigger
-          class="app-store-nav__menu-btn flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[#e7e7e7] bg-white text-[rgba(0,0,0,0.6)] transition-all duration-200 hover:border-[#2f8d72] hover:text-[#2f8d72]"
+          class="app-store-nav__menu-btn"
           aria-label="Abrir menu de usuario"
           (click)="userMenu.toggle($event)"
         >
-          <i class="pi pi-user text-sm" aria-hidden="true"></i>
+          <i class="pi pi-user" aria-hidden="true"></i>
         </button>
         <p-menu
           #userMenu
@@ -45,21 +44,20 @@
           [popup]="true"
           appendTo="body"
           aria-label="Opciones de usuario"
-          styleClass="w-[200px] border-none bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] rounded-[16px] mt-2"
+          styleClass="app-store-nav__dropdown"
         />
       } @else {
-        <div class="hidden items-center gap-2 sm:flex">
-          <a routerLink="/auth/login" class="app-store-nav__login rounded-full border border-[#e7e7e7] bg-transparent px-[14px] py-[6px] text-[13px] font-semibold tracking-[-0.01em] text-[rgba(0,0,0,0.6)] transition-all duration-200 hover:border-[rgba(0,0,0,0.87)] hover:text-[rgba(0,0,0,0.87)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f8d72]"> Ingresar </a>
-          <a routerLink="/auth/register" class="app-store-nav__cta rounded-full border border-[#075f36] bg-[#075f36] px-[14px] py-[6px] text-[13px] font-semibold tracking-[-0.01em] text-white transition-all duration-200 hover:bg-[#06402a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f8d72]"> Crear cuenta </a>
+        <div class="app-store-nav__auth">
+          <a routerLink="/auth/login" class="app-store-nav__login">Ingresar</a>
+          <a routerLink="/auth/register" class="app-store-nav__cta">Crear cuenta</a>
         </div>
       }
-
     </div>
   </div>
 
-  <!-- Mobile search bar (second row) -->
+  <!-- Mobile search bar -->
   @if (showSearch()) {
-    <div class="app-store-nav__search--mobile border-t border-[#e7e7e7] bg-white/80 p-3 lg:hidden">
+    <div class="app-store-nav__search-mobile">
       <app-search-bar
         [placeholder]="searchPlaceholder()"
         size="sm"
@@ -69,15 +67,15 @@
   }
 </header>
 
-<!-- Floating Leaf CTA for Cart -->
+<!-- Floating Cart CTA -->
 <a
   routerLink="/customer/checkout"
-  class="fixed bottom-[calc(1rem+16px)] right-[calc(1rem+16px)] z-[100] flex h-[56px] w-[56px] items-center justify-center rounded-full bg-[#075f36] text-white shadow-[0_4px_16px_rgba(7,95,54,0.35)] transition-all duration-300 ease-out hover:scale-110 hover:shadow-[0_8px_24px_rgba(7,95,54,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f8d72]"
+  class="app-store-nav__cart"
   aria-label="Ir al carrito de compras"
 >
   <i class="pi pi-shopping-bag text-xl"></i>
   @if (cartCount() > 0) {
-    <span class="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#075f36] bg-[#f29d52] text-[11px] font-bold text-white shadow-sm">
+    <span class="app-store-nav__cart-badge">
       {{ cartCount() }}
     </span>
   }

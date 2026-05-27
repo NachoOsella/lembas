@@ -32,14 +32,6 @@ export interface AppMetricItem {
   readonly trend?: MetricTrend;
 }
 
-/**
- * Reusable responsive strip for small dashboard metrics and page summaries.
- *
- * Usage:
- * ```html
- * <app-stat-card [metrics]="dashboardMetrics" />
- * ```
- */
 @Component({
   selector: 'app-stat-card',
   templateUrl: './app-stat-card.html',

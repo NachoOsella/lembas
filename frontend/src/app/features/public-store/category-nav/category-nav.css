@@ -5,6 +5,7 @@
 .catalog-page__pill {
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .catalog-page__pill:not(.catalog-page__pill--active)::before {

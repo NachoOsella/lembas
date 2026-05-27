@@ -8,7 +8,6 @@ import { Dialog } from 'primeng/dialog';
   templateUrl: './confirm-dialog.html',
   styleUrl: './confirm-dialog.css',
 })
-/** Renders a PrimeNG confirmation modal for sensitive user actions. */
 export class ConfirmDialog {
   readonly visible = input(false);
   readonly title = input('Confirmar accion');

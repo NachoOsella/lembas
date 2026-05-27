@@ -1,46 +1,39 @@
 <article
-  class="store-product-card group relative overflow-hidden rounded-[16px] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-500 ease-out hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] hover:-translate-y-1 focus-within:ring-2 focus-within:ring-[#2f8d72] focus-within:ring-offset-2"
+  class="store-product-card group relative overflow-hidden rounded-xl bg-white shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.24)] transition-all duration-500 ease-out hover:shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_2px_4px_rgba(0,0,0,0.16)] hover:-translate-y-1 focus-within:ring-2 focus-within:ring-[#2f8d72] focus-within:ring-offset-2"
   [class.store-product-card--compact]="isCompact()"
   [ngClass]="cardClass()"
 >
   <a [routerLink]="productRoute()" class="block h-full outline-none" [attr.aria-label]="detailLabel()">
     <div
-      class="relative flex items-center justify-center overflow-hidden bg-[#faf6ef]"
-      [class.aspect-[4/3]]="!isCompact()"
-      [class.aspect-square]="isCompact()"
+      class="store-product-card__image"
+      [class.store-product-card__image--regular]="!isCompact()"
+      [class.store-product-card__image--compact]="isCompact()"
     >
-      <!-- Subtle organic texture overlay -->
-      <div class="pointer-events-none absolute inset-0 opacity-40 mix-blend-multiply" style="background-image: radial-gradient(circle at 30% 20%, rgba(242,157,82,0.08) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(47,141,114,0.06) 0%, transparent 50%);" aria-hidden="true"></div>
+      <div class="store-product-card__texture" aria-hidden="true"></div>
 
       @if (product().imageUrl) {
         <img
           [src]="product().imageUrl"
           [alt]="product().name"
           loading="lazy"
-          class="h-full w-full object-contain p-6 transition-all duration-700 ease-out group-hover:scale-105 opacity-0"
-          onload="this.style.opacity='1'; this.style.transform='scale(1)';"
-          style="transform: scale(0.96);"
+          class="store-product-card__img"
+          onload="this.classList.add('store-product-card__img--loaded');"
         />
       } @else {
-        <div
-          class="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-white/80 text-[rgba(0,0,0,0.15)] shadow-sm backdrop-blur-sm"
-        >
-          <i class="pi pi-image text-[28px]" aria-hidden="true"></i>
+        <div class="store-product-card__placeholder">
+          <i class="pi pi-image" aria-hidden="true"></i>
         </div>
       }
 
       @if (product().categoryName) {
-        <span
-          class="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[rgba(0,0,0,0.6)] shadow-sm backdrop-blur-sm"
-        >
+        <span class="store-product-card__category">
           {{ product().categoryName }}
         </span>
       }
 
-      <!-- Hover overlay hint -->
-      <div class="absolute inset-0 flex items-center justify-center bg-[#075f36]/0 transition-all duration-500 group-hover:bg-[#075f36]/5" aria-hidden="true">
-        <span class="flex h-10 w-10 translate-y-4 items-center justify-center rounded-full bg-white/90 text-[#075f36] opacity-0 shadow-lg backdrop-blur-sm transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-          <i class="pi pi-eye text-sm" aria-hidden="true"></i>
+      <div class="store-product-card__hover" aria-hidden="true">
+        <span class="store-product-card__hover-icon">
+          <i class="pi pi-eye" aria-hidden="true"></i>
         </span>
       </div>
     </div>

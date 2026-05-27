@@ -1,9 +1,6 @@
 import { Component, input, model, output } from '@angular/core';
 import { Paginator } from 'primeng/paginator';
 
-/**
- * Lembas-styled pagination wrapper over PrimeNG Paginator.
- */
 @Component({
   selector: 'app-pagination',
   imports: [Paginator],

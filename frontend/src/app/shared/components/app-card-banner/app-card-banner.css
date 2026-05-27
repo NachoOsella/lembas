@@ -6,7 +6,10 @@
   position: relative;
   overflow: hidden;
   border: 1px solid;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  /* Whisper-soft layered shadow */
+  box-shadow:
+    0 0 0.5px rgba(0, 0, 0, 0.14),
+    0 1px 1px rgba(0, 0, 0, 0.24);
   transition:
     box-shadow 0.3s ease,
     transform 0.3s ease;
@@ -17,7 +20,9 @@
 }
 
 .card-banner--clickable:hover {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 0 0.5px rgba(0, 0, 0, 0.14),
+    0 2px 4px rgba(0, 0, 0, 0.16);
   transform: translateY(-2px);
 }
 

@@ -2,10 +2,6 @@ import { Component, computed, input, model } from '@angular/core';
 import { AppInput } from '../app-input/app-input';
 import { AppFieldHint } from '../app-field-hint/app-field-hint';
 
-/**
- * Lembas form-field wrapper combining label, input, hint, and error messages
- * into a single accessible and consistently-styled component.
- */
 @Component({
   selector: 'app-form-field',
   imports: [AppInput, AppFieldHint],

@@ -5,7 +5,6 @@ import { Component, input } from '@angular/core';
   templateUrl: './app-page-header.html',
   styleUrl: './app-page-header.css',
 })
-/** Renders a consistent page hero/header with optional projected actions. */
 export class AppPageHeader {
   readonly eyebrow = input<string | null>(null);
   readonly title = input.required<string>();

@@ -14,10 +14,6 @@ export type StoreProductCardDensity = 'regular' | 'compact';
   styleUrl: './store-product-card.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-/**
- * Reusable public-store product card.
- * Keeps product presentation homogeneous across home recommendations and catalog grids.
- */
 export class StoreProductCard {
   /** Product summary to render. */
   readonly product = input.required<ProductSummary>();

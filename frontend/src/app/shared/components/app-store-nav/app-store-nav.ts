@@ -19,10 +19,6 @@ export interface StoreBrandConfig {
   templateUrl: './app-store-nav.html',
   styleUrl: './app-store-nav.css',
 })
-/**
- * Generic Lembas store top navigation bar.
- * Displays brand logo, optional search bar, auth state, user menu, and cart icon.
- */
 export class AppStoreNav {
   /** Brand display configuration. */
   readonly brand = input.required<StoreBrandConfig>();

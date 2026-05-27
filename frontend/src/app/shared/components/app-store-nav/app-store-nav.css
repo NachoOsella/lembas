@@ -2,27 +2,244 @@
   display: block;
 }
 
+/* ── Nav shadow ────────────────────────────────────────────── */
+.app-store-nav {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 2px 2px rgba(0, 0, 0, 0.06), 0 0 2px rgba(0, 0, 0, 0.07);
+}
+
+/* ── Brand ─────────────────────────────────────────────────── */
+.app-store-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 4px;
+  transition: outline 0.15s ease;
+}
+
+.app-store-nav__brand:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
+}
+
+.app-store-nav__logo {
+  transition: transform 0.3s ease;
+}
+
+.app-store-nav__brand:hover .app-store-nav__logo {
+  transform: rotate(-8deg);
+}
+
+.app-store-nav__brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-store-nav__brand-text strong {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.app-store-nav__brand-text span {
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+@media (min-width: 640px) {
+  .app-store-nav__brand-text strong {
+    font-size: 1.25rem;
+  }
+  .app-store-nav__brand-text span {
+    font-size: 0.6875rem;
+    letter-spacing: 0.15em;
+  }
+}
+
+/* ── Center navigation ─────────────────────────────────────── */
+.app-store-nav__center {
+  display: none;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .app-store-nav__center {
+    display: flex;
+  }
+}
+
+.app-store-nav__links {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.nav-link {
+  border-radius: 9999px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(0, 0, 0, 0.6);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  background: rgba(47, 141, 114, 0.08);
+  color: #075f36;
+}
+
 .nav-link--active {
-  background-color: rgba(47, 141, 114, 0.1);
-  color: #075f36 !important;
+  background: rgba(47, 141, 114, 0.1);
+  color: #075f36;
   font-weight: 700;
 }
 
-.app-store-nav {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 2px 2px rgba(0,0,0,0.06), 0 0 2px rgba(0,0,0,0.07);
+.app-store-nav__search {
+  width: 14rem;
+}
+
+/* ── Actions ───────────────────────────────────────────────── */
+.app-store-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-store-nav__user-name {
+  display: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+@media (min-width: 768px) {
+  .app-store-nav__user-name {
+    display: inline-block;
+  }
+}
+
+.app-store-nav__menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 9999px;
+  border: 1px solid #e7e7e7;
+  background: #ffffff;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.app-store-nav__menu-btn:hover {
+  border-color: #2f8d72;
+  color: #2f8d72;
+}
+
+.app-store-nav__auth {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .app-store-nav__auth {
+    display: flex;
+  }
+}
+
+.app-store-nav__login {
+  border-radius: 9999px;
+  border: 1px solid #e7e7e7;
+  background: transparent;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(0, 0, 0, 0.6);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.app-store-nav__login:hover {
+  border-color: rgba(0, 0, 0, 0.87);
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.app-store-nav__login:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
+}
+
+.app-store-nav__cta {
+  border-radius: 9999px;
+  border: 1px solid #075f36;
+  background: #075f36;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.app-store-nav__cta:hover {
+  background: #06402a;
+}
+
+.app-store-nav__cta:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
+}
+
+/* ── Mobile search ─────────────────────────────────────────── */
+.app-store-nav__search-mobile {
+  display: block;
+  border-top: 1px solid #e7e7e7;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+  .app-store-nav__search-mobile {
+    display: none;
+  }
+}
+
+/* ── Dropdown menu ─────────────────────────────────────────── */
+:host ::ng-deep .app-store-nav__dropdown {
+  width: 200px;
+  border: none;
+  background: #ffffff;
+  box-shadow: 0 0 0.5px rgba(0, 0, 0, 0.14), 0 2px 4px rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  margin-top: 0.5rem;
 }
 
 :host ::ng-deep .p-menu {
   border-radius: 12px;
   padding: 8px 0;
-  border: 1px solid rgba(0,0,0,0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 :host ::ng-deep .p-menu .p-menuitem-link {
   padding: 10px 16px;
   font-family: inherit;
   font-size: 14px;
-  color: rgba(0,0,0,0.87);
+  color: rgba(0, 0, 0, 0.87);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -33,9 +250,55 @@
 
 :host ::ng-deep .p-menu .p-menuitem-icon {
   margin-right: 12px;
-  color: rgba(0,0,0,0.58);
+  color: rgba(0, 0, 0, 0.58);
 }
 
 :host ::ng-deep .p-menu .p-menuitem-link:hover .p-menuitem-icon {
   color: #2f8d72;
+}
+
+/* ── Floating cart CTA ─────────────────────────────────────── */
+.app-store-nav__cart {
+  position: fixed;
+  bottom: calc(1rem + 16px);
+  right: calc(1rem + 16px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  background: #075f36;
+  color: #ffffff;
+  text-decoration: none;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.24), 0 8px 12px rgba(0, 0, 0, 0.14);
+  transition: all 0.3s ease;
+}
+
+.app-store-nav__cart:hover {
+  transform: scale(1.1);
+}
+
+.app-store-nav__cart:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
+}
+
+.app-store-nav__cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  border: 2px solid #075f36;
+  background: #f29d52;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }

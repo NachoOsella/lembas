@@ -5,7 +5,6 @@ import { MessageService } from 'primeng/api';
 import { CatalogService } from '../../../core/services/catalog';
 import { Category, ProductSummary } from '../../../shared/models/product';
 import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { AppPagination } from '../../../shared/components/app-pagination/app-pagination';
 import { StoreProductCard } from '../../../shared/components/store-product-card/store-product-card';
@@ -17,7 +16,7 @@ const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-catalog',
-  imports: [LoadingSpinner, ErrorAlert, EmptyState, AppPagination, StoreProductCard, HeroFlowers, CategoryNav],
+  imports: [LoadingSpinner, EmptyState, AppPagination, StoreProductCard, HeroFlowers, CategoryNav],
   templateUrl: './catalog.html',
   styleUrl: './catalog.css',
 })

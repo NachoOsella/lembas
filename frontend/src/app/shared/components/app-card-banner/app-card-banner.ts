@@ -19,23 +19,6 @@ const BLOB_POSITION_MAP: Record<BlobPosition, string> = {
   'center-left': '-left-10 top-1/2 -translate-y-1/2',
 };
 
-/**
- * Generic card banner with a decorative blob overlay.
- *
- * Usage:
- * ```html
- * <app-card-banner
- *   blobColor="#2f8d72"
- *   blobOpacity="5"
- *   blobPosition="top-right"
- *   blobSize="lg"
- * >
- *   <p class="eyebrow">Titulo</p>
- *   <h2>Contenido principal</h2>
- *   <p>Descripcion</p>
- * </app-card-banner>
- * ```
- */
 @Component({
   selector: 'app-card-banner',
   templateUrl: './app-card-banner.html',
