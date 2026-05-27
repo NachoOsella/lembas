@@ -62,9 +62,6 @@ describe('Users', () => {
       updateUser: vi.fn().mockReturnValue(of(buildUser())),
       updateUserStatus: vi.fn().mockReturnValue(of(buildUser())),
       listBranches: vi.fn().mockReturnValue(of(SAMPLE_BRANCHES)),
-      getUserMetrics: vi.fn().mockReturnValue(
-        of({ totalUsers: 0, enabledUsers: 0, usersWithBranch: 0 }),
-      ),
     };
 
     TestBed.configureTestingModule({
@@ -115,10 +112,5 @@ describe('Users', () => {
       expect(el.querySelector('app-user-form')).toBeTruthy();
     });
 
-    it('should render toast container', () => {
-      configure();
-      const el: HTMLElement = fixture.nativeElement;
-      expect(el.querySelector('app-toast')).toBeTruthy();
-    });
   });
 });

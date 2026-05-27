@@ -2,14 +2,13 @@ import { Component, inject, signal, viewChild } from '@angular/core';
 
 import { CategoryService } from '../../../core/services/category';
 import { CategoryDto } from '../../../shared/models/category';
-import { AppToast } from '../../../shared/components/app-toast/app-toast';
 import { CategoryList } from './category-list/category-list';
 import { CategoryForm } from './category-form/category-form';
 
 /** Admin category page orchestrating list, form and shared category data. */
 @Component({
   selector: 'app-categories',
-  imports: [AppToast, CategoryList, CategoryForm],
+  imports: [CategoryList, CategoryForm],
   templateUrl: './categories.html',
   styleUrl: './categories.css',
 })

@@ -66,13 +66,6 @@ describe('UserList', () => {
   function configure(users: UserResponse[] = [], totalElements = users.length): void {
     svc = {
       listUsers: vi.fn().mockReturnValue(of(userPage(users, totalElements))),
-      getUserMetrics: vi.fn().mockReturnValue(
-        of({
-          totalUsers: totalElements,
-          enabledUsers: users.filter((u) => u.enabled).length,
-          usersWithBranch: users.filter((u) => u.branchId != null).length,
-        }),
-      ),
       updateUserStatus: vi.fn().mockReturnValue(of(buildUser())),
       listBranches: vi.fn().mockReturnValue(of(SAMPLE_BRANCHES)),
     };
@@ -220,34 +213,6 @@ describe('UserList', () => {
       (c['onSort'] as (event: { field: string; order: number }) => void)({ field: 'branchId', order: 1 });
 
       expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '', undefined);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Metrics
-  // ---------------------------------------------------------------------------
-  describe('userMetrics', () => {
-    it('should compute correct metrics from user list', () => {
-      const users = [
-        buildUser({ id: 1, role: 'ADMIN', branchId: null, enabled: true }),
-        buildUser({ id: 2, role: 'MANAGER', branchId: 1, enabled: true }),
-        buildUser({ id: 3, role: 'EMPLOYEE', branchId: 1, enabled: false }),
-      ];
-      configure(users);
-
-      const metrics = (c['userMetrics'] as () => { label: string; value: number }[])();
-      expect(metrics[0].value).toBe(3); // total usuarios
-      expect(metrics[1].value).toBe(2); // activos
-      expect(metrics[2].value).toBe(2); // con sucursal asignada
-    });
-
-    it('should show zero counts for empty user list', () => {
-      configure([]);
-
-      const metrics = (c['userMetrics'] as () => { label: string; value: number }[])();
-      expect(metrics[0].value).toBe(0);
-      expect(metrics[1].value).toBe(0);
-      expect(metrics[2].value).toBe(0);
     });
   });
 

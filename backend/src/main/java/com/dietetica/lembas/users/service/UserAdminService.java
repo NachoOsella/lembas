@@ -3,7 +3,6 @@ package com.dietetica.lembas.users.service;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
 import com.dietetica.lembas.users.dto.UpdateUserRequest;
-import com.dietetica.lembas.users.dto.UserMetricsResponse;
 import com.dietetica.lembas.users.dto.UserResponse;
 import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
@@ -79,15 +78,6 @@ public class UserAdminService {
         }
         String normalized = search.trim().toLowerCase(Locale.ROOT);
         return normalized.isEmpty() ? null : normalized;
-    }
-
-    /**
-     * Returns aggregate metrics for the internal user directory via a single native query.
-     */
-    @Transactional(readOnly = true)
-    public UserMetricsResponse getUserMetrics() {
-        var m = userRepository.computeUserMetrics();
-        return new UserMetricsResponse(m.getTotalUsers(), m.getEnabledUsers(), m.getUsersWithBranch());
     }
 
     /**

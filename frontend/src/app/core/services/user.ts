@@ -7,7 +7,6 @@ import {
   CreateUserRequest,
   Page,
   UpdateUserRequest,
-  UserMetrics,
   UserResponse,
 } from '../../shared/models/user';
 
@@ -90,10 +89,4 @@ export class UserService {
     return this.http.get<Branch[]>(this.branchesUrl);
   }
 
-  /**
-   * Returns aggregate metrics for the internal users directory.
-   */
-  getUserMetrics(): Observable<UserMetrics> {
-    return this.http.get<UserMetrics>(`${this.usersUrl}/metrics`);
-  }
 }

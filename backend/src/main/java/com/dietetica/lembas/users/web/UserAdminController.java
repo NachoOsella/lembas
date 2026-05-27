@@ -2,7 +2,6 @@ package com.dietetica.lembas.users.web;
 
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
 import com.dietetica.lembas.users.dto.UpdateUserRequest;
-import com.dietetica.lembas.users.dto.UserMetricsResponse;
 import com.dietetica.lembas.users.dto.UserResponse;
 import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
@@ -59,15 +58,6 @@ public class UserAdminController {
             @RequestParam(required = false) String search,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return userAdminService.listUsers(role, branchId, search, pageable);
-    }
-
-    /**
-     * Returns aggregate metrics for the internal user directory.
-     */
-    @GetMapping("/metrics")
-    @PreAuthorize("hasRole('ADMIN')")
-    public UserMetricsResponse getUserMetrics() {
-        return userAdminService.getUserMetrics();
     }
 
     /**

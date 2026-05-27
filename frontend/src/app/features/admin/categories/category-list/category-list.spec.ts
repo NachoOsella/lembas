@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 
 import { CategoryService } from '../../../../core/services/category';
@@ -14,7 +15,7 @@ describe('CategoryList', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CategoryList],
-      providers: [provideNoopAnimations(), { provide: CategoryService, useValue: categoryService }],
+      providers: [provideNoopAnimations(), MessageService, { provide: CategoryService, useValue: categoryService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CategoryList);

@@ -9,10 +9,7 @@ import { UserService } from '../../../../core/services/user';
 import { Branch, UserResponse } from '../../../../shared/models/user';
 import { ColumnDef } from '../../../../shared/components/app-data-table/app-data-table';
 import { AppDataTable } from '../../../../shared/components/app-data-table/app-data-table';
-import {
-  AppMetricItem,
-  AppMetricStrip,
-} from '../../../../shared/components/app-metric-strip/app-metric-strip';
+
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
 import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
@@ -54,7 +51,6 @@ const USER_SORT_FIELDS = new Set(['firstName', 'email', 'role', 'enabled']);
     ButtonDirective,
     Ripple,
     AppDataTable,
-    AppMetricStrip,
     AppButton,
     AppBadge,
     AppSearchBar,
@@ -84,8 +80,6 @@ export class UserList implements OnInit {
   protected readonly totalRecords = signal(0);
   protected readonly sortField = signal<string | undefined>(undefined);
   protected readonly sortOrder = signal<number | undefined>(undefined);
-  protected readonly metrics = signal({ totalUsers: 0, enabledUsers: 0, usersWithBranch: 0 });
-
   /** Branch ID -> name map for display in the table. */
   readonly branchName = input<((id: number | null) => string | undefined) | undefined>();
 
@@ -104,59 +98,17 @@ export class UserList implements OnInit {
 
   protected readonly userColumns = USER_COLUMNS;
 
-  /** Operational metrics for the metric strip. */
-  protected readonly userMetrics = computed<readonly AppMetricItem[]>(() => {
-    const m = this.metrics();
-    return [
-      {
-        label: 'Usuarios',
-        value: m.totalUsers,
-        detail: 'internos cargados',
-        icon: 'pi pi-users',
-        tone: 'forest',
-      },
-      {
-        label: 'Activos',
-        value: m.enabledUsers,
-        detail: `${m.totalUsers - m.enabledUsers} inactivos`,
-        icon: 'pi pi-shield',
-        tone: 'sage',
-      },
-      {
-        label: 'Sucursales',
-        value: m.usersWithBranch,
-        detail: 'con asignacion operativa',
-        icon: 'pi pi-building',
-        tone: 'amber',
-      },
-    ];
-  });
-
   // ---------------------------------------------------------------------------
   // Lifecycle
   // ---------------------------------------------------------------------------
   ngOnInit(): void {
     this.loadUsers();
-    this.loadMetrics();
     this.loadBranches();
   }
 
   // ---------------------------------------------------------------------------
   // Data loading
   // ---------------------------------------------------------------------------
-  protected loadMetrics(): void {
-    this.userService.getUserMetrics().subscribe({
-      next: (m) => this.metrics.set(m),
-      error: () => {
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Metricas no disponibles',
-          detail: 'No se pudieron cargar las metricas de usuarios.',
-        });
-      },
-    });
-  }
-
   protected loadUsers(): void {
     const page = Math.floor(this.first() / this.pageSize());
     const sort = this.buildSortParam();

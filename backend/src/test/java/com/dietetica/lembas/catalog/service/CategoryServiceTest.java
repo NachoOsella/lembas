@@ -15,6 +15,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /** Unit tests for category creation, edition and parent validation rules. */
@@ -58,5 +59,28 @@ class CategoryServiceTest {
         assertThatThrownBy(() -> categoryService.create(new CategoryRequest("Suplementos", null, null)))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("already exists");
+    }
+
+    @Test
+    void deleteShouldThrowWhenCategoryHasChildren() {
+        Category category = new Category(5L, null, "Cereales", null);
+        when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
+        when(categoryRepository.existsByParentId(5L)).thenReturn(true);
+
+        assertThatThrownBy(() -> categoryService.delete(5L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("has child categories");
+    }
+
+    @Test
+    void deleteShouldSucceedWhenNoChildrenOrProducts() {
+        Category category = new Category(6L, null, "Snacks", null);
+        when(categoryRepository.findById(6L)).thenReturn(Optional.of(category));
+        when(categoryRepository.existsByParentId(6L)).thenReturn(false);
+        when(categoryRepository.countProductsByCategoryId(6L)).thenReturn(0L);
+
+        categoryService.delete(6L);
+
+        verify(categoryRepository).delete(category);
     }
 }

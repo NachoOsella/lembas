@@ -1,4 +1,6 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { MessageService } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { Ripple } from 'primeng/ripple';
 
@@ -9,6 +11,9 @@ import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppDataTable, ColumnDef } from '../../../../shared/components/app-data-table/app-data-table';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
+/** Time window for collapsing duplicate error toasts in this component. */
+const DUPLICATE_TOAST_MS = 2000;
+
 /** Displays the admin category directory using shared Lembas table and action components. */
 @Component({
   selector: 'app-category-list',
@@ -18,6 +23,7 @@ import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/conf
 })
 export class CategoryList {
   private readonly categoryService = inject(CategoryService);
+  private readonly messageService = inject(MessageService);
 
   readonly categories = input.required<CategoryDto[]>();
   readonly loading = input(false);
@@ -28,6 +34,9 @@ export class CategoryList {
   readonly retry = output<void>();
 
   protected readonly categoryToDelete = signal<CategoryDto | null>(null);
+  protected readonly deleting = signal(false);
+  /** Last error-toast key and timestamp to collapse rapid duplicates from re-entrant CD. */
+  private lastDeleteError: { key: string; timestamp: number } | null = null;
   protected readonly categoryColumns: ColumnDef[] = [
     { field: 'name', header: 'Nombre', sortable: true },
     { field: 'parentId', header: 'Categoria padre', sortable: false },
@@ -53,18 +62,41 @@ export class CategoryList {
     this.categoryToDelete.set(category);
   }
 
+  /** Maps backend delete error codes to Spanish copy. */
+  private deleteErrorForCode(code?: string): string {
+    const messages: Record<string, string> = {
+      CATEGORY_HAS_CHILDREN: 'No se puede eliminar una categoria que tiene subcategorias. Elimina primero las subcategorias.',
+      CATEGORY_HAS_PRODUCTS: 'No se puede eliminar una categoria que tiene productos asociados. Reasigna los productos a otra categoria primero.',
+    };
+    return messages[code ?? ''] ?? 'No se pudo eliminar la categoria. Intenta nuevamente.';
+  }
+
   /** Deletes the selected category after explicit confirmation. */
   protected confirmDelete(): void {
     const category = this.categoryToDelete();
-    if (!category) {
+    if (!category || this.deleting()) {
       return;
     }
+    this.deleting.set(true);
     this.categoryService.deleteCategory(category.id).subscribe({
       next: () => {
         this.categoryToDelete.set(null);
+        this.deleting.set(false);
         this.deleted.emit();
       },
-      error: () => this.categoryToDelete.set(null),
+      error: (err: HttpErrorResponse) => {
+        this.categoryToDelete.set(null);
+        this.deleting.set(false);
+        const code: string | undefined = err.error?.code;
+        const detail = this.deleteErrorForCode(code);
+        const key = `delete-category|${detail}`;
+        const now = Date.now();
+        if (this.lastDeleteError?.key === key && now - this.lastDeleteError.timestamp < DUPLICATE_TOAST_MS) {
+          return;
+        }
+        this.lastDeleteError = { key, timestamp: now };
+        this.messageService.add({ severity: 'error', summary: 'Error al eliminar', detail, life: 5000 });
+      },
     });
   }
 }

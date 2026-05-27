@@ -3,13 +3,11 @@ package com.dietetica.lembas.users.service;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
 import com.dietetica.lembas.users.dto.UpdateUserRequest;
-import com.dietetica.lembas.users.dto.UserMetricsResponse;
 import com.dietetica.lembas.users.dto.UserResponse;
 import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
-import com.dietetica.lembas.users.repository.UserRepository.UserMetricsProjection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -143,22 +141,6 @@ class UserAdminServiceTest {
 
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().getFirst().email()).isEqualTo("admin@lembas.com");
-        }
-    }
-
-    @Nested
-    class GetUserMetrics {
-
-        @Test
-        void Should_aggregateInternalUserCountsFromRepository() {
-            var projection = mockUserMetricsProjection(30, 25, 20);
-            when(userRepository.computeUserMetrics()).thenReturn(projection);
-
-            var metrics = userAdminService.getUserMetrics();
-
-            assertThat(metrics.totalUsers()).isEqualTo(30);
-            assertThat(metrics.enabledUsers()).isEqualTo(25);
-            assertThat(metrics.usersWithBranch()).isEqualTo(20);
         }
     }
 
@@ -467,17 +449,6 @@ class UserAdminServiceTest {
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
-
-    private static UserMetricsProjection mockUserMetricsProjection(long total, long enabled, long withBranch) {
-        return new UserMetricsProjection() {
-            @Override
-            public long getTotalUsers() { return total; }
-            @Override
-            public long getEnabledUsers() { return enabled; }
-            @Override
-            public long getUsersWithBranch() { return withBranch; }
-        };
-    }
 
     private static User existingAdmin() {
         return new User(

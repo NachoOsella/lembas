@@ -2,6 +2,7 @@ package com.dietetica.lembas.catalog.repository;
 
 import com.dietetica.lembas.catalog.model.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,5 +30,15 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     /** Finds a child category by parent and name, ignoring case. */
     Optional<Category> findByParentIdAndNameIgnoreCase(Long parentId, String name);
+
+    /** Returns true when the category has at least one child category. */
+    boolean existsByParentId(Long parentId);
+
+    /**
+     * Counts products assigned to the given category (native query because the
+     * Product entity is not yet mapped in JPA).
+     */
+    @Query(value = "SELECT COUNT(*) FROM products WHERE category_id = :categoryId", nativeQuery = true)
+    long countProductsByCategoryId(Long categoryId);
 }
 

@@ -57,10 +57,32 @@ public class CategoryService {
         return toDto(category);
     }
 
-    /** Deletes a category, relying on database constraints to reject referenced rows. */
+    /**
+     * Deletes a category after verifying it has no child categories or product
+     * references. Throws a {@link DomainException} with a clear message when
+     * the category cannot be deleted.
+     */
     @Transactional
     public void delete(Long id) {
         Category category = findById(id);
+
+        if (categoryRepository.existsByParentId(id)) {
+            throw new DomainException(
+                    "CATEGORY_HAS_CHILDREN",
+                    HttpStatus.CONFLICT,
+                    "Cannot delete category \"" + category.getName() + "\": it has child categories"
+            );
+        }
+
+        long productCount = categoryRepository.countProductsByCategoryId(id);
+        if (productCount > 0) {
+            throw new DomainException(
+                    "CATEGORY_HAS_PRODUCTS",
+                    HttpStatus.CONFLICT,
+                    "Cannot delete category \"" + category.getName() + "\": " + productCount + " product(s) reference it"
+            );
+        }
+
         categoryRepository.delete(category);
     }
 
