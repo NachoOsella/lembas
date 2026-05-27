@@ -1,8 +1,10 @@
 <section class="metric-strip" aria-label="Resumen de metricas">
-  @for (metric of metrics(); track metric.label) {
+  @for (metric of metrics(); track metric.label; let i = $index) {
     <article
       class="metric-strip__item"
-      [class]="'metric-strip__item metric-strip__item--' + (metric.tone ?? 'forest')"
+      [class]="'metric-strip__item metric-strip__item--' + (metric.tone ?? 'forest') + (metric.trend ? ' metric-strip__item--trend-' + metric.trend : '')"
+      [style.animation-delay]="i * 0.08 + 's'"
+      [attr.aria-label]="metric.label + ': ' + metric.value + (metric.detail ? ', ' + metric.detail : '')"
     >
       @if (metric.icon) {
         <span class="metric-strip__icon" aria-hidden="true">
@@ -11,7 +13,17 @@
       }
       <div class="metric-strip__copy">
         <span class="metric-strip__label">{{ metric.label }}</span>
-        <strong class="metric-strip__value">{{ metric.value }}</strong>
+        <div class="metric-strip__value-row">
+          <strong class="metric-strip__value">{{ metric.value }}</strong>
+          @if (metric.trend === 'up' || metric.trend === 'down') {
+            <i
+              class="metric-strip__trend-icon pi"
+              [class]="'metric-strip__trend-icon pi ' + (metric.trend === 'up' ? 'pi-arrow-up' : 'pi-arrow-down')"
+              [attr.aria-label]="metric.trend === 'up' ? 'Tendencia ascendente' : 'Tendencia descendente'"
+              aria-hidden="true"
+            ></i>
+          }
+        </div>
         @if (metric.detail) {
           <span class="metric-strip__detail">{{ metric.detail }}</span>
         }

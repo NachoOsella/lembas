@@ -136,10 +136,10 @@ export class ComponentShowcase {
   // Metrics demo
   // ---------------------------------------------------------------------------
   protected readonly showcaseMetrics: AppMetricItem[] = [
-    { label: 'Ventas hoy', value: '$12.450', detail: '+12% vs ayer', icon: 'pi pi-shopping-cart', tone: 'forest' },
-    { label: 'Pedidos pendientes', value: '8', detail: '3 requieren atencion', icon: 'pi pi-clock', tone: 'amber' },
-    { label: 'Stock critico', value: '5', detail: 'productos por reponer', icon: 'pi pi-exclamation-triangle', tone: 'ink' },
-    { label: 'Clientes nuevos', value: '+23', detail: 'este mes', icon: 'pi pi-user-plus', tone: 'sage' },
+    { label: 'Ventas hoy', value: '$12.450', detail: '+12% vs ayer', icon: 'pi pi-shopping-cart', tone: 'forest', trend: 'up' },
+    { label: 'Pedidos pendientes', value: '8', detail: '3 requieren atencion', icon: 'pi pi-clock', tone: 'amber', trend: 'neutral' },
+    { label: 'Stock critico', value: '5', detail: 'productos por reponer', icon: 'pi pi-exclamation-triangle', tone: 'ink', trend: 'down' },
+    { label: 'Clientes nuevos', value: '+23', detail: 'este mes', icon: 'pi pi-user-plus', tone: 'sage', trend: 'up' },
   ];
 
   // ---------------------------------------------------------------------------
