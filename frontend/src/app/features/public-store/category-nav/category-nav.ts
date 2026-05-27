@@ -6,6 +6,7 @@ import { StoreCategory } from '../../../shared/models/category';
 @Component({
   selector: 'app-category-nav',
   templateUrl: './category-nav.html',
+  styleUrl: './category-nav.css',
 })
 export class CategoryNav {
   readonly categories = input.required<StoreCategory[]>();

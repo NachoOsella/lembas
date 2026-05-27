@@ -28,7 +28,7 @@
   <main class="mx-auto grid w-full max-w-[1600px] gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[300px_1fr] lg:px-10 lg:py-16">
     <aside class="lg:sticky lg:top-[100px] lg:self-start">
       <section
-        class="rounded-[20px] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+        class="rounded-xl bg-white p-6 border border-[rgba(7,95,54,0.08)] shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]"
         aria-label="Filtros del catálogo"
       >
         <div class="mb-6 flex items-center gap-3 border-b border-[#f0e6d3] pb-5">
@@ -56,7 +56,7 @@
 
     <section class="min-w-0">
       <div
-        class="mb-8 flex flex-col gap-4 rounded-[20px] bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] sm:flex-row sm:items-center sm:justify-between"
+        class="mb-8 flex flex-col gap-4 rounded-xl bg-white p-6 border border-[rgba(7,95,54,0.08)] shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)] sm:flex-row sm:items-center sm:justify-between"
       >
         <div>
           <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">Góndola</p>
@@ -84,17 +84,31 @@
       </div>
 
       @if (productsLoading() && !products().length) {
-        <div class="rounded-[20px] bg-white p-16 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+        <div class="rounded-xl bg-white p-16 border border-[rgba(7,95,54,0.08)] shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]">
           <app-loading-spinner label="Preparando estantes..." size="lg" surface="card" />
         </div>
       } @else if (productsError()) {
-        <app-error-alert
-          title="No pudimos cargar el catálogo"
-          message="Intentá nuevamente en unos segundos."
-          [dismissible]="false"
-        />
+        <div class="rounded-xl border border-[rgba(200,32,20,0.28)] bg-[hsl(4_82%_43%/_5%)] p-4">
+          <div class="flex items-start gap-3">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[rgba(200,32,20,0.12)] bg-white text-[#c82014]">
+              <i class="pi pi-exclamation-triangle text-sm" aria-hidden="true"></i>
+            </span>
+            <div class="flex-1">
+              <p class="text-[15px] font-bold text-[rgba(0,0,0,0.87)]">No pudimos cargar el catálogo</p>
+              <p class="mt-1 text-[13px] text-[rgba(0,0,0,0.58)]">Intentá nuevamente en unos segundos.</p>
+            </div>
+            <button
+              type="button"
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#c82014] transition-colors hover:bg-[rgba(200,32,20,0.08)]"
+              (click)="loadProducts()"
+              aria-label="Reintentar"
+            >
+              <i class="pi pi-refresh text-sm" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
       } @else if (initialLoadDone() && products().length === 0) {
-        <div class="rounded-[20px] bg-white p-12 text-center shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+        <div class="rounded-xl bg-white p-12 text-center border border-[rgba(7,95,54,0.08)] shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]">
           <app-empty-state
             icon="pi pi-shop"
             [title]="
@@ -112,7 +126,7 @@
 
         @if (totalRecords() > 0) {
           <div
-            class="mt-10 rounded-[20px] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+            class="mt-10 rounded-xl bg-white p-5 border border-[rgba(7,95,54,0.08)] shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]"
           >
             <app-pagination
               [totalRecords]="totalRecords()"

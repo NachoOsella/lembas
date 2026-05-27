@@ -337,8 +337,9 @@ describe('Catalog', () => {
 
     expect((c['productsError'] as () => boolean)()).toBe(true);
 
-    const errorAlert: HTMLElement | null = fixture.nativeElement.querySelector('app-error-alert');
-    expect(errorAlert).toBeTruthy();
+    // The error alert is now inline-styled with the Lembas design system
+    const errorText: HTMLElement | null = fixture.nativeElement.querySelector('button[aria-label="Reintentar"]');
+    expect(errorText).toBeTruthy();
   });
 
   // -------------------------------------------------------------------------

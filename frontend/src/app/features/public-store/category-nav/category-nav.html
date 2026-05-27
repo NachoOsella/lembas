@@ -5,36 +5,36 @@
     }
   </div>
 } @else if (error()) {
-  <div class="catalog-page__filter-error flex items-start gap-3 rounded-xl border border-[#c82014]/15 bg-[hsl(4_82%_43%_/_5%)] p-4 text-[13px] font-semibold text-[#c82014]">
+  <div class="catalog-page__filter-error flex items-start gap-3 rounded-xl border border-[rgba(200,32,20,0.15)] bg-[hsl(4_82%_43%/_5%)] p-4 text-[13px] font-semibold text-[#c82014]">
     <i class="pi pi-exclamation-circle mt-0.5" aria-hidden="true"></i>
     <p>No se pudieron cargar las categorías.</p>
   </div>
 } @else if (categories().length) {
-  <nav class="space-y-1.5" aria-label="Filtro de categorías">
+  <nav class="space-y-1" aria-label="Filtro de categorías">
     <button
       type="button"
-      class="catalog-page__pill flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-[13px] font-semibold tracking-[-0.01em] transition-all duration-200"
+      class="catalog-page__pill flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-[13px] font-semibold tracking-[-0.01em] transition-all duration-200 ease-out"
       [class.catalog-page__pill--active]="selectedCategoryId() === null"
       [class.bg-[#075f36]]="selectedCategoryId() === null"
       [class.text-white]="selectedCategoryId() === null"
-      [class.shadow-md]="selectedCategoryId() === null"
-      [class.hover:bg-[#f6ead6]]="selectedCategoryId() !== null"
+      [class.shadow-sm]="selectedCategoryId() === null"
+      [class.hover:bg-[rgba(47,141,114,0.06)]]="selectedCategoryId() !== null"
       (click)="allSelected.emit()"
       [attr.aria-pressed]="selectedCategoryId() === null"
     >
       <span>Todas</span>
-      <i class="pi pi-arrow-right text-[11px]" aria-hidden="true"></i>
+      <i class="pi pi-arrow-right text-[11px] transition-transform duration-200" [class.translate-x-0.5]="selectedCategoryId() === null" aria-hidden="true"></i>
     </button>
 
     @for (cat of categories(); track cat.id) {
       <button
         type="button"
-        class="catalog-page__pill flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-[13px] font-semibold tracking-[-0.01em] transition-all duration-200"
+        class="catalog-page__pill flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-[13px] font-semibold tracking-[-0.01em] transition-all duration-200 ease-out"
         [class.catalog-page__pill--active]="selectedCategoryId() === cat.id"
         [class.bg-[#075f36]]="selectedCategoryId() === cat.id"
         [class.text-white]="selectedCategoryId() === cat.id"
-        [class.shadow-md]="selectedCategoryId() === cat.id"
-        [class.hover:bg-[#f6ead6]]="selectedCategoryId() !== cat.id"
+        [class.shadow-sm]="selectedCategoryId() === cat.id"
+        [class.hover:bg-[rgba(47,141,114,0.06)]]="selectedCategoryId() !== cat.id"
         (click)="categorySelected.emit(cat.id)"
         [attr.aria-pressed]="selectedCategoryId() === cat.id"
       >
@@ -43,7 +43,7 @@
           @if (cat.productCount > 0) {
             <span class="text-[11px] opacity-60">{{ cat.productCount }}</span>
           }
-          <i class="pi pi-arrow-right text-[11px]" aria-hidden="true"></i>
+          <i class="pi pi-arrow-right text-[11px] transition-transform duration-200" [class.translate-x-0.5]="selectedCategoryId() === cat.id" aria-hidden="true"></i>
         </span>
       </button>
     }

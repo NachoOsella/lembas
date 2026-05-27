@@ -1,0 +1,25 @@
+:host {
+  display: block;
+}
+
+.catalog-page__pill {
+  position: relative;
+  overflow: hidden;
+}
+
+.catalog-page__pill:not(.catalog-page__pill--active)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(47, 141, 114, 0.04) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.catalog-page__pill:not(.catalog-page__pill--active):hover::before {
+  opacity: 1;
+}
+
+.catalog-page__pill--active {
+  box-shadow: 0 1px 3px rgba(7, 95, 54, 0.2);
+}
