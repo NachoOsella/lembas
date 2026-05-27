@@ -4,13 +4,11 @@
 
 .empty-state {
   align-items: center;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: var(--radius-card);
-  color: var(--color-text);
+  background: transparent;
+  color: rgba(0,0,0,0.87);
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
   justify-content: center;
   min-height: 19rem;
   padding: 2rem;
@@ -19,44 +17,52 @@
 
 .empty-state__icon {
   align-items: center;
-  background: var(--color-orange-wash);
-  border: 1px solid rgba(47, 141, 114, 0.08);
-  border-radius: 999px;
-  color: var(--color-primary);
+  background: #f6ead6;
+  border-radius: 50%;
+  color: #2f8d72;
   display: flex;
-  font-size: 1.45rem;
-  height: 4.5rem;
+  font-size: 32px;
+  height: 80px;
   justify-content: center;
-  width: 4.5rem;
+  width: 80px;
 }
 
 .empty-state__content {
-  max-width: 24rem;
+  max-width: 28rem;
 }
 
 .empty-state__content h2 {
-  color: var(--color-primary);
-  font-size: 1.5rem;
-  font-weight: 700;
+  color: rgba(0,0,0,0.87);
+  font-size: 24px;
+  font-weight: 600;
   letter-spacing: -0.01em;
-  line-height: 1.18;
+  line-height: 1.2;
   margin: 0;
 }
 
 .empty-state__content p {
-  color: var(--color-text-muted);
-  font-size: 0.95rem;
-  line-height: 1.55;
-  margin: 0.65rem 0 0;
+  color: rgba(0,0,0,0.58);
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0.75rem 0 0;
 }
 
 :host ::ng-deep .p-button {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  border-radius: var(--radius-pill);
+  background: #2f8d72;
+  border-color: #2f8d72;
+  border-radius: 50px;
   color: #ffffff;
-  font-weight: 700;
-  min-width: 9.5rem;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 12px 24px;
+  letter-spacing: -0.01em;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+:host ::ng-deep .p-button:hover {
+  transform: scale(0.95);
+  background: #075f36;
+  border-color: #075f36;
 }
 
 :host ::ng-deep .p-button .p-button-label {
