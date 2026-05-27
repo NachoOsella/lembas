@@ -39,7 +39,12 @@
         [attr.aria-pressed]="selectedCategoryId() === cat.id"
       >
         <span>{{ cat.name }}</span>
-        <i class="pi pi-arrow-right text-[11px]" aria-hidden="true"></i>
+        <span class="flex items-center gap-1.5">
+          @if (cat.productCount > 0) {
+            <span class="text-[11px] opacity-60">{{ cat.productCount }}</span>
+          }
+          <i class="pi pi-arrow-right text-[11px]" aria-hidden="true"></i>
+        </span>
       </button>
     }
   </nav>

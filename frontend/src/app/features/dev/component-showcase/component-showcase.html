@@ -143,6 +143,83 @@
   </section>
 
   <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Card Banner                                                   -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-card-banner">
+    <div class="showcase-section-head">
+      <h2 id="sec-card-banner" class="showcase-section-title">Card Banner</h2>
+      <p class="showcase-section-desc">
+        Tarjeta generica con mancha decorativa. Configurable: color, posicion, opacidad y tamanho.
+      </p>
+    </div>
+
+    <div class="showcase-row showcase-row--2col">
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">CardBanner -- default (top-right green)</span>
+        <app-card-banner>
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">Titulo</p>
+          <h3 class="mt-2 text-xl font-semibold tracking-[-0.02em]">Contenido del banner</h3>
+          <p class="mt-2 text-sm text-stone-600">Descripcion breve del componente con mancha decorativa verde.</p>
+        </app-card-banner>
+      </div>
+
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">CardBanner -- orange, bottom-left</span>
+        <app-card-banner
+          blobColor="#f29d52"
+          [blobOpacity]="10"
+          blobPosition="bottom-left"
+          blobSize="lg"
+          bgColor="#fffaf0"
+        >
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-700">Ofertas</p>
+          <h3 class="mt-2 text-xl font-semibold tracking-[-0.02em]">Promociones de la semana</h3>
+          <p class="mt-2 text-sm text-stone-600">Mancha naranja grande en la esquina inferior izquierda.</p>
+        </app-card-banner>
+      </div>
+    </div>
+
+    <div class="showcase-row showcase-row--2col mt-4">
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">CardBanner -- dark theme, center-right</span>
+        <app-card-banner
+          bgColor="#075f36"
+          textColor="#ffffff"
+          borderColor="rgba(255,255,255,0.1)"
+          blobColor="#ffffff"
+          [blobOpacity]="8"
+          blobPosition="center-right"
+          blobSize="lg"
+        >
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300">Feature band</p>
+          <h3 class="mt-2 text-xl font-semibold tracking-[-0.02em] text-white">Titulo sobre fondo oscuro</h3>
+          <p class="mt-2 text-sm text-emerald-100/70">Mancha blanca sutil a la derecha.</p>
+        </app-card-banner>
+      </div>
+
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">CardBanner -- clickable, no blob</span>
+        <app-card-banner
+          [clickable]="true"
+          [showBlob]="false"
+          borderColor="rgba(47,141,114,0.2)"
+          padding="1.5rem"
+        >
+          <div class="flex items-center gap-4">
+            <span class="flex h-12 w-12 items-center justify-center rounded-full bg-[#2f8d72]/10 text-[#2f8d72]">
+              <i class="pi pi-arrow-right text-lg"></i>
+            </span>
+            <div>
+              <h3 class="text-base font-semibold tracking-[-0.01em]">Card clickeable sin mancha</h3>
+              <p class="text-sm text-stone-500">Con hover effect y sin decoracion.</p>
+            </div>
+          </div>
+        </app-card-banner>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
   <!--  Dialogs / Modals                                              -->
   <!-- ════════════════════════════════════════════════════════════════ -->
   <section class="showcase-section" aria-labelledby="sec-dialogs">

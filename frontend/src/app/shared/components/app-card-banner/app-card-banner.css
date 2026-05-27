@@ -1,0 +1,35 @@
+:host {
+  display: block;
+}
+
+.card-banner {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+}
+
+.card-banner--clickable {
+  cursor: pointer;
+}
+
+.card-banner--clickable:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.card-banner__blob {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure content sits above the blob */
+.card-banner > :not(.card-banner__blob) {
+  position: relative;
+  z-index: 1;
+}

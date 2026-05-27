@@ -101,12 +101,17 @@ public class CategoryService {
     }
 
     /**
-     * Lists all categories for the public store, ordered alphabetically.
+     * Lists all categories for the public store, ordered alphabetically,
+     * with the count of products in each category.
      */
     @Transactional(readOnly = true)
     public List<CategoryStoreDto> listStoreCategories() {
         return categoryRepository.findAllByOrderByNameAsc().stream()
-                .map(category -> new CategoryStoreDto(category.getId(), category.getName(), 0L))
+                .map(category -> new CategoryStoreDto(
+                        category.getId(),
+                        category.getName(),
+                        categoryRepository.countProductsByCategoryId(category.getId())
+                ))
                 .toList();
     }
 

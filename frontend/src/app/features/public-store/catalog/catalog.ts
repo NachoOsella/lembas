@@ -9,6 +9,7 @@ import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { AppPagination } from '../../../shared/components/app-pagination/app-pagination';
 import { StoreProductCard } from '../../../shared/components/store-product-card/store-product-card';
+import { HeroFlowers } from '../../../shared/components/hero-flowers/hero-flowers';
 import { CategoryNav } from '../category-nav/category-nav';
 
 /** Page size for the product grid. */
@@ -16,7 +17,7 @@ const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-catalog',
-  imports: [LoadingSpinner, ErrorAlert, EmptyState, AppPagination, StoreProductCard, CategoryNav],
+  imports: [LoadingSpinner, ErrorAlert, EmptyState, AppPagination, StoreProductCard, HeroFlowers, CategoryNav],
   templateUrl: './catalog.html',
   styleUrl: './catalog.css',
 })
@@ -166,6 +167,17 @@ export class Catalog implements OnInit {
           });
         },
       });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Search
+  // ---------------------------------------------------------------------------
+  /** Clears the search query and reloads products. */
+  protected clearSearch(): void {
+    this.searchQuery.set('');
+    this.first.set(0);
+    this.updateUrl();
+    this.loadProducts();
   }
 
   // ---------------------------------------------------------------------------

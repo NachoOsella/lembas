@@ -1,0 +1,21 @@
+<div
+  class="card-banner"
+  [class.card-banner--clickable]="clickable()"
+  [style.backgroundColor]="bgColor()"
+  [style.borderColor]="borderColor()"
+  [style.color]="textColor()"
+  [style.borderRadius]="borderRadius()"
+  [style.padding]="padding()"
+>
+  @if (showBlob()) {
+    <div
+      class="card-banner__blob"
+      [class]="blobPositionClass"
+      [style.width]="blobSizePx"
+      [style.height]="blobSizePx"
+      [style.background]="blobBg"
+      aria-hidden="true"
+    ></div>
+  }
+  <ng-content />
+</div>

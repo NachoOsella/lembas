@@ -6,6 +6,9 @@
     <div class="pointer-events-none absolute -right-16 -top-16 h-[400px] w-[400px] rounded-full bg-[#f29d52]/8 blur-3xl" aria-hidden="true"></div>
     <div class="pointer-events-none absolute -bottom-20 -left-20 h-[300px] w-[300px] rounded-full bg-[#2f8d72]/10 blur-3xl" aria-hidden="true"></div>
 
+    <!-- Decorative Lembas flowers -->
+    <app-hero-flowers />
+
     <div class="relative mx-auto max-w-[1440px]">
       <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-50/70 mb-3">
         Catálogo online
@@ -61,10 +64,21 @@
         </div>
         @if (searchQuery()) {
           <div
-            class="inline-flex items-center gap-2 rounded-full border border-[#d7eadf] bg-[#d7eadf]/30 px-4 py-2 text-[13px] font-semibold text-[rgba(0,0,0,0.87)] tracking-[-0.01em]"
+            class="inline-flex items-center gap-3 rounded-full border border-[#2f8d72]/20 bg-[#2f8d72]/5 px-4 py-2 text-[13px] font-semibold tracking-[-0.01em]"
           >
-            <i class="pi pi-search text-[#2f8d72]" aria-hidden="true"></i>
-            Buscando: <strong class="text-[#075f36]">{{ searchQuery() }}</strong>
+            <span class="flex items-center gap-2 text-[rgba(0,0,0,0.87)]">
+              <i class="pi pi-search text-[11px] text-[#2f8d72]" aria-hidden="true"></i>
+              <span>Resultados para</span>
+              <span class="font-bold text-[#075f36]">"{{ searchQuery() }}"</span>
+            </span>
+            <button
+              type="button"
+              class="flex h-5 w-5 items-center justify-center rounded-full bg-[rgba(0,0,0,0.06)] text-[rgba(0,0,0,0.45)] transition-all hover:bg-[rgba(0,0,0,0.1)] hover:text-[rgba(0,0,0,0.7)]"
+              (click)="clearSearch()"
+              aria-label="Limpiar busqueda"
+            >
+              <i class="pi pi-times text-[10px]" aria-hidden="true"></i>
+            </button>
           </div>
         }
       </div>

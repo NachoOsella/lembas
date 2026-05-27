@@ -4,12 +4,14 @@ import { ButtonDirective } from 'primeng/button';
 import { Ripple } from 'primeng/ripple';
 
 import { CatalogService } from '../../../core/services/catalog';
+import { CardBanner } from '../../../shared/components/app-card-banner/app-card-banner';
 import { StoreProductCard } from '../../../shared/components/store-product-card/store-product-card';
+import { HeroFlowers } from '../../../shared/components/hero-flowers/hero-flowers';
 import { ProductSummary } from '../../../shared/models/product';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, ButtonDirective, Ripple, StoreProductCard],
+  imports: [CardBanner, RouterLink, ButtonDirective, Ripple, StoreProductCard, HeroFlowers],
   template: `
     <div class="home-page min-h-screen overflow-hidden bg-[#f5ead8] text-stone-950">
       <!-- Editorial hero with organic depth -->
@@ -20,10 +22,13 @@ import { ProductSummary } from '../../../shared/models/product';
         <div class="pointer-events-none absolute -right-20 -top-20 h-[500px] w-[500px] rounded-full bg-[#f29d52]/10 blur-3xl" aria-hidden="true"></div>
         <div class="pointer-events-none absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-[#2f8d72]/10 blur-3xl" aria-hidden="true"></div>
 
+        <!-- Decorative Lembas flowers -->
+        <app-hero-flowers />
+
         <div class="relative mx-auto grid w-full max-w-[1600px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_0.85fr] lg:px-10">
           <section class="w-full max-w-3xl min-w-0">
             <span
-              class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-50/90"
+              class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white/90"
             >
               <i class="pi pi-leaf text-[0.7rem]" aria-hidden="true"></i>
               Dietética Lembas
@@ -35,7 +40,7 @@ import { ProductSummary } from '../../../shared/models/product';
               Tu despensa natural, lista para retirar
             </h1>
 
-            <p class="mt-6 w-full max-w-[660px] text-base font-medium leading-7 text-emerald-50/80 sm:text-lg">
+            <p class="mt-6 w-full max-w-[660px] text-base font-medium leading-7 text-white/80 sm:text-lg">
               Productos saludables para comprar online y retirar en sucursal.
             </p>
 
@@ -44,7 +49,7 @@ import { ProductSummary } from '../../../shared/models/product';
                 pButton
                 pRipple
                 routerLink="/store/catalog"
-                class="!rounded-full !border-0 !bg-white !px-8 !py-4 !font-bold !text-[#075f36] shadow-xl shadow-emerald-950/20 transition-all hover:-translate-y-0.5 hover:shadow-2xl"
+                class="!rounded-full !border-0 !bg-white !px-8 !py-4 !font-bold !text-[#075f36] shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 hover:shadow-2xl"
               >
                 Explorar catálogo
                 <i class="pi pi-arrow-right ml-2" aria-hidden="true"></i>
@@ -54,7 +59,7 @@ import { ProductSummary } from '../../../shared/models/product';
 
           <aside class="hidden lg:block" aria-label="Resumen de compra">
             <div
-              class="home-ticket relative ml-auto max-w-sm rounded-[2rem] border border-white/10 bg-[#fffaf0]/95 p-7 shadow-2xl shadow-emerald-950/30 backdrop-blur-sm"
+              class="home-ticket relative ml-auto max-w-sm rounded-[2rem] border border-white/10 bg-[#fffaf0]/95 p-7 shadow-2xl shadow-black/30 backdrop-blur-sm"
             >
               <div class="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#064e3b]" aria-hidden="true"></div>
               <div class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#064e3b]" aria-hidden="true"></div>
@@ -62,7 +67,7 @@ import { ProductSummary } from '../../../shared/models/product';
               <div
                 class="flex items-center justify-between border-b-2 border-dashed border-stone-300 pb-5"
               >
-                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-900/60">
+                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-black/58">
                   Pedido simple
                 </span>
                 <span class="rounded-full bg-[#075f36] px-3 py-1 text-[11px] font-bold text-white tracking-wide">
@@ -72,21 +77,21 @@ import { ProductSummary } from '../../../shared/models/product';
               <ul class="mt-6 space-y-5 text-sm font-semibold text-stone-700">
                 <li class="flex items-center gap-4">
                   <span
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72] font-bold text-sm"
                     >1</span
                   >
                   Explorá el catálogo y filtrá por categoría
                 </li>
                 <li class="flex items-center gap-4">
                   <span
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72] font-bold text-sm"
                     >2</span
                   >
                   Armá tu pedido y confirmá el pago
                 </li>
                 <li class="flex items-center gap-4">
                   <span
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72] font-bold text-sm"
                     >3</span
                   >
                   Retirá en sucursal sin filas
@@ -105,7 +110,7 @@ import { ProductSummary } from '../../../shared/models/product';
         >
           <div class="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">
+              <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">
                 Selección curada
               </p>
               <h2
@@ -117,7 +122,7 @@ import { ProductSummary } from '../../../shared/models/product';
             </div>
             <a
               routerLink="/store/catalog"
-              class="inline-flex items-center gap-2 text-sm font-bold text-emerald-800 transition hover:text-emerald-950"
+              class="inline-flex items-center gap-2 text-sm font-bold text-[#2f8d72] transition hover:text-[#075f36]"
             >
               Ver catálogo completo <i class="pi pi-arrow-right" aria-hidden="true"></i>
             </a>
@@ -125,7 +130,7 @@ import { ProductSummary } from '../../../shared/models/product';
 
           @if (featuredProducts().length > 0) {
             <div
-              class="home-marquee rounded-[2rem] border border-emerald-950/8 bg-[#fffaf0] p-5 shadow-sm"
+              class="home-marquee rounded-[2rem] border border-black/8 bg-[#fffaf0] p-5 shadow-sm"
               aria-label="Productos recomendados en movimiento"
             >
               <div class="home-marquee__track">
@@ -153,33 +158,38 @@ import { ProductSummary } from '../../../shared/models/product';
           class="mx-auto mt-20 w-full max-w-[1600px] px-4 sm:px-6 lg:px-10"
           aria-label="Acceso al catálogo"
         >
-          <div
-            class="relative overflow-hidden rounded-[2rem] border border-emerald-950/8 bg-white p-8 shadow-sm sm:flex-row sm:items-center sm:justify-between lg:flex"
+          <app-card-banner
+            blobColor="#2f8d72"
+            [blobOpacity]="5"
+            blobPosition="top-right"
+            blobSize="md"
+            padding="2rem"
           >
-            <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#2f8d72]/5" aria-hidden="true"></div>
-            <div>
-              <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">
-                Catálogo completo
-              </p>
-              <h2 class="mt-3 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
-                Todas las categorías en la góndola
-              </h2>
-              <p class="mt-3 w-full max-w-[620px] text-sm font-medium leading-6 text-stone-600 sm:text-base">
-                Buscá por categoría, marca o nombre del producto.
-              </p>
+            <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between lg:flex">
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">
+                  Catálogo completo
+                </p>
+                <h2 class="mt-3 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
+                  Todas las categorías en la góndola
+                </h2>
+                <p class="mt-3 w-full max-w-[620px] text-sm font-medium leading-6 text-stone-600 sm:text-base">
+                  Buscá por categoría, marca o nombre del producto.
+                </p>
+              </div>
+              <div class="flex shrink-0 lg:ml-8">
+                <a
+                  pButton
+                  pRipple
+                  routerLink="/store/catalog"
+                  class="!rounded-full !border-0 !bg-[#075f36] !px-8 !py-4 !font-bold !text-white transition-all hover:!bg-[#06402a] hover:-translate-y-0.5"
+                >
+                  Abrir catálogo
+                  <i class="pi pi-arrow-right ml-2" aria-hidden="true"></i>
+                </a>
+              </div>
             </div>
-            <div class="mt-6 flex shrink-0 lg:mt-0 lg:ml-8">
-              <a
-                pButton
-                pRipple
-                routerLink="/store/catalog"
-                class="!rounded-full !border-0 !bg-[#075f36] !px-8 !py-4 !font-bold !text-white transition-all hover:!bg-[#06402a] hover:-translate-y-0.5"
-              >
-                Abrir catálogo
-                <i class="pi pi-arrow-right ml-2" aria-hidden="true"></i>
-              </a>
-            </div>
-          </div>
+          </app-card-banner>
         </section>
       </main>
     </div>

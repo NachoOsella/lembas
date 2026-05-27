@@ -160,9 +160,10 @@ describe('Catalog', () => {
     // "Todas" + 3 categories
     expect(pills.length).toBe(4);
     expect(pills[0].textContent?.trim()).toBe('Todas');
-    expect(pills[1].textContent?.trim()).toBe('Cereales');
-    expect(pills[2].textContent?.trim()).toBe('Suplementos');
-    expect(pills[3].textContent?.trim()).toBe('Snacks');
+    // Pills now include product count, so check that category name is present
+    expect(pills[1].textContent).toContain('Cereales');
+    expect(pills[2].textContent).toContain('Suplementos');
+    expect(pills[3].textContent).toContain('Snacks');
   });
 
   it('should mark "Todas" as active by default', () => {
