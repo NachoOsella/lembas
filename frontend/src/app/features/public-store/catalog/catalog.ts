@@ -9,13 +9,14 @@ import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { AppPagination } from '../../../shared/components/app-pagination/app-pagination';
 import { StoreProductCard } from '../../../shared/components/store-product-card/store-product-card';
+import { CategoryNav } from '../category-nav/category-nav';
 
 /** Page size for the product grid. */
 const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-catalog',
-  imports: [LoadingSpinner, ErrorAlert, EmptyState, AppPagination, StoreProductCard],
+  imports: [LoadingSpinner, ErrorAlert, EmptyState, AppPagination, StoreProductCard, CategoryNav],
   templateUrl: './catalog.html',
   styleUrl: './catalog.css',
 })

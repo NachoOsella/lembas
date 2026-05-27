@@ -60,6 +60,7 @@ public class Category {
     /** Self-referencing parent category for the hierarchy tree. Null for root categories. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
+    @Setter
     @ToString.Exclude
     private Category parent;
 

@@ -18,6 +18,10 @@ export default [
         loadComponent: () => import('./dashboard/dashboard').then((m) => m.Dashboard),
       },
       {
+        path: 'categories',
+        loadComponent: () => import('./categories/categories').then((m) => m.Categories),
+      },
+      {
         path: 'products',
         loadComponent: () => import('./products/products').then((m) => m.Products),
       },

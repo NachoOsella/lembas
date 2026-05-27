@@ -1,11 +1,7 @@
-/**
- * Category DTO returned from GET /api/store/categories.
- */
-export interface Category {
-  id: number;
-  name: string;
-  productCount: number;
-}
+import { StoreCategory } from './category';
+
+/** Category DTO returned from GET /api/store/categories. */
+export type Category = StoreCategory;
 
 /**
  * Product summary DTO returned from GET /api/store/products.

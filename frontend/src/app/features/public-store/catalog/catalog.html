@@ -40,58 +40,14 @@
           </div>
         </div>
 
-        @if (categoriesLoading()) {
-          <div class="space-y-3" aria-hidden="true">
-            @for (_ of [1, 2, 3, 4, 5, 6]; track _) {
-              <div class="h-11 animate-pulse rounded-xl bg-[#f6ead6]/60"></div>
-            }
-          </div>
-        } @else if (categoriesError()) {
-          <div
-            class="catalog-page__filter-error flex items-start gap-3 rounded-xl border border-[#c82014]/15 bg-[hsl(4_82%_43%_/_5%)] p-4 text-[13px] font-semibold text-[#c82014]"
-          >
-            <i class="pi pi-exclamation-circle mt-0.5" aria-hidden="true"></i>
-            <p>No se pudieron cargar las categorías.</p>
-          </div>
-        } @else if (showFilter()) {
-          <nav class="space-y-1.5" aria-label="Filtro de categorías">
-            <button
-              type="button"
-              class="catalog-page__pill flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-[13px] font-semibold tracking-[-0.01em] transition-all duration-200"
-              [class.catalog-page__pill--active]="selectedCategoryId() === null"
-              [class.bg-[#075f36]]="selectedCategoryId() === null"
-              [class.text-white]="selectedCategoryId() === null"
-              [class.shadow-md]="selectedCategoryId() === null"
-              [class.bg-transparent]="selectedCategoryId() !== null"
-              [class.text-[rgba(0,0,0,0.6)]]="selectedCategoryId() !== null"
-              [class.hover:bg-[#f6ead6]]="selectedCategoryId() !== null"
-              (click)="selectAllCategories()"
-              [attr.aria-pressed]="selectedCategoryId() === null"
-            >
-              <span>Todas</span>
-              <i class="pi pi-arrow-right text-[11px] transition-transform" [class.translate-x-0.5]="selectedCategoryId() === null" aria-hidden="true"></i>
-            </button>
-
-            @for (cat of categories(); track cat.id) {
-              <button
-                type="button"
-                class="catalog-page__pill flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-[13px] font-semibold tracking-[-0.01em] transition-all duration-200"
-                [class.catalog-page__pill--active]="isCategorySelected(cat.id)"
-                [class.bg-[#075f36]]="isCategorySelected(cat.id)"
-                [class.text-white]="isCategorySelected(cat.id)"
-                [class.shadow-md]="isCategorySelected(cat.id)"
-                [class.bg-transparent]="!isCategorySelected(cat.id)"
-                [class.text-[rgba(0,0,0,0.6)]]="!isCategorySelected(cat.id)"
-                [class.hover:bg-[#f6ead6]]="!isCategorySelected(cat.id)"
-                (click)="selectCategory(cat.id)"
-                [attr.aria-pressed]="isCategorySelected(cat.id)"
-              >
-                <span>{{ cat.name }}</span>
-                <i class="pi pi-arrow-right text-[11px] transition-transform" [class.translate-x-0.5]="isCategorySelected(cat.id)" aria-hidden="true"></i>
-              </button>
-            }
-          </nav>
-        }
+        <app-category-nav
+          [categories]="categories()"
+          [loading]="categoriesLoading()"
+          [error]="categoriesError()"
+          [selectedCategoryId]="selectedCategoryId()"
+          (allSelected)="selectAllCategories()"
+          (categorySelected)="selectCategory($event)"
+        />
       </section>
     </aside>
 

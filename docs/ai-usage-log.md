@@ -115,3 +115,9 @@
 - `frontend/src/app/core/services/auth.ts`, `frontend/src/app/core/interceptors/auth-interceptor.ts`, `frontend/src/app/app.config.ts` -- el frontend ahora usa el refresh token persistido para renovar sesion ante 401, comparte una unica renovacion para requests paralelas y reintenta la request original con el access token nuevo.
 - `backend/src/test/java/com/dietetica/lembas/auth/`, `frontend/src/app/core/` -- agregada cobertura de rotacion, endpoint refresh, persistencia de tokens renovados y retry/limpieza de auth ante fallos de refresh.
 - `frontend/src/app/features/public-store/{home,catalog,store-layout}/`, `frontend/src/app/app.routes.ts`, `frontend/src/app/shared/components/store-product-card/` -- redisenada landing y catalogo publico con estética editorial/apotecaria sin gradientes, recomendados en marquee horizontal, card de producto reutilizable, home sin grilla de categorias, corregidos links a `/store/catalog`, busqueda del header y alias `/catalog` para acceso directo.
+
+## 2026-05-27
+
+- `backend/src/main/java/com/dietetica/lembas/catalog/` y tests -- implementado CRUD admin de categorias para S1-US07 con DTOs, validacion de parent/nombre duplicado por nivel, endpoint publico existente y cobertura unitaria.
+- `frontend/src/app/features/admin/categories/`, `core/services/category.ts`, rutas/admin layout -- agregada pantalla de administracion de categorias con tabla paginada, formulario modal, validacion en tiempo real, confirmacion de eliminacion y estados loading/error/empty.
+- `frontend/src/app/features/public-store/category-nav/`, `public-store/catalog/` -- extraido filtro publico reutilizable de categorias e integrado al catalogo.
