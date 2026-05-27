@@ -23,7 +23,7 @@ Sprint 0: backend/ frontend/ on disk untracked, only docs/ committed on main.
 
 ## GIT
 
-Feature branches from main, squash-merge PRs. Conventional commits: feat fix docs refactor test chore. No direct main commits (except docs).
+Do not commit changes unless the user explicitly asks for a commit. Never work directly on main: all implementation work must happen on a user-story branch. Conventional commits: feat fix docs refactor test chore.
 
 ## BE (JAVA)
 
@@ -65,7 +65,7 @@ BE: JUnit5+AssertJ (unit, @WebMvcTest, Testcontainers). FE: Vitest 4.0.8+jsdom 2
 
 ## HARD NO
 
-Microservices, msg queues, Redis, separate POS/ONLINE models, home delivery, fiscal invoicing, guest checkout, AI/LLM, mobile app, notifications, Angular Material, exposing JPA entities from controllers, field injection, skipping critical tests, commits to main.
+Microservices, msg queues, Redis, separate POS/ONLINE models, home delivery, fiscal invoicing, guest checkout, AI/LLM, mobile app, notifications, Angular Material, exposing JPA entities from controllers, field injection, skipping critical tests, working directly on main.
 
 ## GOTCHAS
 
