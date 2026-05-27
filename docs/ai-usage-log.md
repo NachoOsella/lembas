@@ -108,3 +108,9 @@
 - `backend/src/test/java/com/dietetica/lembas/users/web/UserAdminControllerTest.java` -- +7 tests para `GET /api/admin/users/metrics` (200 ADMIN, 403 MANAGER, 403 EMPLOYEE, 401 unauthenticated).
 - `frontend/src/app/features/admin/users/user-list/user-list.ts` -- `loadMetrics` con `error` callback que muestra toast via `MessageService` en vez de fallar silenciosamente con ceros.
 - `docs/05-api/endpoints.md` -- documentado `search` y `metrics` en `GET /api/admin/users`.
+
+## 2026-05-27
+
+- `backend/src/main/java/com/dietetica/lembas/auth/`, `backend/src/main/resources/db/migration/V11__refresh_tokens.sql` -- implementada rotacion real de refresh tokens: tabla `refresh_tokens` con hash SHA-256, endpoint `POST /api/auth/refresh`, invalidacion del token anterior y revocacion defensiva ante reuse.
+- `frontend/src/app/core/services/auth.ts`, `frontend/src/app/core/interceptors/auth-interceptor.ts`, `frontend/src/app/app.config.ts` -- el frontend ahora usa el refresh token persistido para renovar sesion ante 401, comparte una unica renovacion para requests paralelas y reintenta la request original con el access token nuevo.
+- `backend/src/test/java/com/dietetica/lembas/auth/`, `frontend/src/app/core/` -- agregada cobertura de rotacion, endpoint refresh, persistencia de tokens renovados y retry/limpieza de auth ante fallos de refresh.

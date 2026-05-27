@@ -1,5 +1,6 @@
 package com.dietetica.lembas;
 
+import com.dietetica.lembas.auth.repository.RefreshTokenRepository;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.users.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,12 @@ class LembasBackendApplicationTests {
      */
     @MockitoBean
     private UserRepository userRepository;
+
+    /**
+     * Provides a refresh token repository collaborator while JPA repositories are disabled.
+     */
+    @MockitoBean
+    private RefreshTokenRepository refreshTokenRepository;
 
     /**
      * Provides a branch repository collaborator while JPA repositories are disabled.

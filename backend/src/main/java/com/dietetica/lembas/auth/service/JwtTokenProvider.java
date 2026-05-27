@@ -4,7 +4,6 @@ import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -30,7 +29,7 @@ import java.util.UUID;
 public class JwtTokenProvider {
 
     /** Refresh token TTL — 7 days. */
-    private static final Duration REFRESH_EXPIRATION = Duration.ofDays(7);
+    public static final Duration REFRESH_EXPIRATION = Duration.ofDays(7);
 
     private static final String TOKEN_TYPE_CLAIM = "tokenType";
     private static final String ACCESS_TOKEN_TYPE = "ACCESS";
@@ -125,6 +124,16 @@ public class JwtTokenProvider {
      */
     public boolean isAccessToken(Claims claims) {
         return ACCESS_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class));
+    }
+
+    /**
+     * Returns whether the parsed claims belong to a refresh token.
+     *
+     * @param claims parsed JWT claims
+     * @return {@code true} when the token is intended for token refresh
+     */
+    public boolean isRefreshToken(Claims claims) {
+        return REFRESH_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class));
     }
 
     /**

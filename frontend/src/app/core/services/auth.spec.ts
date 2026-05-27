@@ -223,6 +223,58 @@ describe('Auth service', () => {
     });
   });
 
+  describe('refreshSession', () => {
+    let store: Record<string, string>;
+
+    beforeEach(() => {
+      store = stubLocalStorage();
+    });
+
+    /** Should call refresh endpoint and persist the rotated token pair. */
+    it('Should_refreshAndPersistTokens_when_refreshTokenExists', () => {
+      const rotatedResponse: AuthResponse = {
+        token: buildFakeJwt({
+          sub: '1',
+          email: 'frodo@lembas.com',
+          role: 'CUSTOMER',
+          tokenType: 'ACCESS',
+          iat: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + 86400,
+        }),
+        refreshToken: 'rotated-refresh-token',
+        user: successResponse.user,
+      };
+      service.saveAuthResponse(successResponse);
+
+      service.refreshSession().subscribe({
+        next: (response) => {
+          expect(response.refreshToken).toBe('rotated-refresh-token');
+        },
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/refresh`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ refreshToken: 'jwt-refresh-token' });
+      req.flush(rotatedResponse);
+
+      expect(service.getAccessToken()).toBe(rotatedResponse.token);
+      expect(service.getRefreshToken()).toBe('rotated-refresh-token');
+      expect(store['lembas_refresh_token']).toBe('rotated-refresh-token');
+    });
+
+    /** Should fail locally without calling the API when no refresh token exists. */
+    it('Should_throwError_when_noRefreshTokenExists', () => {
+      service.refreshSession().subscribe({
+        next: () => {
+          throw new Error('Expected error, got success');
+        },
+        error: (error) => {
+          expect(error.message).toBe('No refresh token available');
+        },
+      });
+    });
+  });
+
   describe('logout', () => {
     let store: Record<string, string>;
 

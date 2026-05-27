@@ -5,7 +5,7 @@ import { MessageService } from 'primeng/api';
 import { catchError, throwError } from 'rxjs';
 
 /** API paths whose errors are handled directly by their owning forms. */
-const FORM_OWNED_AUTH_PATHS = ['/api/auth/login', '/api/auth/register'];
+const FORM_OWNED_AUTH_PATHS = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh'];
 
 /** Time window used to collapse identical infrastructure error toasts. */
 const DUPLICATE_TOAST_WINDOW_MS = 1500;

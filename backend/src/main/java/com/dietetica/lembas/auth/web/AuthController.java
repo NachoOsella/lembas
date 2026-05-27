@@ -2,6 +2,7 @@ package com.dietetica.lembas.auth.web;
 
 import com.dietetica.lembas.auth.dto.AuthResponse;
 import com.dietetica.lembas.auth.dto.LoginRequest;
+import com.dietetica.lembas.auth.dto.RefreshTokenRequest;
 import com.dietetica.lembas.auth.dto.RegisterRequest;
 import com.dietetica.lembas.auth.service.AuthService;
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
@@ -50,6 +51,17 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.authenticate(request);
+    }
+
+    /**
+     * Exchanges a valid refresh token for a new rotated token pair.
+     *
+     * @param request refresh-token payload
+     * @return authentication response with fresh access and refresh tokens
+     */
+    @PostMapping("/refresh")
+    public AuthResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return authService.refresh(request.refreshToken());
     }
 
     /**
