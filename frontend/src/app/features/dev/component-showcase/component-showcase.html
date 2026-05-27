@@ -354,7 +354,17 @@
 
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppToast</span>
-      <p class="showcase-spot-hint">Inyecta MessageService en tu feature para mostrar toasts.</p>
+      <p class="showcase-spot-hint">
+        Notificaciones toast con 4 tipos semanticos. Cada tipo tiene un color de border izquierdo
+        e icono circular diferenciado.
+      </p>
+      <div class="flex flex-wrap gap-2 mb-3">
+        <app-button variant="primary" size="sm" icon="pi pi-check" (click)="showToastSuccess()">Exito</app-button>
+        <app-button variant="danger" size="sm" icon="pi pi-times-circle" (click)="showToastError()">Error</app-button>
+        <app-button variant="secondary" size="sm" icon="pi pi-exclamation-triangle" (click)="showToastWarn()">Advertencia</app-button>
+        <app-button variant="ghost" size="sm" icon="pi pi-info-circle" (click)="showToastInfo()">Info</app-button>
+        <app-button variant="primary" size="sm" icon="pi pi-layer-group" (click)="showToastAll()">Mostrar todos</app-button>
+      </div>
       <app-toast />
     </div>
   </section>

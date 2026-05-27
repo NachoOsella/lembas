@@ -16,6 +16,11 @@ export class CategoryService {
     return this.http.get<CategoryDto[]>(this.adminUrl);
   }
 
+  /** Returns admin categories matching the search term. */
+  searchCategories(search: string): Observable<CategoryDto[]> {
+    return this.http.get<CategoryDto[]>(this.adminUrl, { params: { search } });
+  }
+
   /** Creates a root or child category. */
   createCategory(request: CategoryRequest): Observable<CategoryDto> {
     return this.http.post<CategoryDto>(this.adminUrl, request);

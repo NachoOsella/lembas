@@ -19,6 +19,7 @@ export class Categories {
   protected readonly categories = signal<CategoryDto[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal('');
+  protected readonly searchQuery = signal('');
 
   constructor() {
     this.refresh();
@@ -28,7 +29,11 @@ export class Categories {
   protected refresh(): void {
     this.loading.set(true);
     this.error.set('');
-    this.categoryService.listAdminCategories().subscribe({
+    const query = this.searchQuery();
+    const request$ = query.trim()
+      ? this.categoryService.searchCategories(query)
+      : this.categoryService.listAdminCategories();
+    request$.subscribe({
       next: (categories) => {
         this.categories.set(categories);
         this.loading.set(false);
@@ -38,6 +43,12 @@ export class Categories {
         this.loading.set(false);
       },
     });
+  }
+
+  /** Handles search input from the category list. */
+  protected onSearch(query: string): void {
+    this.searchQuery.set(query);
+    this.refresh();
   }
 
   /** Opens the category creation modal. */

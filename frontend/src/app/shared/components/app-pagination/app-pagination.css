@@ -69,3 +69,20 @@
   font-size: 14px;
   color: rgba(0,0,0,0.87);
 }
+
+/* Mobile: larger touch targets (WCAG 44px minimum) */
+@media (max-width: 34rem) {
+  :host ::ng-deep .app-pagination .p-paginator-page,
+  :host ::ng-deep .app-pagination .p-paginator-first,
+  :host ::ng-deep .app-pagination .p-paginator-prev,
+  :host ::ng-deep .app-pagination .p-paginator-next,
+  :host ::ng-deep .app-pagination .p-paginator-last {
+    min-width: 44px;
+    height: 44px;
+    font-size: 15px;
+  }
+
+  :host ::ng-deep .app-pagination .p-dropdown {
+    height: 44px;
+  }
+}

@@ -10,11 +10,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -82,5 +84,48 @@ class CategoryServiceTest {
         categoryService.delete(6L);
 
         verify(categoryRepository).delete(category);
+    }
+
+    @Test
+    void searchCategoriesShouldReturnMatchingByName() {
+        Category c1 = new Category(1L, null, "Granola integral", "Con almendras");
+        Category c2 = new Category(2L, null, "Granola tropical", "Con frutas");
+        when(categoryRepository.searchCategories("granola")).thenReturn(List.of(c1, c2));
+
+        var result = categoryService.searchCategories("granola");
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).name()).isEqualTo("Granola integral");
+    }
+
+    @Test
+    void searchCategoriesShouldReturnMatchingByDescription() {
+        Category c1 = new Category(1L, null, "Snacks", "Snacks saludables y nutritivos");
+        when(categoryRepository.searchCategories("nutritivos")).thenReturn(List.of(c1));
+
+        var result = categoryService.searchCategories("nutritivos");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).name()).isEqualTo("Snacks");
+    }
+
+    @Test
+    void searchCategoriesShouldReturnAllWhenSearchIsBlank() {
+        Category c1 = new Category(1L, null, "Cereales", null);
+        Category c2 = new Category(2L, null, "Yerbas", null);
+        when(categoryRepository.searchCategories(null)).thenReturn(List.of(c1, c2));
+
+        var result = categoryService.searchCategories(null);
+
+        assertThat(result).hasSize(2);
+    }
+
+    @Test
+    void searchCategoriesShouldNormalizeSearchTerm() {
+        when(categoryRepository.searchCategories("granola")).thenReturn(List.of());
+
+        categoryService.searchCategories("  Granola  ");
+
+        verify(categoryRepository).searchCategories("granola");
     }
 }

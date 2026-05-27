@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 
 import { CategoryService } from '../../../../core/services/category';
 import { CategoryList } from './category-list';
+import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
 
 /** Tests the admin category table states and destructive action flow. */
 describe('CategoryList', () => {
@@ -14,7 +15,7 @@ describe('CategoryList', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CategoryList],
+      imports: [CategoryList, AppSearchBar],
       providers: [provideNoopAnimations(), MessageService, { provide: CategoryService, useValue: categoryService }],
     }).compileComponents();
 
@@ -52,5 +53,31 @@ describe('CategoryList', () => {
 
     expect(categoryService.deleteCategory).toHaveBeenCalledWith(1);
     expect(emitSpy).toHaveBeenCalled();
+  });
+
+  it('emits searchChange when search is triggered', () => {
+    const emitSpy = vi.spyOn(component.searchChange, 'emit');
+    fixture.componentRef.setInput('categories', []);
+
+    (component as unknown as { onSearch: (query: string) => void }).onSearch('granola');
+
+    expect(emitSpy).toHaveBeenCalledWith('granola');
+  });
+
+  it('emits searchChange with empty string when search is cleared', () => {
+    const emitSpy = vi.spyOn(component.searchChange, 'emit');
+    fixture.componentRef.setInput('categories', []);
+
+    (component as unknown as { onSearchClear: () => void }).onSearchClear();
+
+    expect(emitSpy).toHaveBeenCalledWith('');
+  });
+
+  it('renders search bar in toolbar', async () => {
+    fixture.componentRef.setInput('categories', []);
+    await fixture.whenStable();
+
+    const searchBar = fixture.nativeElement.querySelector('app-search-bar');
+    expect(searchBar).toBeTruthy();
   });
 });

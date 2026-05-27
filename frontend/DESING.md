@@ -60,6 +60,7 @@ The surfaces breathe through rounded geometry. Every button is a 50px full-pill.
 - **Yellow** (`#fbbc05`): Warning state, legacy brand touch.
 - **Mint Leaf Wash** (`#d7eadf` at 33% opacity = `hsl(160 32% 87% / 33%)`): Form valid-field tint background.
 - **Red Tint** (`hsl(4 82% 43% / 5%)`): Invalid-field tint on forms.
+- **Input Border** (`rgba(0,0,0,0.12)`): Neutral border for input fields, selects, and form controls — palette-aligned, not a standalone hex value.
 
 ### Black / White Alpha Ladders
 
@@ -136,6 +137,8 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 - Radius: `50px` (full pill)
 - Padding: `7px 16px`
 - Font: Plus Jakarta Sans, 16px, weight 600, letter-spacing `-0.01em`
+- Shadow: `0 0 0.5px rgba(47,141,114,0.12), 0 1px 2px rgba(47,141,114,0.14)` (whisper-soft layered)
+- Hover state: no transform (only background color deepens to `#075f36`)
 - Active state: `transform: scale(0.95)` via `--buttonActiveScale`
 - Transition: `all 0.2s ease`
 
@@ -196,6 +199,30 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 - Font: 14px, weight 400
 - Positioned fixed bottom-right-inside, attached to the viewport edge
 
+### Data Table
+
+**Data Table Shell**
+- Background: `#ffffff`
+- Border: `1px solid rgba(7,95,54,0.11)`
+- Radius: `var(--radius-card, 12px)`
+- Shadow: `0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24)` (whisper-soft layered)
+- Overflow: hidden
+
+**Toolbar**
+- Background: `#f9f9f9` (Neutral Cool)
+- Border-bottom: `1px solid rgba(7,95,54,0.09)`
+- Padding: `0.75rem 1rem`
+
+**Table Header**
+- Background: `#eef6f1`
+- Font: 0.74rem, weight 800, uppercase, letter-spacing 0.08em
+- Color: `rgba(18,55,42,0.86)`
+- Border-bottom: `1px solid rgba(7,95,54,0.1)`
+
+**Table Row Hover**
+- Background: `rgba(47,141,114,0.045)`
+- Box-shadow: `inset 0.25rem 0 0 rgba(47,141,114,0.75)` (left accent bar)
+
 ### Cards & Containers
 
 **Content Card (default)**
@@ -229,14 +256,23 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 - No border — just background surface shift against white nav
 
 **Modal**
+- Background: `#ffffff`
+- Border: `1px solid rgba(0,0,0,0.08)`
+- Radius inherits from card spec (`12px`)
+- Shadow: `0 0 0.5px rgba(0,0,0,0.14), 0 1px 3px rgba(0,0,0,0.12)` (whisper-soft layered)
 - Padding: `2.4rem` (`--modalPadding`)
 - Top padding: `8.8rem` (`--modalTopPadding`) — leaves room for close button / header
 - Combined vertical padding: `11.2rem`
-- Radius inherits from card spec (`12px`)
 
 ### Inputs & Forms
 
 **Floating Label Input**
+- Background: `#ffffff`
+- Border: `1px solid rgba(0,0,0,0.12)` (palette-aligned neutral)
+- Focus border: `#2f8d72` (Lembas Leaf Green)
+- Focus shadow: `0 0 0 1px #2f8d72`
+- Invalid border: `#c82014` (Red)
+- Invalid background: `hsl(4 82% 43% / 5%)`
 - Label floats above the input border when focused/filled
 - Desktop label font size: `1.9rem` default, animates to `1.4rem` when active
 - Mobile label font size: `1.6rem` default, animates to `1.3rem` active
@@ -310,7 +346,7 @@ A repeating component cluster used on menu product pages (e.g., `/menu/product/4
 
 **Add-in / Milk Select (outlined rectangle)**
 - Background: `#ffffff`
-- Border: `1px solid #d6dbde` (Input Border)
+- Border: `1px solid rgba(0,0,0,0.12)` (Input Border — palette-aligned)
 - Radius: `4px`
 - Full-width in its column
 - Floating label above top border: "Add-ins" / "Milk" / "Add-ins" — 13/700 in Text Black, uppercase, `0.325px` letter-spacing
@@ -321,7 +357,7 @@ A repeating component cluster used on menu product pages (e.g., `/menu/product/4
 **Numeric Stepper**
 - Embedded inside an Add-in row when a quantity is required (e.g., Strawberry Fruit Inclusions scoop)
 - `−` minus button + count number + `+` plus button, all inline right of the label
-- Buttons: circular `32×32px` with `1px solid #d6dbde` border, neutral gray icon
+- Buttons: circular `32×32px` with `1px solid rgba(0,0,0,0.12)` border, neutral gray icon
 - Count number: 16/700 Text Black centered
 
 **Customize Button**
@@ -441,6 +477,10 @@ Whitespace carries the feeling of "plenty of space in the local store." Section 
 | Level | Treatment | Use |
 |-------|-----------|-----|
 | Card | `0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24)` | Default content cards — a whisper-soft dual-shadow |
+| Modal / Dialog | `0 0 0.5px rgba(0,0,0,0.14), 0 1px 3px rgba(0,0,0,0.12)` | Modal and confirm-dialog surfaces |
+| Toast | `0 0 0.5px rgba(0,0,0,0.14), 0 1px 3px rgba(0,0,0,0.12)` | Toast notification surfaces |
+| Button Primary | `0 0 0.5px rgba(47,141,114,0.12), 0 1px 2px rgba(47,141,114,0.14)` | Primary CTA buttons — tonal layered shadow |
+| Button Danger | `0 0 0.5px rgba(200,32,20,0.12), 0 1px 2px rgba(200,32,20,0.14)` | Danger/destructive buttons — tonal layered shadow |
 | Global Nav | `0 1px 3px rgba(0,0,0,0.1), 0 2px 2px rgba(0,0,0,0.06), 0 0 2px rgba(0,0,0,0.07)` | Triple-layer soft lift on the fixed top bar |
 | Leaf CTA Base | `0 0 6px rgba(0,0,0,0.24)` | Base halo around the floating circular CTA |
 | Leaf CTA Ambient | `0 8px 12px rgba(0,0,0,0.14)` | Stacked directional ambient — floats the Leaf CTA forward |
@@ -462,7 +502,7 @@ Whitespace carries the feeling of "plenty of space in the local store." Section 
 - Map greens consistently — Lembas Leaf Green for headings, links, icons, CTAs, and selections; Lembas Forest Green only for deep bands, sidebars, and footer surfaces
 - Keep tracking tight at `-0.01em` / `-0.16px` on Plus Jakarta Sans across the whole system
 - Use 50px full-pill radius on every button without exception
-- Apply `transform: scale(0.95)` as the universal button active state
+- Apply `transform: scale(0.95)` as the universal button active state — never on hover, only on `:active`
 - Reserve Lembas Orange for loyalty-status ceremony moments only
 - Use Plus Jakarta Sans for nearly everything; switch to Lora serif only for loyalty editorial headlines; reserve Caveat script for brand moments "handwritten label" moments
 - Layer 2–3 low-alpha shadows instead of one heavier drop shadow for elevation
@@ -478,6 +518,7 @@ Whitespace carries the feeling of "plenty of space in the local store." Section 
 - Don't weight-contrast h1 and h2 by size — the hierarchy comes from weight + color (600 Lembas-Leaf-Green vs 400 Text Black)
 - Don't use pure black for body text — `rgba(0,0,0,0.87)` matches the warm canvas
 - Don't skip the `scale(0.95)` active feedback on buttons — it's a signature micro-interaction
+- Don't apply `scale()` on hover — only on `:active` (press) to avoid accidental triggers
 - Don't stack single heavy shadows; always layer 2–3 low-alpha ones
 - Don't introduce serifs or scripts into the main shopping flow — they belong to loyalty and brand moments contexts respectively
 

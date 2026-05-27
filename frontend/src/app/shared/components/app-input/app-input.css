@@ -9,9 +9,9 @@
   box-sizing: border-box;
   font-family: inherit;
   letter-spacing: -0.01em;
-  color: rgba(0,0,0,0.87);
+  color: rgba(0, 0, 0, 0.87);
   background: #ffffff;
-  border: 1px solid #d6dbde;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 50px;
   transition:
     border-color 0.2s ease,

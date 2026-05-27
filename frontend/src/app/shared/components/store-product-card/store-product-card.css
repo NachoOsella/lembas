@@ -10,4 +10,12 @@
 /* Compact cards are used in moving recommendation rails. */
 .store-product-card--compact {
   width: 18rem;
+  max-width: 100%;
+}
+
+/* Mobile: smaller compact cards */
+@media (max-width: 34rem) {
+  .store-product-card--compact {
+    width: 14rem;
+  }
 }

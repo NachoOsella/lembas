@@ -33,6 +33,20 @@ public class CategoryService {
                 .toList();
     }
 
+    /**
+     * Lists categories matching the search term for admin management.
+     *
+     * @param search optional search term (trimmed and lowercased); when null or blank, returns all categories
+     * @return categories matching the search term
+     */
+    @Transactional(readOnly = true)
+    public List<CategoryDto> searchCategories(String search) {
+        String normalizedSearch = (search == null || search.isBlank()) ? null : search.trim().toLowerCase();
+        return categoryRepository.searchCategories(normalizedSearch).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
     /** Creates a category after validating parent and duplicated names. */
     @Transactional
     public CategoryDto create(CategoryRequest request) {

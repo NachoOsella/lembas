@@ -20,7 +20,7 @@
 }
 
 .app-store-footer__copy {
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.70);
   font-size: 0.78rem;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -35,7 +35,7 @@
 }
 
 .app-store-footer__link {
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.70);
   font-size: 0.76rem;
   font-weight: 500;
   text-decoration: none;

@@ -9,6 +9,7 @@ import { CategoryDto } from '../../../../shared/models/category';
 import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppDataTable, ColumnDef } from '../../../../shared/components/app-data-table/app-data-table';
+import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
 /** Time window for collapsing duplicate error toasts in this component. */
@@ -17,7 +18,7 @@ const DUPLICATE_TOAST_MS = 2000;
 /** Displays the admin category directory using shared Lembas table and action components. */
 @Component({
   selector: 'app-category-list',
-  imports: [AppBadge, AppButton, AppDataTable, ButtonDirective, ConfirmDialog, Ripple],
+  imports: [AppBadge, AppButton, AppDataTable, AppSearchBar, ButtonDirective, ConfirmDialog, Ripple],
   templateUrl: './category-list.html',
   styleUrl: './category-list.css',
 })
@@ -32,9 +33,11 @@ export class CategoryList {
   readonly editCategory = output<CategoryDto>();
   readonly deleted = output<void>();
   readonly retry = output<void>();
+  readonly searchChange = output<string>();
 
   protected readonly categoryToDelete = signal<CategoryDto | null>(null);
   protected readonly deleting = signal(false);
+  protected readonly searchQuery = signal('');
   /** Last error-toast key and timestamp to collapse rapid duplicates from re-entrant CD. */
   private lastDeleteError: { key: string; timestamp: number } | null = null;
   protected readonly categoryColumns: ColumnDef[] = [
@@ -55,6 +58,20 @@ export class CategoryList {
   /** Returns a human-readable parent label for the table. */
   protected parentName(category: CategoryDto): string {
     return category.parentId ? (this.parentNameById().get(category.parentId) ?? 'Sin encontrar') : 'Raiz';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Search handlers
+  // ---------------------------------------------------------------------------
+
+  protected onSearch(query: string): void {
+    this.searchQuery.set(query);
+    this.searchChange.emit(query);
+  }
+
+  protected onSearchClear(): void {
+    this.searchQuery.set('');
+    this.searchChange.emit('');
   }
 
   /** Opens the destructive confirmation dialog. */

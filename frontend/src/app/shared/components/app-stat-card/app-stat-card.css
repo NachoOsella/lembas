@@ -115,15 +115,27 @@
    Icon circle — refined, with tonal background
    ──────────────────────────────────────────────────────────── */
 .metric-strip__icon {
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
   width: 2.5rem;
   height: 2.5rem;
-  place-items: center;
   color: #ffffff;
   background: var(--metric-color, #2f8d72);
   border-radius: 999px;
+  font-size: 0.9rem;
+  line-height: 1;
   box-shadow: 0 0.5rem 1rem color-mix(in srgb, var(--metric-color, #2f8d72) 18%, transparent);
+}
+
+/* Ensure PrimeIcon inside is perfectly centered */
+.metric-strip__icon i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 /* ──────────────────────────────────────────────────────────────

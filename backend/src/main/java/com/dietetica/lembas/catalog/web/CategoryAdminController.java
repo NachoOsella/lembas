@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,9 +33,17 @@ public class CategoryAdminController {
         this.categoryService = categoryService;
     }
 
-    /** Returns all categories ordered by name for the admin table and parent selector. */
+    /**
+     * Returns categories for the admin table, optionally filtered by a search term.
+     *
+     * @param search optional search term matched against name and description
+     * @return categories matching the search criteria
+     */
     @GetMapping
-    public List<CategoryDto> list() {
+    public List<CategoryDto> list(@RequestParam(required = false) String search) {
+        if (search != null && !search.isBlank()) {
+            return categoryService.searchCategories(search);
+        }
         return categoryService.listAdminCategories();
     }
 

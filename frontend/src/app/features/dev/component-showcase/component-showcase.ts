@@ -1,6 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MenuItem } from 'primeng/api';
+import { MenuItem, MessageService } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { Ripple } from 'primeng/ripple';
 import {
@@ -76,6 +76,8 @@ interface ShowcaseLink {
 })
 /** Provides a development-only visual catalog for reusable components and app screens. */
 export class ComponentShowcase {
+  private readonly messageService = inject(MessageService);
+
   protected readonly dialogVisible = signal(false);
   protected readonly modalVisible = signal(false);
   protected readonly lastAction = signal('Todavia no ejecutaste ninguna accion.');
@@ -290,5 +292,62 @@ export class ComponentShowcase {
       this.formError.set('');
       this.lastAction.set(`Valor ingresado: "${this.formValue()}"`);
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Toast demo
+  // ---------------------------------------------------------------------------
+
+  /** Shows a success toast. */
+  protected showToastSuccess(): void {
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Exito',
+      detail: 'Archivo subido correctamente',
+      life: 4000,
+    });
+    this.lastAction.set('Toast de exito enviado.');
+  }
+
+  /** Shows an error toast. */
+  protected showToastError(): void {
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Error al eliminar',
+      detail: 'No se puede eliminar una categoria que tiene subcategorias. Elimina primero las subcategorias.',
+      life: 5000,
+    });
+    this.lastAction.set('Toast de error enviado.');
+  }
+
+  /** Shows a warning toast. */
+  protected showToastWarn(): void {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Advertencia',
+      detail: 'Stock bajo para: Harina integral (3 unidades)',
+      life: 4500,
+    });
+    this.lastAction.set('Toast de advertencia enviado.');
+  }
+
+  /** Shows an info toast. */
+  protected showToastInfo(): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Informacion',
+      detail: 'Nuevo mensaje de tu proveedor favorito',
+      life: 4000,
+    });
+    this.lastAction.set('Toast de informacion enviado.');
+  }
+
+  /** Shows all four toast types in sequence. */
+  protected showToastAll(): void {
+    this.showToastSuccess();
+    setTimeout(() => this.showToastWarn(), 300);
+    setTimeout(() => this.showToastInfo(), 600);
+    setTimeout(() => this.showToastError(), 900);
+    this.lastAction.set('Enviando los 4 tipos de toast...');
   }
 }

@@ -5,7 +5,7 @@
 .empty-state {
   align-items: center;
   background: transparent;
-  color: rgba(0,0,0,0.87);
+  color: rgba(0, 0, 0, 0.87);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -16,15 +16,25 @@
 }
 
 .empty-state__icon {
-  align-items: center;
-  background: #f6ead6;
-  border-radius: 50%;
-  color: #2f8d72;
   display: flex;
-  font-size: 32px;
-  height: 80px;
+  align-items: center;
   justify-content: center;
-  width: 80px;
+  width: 5rem;
+  height: 5rem;
+  background: #f6ead6;
+  border-radius: 999px;
+  color: #2f8d72;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+/* Ensure PrimeIcon inside is perfectly centered */
+.empty-state__icon i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .empty-state__content {
@@ -32,8 +42,8 @@
 }
 
 .empty-state__content h2 {
-  color: rgba(0,0,0,0.87);
-  font-size: 24px;
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.2;
@@ -41,8 +51,8 @@
 }
 
 .empty-state__content p {
-  color: rgba(0,0,0,0.58);
-  font-size: 16px;
+  color: rgba(0, 0, 0, 0.58);
+  font-size: 1rem;
   line-height: 1.5;
   margin: 0.75rem 0 0;
 }
@@ -53,18 +63,46 @@
   border-radius: 50px;
   color: #ffffff;
   font-weight: 600;
-  font-size: 16px;
-  padding: 12px 24px;
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
   letter-spacing: -0.01em;
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
+/* Hover: no transform — only active gets scale */
 :host ::ng-deep .p-button:hover {
-  transform: scale(0.95);
   background: #075f36;
   border-color: #075f36;
 }
 
+/* Active: signature scale(0.95) */
+:host ::ng-deep .p-button:active {
+  transform: scale(0.95);
+}
+
 :host ::ng-deep .p-button .p-button-label {
   color: #ffffff;
+}
+
+/* Mobile: reduce height and padding */
+@media (max-width: 34rem) {
+  .empty-state {
+    min-height: 14rem;
+    padding: 1.5rem 1rem;
+    gap: 1.25rem;
+  }
+
+  .empty-state__icon {
+    width: 4rem;
+    height: 4rem;
+    font-size: 1.5rem;
+  }
+
+  .empty-state__content h2 {
+    font-size: 1.25rem;
+  }
+
+  .empty-state__content p {
+    font-size: 0.92rem;
+  }
 }

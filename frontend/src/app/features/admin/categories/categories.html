@@ -6,6 +6,7 @@
   (editCategory)="openEdit($event)"
   (deleted)="refresh()"
   (retry)="refresh()"
+  (searchChange)="onSearch($event)"
 />
 
 <app-category-form [categories]="categories()" (saved)="refresh()" />

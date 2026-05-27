@@ -7,10 +7,11 @@
   max-width: 100%;
   background: #ffffff;
   border: 1px solid rgba(7, 95, 54, 0.11);
-  border-radius: 1.35rem;
+  border-radius: var(--radius-card, 12px);
+  /* Whisper-soft layered shadow — two low-alpha layers */
   box-shadow:
-    0 1.5rem 3rem rgba(38, 30, 17, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.65) inset;
+    0 0 0.5px rgba(0, 0, 0, 0.14),
+    0 1px 1px rgba(0, 0, 0, 0.24);
   overflow: hidden;
 }
 
@@ -31,7 +32,7 @@
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid rgba(7, 95, 54, 0.09);
-  background: #fafcfa;
+  background: #f9f9f9;
 }
 
 /* The p-table inside is flat — no border, no radius, no shadow */
