@@ -19,15 +19,7 @@
     <app-skeleton height="24rem" />
   } @else {
     <form class="product-form" (submit)="save(); $event.preventDefault()">
-      <section class="product-form__section">
-        <div class="product-form__section-heading">
-          <span class="product-form__section-index">01</span>
-          <div>
-            <h2>Datos principales</h2>
-            <p>Nombre, categoria y datos de identificacion para el backoffice.</p>
-          </div>
-        </div>
-
+      <app-form-section [index]="1" title="Datos principales" description="Nombre, categoria y datos de identificacion para el backoffice.">
         <div class="product-form__grid">
           <div class="product-form__field product-form__field--wide">
             <label for="product-name" class="product-form__label">Nombre <span aria-hidden="true">*</span></label>
@@ -68,17 +60,9 @@
             <textarea id="product-description" pInputText rows="4" [ngModel]="description()" (ngModelChange)="description.set($event)" name="description" placeholder="Descripcion comercial para tienda y administracion"></textarea>
           </div>
         </div>
-      </section>
+      </app-form-section>
 
-      <section class="product-form__section">
-        <div class="product-form__section-heading">
-          <span class="product-form__section-index">02</span>
-          <div>
-            <h2>Precio, stock e imagen</h2>
-            <p>Valores comerciales y vista previa del producto para mantener una gondola homogenea.</p>
-          </div>
-        </div>
-
+      <app-form-section [index]="2" title="Precio, stock e imagen" description="Valores comerciales y vista previa del producto para mantener una gondola homogenea.">
         <div class="product-form__media-grid">
           <div class="product-form__grid">
             <div class="product-form__field">
@@ -111,7 +95,7 @@
             <span>Preview</span>
           </aside>
         </div>
-      </section>
+      </app-form-section>
 
       <div class="product-form__actions">
         <app-button variant="secondary" type="button" routerLink="/admin/products">Cancelar</app-button>

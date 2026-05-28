@@ -9,6 +9,7 @@ import { Select } from 'primeng/select';
 import { CategoryService } from '../../../../core/services/category';
 import { ProductService } from '../../../../core/services/product';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
+import { FormSection } from '../../../../shared/components/form-section/form-section';
 import { Skeleton } from '../../../../shared/components/skeleton/skeleton';
 import { CategoryDto } from '../../../../shared/models/category';
 import { ProductDetail, ProductOnlineStatus, ProductRequest } from '../../../../shared/models/product';
@@ -21,7 +22,7 @@ interface Option<T> {
 /** Create and edit form for admin catalog products with local image preview. */
 @Component({
   selector: 'app-product-form',
-  imports: [AppButton, FormsModule, InputNumber, InputText, RouterLink, Select, Skeleton],
+  imports: [AppButton, FormSection, FormsModule, InputNumber, InputText, RouterLink, Select, Skeleton],
   templateUrl: './product-form.html',
   styleUrl: './product-form.css',
 })

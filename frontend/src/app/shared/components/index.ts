@@ -5,6 +5,7 @@ export * from './app-card-banner/app-card-banner';
 export * from './app-data-table/app-data-table';
 export * from './app-field-hint/app-field-hint';
 export * from './app-form-field/app-form-field';
+export * from './form-section/form-section';
 export * from './app-input/app-input';
 export * from './app-modal/app-modal';
 export * from './app-page-header/app-page-header';
