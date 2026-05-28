@@ -1,6 +1,8 @@
 package com.dietetica.lembas.catalog.repository;
 
 import com.dietetica.lembas.catalog.model.Category;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +23,14 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findAllByOrderByNameAsc();
 
     /**
+     * Returns categories ordered alphabetically with an explicit page-size cap.
+     *
+     * @param pageable page request used to cap result size
+     * @return page of categories ordered by name
+     */
+    Page<Category> findAllByOrderByNameAsc(Pageable pageable);
+
+    /**
      * Returns categories matching the search term, ordered alphabetically.
      * Searches across name and description fields.
      *
@@ -37,6 +47,23 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
             order by c.name asc
             """)
     List<Category> searchCategories(@Param("search") String search);
+
+    /**
+     * Returns categories matching search with an explicit page-size cap.
+     *
+     * @param search optional search term
+     * @param pageable page request used to cap result size
+     * @return page of matching categories ordered by name
+     */
+    @Query("""
+            select c from Category c
+            where (:search is null or (
+                lower(c.name) like concat('%', cast(:search as string), '%')
+                or lower(c.description) like concat('%', cast(:search as string), '%')
+            ))
+            order by c.name asc
+            """)
+    Page<Category> searchCategories(@Param("search") String search, Pageable pageable);
 
     /** Checks duplicated root category names, ignoring case. */
     boolean existsByParentIsNullAndNameIgnoreCase(String name);
@@ -59,5 +86,34 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
      */
     @Query(value = "SELECT COUNT(*) FROM products WHERE category_id = :categoryId", nativeQuery = true)
     long countProductsByCategoryId(Long categoryId);
+
+    /**
+     * Lightweight projection for store-facing category listings.
+     */
+    interface CategoryStoreSummaryProjection {
+        Long getId();
+
+        String getName();
+
+        long getProductCount();
+    }
+
+    /**
+     * Returns categories with counts of active and published products.
+     */
+    @Query(value = """
+            select
+                c.id as id,
+                c.name as name,
+                coalesce(count(p.id), 0) as productCount
+            from categories c
+            left join products p
+                on p.category_id = c.id
+               and p.active = true
+               and p.online_status = 'PUBLISHED'
+            group by c.id, c.name
+            order by c.name asc
+            """, nativeQuery = true)
+    Page<CategoryStoreSummaryProjection> findStoreCategorySummaries(Pageable pageable);
 }
 

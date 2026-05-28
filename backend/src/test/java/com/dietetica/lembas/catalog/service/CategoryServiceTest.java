@@ -10,6 +10,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -90,7 +93,8 @@ class CategoryServiceTest {
     void searchCategoriesShouldReturnMatchingByName() {
         Category c1 = new Category(1L, null, "Granola integral", "Con almendras");
         Category c2 = new Category(2L, null, "Granola tropical", "Con frutas");
-        when(categoryRepository.searchCategories("granola")).thenReturn(List.of(c1, c2));
+        when(categoryRepository.searchCategories(eq("granola"), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(c1, c2)));
 
         var result = categoryService.searchCategories("granola");
 
@@ -101,7 +105,8 @@ class CategoryServiceTest {
     @Test
     void searchCategoriesShouldReturnMatchingByDescription() {
         Category c1 = new Category(1L, null, "Snacks", "Snacks saludables y nutritivos");
-        when(categoryRepository.searchCategories("nutritivos")).thenReturn(List.of(c1));
+        when(categoryRepository.searchCategories(eq("nutritivos"), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(c1)));
 
         var result = categoryService.searchCategories("nutritivos");
 
@@ -113,7 +118,8 @@ class CategoryServiceTest {
     void searchCategoriesShouldReturnAllWhenSearchIsBlank() {
         Category c1 = new Category(1L, null, "Cereales", null);
         Category c2 = new Category(2L, null, "Yerbas", null);
-        when(categoryRepository.searchCategories(null)).thenReturn(List.of(c1, c2));
+        when(categoryRepository.searchCategories(eq(null), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(c1, c2)));
 
         var result = categoryService.searchCategories(null);
 
@@ -122,10 +128,11 @@ class CategoryServiceTest {
 
     @Test
     void searchCategoriesShouldNormalizeSearchTerm() {
-        when(categoryRepository.searchCategories("granola")).thenReturn(List.of());
+        when(categoryRepository.searchCategories(eq("granola"), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of()));
 
         categoryService.searchCategories("  Granola  ");
 
-        verify(categoryRepository).searchCategories("granola");
+        verify(categoryRepository).searchCategories(eq("granola"), any(PageRequest.class));
     }
 }

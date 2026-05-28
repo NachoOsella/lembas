@@ -6,18 +6,25 @@ import com.dietetica.lembas.catalog.dto.CategoryStoreDto;
 import com.dietetica.lembas.catalog.model.Category;
 import com.dietetica.lembas.catalog.repository.CategoryRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Service for category management operations.
  */
 @Service
 public class CategoryService {
+
+    private static final int MAX_LIST_SIZE = 500;
 
     private final CategoryRepository categoryRepository;
 
@@ -28,7 +35,10 @@ public class CategoryService {
     /** Lists all categories for admin management. */
     @Transactional(readOnly = true)
     public List<CategoryDto> listAdminCategories() {
-        return categoryRepository.findAllByOrderByNameAsc().stream()
+        return categoryRepository.findAllByOrderByNameAsc(
+                        PageRequest.of(0, MAX_LIST_SIZE, Sort.by(Sort.Direction.ASC, "name")))
+                .getContent()
+                .stream()
                 .map(this::toDto)
                 .toList();
     }
@@ -41,8 +51,14 @@ public class CategoryService {
      */
     @Transactional(readOnly = true)
     public List<CategoryDto> searchCategories(String search) {
-        String normalizedSearch = (search == null || search.isBlank()) ? null : search.trim().toLowerCase();
-        return categoryRepository.searchCategories(normalizedSearch).stream()
+        String normalizedSearch = (search == null || search.isBlank())
+                ? null
+                : search.trim().toLowerCase(Locale.ROOT);
+        return categoryRepository.searchCategories(
+                        normalizedSearch,
+                        PageRequest.of(0, MAX_LIST_SIZE, Sort.by(Sort.Direction.ASC, "name")))
+                .getContent()
+                .stream()
                 .map(this::toDto)
                 .toList();
     }
@@ -64,6 +80,7 @@ public class CategoryService {
         if (parent != null && parent.getId().equals(id)) {
             throw new DomainException("PARENT_INVALID", "A category cannot be its own parent");
         }
+        validateNoHierarchyCycle(id, parent);
         validateUniqueNameAtLevel(request.name(), parent, id);
         category.setParent(parent);
         category.setName(request.name().trim());
@@ -106,13 +123,45 @@ public class CategoryService {
      */
     @Transactional(readOnly = true)
     public List<CategoryStoreDto> listStoreCategories() {
-        return categoryRepository.findAllByOrderByNameAsc().stream()
-                .map(category -> new CategoryStoreDto(
-                        category.getId(),
-                        category.getName(),
-                        categoryRepository.countProductsByCategoryId(category.getId())
+        return categoryRepository.findStoreCategorySummaries(
+                        PageRequest.of(0, MAX_LIST_SIZE, Sort.by(Sort.Direction.ASC, "name")))
+                .getContent()
+                .stream()
+                .map(summary -> new CategoryStoreDto(
+                        summary.getId(),
+                        summary.getName(),
+                        summary.getProductCount()
                 ))
                 .toList();
+    }
+
+    /**
+     * Validates that assigning the provided parent does not create a hierarchy cycle.
+     */
+    private void validateNoHierarchyCycle(Long categoryId, Category parent) {
+        Set<Long> visited = new HashSet<>();
+        Category cursor = parent;
+
+        while (cursor != null) {
+            Long cursorId = cursor.getId();
+            if (cursorId != null && cursorId.equals(categoryId)) {
+                throw new DomainException(
+                        "CATEGORY_HIERARCHY_CYCLE",
+                        HttpStatus.CONFLICT,
+                        "Category hierarchy cannot contain cycles"
+                );
+            }
+
+            if (cursorId != null && !visited.add(cursorId)) {
+                throw new DomainException(
+                        "CATEGORY_HIERARCHY_CYCLE",
+                        HttpStatus.CONFLICT,
+                        "Category hierarchy cannot contain cycles"
+                );
+            }
+
+            cursor = cursor.getParent();
+        }
     }
 
     /** Resolves a nullable parent id to an entity. */

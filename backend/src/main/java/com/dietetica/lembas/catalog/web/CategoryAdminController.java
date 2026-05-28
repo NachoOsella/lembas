@@ -3,6 +3,7 @@ package com.dietetica.lembas.catalog.web;
 import com.dietetica.lembas.catalog.dto.CategoryDto;
 import com.dietetica.lembas.catalog.dto.CategoryRequest;
 import com.dietetica.lembas.catalog.service.CategoryService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/categories")
 @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+@SecurityRequirement(name = "bearerAuth")
 public class CategoryAdminController {
 
     private final CategoryService categoryService;
