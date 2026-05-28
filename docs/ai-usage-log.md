@@ -122,3 +122,8 @@
 - `frontend/src/app/features/admin/categories/`, `core/services/category.ts`, rutas/admin layout -- agregada pantalla de administracion de categorias con tabla paginada, formulario modal, validacion en tiempo real, confirmacion de eliminacion y estados loading/error/empty.
 - `frontend/src/app/features/public-store/category-nav/`, `public-store/catalog/` -- extraido filtro publico reutilizable de categorias e integrado al catalogo.
 - `frontend/src/app/shared/components/hero-flowers/hero-flowers.ts` -- nuevo componente decorativo standalone con 6 hojas SVG del logo Lembas distribuidas homogeneamente en el hero de home y catalogo. Cada hoja usa arquitectura de 2 capas (wrapper posicion estatico + wrapper animacion) para preservar rotacion/scale/flip sin conflicto con keyframes. 3 animaciones sway distintas (translate + delay staggered) con ciclo 6-11s, opacidades 0.04-0.07, responsive (3 hojas ocultas en mobile). Integrado en `home.ts` y `catalog.html`.
+
+## 2026-05-28
+
+- `backend/src/main/java/com/dietetica/lembas/catalog/` y tests -- implementado CRUD admin de productos para S1-US08 con entidad JPA, DTOs, endpoints paginados, validacion de barcode unico/precio/categoria y soft-delete.
+- `frontend/src/app/features/admin/products/`, `core/services/product.ts`, `shared/models/{product,page}.ts` -- agregada administracion de productos con listado paginado y filtros, formulario de alta/edicion, preview de imagen, badges de estado online y rutas `/admin/products`, `/admin/products/new`, `/admin/products/:id/edit`.

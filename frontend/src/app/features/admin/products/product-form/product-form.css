@@ -1,0 +1,226 @@
+:host {
+  display: block;
+}
+
+.product-form-page {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  max-width: 58rem;
+  margin: 0 auto;
+  padding-bottom: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.product-form-page__hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(0.95rem, 1.8vw, 1.35rem);
+  background: #ffffff;
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: 1.45rem;
+  box-shadow: 0 1.25rem 3rem rgba(48, 38, 20, 0.08);
+}
+
+.product-form-page__eyebrow {
+  margin: 0 0 0.45rem;
+  color: #9a5b19;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.product-form-page__hero h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(1.9rem, 3.8vw, 3.15rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.07em;
+}
+
+.product-form-page__hero p:not(.product-form-page__eyebrow) {
+  margin: 0.55rem 0 0;
+  color: rgba(0, 0, 0, 0.58);
+  font-weight: 500;
+}
+
+.product-form-page__alert,
+.product-form__alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  color: #8a2f24;
+  background: #fff7f3;
+  border: 1px solid rgba(138, 47, 36, 0.16);
+  border-radius: 1rem;
+  font-weight: 700;
+}
+
+.product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.product-form__section {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid rgba(36, 32, 24, 0.08);
+  border-radius: 1.15rem;
+  background: #fffef9;
+}
+
+.product-form__section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.product-form__section-index {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.8rem;
+  background: #075f36;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.product-form__section-heading h2 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.product-form__section-heading p {
+  margin: 0.16rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.product-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.product-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.product-form__field--wide {
+  grid-column: 1 / -1;
+}
+
+.product-form__label {
+  color: var(--color-text);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.product-form__label span,
+.product-form__error {
+  color: #c82014;
+}
+
+.product-form__hint,
+.product-form__error {
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.product-form__hint {
+  color: var(--color-text-muted);
+}
+
+.product-form .ng-invalid {
+  border-color: #c82014 !important;
+  box-shadow: 0 0 0 1px #c82014;
+}
+
+:host ::ng-deep .product-form .p-select,
+:host ::ng-deep .product-form .p-inputnumber,
+:host ::ng-deep .product-form .p-inputnumber-input {
+  width: 100%;
+}
+
+:host ::ng-deep .product-form .p-select,
+:host ::ng-deep .product-form .p-inputnumber-input {
+  border-color: rgba(47, 141, 114, 0.2);
+  border-radius: 0.95rem;
+  background: #fffef9;
+  box-shadow: 0 0.55rem 1.1rem rgba(23, 63, 53, 0.06);
+}
+
+.product-form textarea {
+  resize: vertical;
+}
+
+.product-form__media-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 16rem);
+  gap: 1rem;
+}
+
+.product-form__preview {
+  display: grid;
+  align-content: start;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  color: #075f36;
+  font-weight: 800;
+  text-align: center;
+  background: #f6ead6;
+  border: 1px dashed rgba(47, 141, 114, 0.35);
+  border-radius: 1.1rem;
+}
+
+.product-form__preview img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: #ffffff;
+  border-radius: 0.9rem;
+}
+
+.product-form__file {
+  padding: 0.7rem;
+  background: #fffef9;
+  border: 1px solid rgba(47, 141, 114, 0.2);
+  border-radius: 0.95rem;
+}
+
+.product-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 48rem) {
+  .product-form-page__hero,
+  .product-form__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .product-form__grid,
+  .product-form__media-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -2,6 +2,7 @@ package com.dietetica.lembas;
 
 import com.dietetica.lembas.auth.repository.RefreshTokenRepository;
 import com.dietetica.lembas.catalog.repository.CategoryRepository;
+import com.dietetica.lembas.catalog.repository.ProductRepository;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.users.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,12 @@ class LembasBackendApplicationTests {
      */
     @MockitoBean
     private CategoryRepository categoryRepository;
+
+    /**
+     * Provides a product repository collaborator while JPA repositories are disabled.
+     */
+    @MockitoBean
+    private ProductRepository productRepository;
 
     /**
      * Keeps a fast smoke test for the application context without external services.
