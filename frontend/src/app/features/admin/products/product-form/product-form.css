@@ -116,11 +116,11 @@
 }
 
 .product-form__preview {
-  position: relative;
-  overflow: hidden;
+  display: grid;
   border-radius: 1.1rem;
   border: 1px solid rgba(47, 141, 114, 0.12);
   background: #f6ead6;
+  overflow: hidden;
 }
 
 .product-form__preview img {
@@ -128,6 +128,16 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.product-form__preview-label {
+  padding: 0.5rem;
+  background: #f6ead6;
+  color: #075f36;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.04em;
 }
 
 .product-form__file {
