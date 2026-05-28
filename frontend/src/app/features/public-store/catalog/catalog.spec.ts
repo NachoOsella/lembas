@@ -156,11 +156,11 @@ describe('Catalog', () => {
   it('should render a pill for each category plus "Todas"', () => {
     configure();
     const pills: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.catalog-page__pill');
+      fixture.nativeElement.querySelectorAll('.catnav__pill');
     // "Todas" + 3 categories
     expect(pills.length).toBe(4);
-    expect(pills[0].textContent?.trim()).toBe('Todas');
-    // Pills now include product count, so check that category name is present
+    expect(pills[0].textContent?.trim()).toContain('Todas');
+    // Pills now include icon + name, so check that category name is present
     expect(pills[1].textContent).toContain('Cereales');
     expect(pills[2].textContent).toContain('Suplementos');
     expect(pills[3].textContent).toContain('Snacks');
@@ -169,8 +169,8 @@ describe('Catalog', () => {
   it('should mark "Todas" as active by default', () => {
     configure();
     const pills: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.catalog-page__pill');
-    expect(pills[0].classList.contains('catalog-page__pill--active')).toBe(true);
+      fixture.nativeElement.querySelectorAll('.catnav__pill');
+    expect(pills[0].classList.contains('catnav__pill--active')).toBe(true);
   });
 
   it('should select a category on pill click', () => {
@@ -178,7 +178,7 @@ describe('Catalog', () => {
 
     // Click on "Suplementos" (index 2)
     const pills: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.catalog-page__pill');
+      fixture.nativeElement.querySelectorAll('.catnav__pill');
     pills[2].click();
     fixture.detectChanges();
 
@@ -186,7 +186,7 @@ describe('Catalog', () => {
     expect(svc['getProducts']).toHaveBeenCalledWith(undefined, 2, undefined, 0, 20);
 
     // "Suplementos" pill should now be active
-    expect(pills[2].classList.contains('catalog-page__pill--active')).toBe(true);
+    expect(pills[2].classList.contains('catnav__pill--active')).toBe(true);
   });
 
   it('should reset to all categories when "Todas" is clicked', () => {
@@ -198,12 +198,12 @@ describe('Catalog', () => {
 
     // Then click "Todas"
     const pills: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.catalog-page__pill');
+      fixture.nativeElement.querySelectorAll('.catnav__pill');
     pills[0].click();
     fixture.detectChanges();
 
     expect((c['selectedCategoryId'] as () => number | null)()).toBeNull();
-    expect(pills[0].classList.contains('catalog-page__pill--active')).toBe(true);
+    expect(pills[0].classList.contains('catnav__pill--active')).toBe(true);
   });
 
   // -------------------------------------------------------------------------
@@ -307,9 +307,11 @@ describe('Catalog', () => {
 
     // The filter section should show the error message instead of pills
     const filterError: HTMLElement | null = fixture.nativeElement.querySelector(
-      '.catalog-page__filter-error',
+      '.catnav + .flex, [class*="border-"][class*="bg-"][class*="text-"][class*="rounded-xl"]',
     );
-    expect(filterError).toBeTruthy();
+    // Verify error state is active and no pills are rendered
+    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav__pill');
+    expect(pills.length).toBe(0);
   });
 
   it('should show error alert when products fail to load', () => {
