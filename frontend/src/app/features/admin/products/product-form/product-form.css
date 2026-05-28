@@ -109,6 +109,7 @@
   box-shadow: 0 0 0 1px #c82014;
 }
 
+/* width: 100% ensures PrimeNG components stretch inside flex/grid fields */
 :host ::ng-deep .product-form .p-inputtext,
 :host ::ng-deep .product-form .p-select,
 :host ::ng-deep .product-form .p-inputnumber,
