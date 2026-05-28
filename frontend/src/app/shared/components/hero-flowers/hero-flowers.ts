@@ -129,23 +129,23 @@ import { Component } from '@angular/core';
     .hero-flowers__pos--6 .hero-flowers__anim { animation-delay: 0.8s; }
 
     @keyframes sway-a {
-      0%, 100% { transform: translate(0, 0); }
-      20% { transform: translate(5px, 6px); }
-      50% { transform: translate(-3px, 14px); }
-      80% { transform: translate(4px, 7px); }
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      20% { transform: translate(12px, 10px) rotate(2deg); }
+      50% { transform: translate(-8px, 20px) rotate(-1deg); }
+      80% { transform: translate(10px, 12px) rotate(1.5deg); }
     }
 
     @keyframes sway-b {
-      0%, 100% { transform: translate(0, 0); }
-      25% { transform: translate(-7px, 5px); }
-      55% { transform: translate(4px, 12px); }
-      85% { transform: translate(-2px, 5px); }
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(-14px, 8px) rotate(-2deg); }
+      55% { transform: translate(10px, 18px) rotate(1deg); }
+      85% { transform: translate(-6px, 8px) rotate(-1deg); }
     }
 
     @keyframes sway-c {
-      0%, 100% { transform: translate(0, 0); }
-      30% { transform: translate(6px, 8px); }
-      65% { transform: translate(-5px, 10px); }
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      30% { transform: translate(10px, 12px) rotate(1.5deg); }
+      65% { transform: translate(-10px, 16px) rotate(-1.5deg); }
     }
 
     @media (prefers-reduced-motion: reduce) {
