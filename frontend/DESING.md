@@ -57,10 +57,28 @@ The surfaces breathe through rounded geometry. Every button is a 50px full-pill.
 ### Semantic & Accent
 
 - **Red** (`#c82014`): Error and destructive state (form invalid, destructive actions).
-- **Yellow** (`#fbbc05`): Warning state, legacy brand touch.
-- **Mint Leaf Wash** (`#d7eadf` at 33% opacity = `hsl(160 32% 87% / 33%)`): Form valid-field tint background.
+- **Red Dark** (`#a41810`): Danger button hover state — darken from Red.
+- **Red Darker** (`#9a3328`): Destructive action hover state.
+- **Red Soft** (`#8a2f24`): Subtle error text on light backgrounds.
 - **Red Tint** (`hsl(4 82% 43% / 5%)`): Invalid-field tint on forms.
+- **Red Surface** (`#fff7f3`): Light pink surface for error states.
+- **Amber** (`#d9822b`): Warning state — used for warning toasts and alert borders.
+- **Amber Dark** (`#b56d12`): Warning icon color on form labels.
+- **Amber Text** (`#7a4f00`): Warning badge text color.
+- **Amber Tint** (`#fff4d8`): Warning badge background.
+- **Brown Bark** (`#9a5b19`): Eyebrow text color — used for section labels above headings.
+- **Mint Leaf Wash** (`#d7eadf`): Form valid-field tint background and admin form icon backgrounds.
+- **Mint Leaf Wash Light** (`#e9f3ea`): Light green surface for page header decorative shapes and stat card washes.
+- **Mint Leaf Wash Lighter** (`#eaf4f1`): Info badge background.
+- **Mint Leaf Wash Subtle** (`#eef6f1`): Table header background.
+- **Mint Leaf Wash Minimal** (`#dff6ea`): Paginator active background.
+- **Mint Leaf Wash Pale** (`#f6fbf7`): Paginator background.
+- **Orange Light** (`#ffe1ba`): Light orange for decorative elements.
 - **Input Border** (`rgba(0,0,0,0.12)`): Neutral border for input fields, selects, and form controls — palette-aligned, not a standalone hex value.
+- **Border Neutral** (`#e7e7e7`): Neutral gray border for inputs, nav, and dividers.
+- **Border Warm** (`#f0e6d3`): Subtle warm border for dividers and section separators.
+- **Surface Warm** (`#faf6ef`): Warm white surface for card hover states.
+- **Surface Warmest** (`#fffef9`): Warm white background for form sections and inputs.
 
 ### Black / White Alpha Ladders
 
@@ -138,7 +156,7 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 - Padding: `7px 16px`
 - Font: Plus Jakarta Sans, 16px, weight 600, letter-spacing `-0.01em`
 - Shadow: `0 0 0.5px rgba(47,141,114,0.12), 0 1px 2px rgba(47,141,114,0.14)` (whisper-soft layered)
-- Hover state: no transform (only background color deepens to `#075f36`)
+- Hover state: no transform (only background color deepens to `#075f36` Forest Green)
 - Active state: `transform: scale(0.95)` via `--buttonActiveScale`
 - Transition: `all 0.2s ease`
 
@@ -154,6 +172,7 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 - Border: `1px solid #000000`
 - Radius: `50px`, Padding: `7px 16px`
 - Font: 14px, weight 600
+- Hover: background `#1a1a1a` (slightly lighter black)
 - Used on the top-of-page join strip and similar conversion moments
 
 **4. Dark Outlined — "Ingresar"**
@@ -214,7 +233,7 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 - Padding: `0.75rem 1rem`
 
 **Table Header**
-- Background: `#eef6f1`
+- Background: `#eef6f1` (Mint Leaf Wash Subtle)
 - Font: 0.74rem, weight 800, uppercase, letter-spacing 0.08em
 - Color: `rgba(18,55,42,0.86)`
 - Border-bottom: `1px solid rgba(7,95,54,0.1)`
@@ -222,6 +241,11 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 **Table Row Hover**
 - Background: `rgba(47,141,114,0.045)`
 - Box-shadow: `inset 0.25rem 0 0 rgba(47,141,114,0.75)` (left accent bar)
+
+**Table Paginator**
+- Background: `#f6fbf7` (Mint Leaf Wash Pale)
+- Active page: color `#2f8d72`, background `#dff6ea`
+- Hover: background `rgba(47,141,114,0.08)`, color `#2f8d72`
 
 ### Cards & Containers
 
@@ -249,6 +273,12 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 - Background: `#fff2df` (Orange Lightest) warm-cream surface
 - Content: partner logos ("supplier benefits", "community perks") centered, with descriptive text below
 - Radius and shadow follow default card spec
+
+**Section Card (Admin)**
+- Surface variant: background `#ffffff`
+- Muted variant: background `#e7dbc0` (Ceramic)
+- Dark variant: background `#075f36` (Forest Green), text `#ffffff`
+- Eyebrow: color `#f29d52` (Orange)
 
 **Dropdown Menu (Account dropdown, top-nav)**
 - Background: `#f9f9f9` (Neutral Cool)
@@ -291,9 +321,12 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 
 **Global Nav (top bar)**
 - Fixed position with progressive heights: `64px` xs → `72px` mobile → `83px` tablet → `99px` desktop
+- Background: `#ffffff` (White) with `95%` opacity + backdrop blur
 - Shadow stack: `0 1px 3px rgba(0,0,0,0.1), 0 2px 2px rgba(0,0,0,0.06), 0 0 2px rgba(0,0,0,0.07)` — three-layer soft lift
 - Left: Lembas wordmark logo, offsetting by `99px` (md) / `131px` (lg) from left edge
 - Primary links inline in Plus Jakarta Sans weight 400–600: Tienda · Beneficios · Productos
+- Link hover: background `rgba(47, 141, 114, 0.08)`, text `#2f8d72` (Leaf Green)
+- Link active: background `rgba(47, 141, 114, 0.1)`, text `#2f8d72`, font-weight 700
 - Right: Cómo llegar link + Ingresar (outlined) + Crear cuenta (black filled)
 
 **Sub-nav (second bar, e.g., loyalty internal)**
@@ -312,6 +345,21 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 - **Menu thumbnails**: Square or 4:3 product photography with clean white/cream backdrops, slight soft drop-shadow around the package.
 - **Image fade-in**: `opacity 0.3s ease-in` transition on image load (`--imageFadeTransition`).
 
+### Page Header (Admin)
+
+**Light Variant**
+- Background: `#ffffff` (White)
+- Border: `1px solid rgba(7, 95, 54, 0.1)`
+- Decorative shape: `#e9f3ea` (Mint Leaf Wash Light)
+
+**Dark Variant**
+- Background: `#075f36` (Forest Green)
+- Text: `#ffffff`
+- Decorative shape: `rgba(255, 255, 255, 0.08)`
+
+**Eyebrow Text**
+- Color: `#9a5b19` (Brown Bark)
+
 ### Feature Band (dark-green hero strip)
 
 Full-width `#075f36` (Lembas Forest Green) band with:
@@ -326,6 +374,135 @@ Full-width `#075f36` (Lembas Forest Green) band with:
 - Duration: `300ms` (`--expanderDuration`)
 - Timing curve: `cubic-bezier(0.25, 0.46, 0.45, 0.94)` — a measured ease-out
 - Used for FAQ sections on loyalty and gift page
+
+### Badges
+
+**Success Badge**
+- Text: `#2f8d72` (Leaf Green)
+- Background: `rgba(212, 233, 226, 0.72)` (Mint Leaf Wash)
+- Border: `1px solid rgba(47, 141, 114, 0.18)`
+
+**Warning Badge**
+- Text: `#7a4f00` (Amber Text)
+- Background: `#fff4d8` (Amber Tint)
+- Border: `1px solid rgba(203, 162, 88, 0.42)`
+
+**Danger Badge**
+- Text: `#c82014` (Red)
+- Background: `hsla(4, 82%, 43%, 0.08)` (Red Tint)
+- Border: `1px solid hsla(4, 82%, 43%, 0.18)`
+
+**Info Badge**
+- Text: `#075f36` (Forest Green)
+- Background: `#eaf4f1` (Mint Leaf Wash Lighter)
+- Border: `1px solid rgba(7, 95, 54, 0.14)`
+
+**Neutral Badge**
+- Text: `rgba(0, 0, 0, 0.58)` (Text Black Soft)
+- Background: `#e7dbc0` (Ceramic)
+- Border: `1px solid rgba(0, 0, 0, 0.06)`
+
+### Stat Cards (Dashboard)
+
+**Default Stat**
+- Metric color: `#243a31` (Dark Forest)
+- Metric wash: `#f7f9f5` (Mint Pale)
+
+**Success Stat**
+- Metric color: `#6f8d67` (Muted Leaf)
+- Metric wash: `#f7f9f5` (Mint Pale)
+
+**Warning Stat**
+- Metric color: `#d9822b` (Amber)
+- Metric wash: `#fff9f0` (Warm Pale)
+
+**Trend Text**
+- Color: `#4a5b55` (Slate Green)
+
+### Toast Notifications
+
+**Success Toast**
+- Border-left: `4px solid #2f8d72` (Leaf Green)
+- Icon color: `#2f8d72`
+
+**Error Toast**
+- Border-left: `4px solid #c82014` (Red)
+- Icon color: `#c82014`
+
+**Warning Toast**
+- Border-left: `4px solid #d9822b` (Amber)
+- Icon color: `#d9822b`
+
+**Info Toast**
+- Border-left: `4px solid #2f8d72` (Leaf Green)
+- Icon color: `#2f8d72`
+
+### Admin Forms
+
+**Form Section Index Badge**
+- Background: `#075f36` (Forest Green)
+- Text: `#ffffff`
+
+**Form Intro Mark**
+- Text: `#075f36` (Forest Green)
+- Background: `#d7eadf` (Mint Leaf Wash)
+
+**Form Selected Option**
+- Text: `#075f36` (Forest Green)
+
+**Form Option Icon**
+- Text: `#075f36` (Forest Green)
+- Background: `rgba(47, 141, 114, 0.12)`
+
+### Confirm Dialog
+
+**Dialog Surface**
+- Background: `#ffffff`
+- Border: `1px solid rgba(0, 0, 0, 0.08)`
+- Shadow: `0 0 0.5px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.12)`
+
+**Header Icon**
+- Default: color `rgba(0, 0, 0, 0.4)`, hover `#2f8d72`
+- Danger variant: background `hsl(4 82% 43% / 8%)`, color `#c82014`
+
+**Icon Container**
+- Default: background `#fff2df` (Orange Lightest), border `1px solid rgba(47, 141, 114, 0.08)`
+- Danger: background `hsl(4 82% 43% / 8%)`, border `1px solid rgba(200, 32, 20, 0.12)`
+
+### Empty State
+
+**Icon Container**
+- Background: `#f6ead6` (Neutral Warm)
+- Color: `#2f8d72` (Leaf Green)
+
+**CTA Button**
+- Background: `#2f8d72` (Leaf Green)
+- Hover: `#075f36` (Forest Green)
+
+### Loading Spinner
+
+- Track color: `#ffffff` with opacity
+- Spinner color: `#2f8d72` (Leaf Green)
+
+### Error Alert
+
+- Background: `#ffffff`
+- Border: `1px solid rgba(200, 32, 20, 0.28)`
+- Icon background: `#ffffff`
+- Icon color: `#c82014` (Red)
+- Border radius: `12px`
+
+### Category Nav (Sidebar Filter)
+
+Vertical list of category pills for catalog filtering.
+
+**Pill Button**
+- Default: background transparent, text `rgba(0, 0, 0, 0.65)`
+- Hover: background `rgba(47, 141, 114, 0.06)`
+- Active: background `#075f36` (Forest Green), text `#ffffff`
+- Active hover: background `#075f36`
+- Focus: outline `2px solid #2f8d72`
+- Active: `transform: scale(0.95)`
 
 ### Cookie Consent Module
 

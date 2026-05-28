@@ -13,7 +13,7 @@ import { ProductSummary } from '../../../shared/models/product';
   selector: 'app-home',
   imports: [CardBanner, RouterLink, ButtonDirective, Ripple, StoreProductCard, HeroFlowers],
   template: `
-    <div class="home-page min-h-screen overflow-hidden bg-[#f5ead8] text-stone-950">
+    <div class="home-page min-h-screen overflow-hidden bg-[#f6ead6] text-stone-950">
       <!-- Editorial hero with organic depth -->
       <header
         class="home-hero relative isolate overflow-hidden px-4 py-16 sm:px-6 md:py-24 lg:px-8"
@@ -59,7 +59,7 @@ import { ProductSummary } from '../../../shared/models/product';
 
           <aside class="hidden lg:block" aria-label="Resumen de compra">
             <div
-              class="home-ticket relative ml-auto max-w-sm rounded-[2rem] border border-white/10 bg-[#fffaf0]/95 p-7 shadow-2xl shadow-black/30 backdrop-blur-sm"
+              class="home-ticket relative ml-auto max-w-sm rounded-[2rem] border border-white/10 bg-white/95 p-7 shadow-2xl shadow-black/30 backdrop-blur-sm"
             >
               <div class="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#075f36]" aria-hidden="true"></div>
               <div class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#075f36]" aria-hidden="true"></div>
@@ -130,7 +130,7 @@ import { ProductSummary } from '../../../shared/models/product';
 
           @if (featuredProducts().length > 0) {
             <div
-              class="home-marquee rounded-[2rem] border border-black/8 bg-[#fffaf0] p-5 shadow-sm"
+              class="home-marquee rounded-[2rem] border border-black/8 bg-white p-5 shadow-sm"
               aria-label="Productos recomendados en movimiento"
             >
               <div class="home-marquee__track">
@@ -182,7 +182,7 @@ import { ProductSummary } from '../../../shared/models/product';
                   pButton
                   pRipple
                   routerLink="/store/catalog"
-                  class="!rounded-full !border-0 !bg-[#075f36] !px-8 !py-4 !font-bold !text-white transition-all hover:!bg-[#06402a] hover:-translate-y-0.5"
+                  class="!rounded-full !border-0 !bg-[#075f36] !px-8 !py-4 !font-bold !text-white transition-all hover:!bg-[#075f36]/90 hover:-translate-y-0.5"
                 >
                   Abrir catálogo
                   <i class="pi pi-arrow-right ml-2" aria-hidden="true"></i>

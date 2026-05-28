@@ -200,7 +200,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  color: #173f35;
+  color: #075f36;
   font-weight: 800;
 }
 
@@ -212,7 +212,7 @@
   width: 1.65rem;
   height: 1.65rem;
   border-radius: 999px;
-  color: #173f35;
+  color: #075f36;
   background: rgba(47, 141, 114, 0.12);
 }
 
@@ -230,7 +230,7 @@
 }
 
 .user-form__option strong {
-  color: #173f35;
+  color: #075f36;
   font-size: 0.86rem;
   font-weight: 800;
 }
@@ -258,7 +258,7 @@
 
 ::ng-deep .user-form__branch-panel .p-select-option.p-select-option-selected {
   background: rgba(47, 141, 114, 0.12);
-  color: #173f35;
+  color: #075f36;
 }
 
 .user-form__actions {
