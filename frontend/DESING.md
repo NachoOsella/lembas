@@ -166,13 +166,13 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 - Border: `1px solid #2f8d72`
 - Same radius/padding/active/transition as Primary Filled
 
-**3. Black Filled — "Crear cuenta"**
-- Background: `#000000`
+**3. Primary Filled — "Crear cuenta"**
+- Background: `#2f8d72` (Lembas Leaf Green)
 - Text: `#ffffff`
-- Border: `1px solid #000000`
+- Border: `1px solid #2f8d72`
 - Radius: `50px`, Padding: `7px 16px`
 - Font: 14px, weight 600
-- Hover: background `#1a1a1a` (slightly lighter black)
+- Hover: background `#075f36` (Forest Green), border `#075f36`
 - Used on the top-of-page join strip and similar conversion moments
 
 **4. Dark Outlined — "Ingresar"**
@@ -327,7 +327,7 @@ Lora and Caveat are optional brand-moment fonts; keep the main shopping flow in 
 - Primary links inline in Plus Jakarta Sans weight 400–600: Tienda · Beneficios · Productos
 - Link hover: background `rgba(47, 141, 114, 0.08)`, text `#2f8d72` (Leaf Green)
 - Link active: background `rgba(47, 141, 114, 0.1)`, text `#2f8d72`, font-weight 700
-- Right: Cómo llegar link + Ingresar (outlined) + Crear cuenta (black filled)
+- Right: Cómo llegar link + Ingresar (outlined) + Crear cuenta (leaf green filled)
 
 **Sub-nav (second bar, e.g., loyalty internal)**
 - Height: `53px` (global subnav) / `48px` (internal subnav)
