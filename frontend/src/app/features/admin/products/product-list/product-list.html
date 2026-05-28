@@ -31,9 +31,12 @@
       [first]="first()"
       [rows]="rows()"
       [rowsPerPageOptions]="[10, 20, 30]"
+      [sortField]="sortField()"
+      [sortOrder]="sortOrder()"
       emptyTitle="No hay productos"
       emptyDescription="Crea el primer producto para empezar a publicar el catalogo."
       (pageChange)="onPageChange($event)"
+      (sortChange)="onSort($event)"
     >
       <ng-template #toolbar>
         <div class="table-toolbar__info">

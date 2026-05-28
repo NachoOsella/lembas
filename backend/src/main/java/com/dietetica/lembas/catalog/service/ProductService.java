@@ -10,7 +10,9 @@ import com.dietetica.lembas.catalog.repository.CategoryRepository;
 import com.dietetica.lembas.catalog.repository.ProductRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +35,8 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<ProductSummaryDto> listAdminProducts(String search, Long categoryId, ProductOnlineStatus status, Pageable pageable) {
         String normalizedSearch = search == null || search.isBlank() ? null : search.trim().toLowerCase(Locale.ROOT);
-        return productRepository.searchAdminProducts(normalizedSearch, categoryId, status, pageable)
+        Pageable sortedPageable = mapSort(pageable);
+        return productRepository.searchAdminProducts(normalizedSearch, categoryId, status, sortedPageable)
                 .map(this::toSummaryDto);
     }
 
@@ -95,6 +98,26 @@ public class ProductService {
         if (duplicated) {
             throw new DomainException("PRODUCT_BARCODE_DUPLICATED", HttpStatus.CONFLICT, "Product barcode already exists");
         }
+    }
+
+    /**
+     * Maps frontend sort field names to JPA entity paths.
+     * The JPQL query joins Product p with Category c, so category-level
+     * fields need the c alias prefix.
+     */
+    private Pageable mapSort(Pageable pageable) {
+        if (pageable.getSort().isUnsorted()) {
+            return pageable;
+        }
+        Sort mappedSort = Sort.unsorted();
+        for (Sort.Order order : pageable.getSort()) {
+            String property = switch (order.getProperty()) {
+                case "categoryName" -> "c.name";
+                default -> order.getProperty();
+            };
+            mappedSort = mappedSort.and(Sort.by(new Sort.Order(order.getDirection(), property)));
+        }
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mappedSort);
     }
 
     /** Finds an active product or raises the uniform not-found error. */

@@ -12,6 +12,7 @@ export interface ProductFilters {
   readonly onlineStatus?: ProductOnlineStatus | null;
   readonly page?: number;
   readonly size?: number;
+  readonly sort?: string;
 }
 
 /** Provides admin CRUD operations for catalog products. */
@@ -25,7 +26,7 @@ export class ProductService {
     let params = new HttpParams()
       .set('page', filters.page ?? 0)
       .set('size', filters.size ?? 10)
-      .set('sort', 'name,asc');
+      .set('sort', filters.sort ?? 'name,asc');
 
     if (filters.search?.trim()) {
       params = params.set('search', filters.search.trim());

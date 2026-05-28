@@ -46,6 +46,8 @@ export class ProductList {
   protected readonly first = signal(0);
   protected readonly rows = signal(10);
   protected readonly totalRecords = signal(0);
+  protected readonly sortField = signal<string>('name');
+  protected readonly sortOrder = signal<number>(1);
 
   protected readonly columns: ColumnDef[] = [
     { field: 'name', header: 'Producto', sortable: true },
@@ -115,6 +117,14 @@ export class ProductList {
     this.refresh();
   }
 
+  /** Handles column sort changes from the table header. */
+  protected onSort(event: { field: string; order: number }): void {
+    this.sortField.set(event.field);
+    this.sortOrder.set(event.order);
+    this.first.set(0);
+    this.refresh();
+  }
+
   /** Returns UI metadata for online-status badges. */
   protected statusBadge(status: ProductOnlineStatus): { label: string; tone: 'neutral' | 'success' | 'warning' | 'danger' } {
     const badges = {
@@ -161,12 +171,14 @@ export class ProductList {
 
   /** Builds the API filter object from table state. */
   private currentFilters(): ProductFilters {
+    const order = this.sortOrder() === 1 ? 'asc' : 'desc';
     return {
       search: this.searchQuery(),
       categoryId: this.categoryId(),
       onlineStatus: this.onlineStatus(),
       page: Math.floor(this.first() / this.rows()),
       size: this.rows(),
+      sort: `${this.sortField()},${order}`,
     };
   }
 
