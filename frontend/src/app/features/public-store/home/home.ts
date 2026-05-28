@@ -27,12 +27,9 @@ import { ProductSummary } from '../../../shared/models/product';
 
         <div class="relative mx-auto grid w-full max-w-[1600px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_0.85fr] lg:px-10">
           <section class="w-full max-w-3xl min-w-0">
-            <span
-              class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white/90"
-            >
-              <i class="pi pi-leaf text-[0.7rem]" aria-hidden="true"></i>
+            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-50/70 mb-3">
               Dietética Lembas
-            </span>
+            </p>
 
             <h1
               class="mt-8 max-w-[760px] text-5xl font-semibold leading-[1.05] tracking-[-0.04em] text-white sm:text-6xl lg:text-[5rem]"
