@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -102,6 +103,28 @@ public class GlobalExceptionHandler {
                 request
         );
         return ResponseEntity.badRequest().body(error);
+    }
+
+    /**
+     * Handles relational and unique-constraint conflicts raised by the database.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrityViolation(
+            DataIntegrityViolationException exception,
+            HttpServletRequest request
+    ) {
+        Throwable cause = exception.getMostSpecificCause();
+        String causeMessage = cause != null ? cause.getMessage() : exception.getMessage();
+        log.warn("Data integrity violation path={} cause={}", request.getRequestURI(), causeMessage);
+
+        ApiError error = buildError(
+                HttpStatus.CONFLICT,
+                "DATA_INTEGRITY_VIOLATION",
+                "Request conflicts with existing or related data",
+                null,
+                request
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     /**
