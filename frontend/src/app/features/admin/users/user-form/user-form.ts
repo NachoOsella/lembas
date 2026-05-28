@@ -294,7 +294,7 @@ export class UserForm {
 
   private buildErrorMessage(err: unknown): string | null {
     if (!(err instanceof HttpErrorResponse)) {
-      return 'No se pudo completar la operacion. Intente nuevamente.';
+      return 'No se pudo completar la operacion. Intenta nuevamente.';
     }
     if (err.status === 0 || err.status >= 500) return null;
 
@@ -357,7 +357,7 @@ export class UserForm {
       case 409:
         return 'La operacion no se puede completar por una regla de negocio.';
       default:
-        return 'No se pudo completar la operacion. Intente nuevamente.';
+        return 'No se pudo completar la operacion. Intenta nuevamente.';
     }
   }
 

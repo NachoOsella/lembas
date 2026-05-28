@@ -341,7 +341,7 @@ describe('Register component', () => {
 
     const errEl = fixture.nativeElement.querySelector('[data-testid="general-error"]');
     expect(errEl).toBeTruthy();
-    expect(errEl.textContent).toContain('Verifique los datos ingresados');
+    expect(errEl.textContent).toContain('Verifica los datos ingresados');
     expect(errEl.textContent).toContain('Contrasena: size must be between 8 and 128');
     expect(authService.currentUser()).toBeNull();
     expect(navigateSpy).not.toHaveBeenCalled();

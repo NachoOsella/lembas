@@ -104,7 +104,7 @@ export class Login {
   /** Converts backend API error codes into user-facing login messages. */
   private buildBackendErrorMessage(err: unknown): string | null {
     if (!(err instanceof HttpErrorResponse)) {
-      return 'Error al iniciar sesion. Intente nuevamente';
+      return 'Error al iniciar sesion. Intenta nuevamente.';
     }
 
     if (err.status === 0 || err.status >= 500) {
@@ -118,9 +118,9 @@ export class Login {
       case 'ACCOUNT_DISABLED':
         return 'La cuenta se encuentra deshabilitada';
       case 'VALIDATION_ERROR':
-        return 'Verifique los datos ingresados';
+        return 'Verifica los datos ingresados.';
       default:
-        return 'Error al iniciar sesion. Intente nuevamente';
+        return 'Error al iniciar sesion. Intenta nuevamente.';
     }
   }
 

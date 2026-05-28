@@ -141,7 +141,7 @@ export class ProductForm {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('No pudimos cargar el producto solicitado.');
+        this.error.set('No pudimos cargar el producto.');
         this.loading.set(false);
       },
     });

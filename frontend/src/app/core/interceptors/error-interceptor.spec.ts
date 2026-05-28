@@ -80,7 +80,7 @@ describe('errorInterceptor', () => {
     expect(messageService.add).toHaveBeenCalledWith({
       severity: 'error',
       summary: 'Error de conexion',
-      detail: 'No se pudo conectar con el servidor. Verifique su conexion a internet.',
+      detail: 'No se pudo conectar con el servidor. Verifica tu conexion a internet.',
       life: 5000,
     });
   });
@@ -97,7 +97,7 @@ describe('errorInterceptor', () => {
     expect(messageService.add).toHaveBeenCalledWith({
       severity: 'error',
       summary: 'Error de conexion',
-      detail: 'No se pudo conectar con el servidor. Verifique su conexion a internet.',
+      detail: 'No se pudo conectar con el servidor. Verifica tu conexion a internet.',
       life: 5000,
     });
   });
