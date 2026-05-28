@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Locale;
@@ -32,6 +33,8 @@ import java.util.Locale;
  */
 @Service
 public class AuthService {
+
+    private static final Duration REVOKED_TOKEN_RETENTION = Duration.ofDays(30);
 
     private final UserRepository userRepository;
     private final AuthMapper authMapper;
@@ -64,7 +67,7 @@ public class AuthService {
      */
     @Transactional
     public AuthResponse registerCustomer(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.email().toLowerCase().trim())) {
+        if (userRepository.existsByEmail(request.email().trim().toLowerCase(Locale.ROOT))) {
             throw new DomainException(
                     "EMAIL_DUPLICATED",
                     HttpStatus.CONFLICT,
@@ -199,6 +202,8 @@ public class AuthService {
     /** Creates and persists a new active refresh token for the user. */
     private String issueRefreshToken(User user) {
         Instant now = Instant.now();
+        cleanupObsoleteRefreshTokens(user, now);
+
         String rawRefreshToken = jwtTokenProvider.createRefreshToken(user);
         RefreshToken refreshToken = new RefreshToken(
                 user,
@@ -221,6 +226,11 @@ public class AuthService {
         } catch (JwtException | IllegalArgumentException e) {
             throw invalidRefreshToken();
         }
+    }
+
+    /** Removes obsolete refresh-token rows for the user to limit unbounded growth. */
+    private void cleanupObsoleteRefreshTokens(User user, Instant now) {
+        refreshTokenRepository.deleteObsoleteTokensByUser(user, now, now.minus(REVOKED_TOKEN_RETENTION));
     }
 
     /** Hashes a bearer token before persistence or lookup. */

@@ -41,4 +41,27 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
               and rt.revokedAt is null
             """)
     int revokeActiveTokensByUser(@Param("user") User user, @Param("revokedAt") Instant revokedAt);
+
+    /**
+     * Deletes expired tokens and old revoked tokens for one user.
+     *
+     * @param user token owner
+     * @param now current timestamp for expiration checks
+     * @param revokedBefore upper bound for revoked-token retention
+     * @return number of rows deleted
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            delete from RefreshToken rt
+            where rt.user = :user
+              and (
+                  rt.expiresAt <= :now
+                  or (rt.revokedAt is not null and rt.revokedAt <= :revokedBefore)
+              )
+            """)
+    int deleteObsoleteTokensByUser(
+            @Param("user") User user,
+            @Param("now") Instant now,
+            @Param("revokedBefore") Instant revokedBefore
+    );
 }

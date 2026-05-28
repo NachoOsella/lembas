@@ -6,6 +6,7 @@ import com.dietetica.lembas.auth.dto.RefreshTokenRequest;
 import com.dietetica.lembas.auth.dto.RegisterRequest;
 import com.dietetica.lembas.auth.service.AuthService;
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,6 +74,7 @@ public class AuthController {
      * @return the authenticated user's profile
      */
     @GetMapping("/me")
+    @SecurityRequirement(name = "bearerAuth")
     public AuthResponse me() {
         return authService.getCurrentUser(securityContextHelper.getCurrentUser());
     }
