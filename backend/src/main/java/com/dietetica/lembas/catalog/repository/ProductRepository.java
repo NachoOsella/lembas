@@ -26,8 +26,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             select p from Product p
             join p.category c
             where p.active = true
-              and (:search is null or lower(p.name) like concat('%', :search, '%')
-                   or lower(coalesce(p.barcode, '')) like concat('%', :search, '%'))
+              and (:search is null or lower(p.name) like concat('%', cast(:search as string), '%')
+                   or lower(coalesce(p.barcode, '')) like concat('%', cast(:search as string), '%'))
               and (:categoryId is null or c.id = :categoryId)
               and (:status is null or p.onlineStatus = :status)
             """)

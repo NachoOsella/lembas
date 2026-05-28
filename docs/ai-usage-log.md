@@ -127,3 +127,4 @@
 
 - `backend/src/main/java/com/dietetica/lembas/catalog/` y tests -- implementado CRUD admin de productos para S1-US08 con entidad JPA, DTOs, endpoints paginados, validacion de barcode unico/precio/categoria y soft-delete.
 - `frontend/src/app/features/admin/products/`, `core/services/product.ts`, `shared/models/{product,page}.ts` -- agregada administracion de productos con listado paginado y filtros, formulario de alta/edicion, preview de imagen, badges de estado online y rutas `/admin/products`, `/admin/products/new`, `/admin/products/:id/edit`.
+- `backend/src/main/resources/db/migration/V12__seed_products.sql`, `V13__fix_demo_product_categories.sql`, `backend/src/main/java/com/dietetica/lembas/catalog/repository/ProductRepository.java`, `docker/nginx.conf` -- agregados productos demo, corregido 500 de busqueda paginada por casteo de `search` en PostgreSQL y habilitadas imagenes HTTPS en CSP para previews semilla.
