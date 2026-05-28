@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 
+import { MessageService } from 'primeng/api';
 import { CategoryService } from '../../../../core/services/category';
 import { CategoryDto, CategoryRequest } from '../../../../shared/models/category';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
@@ -22,6 +23,7 @@ interface ParentOption {
 })
 export class CategoryForm {
   private readonly categoryService = inject(CategoryService);
+  private readonly messageService = inject(MessageService);
 
   readonly categories = input.required<CategoryDto[]>();
   readonly saved = output<void>();
@@ -83,6 +85,15 @@ export class CategoryForm {
       next: () => {
         this.submitting.set(false);
         this.dialogVisible.set(false);
+        const isEdit = !!editing;
+        this.messageService.add({
+          severity: 'success',
+          summary: isEdit ? 'Categoria actualizada' : 'Categoria creada',
+          detail: isEdit
+            ? `${this.formName().trim()} se actualizo correctamente.`
+            : `${this.formName().trim()} se creo correctamente.`,
+          life: 3000,
+        });
         this.saved.emit();
       },
       error: (error) => {
