@@ -190,6 +190,25 @@ class UserDtoValidationTest {
                 .contains("email", "phone");
     }
 
+    @Test
+    void invalidUpdateUserRequestRejectsBlankOptionalTextFields() {
+        var request = new UpdateUserRequest(
+                "   ",
+                null,
+                "   ",
+                "   ",
+                null,
+                null,
+                null
+        );
+
+        Set<ConstraintViolation<UpdateUserRequest>> violations = validator.validate(request);
+
+        assertThat(violations)
+                .extracting(v -> v.getPropertyPath().toString())
+                .contains("email", "firstName", "lastName");
+    }
+
     /**
      * Returns the three internal roles for parameterized testing.
      */

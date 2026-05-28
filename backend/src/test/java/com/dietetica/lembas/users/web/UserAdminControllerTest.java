@@ -126,6 +126,19 @@ class UserAdminControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    void Should_return200_when_adminPartiallyUpdatesUser() throws Exception {
+        when(userAdminService.updateUser(eq(1L), any()))
+                .thenReturn(anAdminResponse());
+
+        mockMvc.perform(patch("/api/admin/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validUpdateRequest()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("admin@lembas.com"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     void Should_return200_when_adminUpdatesUserStatus() throws Exception {
         when(userAdminService.updateUserStatus(eq(1L), any(UserStatusRequest.class)))
                 .thenReturn(anAdminResponse());
@@ -163,6 +176,15 @@ class UserAdminControllerTest {
         mockMvc.perform(put("/api/admin/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"firstName\": \"Updated\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void Should_return403_when_managerPartiallyUpdatesUser() throws Exception {
+        mockMvc.perform(patch("/api/admin/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validUpdateRequest()))
                 .andExpect(status().isForbidden());
     }
 

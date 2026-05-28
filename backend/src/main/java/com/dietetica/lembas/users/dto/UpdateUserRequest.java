@@ -24,13 +24,20 @@ import jakarta.validation.constraints.Size;
  */
 public record UpdateUserRequest(
 
-        @Email @Size(max = 255) String email,
+        @Email
+        @Size(max = 255)
+        @Pattern(regexp = ".*\\S.*", message = "Email must not be blank")
+        String email,
 
         @Size(min = 8, max = 128) String password,
 
-        @Size(max = 100) String firstName,
+        @Size(max = 100)
+        @Pattern(regexp = ".*\\S.*", message = "First name must not be blank")
+        String firstName,
 
-        @Size(max = 100) String lastName,
+        @Size(max = 100)
+        @Pattern(regexp = ".*\\S.*", message = "Last name must not be blank")
+        String lastName,
 
         @Size(max = 50)
         @Pattern(regexp = "^[+]?[0-9\\s\\-().]{0,50}$", message = "Invalid phone number format")
