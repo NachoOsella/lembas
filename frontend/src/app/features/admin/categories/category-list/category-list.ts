@@ -97,6 +97,12 @@ export class CategoryList {
     this.deleting.set(true);
     this.categoryService.deleteCategory(category.id).subscribe({
       next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Categoria eliminada',
+          detail: `${category.name} se elimino correctamente.`,
+          life: 3000,
+        });
         this.categoryToDelete.set(null);
         this.deleting.set(false);
         this.deleted.emit();
