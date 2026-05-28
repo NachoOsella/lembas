@@ -6,7 +6,6 @@ import com.dietetica.lembas.auth.service.LembasUserDetailsService;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
-import com.dietetica.lembas.users.dto.UserMetricsResponse;
 import com.dietetica.lembas.users.dto.UserResponse;
 import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
@@ -101,19 +100,6 @@ class UserAdminControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    void Should_returnMetrics_when_adminRequestsUserMetrics() throws Exception {
-        when(userAdminService.getUserMetrics())
-                .thenReturn(new UserMetricsResponse(30, 25, 20));
-
-        mockMvc.perform(get("/api/admin/users/metrics"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalUsers").value(30))
-                .andExpect(jsonPath("$.enabledUsers").value(25))
-                .andExpect(jsonPath("$.usersWithBranch").value(20));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
     void Should_return201_when_adminCreatesUser() throws Exception {
         when(userAdminService.createUser(any(CreateInternalUserRequest.class)))
                 .thenReturn(anAdminResponse());
@@ -134,6 +120,19 @@ class UserAdminControllerTest {
         mockMvc.perform(put("/api/admin/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"firstName\": \"Updated\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("admin@lembas.com"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void Should_return200_when_adminPartiallyUpdatesUser() throws Exception {
+        when(userAdminService.updateUser(eq(1L), any()))
+                .thenReturn(anAdminResponse());
+
+        mockMvc.perform(patch("/api/admin/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validUpdateRequest()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("admin@lembas.com"));
     }
@@ -164,13 +163,6 @@ class UserAdminControllerTest {
 
     @Test
     @WithMockUser(roles = "MANAGER")
-    void Should_return403_when_managerRequestsUserMetrics() throws Exception {
-        mockMvc.perform(get("/api/admin/users/metrics"))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @WithMockUser(roles = "MANAGER")
     void Should_return403_when_managerCreatesUser() throws Exception {
         mockMvc.perform(post("/api/admin/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -184,6 +176,15 @@ class UserAdminControllerTest {
         mockMvc.perform(put("/api/admin/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"firstName\": \"Updated\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void Should_return403_when_managerPartiallyUpdatesUser() throws Exception {
+        mockMvc.perform(patch("/api/admin/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validUpdateRequest()))
                 .andExpect(status().isForbidden());
     }
 
@@ -204,13 +205,6 @@ class UserAdminControllerTest {
     @WithMockUser(roles = "EMPLOYEE")
     void Should_return403_when_employeeListsUsers() throws Exception {
         mockMvc.perform(get("/api/admin/users"))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @WithMockUser(roles = "EMPLOYEE")
-    void Should_return403_when_employeeRequestsUserMetrics() throws Exception {
-        mockMvc.perform(get("/api/admin/users/metrics"))
                 .andExpect(status().isForbidden());
     }
 
@@ -251,12 +245,6 @@ class UserAdminControllerTest {
     @Test
     void Should_return401_when_unauthenticatedUserListsUsers() throws Exception {
         mockMvc.perform(get("/api/admin/users"))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void Should_return401_when_unauthenticatedUserRequestsUserMetrics() throws Exception {
-        mockMvc.perform(get("/api/admin/users/metrics"))
                 .andExpect(status().isUnauthorized());
     }
 

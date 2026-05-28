@@ -15,6 +15,7 @@ interface AdminNavItem {
 
 const NAV_ITEMS: readonly AdminNavItem[] = [
   { label: 'Dashboard', icon: 'pi pi-chart-pie', route: '/admin/dashboard' },
+  { label: 'Categorias', icon: 'pi pi-tags', route: '/admin/categories' },
   { label: 'Productos', icon: 'pi pi-box', route: '/admin/products' },
   { label: 'Inventario', icon: 'pi pi-warehouse', route: '/admin/inventory' },
   { label: 'Pedidos', icon: 'pi pi-receipt', route: '/admin/orders' },
@@ -27,6 +28,7 @@ const NAV_ITEMS: readonly AdminNavItem[] = [
 
 const LABEL_MAP: Record<string, string> = {
   dashboard: 'Dashboard',
+  categories: 'Categorias',
   products: 'Productos',
   inventory: 'Inventario',
   orders: 'Pedidos',

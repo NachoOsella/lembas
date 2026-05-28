@@ -2,6 +2,7 @@ package com.dietetica.lembas.shared.branch.web;
 
 import com.dietetica.lembas.shared.branch.dto.BranchResponse;
 import com.dietetica.lembas.shared.branch.service.BranchService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/admin/branches")
+@SecurityRequirement(name = "bearerAuth")
 public class BranchAdminController {
 
     private final BranchService branchService;

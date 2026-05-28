@@ -2,13 +2,12 @@ import { Component, inject, signal, computed, viewChild } from '@angular/core';
 
 import { UserService } from '../../../core/services/user';
 import { Branch, UserResponse } from '../../../shared/models/user';
-import { AppToast } from '../../../shared/components/app-toast/app-toast';
 import { UserList } from './user-list/user-list';
 import { UserForm } from './user-form/user-form';
 
 @Component({
   selector: 'app-users',
-  imports: [AppToast, UserList, UserForm],
+  imports: [UserList, UserForm],
   templateUrl: './users.html',
   styleUrl: './users.css',
 })

@@ -1,0 +1,96 @@
+<div class="categories-page">
+  <section class="categories-page__hero" aria-labelledby="categories-title">
+    <div class="categories-page__hero-copy">
+      <p class="categories-page__eyebrow">Catalogo</p>
+      <h1 id="categories-title">Categorias</h1>
+      <p>Organizacion de gondolas digitales, jerarquias y filtros de tienda.</p>
+    </div>
+
+    <div class="categories-page__hero-actions">
+      <app-button icon="pi pi-plus" (click)="createCategory.emit()"> Nueva categoria </app-button>
+    </div>
+  </section>
+
+  @if (error()) {
+    <section class="categories-page__alert" role="alert">
+      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+      <span>{{ error() }}</span>
+      <app-button variant="secondary" size="sm" (click)="retry.emit()">Reintentar</app-button>
+    </section>
+  }
+
+  <section class="categories-page__directory" aria-label="Directorio de categorias de productos">
+    <app-data-table
+      [data]="categories()"
+      [columns]="categoryColumns"
+      [loading]="loading()"
+      [sortable]="true"
+      [paginated]="true"
+      [rows]="8"
+      [rowsPerPageOptions]="[8, 16, 24]"
+      emptyTitle="No hay categorias"
+      emptyDescription="Crea la primera categoria para habilitar filtros del catalogo."
+    >
+      <ng-template #toolbar>
+        <div class="table-toolbar__info">
+          <p class="table-toolbar__kicker">Taxonomia comercial</p>
+          <h2 class="table-toolbar__title">Categorias disponibles</h2>
+        </div>
+        <div class="table-toolbar__actions">
+          <app-search-bar
+            [(value)]="searchQuery"
+            placeholder="Buscar por nombre o descripcion..."
+            (search)="onSearch($event)"
+            (clear)="onSearchClear()"
+          />
+        </div>
+      </ng-template>
+
+      <ng-template #body let-category>
+        <tr>
+          <td>
+            <span class="category-name">{{ category.name }}</span>
+          </td>
+          <td>
+            <app-badge [tone]="category.parentId ? 'info' : 'success'">
+              {{ parentName(category) }}
+            </app-badge>
+          </td>
+          <td>
+            <span>{{ category.description || 'Sin descripcion' }}</span>
+          </td>
+          <td>
+            <div class="category-actions">
+              <button
+                pButton
+                pRipple
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-rounded"
+                [attr.aria-label]="'Editar ' + category.name"
+                (click)="editCategory.emit(category)"
+              ></button>
+              <button
+                pButton
+                pRipple
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-rounded p-button-danger"
+                [attr.aria-label]="'Eliminar ' + category.name"
+                (click)="requestDelete(category)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </app-data-table>
+  </section>
+</div>
+
+<app-confirm-dialog
+  [visible]="!!categoryToDelete()"
+  title="Eliminar categoria"
+  [message]="'Vas a eliminar ' + (categoryToDelete()?.name ?? 'esta categoria') + '. La accion se rechazara si tiene productos o subcategorias.'"
+  confirmLabel="Eliminar"
+  [destructive]="true"
+  (confirmed)="confirmDelete()"
+  (cancelled)="categoryToDelete.set(null)"
+/>

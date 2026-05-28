@@ -15,10 +15,6 @@ export interface StoreFooterLink {
   templateUrl: './app-store-footer.html',
   styleUrl: './app-store-footer.css',
 })
-/**
- * Generic Lembas store footer.
- * Minimal single-row layout: copyright on the left, inline links on the right.
- */
 export class AppStoreFooter {
   /** Flat list of footer links rendered inline. */
   readonly links = input.required<readonly StoreFooterLink[]>();

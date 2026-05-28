@@ -1,0 +1,97 @@
+<app-modal [(visible)]="dialogVisible" [title]="dialogTitle()" [width]="'min(94vw, 36rem)'">
+  <form class="category-form" (submit)="onSubmit(); $event.preventDefault()">
+    @if (dialogError()) {
+      <div class="category-form__alert" role="alert" data-testid="category-dialog-error">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <span>{{ dialogError() }}</span>
+      </div>
+    }
+
+    <div class="category-form__section">
+      <div class="category-form__section-heading">
+        <span class="category-form__section-index">01</span>
+        <div>
+          <h3>Datos de categoria</h3>
+          <p>Nombre publico, jerarquia y descripcion para la gondola digital.</p>
+        </div>
+      </div>
+
+      <div class="category-form__grid">
+        <div class="category-form__field category-form__field--wide">
+          <label for="category-name" class="category-form__label">
+            Nombre <span class="category-form__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="category-name"
+            pInputText
+            type="text"
+            [ngModel]="formName()"
+            (ngModelChange)="formName.set($event); formSubmitted.set(false)"
+            placeholder="Ej. Cereales integrales"
+            class="w-full"
+            [class.ng-invalid]="formSubmitted() && !formNameValid()"
+          />
+          @if (formSubmitted() && !formNameValid()) {
+            <small class="category-form__error">El nombre es obligatorio.</small>
+          }
+        </div>
+
+        <div class="category-form__field category-form__field--wide">
+          <label for="category-parent" class="category-form__label">Categoria padre</label>
+          <p-select
+            inputId="category-parent"
+            [options]="parentOptions()"
+            [ngModel]="formParentId()"
+            (ngModelChange)="formParentId.set($event); formSubmitted.set(false)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar categoria padre"
+            class="w-full category-form__select category-form__select--rich"
+            [style]="{ width: '100%' }"
+            [appendTo]="'body'"
+            panelStyleClass="category-form__select-panel"
+          >
+            <ng-template #selectedItem let-option>
+              <span class="category-form__selected-option">
+                <i class="pi pi-sitemap" aria-hidden="true"></i>
+                <span>{{ option.label }}</span>
+              </span>
+            </ng-template>
+            <ng-template #item let-option>
+              <div class="category-form__option">
+                <i class="pi pi-sitemap" aria-hidden="true"></i>
+                <div>
+                  <strong>{{ option.label }}</strong>
+                  <span>{{ option.value === null ? 'Nivel principal' : 'Subcategoria' }}</span>
+                </div>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <div class="category-form__field category-form__field--wide">
+          <label for="category-description" class="category-form__label">Descripcion</label>
+          <textarea
+            id="category-description"
+            pInputText
+            [ngModel]="formDescription()"
+            (ngModelChange)="formDescription.set($event)"
+            rows="4"
+            placeholder="Notas internas o texto visible en tienda"
+            class="w-full"
+          ></textarea>
+          <small class="category-form__hint">Opcional. Ayuda a diferenciar categorias similares.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="category-form__actions">
+      <app-button variant="secondary" type="button" (click)="dialogVisible.set(false)">
+        Cancelar
+      </app-button>
+      <app-button type="submit" [loading]="submitting()" loadingLabel="Guardando...">
+        Guardar
+      </app-button>
+    </div>
+  </form>
+</app-modal>

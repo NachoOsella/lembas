@@ -2,130 +2,254 @@
   display: block;
 }
 
-.stat-card {
-  display: flex;
-  flex-direction: column;
+/* ──────────────────────────────────────────────────────────────
+   Grid layout — responsive strip
+   ──────────────────────────────────────────────────────────── */
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
   gap: 0.75rem;
-  padding: 1.25rem;
-  border-radius: var(--radius-card);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: var(--shadow-card);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 0 0.5px 0 rgba(0, 0, 0, 0.14),
-    0 1px 1px 0 rgba(0, 0, 0, 0.24),
-    0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.stat-card--surface {
-  background: #ffffff;
-  color: var(--color-text);
-}
-
-.stat-card--muted {
-  background: var(--color-surface-muted);
-  color: var(--color-text);
-}
-
-.stat-card--dark {
-  background: var(--color-primary-dark);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.stat-card__header {
+/* ──────────────────────────────────────────────────────────────
+   Card base — Lembas whisper-soft layered shadows
+   ──────────────────────────────────────────────────────────── */
+.metric-strip__item {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.85rem;
+  min-height: 5.5rem;
+  padding: 1rem 1.1rem;
+  overflow: hidden;
+  color: var(--metric-ink, rgba(0, 0, 0, 0.87));
+  background: var(--metric-wash, #ffffff);
+  border: 1px solid var(--metric-border, rgba(7, 95, 54, 0.08));
+  border-radius: var(--radius-card, 12px);
+
+  /* Lembas whisper-soft layered shadow — two low-alpha layers */
+  box-shadow:
+    0 0 0.5px rgba(0, 0, 0, 0.08),
+    0 1px 1px rgba(0, 0, 0, 0.12);
+
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease;
+
+  /* Entrance animation */
+  animation: metricEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.stat-card__icon {
+.metric-strip__item:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0.5px rgba(0, 0, 0, 0.08),
+    0 2px 4px rgba(0, 0, 0, 0.14);
+}
+
+/* Decorative blob at bottom-right — subtle, tonal */
+.metric-strip__item::before {
+  content: '';
+  position: absolute;
+  inset: auto -3rem -3.5rem auto;
+  z-index: -1;
+  width: 7.5rem;
+  height: 7.5rem;
+  background: var(--metric-blob, rgba(47, 141, 114, 0.06));
+  border-radius: 999px;
+  transition: background 0.3s ease;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Tone colour tokens — aligned with Lembas palette
+   ──────────────────────────────────────────────────────────── */
+.metric-strip__item--forest {
+  --metric-color: #2f8d72;
+  --metric-ink: rgba(0, 0, 0, 0.87);
+  --metric-wash: #ffffff;
+  --metric-border: rgba(47, 141, 114, 0.12);
+  --metric-blob: rgba(47, 141, 114, 0.06);
+}
+
+.metric-strip__item--amber {
+  --metric-color: #d9822b;
+  --metric-ink: rgba(0, 0, 0, 0.87);
+  --metric-wash: #fff9f0;
+  --metric-border: rgba(217, 130, 43, 0.15);
+  --metric-blob: rgba(217, 130, 43, 0.07);
+}
+
+.metric-strip__item--ink {
+  --metric-color: #243a31;
+  --metric-ink: rgba(0, 0, 0, 0.87);
+  --metric-wash: #f9f9f9;
+  --metric-border: rgba(36, 58, 49, 0.1);
+  --metric-blob: rgba(36, 58, 49, 0.05);
+}
+
+.metric-strip__item--sage {
+  --metric-color: #6f8d67;
+  --metric-ink: rgba(0, 0, 0, 0.87);
+  --metric-wash: #f7f9f5;
+  --metric-border: rgba(111, 141, 103, 0.12);
+  --metric-blob: rgba(111, 141, 103, 0.06);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Trend colour tokens — semantic overlays
+   ──────────────────────────────────────────────────────────── */
+.metric-strip__item--trend-up {
+  --trend-color: #2f8d72;
+}
+
+.metric-strip__item--trend-down {
+  --trend-color: #c82014;
+}
+
+.metric-strip__item--trend-neutral {
+  --trend-color: #4a5b55;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Icon circle — refined, with tonal background
+   ──────────────────────────────────────────────────────────── */
+.metric-strip__icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 8px;
-  background: rgba(47, 141, 114, 0.08);
-  color: var(--color-primary);
-  font-size: 0.9rem;
-}
-
-.stat-card--dark .stat-card__icon {
-  background: rgba(255, 255, 255, 0.1);
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
   color: #ffffff;
+  background: var(--metric-color, #2f8d72);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  line-height: 1;
+  box-shadow: 0 0.5rem 1rem color-mix(in srgb, var(--metric-color, #2f8d72) 18%, transparent);
 }
 
-.stat-card__label {
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.stat-card--dark .stat-card__label {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.stat-card__body {
+/* Ensure PrimeIcon inside is perfectly centered */
+.metric-strip__icon i {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.stat-card__value {
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  color: inherit;
-}
-
-.stat-card__trend {
-  display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Text copy block — tighter grid, better hierarchy
+   ──────────────────────────────────────────────────────────── */
+.metric-strip__copy {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+/* Label — all-caps, tight tracking, Lembas weight 800 */
+.metric-strip__label {
+  color: var(--metric-ink, rgba(0, 0, 0, 0.87));
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  opacity: 0.72;
+}
+
+/* Value row wraps number + trend icon side by side */
+.metric-strip__value-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Value — dramatic, trend-colored, max weight, tight tracking */
+.metric-strip__value {
+  color: var(--trend-color, var(--metric-ink, rgba(0, 0, 0, 0.87)));
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  transition: color 0.3s ease;
+}
+
+/* Trend arrow icon */
+.metric-strip__trend-icon {
+  font-size: 0.6rem;
+  color: var(--trend-color, var(--metric-ink, rgba(0, 0, 0, 0.87)));
+  opacity: 0.65;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  transition: color 0.3s ease;
+}
+
+/* Detail — secondary text, muted, weight 600 */
+.metric-strip__detail {
+  color: var(--metric-ink, rgba(0, 0, 0, 0.58));
   font-size: 0.82rem;
   font-weight: 600;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-  white-space: nowrap;
+  line-height: 1.4;
+  opacity: 0.82;
 }
 
-.stat-card__trend--up {
-  color: #2f8d72;
-  background: rgba(47, 141, 114, 0.08);
+/* ──────────────────────────────────────────────────────────────
+   Entrance animation
+   ──────────────────────────────────────────────────────────── */
+@keyframes metricEnter {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.stat-card__trend--down {
-  color: #c82014;
-  background: rgba(200, 32, 20, 0.08);
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .metric-strip__item {
+    animation: none;
+  }
 }
 
-.stat-card__trend--neutral {
-  color: var(--color-text-muted);
-  background: rgba(0, 0, 0, 0.04);
+/* ──────────────────────────────────────────────────────────────
+   Responsive — 2-col on tablet, stack on mobile
+   ──────────────────────────────────────────────────────────── */
+@media (max-width: 48rem) {
+  .metric-strip {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
+  }
 }
 
-.stat-card--dark .stat-card__trend--up {
-  color: #7dd3c0;
-  background: rgba(255, 255, 255, 0.1);
-}
+@media (max-width: 34rem) {
+  .metric-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
 
-.stat-card--dark .stat-card__trend--down {
-  color: #fca5a5;
-  background: rgba(255, 255, 255, 0.1);
-}
+  .metric-strip__item {
+    min-height: 4.8rem;
+    padding: 0.85rem 0.95rem;
+    gap: 0.75rem;
+    width: 100%;
+  }
 
-.stat-card--dark .stat-card__trend--neutral {
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.1);
+  .metric-strip__icon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .metric-strip__value {
+    font-size: 1.6rem;
+  }
+
+  .metric-strip__trend-icon {
+    font-size: 0.55rem;
+  }
 }

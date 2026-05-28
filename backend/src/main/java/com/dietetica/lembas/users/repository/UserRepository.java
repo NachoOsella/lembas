@@ -84,31 +84,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             Pageable pageable);
 
     /**
-     * Single-shot native aggregation for the admin users directory:
-     * returns total, enabled, and branch-assigned counts for internal roles.
-     *
-     * <p>Column aliases use double-quoted camelCase on purpose so that
-     * {@link UserMetricsProjection} accessors map directly.</p>
-     */
-    @Query(value = """
-            SELECT count(*)             AS "totalUsers",
-                   count(*) FILTER (WHERE enabled = true)  AS "enabledUsers",
-                   count(*) FILTER (WHERE branch_id IS NOT NULL) AS "usersWithBranch"
-            FROM users
-            WHERE role IN ('ADMIN','MANAGER','EMPLOYEE')
-            """, nativeQuery = true)
-    UserMetricsProjection computeUserMetrics();
-
-    /**
-     * Projection for the single-query user metrics aggregation.
-     */
-    interface UserMetricsProjection {
-        long getTotalUsers();
-        long getEnabledUsers();
-        long getUsersWithBranch();
-    }
-
-    /**
      * Counts enabled users with the given role. Used by the last-admin-disable guard.
      *
      * @param role the role to count

@@ -1,1 +1,144 @@
-<p>catalog works!</p>
+<!-- frontend/src/app/features/public-store/catalog/catalog.html -->
+<div class="catalog-page min-h-screen bg-[#f6ead6] pb-20 text-[rgba(0,0,0,0.87)]">
+  <header
+    class="catalog-page__hero relative overflow-hidden bg-[#064e3b] px-4 py-14 text-white sm:px-6 lg:px-8 lg:py-20"
+  >
+    <div class="pointer-events-none absolute -right-16 -top-16 h-[400px] w-[400px] rounded-full bg-[#f29d52]/8 blur-3xl" aria-hidden="true"></div>
+    <div class="pointer-events-none absolute -bottom-20 -left-20 h-[300px] w-[300px] rounded-full bg-[#2f8d72]/10 blur-3xl" aria-hidden="true"></div>
+
+    <!-- Decorative Lembas flowers -->
+    <app-hero-flowers />
+
+    <div class="relative mx-auto max-w-[1440px]">
+      <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-50/70 mb-3">
+        Catálogo online
+      </p>
+      <h1
+        id="catalog-title"
+        class="max-w-[760px] text-5xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-6xl lg:text-7xl"
+      >
+        Nuestra góndola digital
+      </h1>
+      <p class="mt-5 w-full max-w-[680px] text-base font-medium leading-7 text-emerald-50/75 sm:text-lg">
+        Filtrá por categoría, compará precios y armá tu pedido para retirar en sucursal.
+      </p>
+    </div>
+  </header>
+
+  <main class="mx-auto grid w-full max-w-[1600px] gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[300px_1fr] lg:px-10 lg:py-16">
+    <aside class="lg:sticky lg:top-[100px] lg:self-start">
+      <section
+        class="rounded-xl bg-white p-6 border border-[rgba(7,95,54,0.08)] shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]"
+        aria-label="Filtros del catálogo"
+      >
+        <div class="mb-6 flex items-center gap-3 border-b border-[#f0e6d3] pb-5">
+          <span
+            class="flex h-9 w-9 items-center justify-center rounded-full bg-[#075f36] text-white"
+          >
+            <i class="pi pi-sliders-h text-sm" aria-hidden="true"></i>
+          </span>
+          <div>
+            <h2 class="text-[15px] font-bold tracking-[-0.01em] text-[rgba(0,0,0,0.87)]">Categorías</h2>
+            <p class="text-[12px] font-medium text-[rgba(0,0,0,0.45)] tracking-[-0.01em]">Filtrá la góndola</p>
+          </div>
+        </div>
+
+        <app-category-nav
+          [categories]="categories()"
+          [loading]="categoriesLoading()"
+          [error]="categoriesError()"
+          [selectedCategoryId]="selectedCategoryId()"
+          (allSelected)="selectAllCategories()"
+          (categorySelected)="selectCategory($event)"
+        />
+      </section>
+    </aside>
+
+    <section class="min-w-0">
+      <div
+        class="mb-8 flex flex-col gap-4 rounded-xl bg-white p-6 border border-[rgba(7,95,54,0.08)] shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)] sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">Góndola</p>
+          <h2 class="mt-1 text-2xl font-semibold tracking-[-0.02em] text-[rgba(0,0,0,0.87)] sm:text-3xl">Productos disponibles</h2>
+        </div>
+        @if (searchQuery()) {
+          <div
+            class="inline-flex items-center gap-3 rounded-full border border-[#2f8d72]/20 bg-[#2f8d72]/5 px-4 py-2 text-[13px] font-semibold tracking-[-0.01em]"
+          >
+            <span class="flex items-center gap-2 text-[rgba(0,0,0,0.87)]">
+              <i class="pi pi-search text-[11px] text-[#2f8d72]" aria-hidden="true"></i>
+              <span>Resultados para</span>
+              <span class="font-bold text-[#075f36]">"{{ searchQuery() }}"</span>
+            </span>
+            <button
+              type="button"
+              class="flex h-5 w-5 items-center justify-center rounded-full bg-[rgba(0,0,0,0.06)] text-[rgba(0,0,0,0.45)] transition-all hover:bg-[rgba(0,0,0,0.1)] hover:text-[rgba(0,0,0,0.7)] cursor-pointer"
+              (click)="clearSearch()"
+              aria-label="Limpiar busqueda"
+            >
+              <i class="pi pi-times text-[10px]" aria-hidden="true"></i>
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (productsLoading() && !products().length) {
+        <div class="rounded-xl bg-white p-16 border border-[rgba(7,95,54,0.08)] shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]">
+          <app-loading-spinner label="Preparando estantes..." size="lg" surface="card" />
+        </div>
+      } @else if (productsError()) {
+        <div class="rounded-xl border border-[rgba(200,32,20,0.28)] bg-[hsl(4_82%_43%/_5%)] p-4">
+          <div class="flex items-start gap-3">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[rgba(200,32,20,0.12)] bg-white text-[#c82014]">
+              <i class="pi pi-exclamation-triangle text-sm" aria-hidden="true"></i>
+            </span>
+            <div class="flex-1">
+              <p class="text-[15px] font-bold text-[rgba(0,0,0,0.87)]">No pudimos cargar el catálogo</p>
+              <p class="mt-1 text-[13px] text-[rgba(0,0,0,0.58)]">Intentá nuevamente en unos segundos.</p>
+            </div>
+            <button
+              type="button"
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#c82014] transition-colors hover:bg-[rgba(200,32,20,0.08)] cursor-pointer"
+              (click)="loadProducts()"
+              aria-label="Reintentar"
+            >
+              <i class="pi pi-refresh text-sm" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      } @else if (initialLoadDone() && products().length === 0) {
+        <div class="rounded-xl bg-white p-12 text-center border border-[rgba(7,95,54,0.08)] shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]">
+          <app-empty-state
+            icon="pi pi-shop"
+            [title]="
+              searchQuery().trim() ? 'No encontramos lo que buscás' : 'Catálogo en preparación'
+            "
+            [description]="emptyDescription()"
+          />
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" aria-label="Productos">
+          @for (product of products(); track product.id) {
+            <app-store-product-card [product]="product" cardClass="catalog-page__card" />
+          }
+        </div>
+
+        @if (totalRecords() > 0) {
+          <div
+            class="mt-10 rounded-xl bg-white p-5 border border-[rgba(7,95,54,0.08)] shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]"
+          >
+            <app-pagination
+              [totalRecords]="totalRecords()"
+              [rows]="20"
+              [first]="first()"
+              (pageChange)="onPageChange($event)"
+              [showCurrentPageReport]="true"
+              currentPageReportTemplate="Mostrando {first}-{last} de {totalRecords} productos"
+            />
+          </div>
+        }
+      }
+    </section>
+  </main>
+</div>

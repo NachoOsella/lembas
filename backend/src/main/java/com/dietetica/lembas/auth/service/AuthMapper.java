@@ -7,6 +7,8 @@ import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
+
 /**
  * Maps between auth-layer DTOs and the {@link User} entity.
  *
@@ -31,7 +33,7 @@ public class AuthMapper {
     public User toEntity(RegisterRequest request, String encodedPassword) {
         return new User(
                 null,                       // branchId — null for CUSTOMER
-                request.email().toLowerCase().trim(),
+                request.email().trim().toLowerCase(Locale.ROOT),
                 encodedPassword,
                 request.firstName().trim(),
                 request.lastName().trim(),

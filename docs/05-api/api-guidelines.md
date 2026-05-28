@@ -123,6 +123,7 @@ All errors use a uniform `ApiError` object:
 |---|---|---|
 | INVALID_CREDENTIALS | Auth | 401 |
 | ACCOUNT_DISABLED | Auth | 403 |
+| INVALID_REFRESH_TOKEN | Auth | 401 |
 | EMAIL_DUPLICATED | Auth, Users | 409 |
 | PRODUCT_NOT_FOUND | Catalog | 404 |
 | PRODUCT_NOT_PUBLISHED | Catalog | 404 |
@@ -136,6 +137,7 @@ All errors use a uniform `ApiError` object:
 | CASH_SESSION_NOT_OPEN | Cash | 409 |
 | DIFFERENCE_REASON_REQUIRED | Cash | 422 |
 | VALIDATION_ERROR | Shared | 400 |
+| DATA_INTEGRITY_VIOLATION | Shared | 409 |
 | INTERNAL_ERROR | Shared | 500 |
 
 ## Pagination

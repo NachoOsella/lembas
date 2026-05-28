@@ -2,259 +2,303 @@
   display: block;
 }
 
+/* ── Nav shadow ────────────────────────────────────────────── */
 .app-store-nav {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: var(--color-surface);
-  box-shadow: var(--shadow-nav);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 2px 2px rgba(0, 0, 0, 0.06), 0 0 2px rgba(0, 0, 0, 0.07);
 }
 
-/* ---- Inner container ---- */
-
-.app-store-nav__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 0 var(--spacing-xl);
-  min-height: 4.2rem;
-}
-
-@media (min-width: 48rem) {
-  .app-store-nav__inner {
-    min-height: 4.8rem;
-  }
-}
-
-/* ---- Brand ---- */
-
+/* ── Brand ─────────────────────────────────────────────────── */
 .app-store-nav__brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: var(--color-primary);
-  text-decoration: none;
-  flex-shrink: 0;
+  border-radius: 4px;
+  transition: outline 0.15s ease;
+}
+
+.app-store-nav__brand:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
 }
 
 .app-store-nav__logo {
-  width: 2.4rem;
-  height: 2.4rem;
-  object-fit: contain;
+  transition: transform 0.3s ease;
 }
 
-@media (min-width: 48rem) {
-  .app-store-nav__logo {
-    width: 2.8rem;
-    height: 2.8rem;
-  }
+.app-store-nav__brand:hover .app-store-nav__logo {
+  transform: rotate(-8deg);
 }
 
 .app-store-nav__brand-text {
-  display: none;
+  display: flex;
   flex-direction: column;
-  line-height: 1.2;
+  min-width: 0;
 }
 
-@media (min-width: 40rem) {
-  .app-store-nav__brand-text {
+.app-store-nav__brand-text strong {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.app-store-nav__brand-text span {
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+@media (min-width: 640px) {
+  .app-store-nav__brand-text strong {
+    font-size: 1.25rem;
+  }
+  .app-store-nav__brand-text span {
+    font-size: 0.6875rem;
+    letter-spacing: 0.15em;
+  }
+}
+
+/* ── Center navigation ─────────────────────────────────────── */
+.app-store-nav__center {
+  display: none;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .app-store-nav__center {
     display: flex;
   }
 }
 
-.app-store-nav__brand-text strong {
-  font-size: 1.05rem;
+.app-store-nav__links {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.nav-link {
+  border-radius: 9999px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  color: rgba(0, 0, 0, 0.6);
+  text-decoration: none;
+  transition: all 0.2s ease;
 }
 
-@media (min-width: 48rem) {
-  .app-store-nav__brand-text strong {
-    font-size: 1.15rem;
-  }
+.nav-link:hover {
+  background: rgba(47, 141, 114, 0.08);
+  color: #075f36;
 }
 
-.app-store-nav__brand-text small {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
+.nav-link--active {
+  background: rgba(47, 141, 114, 0.1);
+  color: #075f36;
+  font-weight: 700;
 }
-
-/* ---- Search bar (desktop) ---- */
 
 .app-store-nav__search {
-  display: none;
-  flex: 1;
-  max-width: 28rem;
-  margin: 0 auto;
+  width: 14rem;
 }
 
-@media (min-width: 48rem) {
-  .app-store-nav__search {
-    display: block;
-  }
-}
-
-/* ---- Search bar (mobile) ---- */
-
-.app-store-nav__search--mobile {
-  padding: 0 var(--spacing-xl) 0.6rem;
-}
-
-@media (min-width: 48rem) {
-  .app-store-nav__search--mobile {
-    display: none;
-  }
-}
-
-/* ---- Actions (right side) ---- */
-
+/* ── Actions ───────────────────────────────────────────────── */
 .app-store-nav__actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
+  gap: 0.75rem;
 }
 
-@media (min-width: 48rem) {
-  .app-store-nav__actions {
-    gap: 0.75rem;
-  }
-}
-
-/* Login link */
-.app-store-nav__login {
-  display: none;
-  align-items: center;
-  color: var(--color-text);
-  font-size: 0.88rem;
-  font-weight: 600;
-  text-decoration: none;
-  padding: 0.45rem 0.35rem;
-  border-radius: var(--radius-pill);
-  transition: color 0.2s ease;
-}
-
-@media (min-width: 48rem) {
-  .app-store-nav__login {
-    display: inline-flex;
-  }
-}
-
-.app-store-nav__login:hover {
-  color: var(--color-primary);
-}
-
-/* CTA pill */
-.app-store-nav__cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.4rem;
-  padding: 0.4rem 1rem;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-pill);
-  background: var(--color-primary);
-  color: #ffffff;
-  font-size: 0.88rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.app-store-nav__cta:active {
-  transform: scale(0.95);
-}
-
-/* User name */
 .app-store-nav__user-name {
   display: none;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text);
-  max-width: 8rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.6);
 }
 
-@media (min-width: 48rem) {
+@media (min-width: 768px) {
   .app-store-nav__user-name {
-    display: inline;
+    display: inline-block;
   }
 }
 
-/* User menu trigger */
 .app-store-nav__menu-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.1rem;
-  width: 2.5rem;
-  height: 2.5rem;
-  background: none;
-  border: none;
-  color: var(--color-text);
-  font-size: 1.05rem;
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 9999px;
+  border: 1px solid #e7e7e7;
+  background: #ffffff;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .app-store-nav__menu-btn:hover {
-  color: var(--color-primary);
+  border-color: #2f8d72;
+  color: #2f8d72;
 }
 
-.app-store-nav__chevron {
-  font-size: 0.65rem;
-  margin-top: 0.05rem;
+.app-store-nav__auth {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* Cart icon */
+@media (min-width: 640px) {
+  .app-store-nav__auth {
+    display: flex;
+  }
+}
+
+.app-store-nav__login {
+  border-radius: 9999px;
+  border: 1px solid #e7e7e7;
+  background: transparent;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(0, 0, 0, 0.6);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.app-store-nav__login:hover {
+  border-color: rgba(0, 0, 0, 0.87);
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.app-store-nav__login:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
+}
+
+.app-store-nav__cta {
+  border-radius: 9999px;
+  border: 1px solid #075f36;
+  background: #075f36;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.app-store-nav__cta:hover {
+  background: #06402a;
+}
+
+.app-store-nav__cta:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
+}
+
+/* ── Mobile search ─────────────────────────────────────────── */
+.app-store-nav__search-mobile {
+  display: block;
+  border-top: 1px solid #e7e7e7;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+  .app-store-nav__search-mobile {
+    display: none;
+  }
+}
+
+/* ── Dropdown menu ─────────────────────────────────────────── */
+:host ::ng-deep .app-store-nav__dropdown {
+  width: 200px;
+  border: none;
+  background: #ffffff;
+  box-shadow: 0 0 0.5px rgba(0, 0, 0, 0.14), 0 2px 4px rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  margin-top: 0.5rem;
+}
+
+:host ::ng-deep .p-menu {
+  border-radius: 12px;
+  padding: 8px 0;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+:host ::ng-deep .p-menu .p-menuitem-link {
+  padding: 10px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.87);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+:host ::ng-deep .p-menu .p-menuitem-link:hover {
+  background-color: #f6ead6;
+  color: #2f8d72;
+}
+
+:host ::ng-deep .p-menu .p-menuitem-icon {
+  margin-right: 12px;
+  color: rgba(0, 0, 0, 0.58);
+}
+
+:host ::ng-deep .p-menu .p-menuitem-link:hover .p-menuitem-icon {
+  color: #2f8d72;
+}
+
+/* ── Floating cart CTA ─────────────────────────────────────── */
 .app-store-nav__cart {
-  position: relative;
+  position: fixed;
+  bottom: calc(1rem + 16px);
+  right: calc(1rem + 16px);
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  color: var(--color-primary);
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  background: #075f36;
+  color: #ffffff;
   text-decoration: none;
-  transition: color 0.2s ease;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.24), 0 8px 12px rgba(0, 0, 0, 0.14);
+  transition: all 0.3s ease;
 }
 
 .app-store-nav__cart:hover {
-  color: var(--color-accent);
+  transform: scale(1.1);
 }
 
-.app-store-nav__cart-icon {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.app-store-nav__cart:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
 }
 
-/* Cart badge */
 .app-store-nav__cart-badge {
   position: absolute;
-  top: -0.15rem;
-  right: -0.15rem;
+  top: -4px;
+  right: -4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.15rem;
-  height: 1.15rem;
-  background: var(--color-primary-dark);
-  border: 2px solid var(--color-surface);
-  border-radius: 50%;
-  color: #ffffff;
-  font-size: 0.65rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  border: 2px solid #075f36;
+  background: #f29d52;
+  font-size: 0.6875rem;
   font-weight: 700;
-  line-height: 1;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }

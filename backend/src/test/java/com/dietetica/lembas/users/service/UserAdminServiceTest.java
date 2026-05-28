@@ -1,15 +1,14 @@
 package com.dietetica.lembas.users.service;
 
+import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
 import com.dietetica.lembas.users.dto.UpdateUserRequest;
-import com.dietetica.lembas.users.dto.UserMetricsResponse;
 import com.dietetica.lembas.users.dto.UserResponse;
 import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
-import com.dietetica.lembas.users.repository.UserRepository.UserMetricsProjection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -51,11 +50,14 @@ class UserAdminServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private BranchRepository branchRepository;
+
     private UserAdminService userAdminService;
 
     @BeforeEach
     void setUp() {
-        userAdminService = new UserAdminService(userRepository, new UserBranchPolicy(), passwordEncoder);
+        userAdminService = new UserAdminService(userRepository, branchRepository, new UserBranchPolicy(), passwordEncoder);
     }
 
     @Nested
@@ -143,22 +145,6 @@ class UserAdminServiceTest {
 
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().getFirst().email()).isEqualTo("admin@lembas.com");
-        }
-    }
-
-    @Nested
-    class GetUserMetrics {
-
-        @Test
-        void Should_aggregateInternalUserCountsFromRepository() {
-            var projection = mockUserMetricsProjection(30, 25, 20);
-            when(userRepository.computeUserMetrics()).thenReturn(projection);
-
-            var metrics = userAdminService.getUserMetrics();
-
-            assertThat(metrics.totalUsers()).isEqualTo(30);
-            assertThat(metrics.enabledUsers()).isEqualTo(25);
-            assertThat(metrics.usersWithBranch()).isEqualTo(20);
         }
     }
 
@@ -260,6 +246,49 @@ class UserAdminServiceTest {
         }
 
         @Test
+        void Should_throwBranchNotFound_when_creatingBranchBoundUserWithUnknownBranch() {
+            var request = new CreateInternalUserRequest(
+                    "manager@lembas.com",
+                    RAW_PASSWORD,
+                    "Manager",
+                    "User",
+                    null,
+                    Role.MANAGER,
+                    99L
+            );
+            when(userRepository.existsByEmail("manager@lembas.com")).thenReturn(false);
+            when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
+            when(branchRepository.existsById(99L)).thenReturn(false);
+
+            assertThatThrownBy(() -> userAdminService.createUser(request))
+                    .isInstanceOf(DomainException.class)
+                    .hasFieldOrPropertyWithValue("code", "BRANCH_NOT_FOUND")
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+        }
+
+        @Test
+        void Should_throwBranchInactive_when_creatingBranchBoundUserOnInactiveBranch() {
+            var request = new CreateInternalUserRequest(
+                    "manager@lembas.com",
+                    RAW_PASSWORD,
+                    "Manager",
+                    "User",
+                    null,
+                    Role.MANAGER,
+                    7L
+            );
+            when(userRepository.existsByEmail("manager@lembas.com")).thenReturn(false);
+            when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
+            when(branchRepository.existsById(7L)).thenReturn(true);
+            when(branchRepository.existsByIdAndActiveTrue(7L)).thenReturn(false);
+
+            assertThatThrownBy(() -> userAdminService.createUser(request))
+                    .isInstanceOf(DomainException.class)
+                    .hasFieldOrPropertyWithValue("code", "BRANCH_INACTIVE")
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        @Test
         void Should_normalizeEmail_when_creatingUser() {
             var request = new CreateInternalUserRequest(
                     "  UPPERCASE@LEMBAS.COM  ",
@@ -298,6 +327,8 @@ class UserAdminServiceTest {
             User existingUser = existingAdmin();
             when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
             when(userRepository.existsByEmail("updated@lembas.com")).thenReturn(false);
+            when(branchRepository.existsById(1L)).thenReturn(true);
+            when(branchRepository.existsByIdAndActiveTrue(1L)).thenReturn(true);
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -376,6 +407,22 @@ class UserAdminServiceTest {
             assertThat(response.firstName()).isEqualTo("OnlyFirstName");
             assertThat(response.lastName()).isEqualTo("User"); // unchanged
             assertThat(response.email()).isEqualTo("admin@lembas.com"); // unchanged
+        }
+
+        @Test
+        void Should_throwBranchInactive_when_updatingUserToManagerWithInactiveBranch() {
+            User existingUser = existingAdmin();
+            when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
+            when(branchRepository.existsById(3L)).thenReturn(true);
+            when(branchRepository.existsByIdAndActiveTrue(3L)).thenReturn(false);
+
+            assertThatThrownBy(() -> userAdminService.updateUser(
+                    1L,
+                    new UpdateUserRequest(null, null, null, null, null, Role.MANAGER, 3L)
+            ))
+                    .isInstanceOf(DomainException.class)
+                    .hasFieldOrPropertyWithValue("code", "BRANCH_INACTIVE")
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
         @Test
@@ -467,17 +514,6 @@ class UserAdminServiceTest {
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
-
-    private static UserMetricsProjection mockUserMetricsProjection(long total, long enabled, long withBranch) {
-        return new UserMetricsProjection() {
-            @Override
-            public long getTotalUsers() { return total; }
-            @Override
-            public long getEnabledUsers() { return enabled; }
-            @Override
-            public long getUsersWithBranch() { return withBranch; }
-        };
-    }
 
     private static User existingAdmin() {
         return new User(

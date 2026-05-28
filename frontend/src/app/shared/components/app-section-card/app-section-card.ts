@@ -7,7 +7,6 @@ import { Card } from 'primeng/card';
   templateUrl: './app-section-card.html',
   styleUrl: './app-section-card.css',
 })
-/** Provides a PrimeNG-backed card container for dashboards, forms, and content sections. */
 export class AppSectionCard {
   readonly eyebrow = input<string | null>(null);
   readonly title = input<string | null>(null);

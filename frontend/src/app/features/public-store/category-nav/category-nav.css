@@ -1,0 +1,166 @@
+:host {
+  display: block;
+}
+
+/* =========================================================================
+   Category Nav — vertical list, all breakpoints
+   Follows DESING.md: full-pill buttons (50px radius), scale(0.95) active,
+   14px button label, Plus Jakarta Sans, -0.01em tracking.
+   ========================================================================= */
+
+.catnav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.catnav__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* =========================================================================
+   Pill button — DESING.md "Primary Filled" pattern
+   ========================================================================= */
+
+.catnav__pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+
+  /* DESING.md: full-pill radius universal */
+  padding: 7px 16px;
+  border-radius: 50px;
+
+  /* DESING.md: Button Label 14-16px, weight 400-600, tracking -0.01em */
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+
+  white-space: nowrap;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.65);
+
+  /* DESING.md: Transition all 0.2s ease */
+  transition: all 0.2s ease;
+}
+
+/* Hover — DESING.md: background deepens, no transform */
+.catnav__pill:not(.catnav__pill--active):hover {
+  background: rgba(47, 141, 114, 0.06);
+  color: rgba(0, 0, 0, 0.87);
+}
+
+/* Active state — DESING.md: Forest Green (#075f36) for dark surfaces with white text */
+.catnav__pill--active {
+  background: #075f36;
+  color: #fff;
+}
+
+.catnav__pill--active:hover {
+  background: #064e2e;
+  color: #fff;
+}
+
+/* Focus visible — DESING.md: Leaf Green focus ring */
+.catnav__pill:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 2px;
+}
+
+/* DESING.md: Active state scale(0.95) — signature micro-interaction */
+.catnav__pill:active {
+  transform: scale(0.95);
+}
+
+/* =========================================================================
+   Icon
+   ========================================================================= */
+
+.catnav__icon {
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+/* =========================================================================
+   Label
+   ========================================================================= */
+
+.catnav__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================================
+   Product count badge
+   ========================================================================= */
+
+.catnav__count {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.5;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.catnav__pill--active .catnav__count {
+  opacity: 0.7;
+}
+
+/* =========================================================================
+   "Ver mas" toggle — secondary text action
+   ========================================================================= */
+
+.catnav__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  color: #2f8d72;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.catnav__toggle:hover {
+  background: rgba(47, 141, 114, 0.06);
+}
+
+.catnav__toggle:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 2px;
+}
+
+/* =========================================================================
+   Skeleton loading
+   ========================================================================= */
+
+.catnav-skeleton {
+  height: 2rem;
+  width: 100%;
+  border-radius: 50px;
+  background: linear-gradient(90deg, #f6ead6 0%, rgba(246, 234, 214, 0.4) 50%, #f6ead6 100%);
+  background-size: 200% 100%;
+  animation: catnav-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes catnav-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

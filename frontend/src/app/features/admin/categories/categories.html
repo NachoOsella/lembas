@@ -1,0 +1,12 @@
+<app-category-list
+  [categories]="categories()"
+  [loading]="loading()"
+  [error]="error()"
+  (createCategory)="openCreate()"
+  (editCategory)="openEdit($event)"
+  (deleted)="refresh()"
+  (retry)="refresh()"
+  (searchChange)="onSearch($event)"
+/>
+
+<app-category-form [categories]="categories()" (saved)="refresh()" />

@@ -7,7 +7,6 @@ import { ButtonDirective, ButtonLabel } from 'primeng/button';
   templateUrl: './app-button.html',
   styleUrl: './app-button.css',
 })
-/** Reusable PrimeNG-backed application button that centralizes Lembas variants. */
 export class AppButton {
   readonly type = input<'button' | 'submit' | 'reset'>('button');
   readonly variant = input<'primary' | 'secondary' | 'ghost' | 'danger'>('primary');

@@ -69,6 +69,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Long userId = Long.parseLong(claims.getSubject());
 
                 UserDetails userDetails = userDetailsService.loadUserById(userId);
+                if (!userDetails.isEnabled()) {
+                    SecurityContextHolder.clearContext();
+                    log.debug("Rejected JWT for disabled user id={} request={}", userId, request.getRequestURI());
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(

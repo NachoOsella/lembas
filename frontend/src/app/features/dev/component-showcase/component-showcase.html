@@ -118,6 +118,108 @@
   </section>
 
   <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Contenedores                                                  -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-cards">
+    <div class="showcase-section-head">
+      <h2 id="sec-cards" class="showcase-section-title">Contenedores</h2>
+      <p class="showcase-section-desc">
+        Tarjetas contenedoras con niveles de fondo: surface, muted y dark.
+      </p>
+    </div>
+
+    <div class="showcase-row showcase-row--3col">
+      @for (tone of sectionCardTones; track tone) {
+        <div class="showcase-spot">
+          <span class="showcase-spot-label">AppSectionCard -- {{ tone }}</span>
+          <app-section-card [tone]="tone" title="{{ tone === 'dark' ? 'Fondo oscuro' : 'Fondo claro' }}" description="Tarjeta con tono {{ tone }} ideal para paneles y dashboards.">
+            <p class="text-sm" [class.text-white]="tone === 'dark'">
+              Contenido del card. Usa cualquier contenido proyectado aqui.
+            </p>
+          </app-section-card>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Card Banner                                                   -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-card-banner">
+    <div class="showcase-section-head">
+      <h2 id="sec-card-banner" class="showcase-section-title">Card Banner</h2>
+      <p class="showcase-section-desc">
+        Tarjeta generica con mancha decorativa. Configurable: color, posicion, opacidad y tamanho.
+      </p>
+    </div>
+
+    <div class="showcase-row showcase-row--2col">
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">CardBanner -- default (top-right green)</span>
+        <app-card-banner>
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">Titulo</p>
+          <h3 class="mt-2 text-xl font-semibold tracking-[-0.02em]">Contenido del banner</h3>
+          <p class="mt-2 text-sm text-stone-600">Descripcion breve del componente con mancha decorativa verde.</p>
+        </app-card-banner>
+      </div>
+
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">CardBanner -- orange, bottom-left</span>
+        <app-card-banner
+          blobColor="#f29d52"
+          [blobOpacity]="10"
+          blobPosition="bottom-left"
+          blobSize="lg"
+          bgColor="#fffaf0"
+        >
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-700">Ofertas</p>
+          <h3 class="mt-2 text-xl font-semibold tracking-[-0.02em]">Promociones de la semana</h3>
+          <p class="mt-2 text-sm text-stone-600">Mancha naranja grande en la esquina inferior izquierda.</p>
+        </app-card-banner>
+      </div>
+    </div>
+
+    <div class="showcase-row showcase-row--2col mt-4">
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">CardBanner -- dark theme, center-right</span>
+        <app-card-banner
+          bgColor="#075f36"
+          textColor="#ffffff"
+          borderColor="rgba(255,255,255,0.1)"
+          blobColor="#ffffff"
+          [blobOpacity]="8"
+          blobPosition="center-right"
+          blobSize="lg"
+        >
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300">Feature band</p>
+          <h3 class="mt-2 text-xl font-semibold tracking-[-0.02em] text-white">Titulo sobre fondo oscuro</h3>
+          <p class="mt-2 text-sm text-emerald-100/70">Mancha blanca sutil a la derecha.</p>
+        </app-card-banner>
+      </div>
+
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">CardBanner -- clickable, no blob</span>
+        <app-card-banner
+          [clickable]="true"
+          [showBlob]="false"
+          borderColor="rgba(47,141,114,0.2)"
+          padding="1.5rem"
+        >
+          <div class="flex items-center gap-4">
+            <span class="flex h-12 w-12 items-center justify-center rounded-full bg-[#2f8d72]/10 text-[#2f8d72]">
+              <i class="pi pi-arrow-right text-lg"></i>
+            </span>
+            <div>
+              <h3 class="text-base font-semibold tracking-[-0.01em]">Card clickeable sin mancha</h3>
+              <p class="text-sm text-stone-500">Con hover effect y sin decoracion.</p>
+            </div>
+          </div>
+        </app-card-banner>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
   <!--  Dialogs / Modals                                              -->
   <!-- ════════════════════════════════════════════════════════════════ -->
   <section class="showcase-section" aria-labelledby="sec-dialogs">
@@ -257,15 +359,55 @@
 
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppDataTable</span>
-      <p class="showcase-spot-hint">Tabla con sorting, paginacion y empty state integrado.</p>
+      <p class="showcase-spot-hint">
+        Tabla generica con toolbar, body template personalizado, sorting y paginacion.
+        Asi se usa en categorias, usuarios y demas modulos del admin.
+      </p>
       <app-data-table
         [data]="tableData"
         [columns]="tableColumns"
+        [loading]="false"
         [sortable]="true"
-        [paginated]="false"
+        [paginated]="true"
+        [rows]="5"
+        [rowsPerPageOptions]="[5, 10, 20]"
         emptyTitle="Sin productos"
         emptyDescription="No se encontraron productos en el catalogo."
-      />
+      >
+        <ng-template #toolbar>
+          <div class="table-toolbar__info">
+            <p class="table-toolbar__kicker">Catalogo de ejemplo</p>
+            <h2 class="table-toolbar__title">Productos destacados</h2>
+          </div>
+        </ng-template>
+
+        <ng-template #body let-row>
+          <tr>
+            <td><span class="font-semibold">{{ row.name }}</span></td>
+            <td>{{ row.category }}</td>
+            <td>{{ row.price }}</td>
+            <td>
+              <span [class.text-red-600]="row.stock < 20">{{ row.stock }}</span>
+            </td>
+            <td>
+              <app-badge [tone]="tableStatusTone(row.status)">
+                {{ row.status === 'PUBLISHED' ? 'Publicado' : row.status === 'PAUSED' ? 'Pausado' : 'Borrador' }}
+              </app-badge>
+            </td>
+            <td>
+              <button
+                pButton
+                pRipple
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-rounded"
+                aria-label="Editar"
+                (click)="tableActions(row)"
+              ></button>
+            </td>
+          </tr>
+        </ng-template>
+      </app-data-table>
+      <p class="showcase-spot-feedback">{{ lastAction() }}</p>
     </div>
 
     <div class="showcase-spot">
@@ -280,44 +422,89 @@
 
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppStatCard</span>
-      <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-        <app-stat-card
-          value="$12.450"
-          label="Ventas hoy"
-          icon="pi pi-shopping-cart"
-          trend="up"
-          trendValue="+12%"
-        />
-        <app-stat-card
-          value="47"
-          label="Pedidos"
-          icon="pi pi-receipt"
-          trend="neutral"
-          trendValue="0%"
-          tone="muted"
-        />
-        <app-stat-card
-          value="128"
-          label="Productos"
-          icon="pi pi-box"
-          trend="down"
-          trendValue="-3%"
-          tone="dark"
-        />
-        <app-stat-card
-          value="98.5%"
-          label="Satisfaccion"
-          icon="pi pi-star"
-          trend="up"
-          trendValue="+2.1%"
+      <p class="showcase-spot-hint">
+        Strip responsivo de indicadores numericos con tonos semanticos.
+        Reemplaza al anterior componente de tarjeta individual.
+      </p>
+      <app-stat-card [metrics]="showcaseMetrics" />
+    </div>
+
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">AppToast</span>
+      <p class="showcase-spot-hint">
+        Notificaciones toast con 4 tipos semanticos. Cada tipo tiene un color de border izquierdo
+        e icono circular diferenciado.
+      </p>
+      <div class="flex flex-wrap gap-2 mb-3">
+        <app-button variant="primary" size="sm" icon="pi pi-check" (click)="showToastSuccess()">Exito</app-button>
+        <app-button variant="danger" size="sm" icon="pi pi-times-circle" (click)="showToastError()">Error</app-button>
+        <app-button variant="secondary" size="sm" icon="pi pi-exclamation-triangle" (click)="showToastWarn()">Advertencia</app-button>
+        <app-button variant="ghost" size="sm" icon="pi pi-info-circle" (click)="showToastInfo()">Info</app-button>
+        <app-button variant="primary" size="sm" icon="pi pi-layer-group" (click)="showToastAll()">Mostrar todos</app-button>
+      </div>
+      <app-toast />
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Catalogo                                                      -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-catalog">
+    <div class="showcase-section-head">
+      <h2 id="sec-catalog" class="showcase-section-title">Catalogo</h2>
+      <p class="showcase-section-desc">
+        Tarjeta de producto para la tienda publica con densidad regular y compacta.
+      </p>
+    </div>
+
+    <div class="showcase-row showcase-row--2col">
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">StoreProductCard -- regular</span>
+        <app-store-product-card [product]="sampleProduct" density="regular" />
+      </div>
+      <div class="showcase-spot">
+        <span class="showcase-spot-label">StoreProductCard -- compact</span>
+        <app-store-product-card [product]="sampleProductCompact" density="compact" />
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!--  Layout de tienda                                              -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="showcase-section" aria-labelledby="sec-layout">
+    <div class="showcase-section-head">
+      <h2 id="sec-layout" class="showcase-section-title">Layout de tienda</h2>
+      <p class="showcase-section-desc">
+        Componentes de navegacion y pie de pagina usados en la tienda publica.
+      </p>
+    </div>
+
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">AppStoreNav</span>
+      <p class="showcase-spot-hint">
+        Barra de navegacion superior con marca, busqueda, estado de sesion y menu de usuario.
+      </p>
+      <div class="showcase-layout-preview">
+        <app-store-nav
+          [brand]="brandConfig"
+          [isLoggedIn]="true"
+          userDisplayName="Admin"
+          [userMenuItems]="storeUserMenuItems"
+          [showSearch]="true"
+          searchPlaceholder="Buscar productos..."
         />
       </div>
     </div>
 
     <div class="showcase-spot">
-      <span class="showcase-spot-label">AppToast</span>
-      <p class="showcase-spot-hint">Inyecta MessageService en tu feature para mostrar toasts.</p>
-      <app-toast />
+      <span class="showcase-spot-label">AppStoreFooter</span>
+      <p class="showcase-spot-hint">
+        Pie de pagina minimalista con copyright y enlaces.
+      </p>
+      <app-store-footer [links]="footerLinks" [copyright]="footerCopyright" />
     </div>
   </section>
 

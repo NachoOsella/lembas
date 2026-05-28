@@ -6,10 +6,6 @@ export interface TabItem {
   readonly disabled?: boolean;
 }
 
-/**
- * Lembas-styled horizontal tab navigation.
- * Provides animated underline indicator and consistent tab switching.
- */
 @Component({
   selector: 'app-tabs',
   imports: [],

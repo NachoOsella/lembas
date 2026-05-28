@@ -1,0 +1,9 @@
+:host {
+  display: block;
+}
+
+.catnav__pill:focus-visible,
+.catalog-page__card a:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
+}

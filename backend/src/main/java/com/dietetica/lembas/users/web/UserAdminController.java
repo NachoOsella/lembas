@@ -2,11 +2,11 @@ package com.dietetica.lembas.users.web;
 
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
 import com.dietetica.lembas.users.dto.UpdateUserRequest;
-import com.dietetica.lembas.users.dto.UserMetricsResponse;
 import com.dietetica.lembas.users.dto.UserResponse;
 import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.service.UserAdminService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/admin/users")
+@SecurityRequirement(name = "bearerAuth")
 public class UserAdminController {
 
     private final UserAdminService userAdminService;
@@ -62,15 +63,6 @@ public class UserAdminController {
     }
 
     /**
-     * Returns aggregate metrics for the internal user directory.
-     */
-    @GetMapping("/metrics")
-    @PreAuthorize("hasRole('ADMIN')")
-    public UserMetricsResponse getUserMetrics() {
-        return userAdminService.getUserMetrics();
-    }
-
-    /**
      * Creates a new internal user.
      *
      * @param request the creation payload
@@ -84,16 +76,33 @@ public class UserAdminController {
     }
 
     /**
-     * Updates an existing internal user. Only non-null fields are applied.
+     * Replaces an existing internal user representation.
+     *
+     * <p>This endpoint is kept for backward compatibility. For partial updates,
+     * prefer {@code PATCH /api/admin/users/{id}}.</p>
      *
      * @param id      the user ID
-     * @param request the update payload (optional fields)
+     * @param request the update payload
      * @return the updated user response
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public UserResponse updateUser(@PathVariable Long id,
                                    @Valid @RequestBody UpdateUserRequest request) {
+        return userAdminService.updateUser(id, request);
+    }
+
+    /**
+     * Partially updates an existing internal user. Only non-null fields are applied.
+     *
+     * @param id      the user ID
+     * @param request the partial update payload
+     * @return the updated user response
+     */
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserResponse patchUser(@PathVariable Long id,
+                                  @Valid @RequestBody UpdateUserRequest request) {
         return userAdminService.updateUser(id, request);
     }
 

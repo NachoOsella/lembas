@@ -3,10 +3,6 @@ import { InputText } from 'primeng/inputtext';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 
-/**
- * Lembas-styled wrapper over PrimeNG InputText.
- * Provides consistent form input styling with optional prefix/suffix icons.
- */
 @Component({
   selector: 'app-input',
   imports: [InputText, IconField, InputIcon],

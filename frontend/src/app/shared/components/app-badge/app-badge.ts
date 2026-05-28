@@ -7,7 +7,6 @@ import { Tag } from 'primeng/tag';
   templateUrl: './app-badge.html',
   styleUrl: './app-badge.css',
 })
-/** Displays a PrimeNG-backed semantic label for statuses, categories, and metadata. */
 export class AppBadge {
   readonly tone = input<'success' | 'warning' | 'danger' | 'info' | 'neutral'>('neutral');
   readonly icon = input<string | null>(null);

@@ -8,7 +8,6 @@ import { Message } from 'primeng/message';
   templateUrl: './error-alert.html',
   styleUrl: './error-alert.css',
 })
-/** Shows an accessible PrimeNG error message with an optional dismiss control. */
 export class ErrorAlert {
   readonly title = input('No pudimos completar la accion');
   readonly message = input('Intentá nuevamente en unos minutos.');

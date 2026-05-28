@@ -24,6 +24,7 @@
         [showCurrentPageReport]="paginated()"
         currentPageReportTemplate="{first}-{last} de {totalRecords}"
         styleClass="app-data-table"
+        [paginatorDropdownAppendTo]="'body'"
         (onPage)="onPageChange($event)"
         (onSort)="onSortChange($event)"
       >

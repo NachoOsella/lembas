@@ -12,10 +12,6 @@ export interface ColumnDef {
   readonly width?: string;
 }
 
-/**
- * Lembas-styled data table wrapper over PrimeNG Table.
- * Provides consistent loading, empty, and error states with Lembas design tokens.
- */
 @Component({
   selector: 'app-data-table',
   imports: [NgTemplateOutlet, TableModule, EmptyState, LoadingSpinner],

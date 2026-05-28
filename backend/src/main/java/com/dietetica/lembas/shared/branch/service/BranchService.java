@@ -3,6 +3,8 @@ package com.dietetica.lembas.shared.branch.service;
 import com.dietetica.lembas.shared.branch.dto.BranchResponse;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +15,8 @@ import java.util.List;
  */
 @Service
 public class BranchService {
+
+    private static final int MAX_SELECTOR_SIZE = 500;
 
     private final BranchRepository branchRepository;
 
@@ -27,7 +31,10 @@ public class BranchService {
      */
     @Transactional(readOnly = true)
     public List<BranchResponse> listActiveBranches() {
-        return branchRepository.findByActiveTrueOrderByNameAsc().stream()
+        return branchRepository.findByActiveTrueOrderByNameAsc(
+                        PageRequest.of(0, MAX_SELECTOR_SIZE, Sort.by(Sort.Direction.ASC, "name")))
+                .getContent()
+                .stream()
                 .map(this::toResponse)
                 .toList();
     }

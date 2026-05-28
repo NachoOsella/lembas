@@ -7,7 +7,6 @@ import { Message } from 'primeng/message';
   templateUrl: './app-field-hint.html',
   styleUrl: './app-field-hint.css',
 })
-/** Shows a PrimeNG-backed helper, success, or error message below form controls. */
 export class AppFieldHint {
   readonly tone = input<'hint' | 'success' | 'error'>('hint');
 

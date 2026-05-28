@@ -2,9 +2,6 @@ import { Component, input, model, output } from '@angular/core';
 import { AppInput } from '../app-input/app-input';
 import { Button } from 'primeng/button';
 
-/**
- * Lembas-styled search bar with integrated search icon and clear button.
- */
 @Component({
   selector: 'app-search-bar',
   imports: [AppInput, Button],

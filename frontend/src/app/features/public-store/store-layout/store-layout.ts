@@ -61,14 +61,11 @@ export class StoreLayout {
     },
   ];
 
-  /** Flat footer links for app-store-footer. */
+  /** Flat footer links for app-store-footer. Only real, working links. */
   protected readonly footerLinks: readonly StoreFooterLink[] = [
-    { label: 'Como comprar', path: '/store' },
-    { label: 'Retiro en sucursal', path: '/store' },
-    { label: 'Terminos', path: '/store' },
-    { label: 'Privacidad', path: '/store' },
-    { label: 'Instagram', path: 'https://www.instagram.com/', external: true },
-    { label: 'Facebook', path: 'https://www.facebook.com/', external: true },
+    { label: 'Catálogo', path: '/store/catalog' },
+    { label: 'Instagram', path: 'https://www.instagram.com/dietetica.lembas', external: true },
+    { label: 'Facebook', path: 'https://www.facebook.com/dietetica.lembas', external: true },
   ];
 
   /** Copyright string for app-store-footer. */
@@ -78,7 +75,7 @@ export class StoreLayout {
   onSearch(query: string): void {
     const trimmed = query.trim();
     if (trimmed) {
-      this.router.navigate(['/store'], { queryParams: { q: trimmed } });
+      this.router.navigate(['/store/catalog'], { queryParams: { q: trimmed } });
     }
   }
 

@@ -1,9 +1,9 @@
 package com.dietetica.lembas.users.service;
 
+import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
 import com.dietetica.lembas.users.dto.UpdateUserRequest;
-import com.dietetica.lembas.users.dto.UserMetricsResponse;
 import com.dietetica.lembas.users.dto.UserResponse;
 import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
@@ -32,13 +32,16 @@ public class UserAdminService {
     private static final List<Role> INTERNAL_ROLES = List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE);
 
     private final UserRepository userRepository;
+    private final BranchRepository branchRepository;
     private final UserBranchPolicy userBranchPolicy;
     private final PasswordEncoder passwordEncoder;
 
     public UserAdminService(UserRepository userRepository,
+                            BranchRepository branchRepository,
                             UserBranchPolicy userBranchPolicy,
                             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.branchRepository = branchRepository;
         this.userBranchPolicy = userBranchPolicy;
         this.passwordEncoder = passwordEncoder;
     }
@@ -82,15 +85,6 @@ public class UserAdminService {
     }
 
     /**
-     * Returns aggregate metrics for the internal user directory via a single native query.
-     */
-    @Transactional(readOnly = true)
-    public UserMetricsResponse getUserMetrics() {
-        var m = userRepository.computeUserMetrics();
-        return new UserMetricsResponse(m.getTotalUsers(), m.getEnabledUsers(), m.getUsersWithBranch());
-    }
-
-    /**
      * Creates a new internal user.
      *
      * @param request the creation payload
@@ -122,6 +116,7 @@ public class UserAdminService {
         );
 
         userBranchPolicy.validate(user.getRole(), user.getBranchId());
+        validateBranchAssignment(user.getRole(), user.getBranchId());
         User savedUser = userRepository.save(user);
         return toResponse(savedUser);
     }
@@ -179,6 +174,7 @@ public class UserAdminService {
         }
 
         userBranchPolicy.validate(user.getRole(), user.getBranchId());
+        validateBranchAssignment(user.getRole(), user.getBranchId());
         User savedUser = userRepository.save(user);
         return toResponse(savedUser);
     }
@@ -207,6 +203,32 @@ public class UserAdminService {
         user.setEnabled(request.enabled());
         User savedUser = userRepository.save(user);
         return toResponse(savedUser);
+    }
+
+    /**
+     * Validates that referenced branches exist and are active for branch-bound internal roles.
+     */
+    private void validateBranchAssignment(Role role, Long branchId) {
+        if (branchId == null) {
+            return;
+        }
+
+        if (!branchRepository.existsById(branchId)) {
+            throw new DomainException(
+                    "BRANCH_NOT_FOUND",
+                    HttpStatus.NOT_FOUND,
+                    "Branch not found with id: " + branchId
+            );
+        }
+
+        if ((role == Role.MANAGER || role == Role.EMPLOYEE)
+                && !branchRepository.existsByIdAndActiveTrue(branchId)) {
+            throw new DomainException(
+                    "BRANCH_INACTIVE",
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Manager and employee users must be assigned to an active branch"
+            );
+        }
     }
 
     /**

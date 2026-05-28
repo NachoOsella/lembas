@@ -146,34 +146,6 @@ class UserRepositoryTest {
     }
 
     /**
-     * Verifies single-query metrics aggregation excludes customers.
-     * Flyway V10 seed data adds an additional ADMIN user ("Admin Lembas"),
-     * so the total count includes that row in addition to the ones created here.
-     */
-    @Test
-    void computeUserMetricsExcludesCustomers() {
-        Long branchId = createBranch("Metrics Test Branch");
-        User admin = new User(null, "metrics-admin@lembas.com", "hash", "Metrics", "Admin",
-                null, Role.ADMIN);
-        User employee = new User(branchId, "metrics-employee@lembas.com", "hash", "Metrics", "Employee",
-                null, Role.EMPLOYEE);
-        employee.setEnabled(false);
-        User customer = new User(null, "metrics-customer@lembas.com", "hash", "Metrics", "Customer",
-                null, Role.CUSTOMER);
-        userRepository.save(admin);
-        userRepository.save(employee);
-        userRepository.save(customer);
-        userRepository.flush();
-
-        // 2 inserted internal users + 1 from Flyway V10 seed (admin@lembas.com) = 3
-        var metrics = userRepository.computeUserMetrics();
-
-        assertThat(metrics.getTotalUsers()).isEqualTo(3);
-        assertThat(metrics.getEnabledUsers()).isEqualTo(2);
-        assertThat(metrics.getUsersWithBranch()).isEqualTo(2);
-    }
-
-    /**
      * Verifies enabled-user filtering query.
      */
     @Test
