@@ -13,9 +13,14 @@ POST /api/auth/login
   Response: { token, refreshToken, user }
   Errors:   INVALID_CREDENTIALS (401), ACCOUNT_DISABLED (403)
 
+POST /api/auth/refresh
+  Request:  { refreshToken }
+  Response: { token, refreshToken, user }
+  Errors:   INVALID_REFRESH_TOKEN (401)
+
 GET /api/auth/me
   Headers:  Authorization: Bearer <token>
-  Response: { id, email, firstName, lastName, role, branchId, branchName }
+  Response: { token: null, refreshToken: null, user: { id, email, firstName, lastName, role, branchId, branchName } }
 ```
 
 ## Public store (no auth)
@@ -78,6 +83,7 @@ DELETE /api/admin/products/{id}
 GET    /api/admin/categories
 POST   /api/admin/categories
 PUT    /api/admin/categories/{id}
+DELETE /api/admin/categories/{id}
 ```
 
 ### Stock
@@ -151,6 +157,7 @@ GET /api/admin/recommendations
 GET    /api/admin/users?role=&branchId=&search=&page=&size=
 POST   /api/admin/users
 PUT    /api/admin/users/{id}
+PATCH  /api/admin/users/{id}
 PATCH  /api/admin/users/{id}/status  Request: { enabled }
 ```
 
@@ -158,8 +165,6 @@ PATCH  /api/admin/users/{id}/status  Request: { enabled }
 
 ```
 GET    /api/admin/branches
-POST   /api/admin/branches
-PUT    /api/admin/branches/{id}
 ```
 
 ## Webhooks (public, signature-verified)

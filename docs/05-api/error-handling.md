@@ -63,6 +63,7 @@ A single `@ControllerAdvice` handles:
 - HttpMessageNotReadableException (returns VALIDATION_ERROR for malformed JSON)
 - AccessDeniedException (returns 403)
 - AuthenticationException (returns 401)
+- DataIntegrityViolationException (returns 409 DATA_INTEGRITY_VIOLATION)
 - Generic Exception (returns 500 INTERNAL_ERROR, without stack trace)
 
 ### Validation error format
