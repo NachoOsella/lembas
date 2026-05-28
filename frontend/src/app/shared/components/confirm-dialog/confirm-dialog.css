@@ -38,7 +38,7 @@
 
 :host ::ng-deep .confirm-dialog .p-dialog-header-icon:hover {
   background: rgba(47, 141, 114, 0.1);
-  color: #075f36;
+  color: #2f8d72;
 }
 
 :host ::ng-deep .confirm-dialog .p-dialog-header-icon:focus-visible {

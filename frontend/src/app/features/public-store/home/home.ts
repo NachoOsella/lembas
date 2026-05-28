@@ -61,8 +61,8 @@ import { ProductSummary } from '../../../shared/models/product';
             <div
               class="home-ticket relative ml-auto max-w-sm rounded-[2rem] border border-white/10 bg-[#fffaf0]/95 p-7 shadow-2xl shadow-black/30 backdrop-blur-sm"
             >
-              <div class="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#064e3b]" aria-hidden="true"></div>
-              <div class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#064e3b]" aria-hidden="true"></div>
+              <div class="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#075f36]" aria-hidden="true"></div>
+              <div class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#075f36]" aria-hidden="true"></div>
 
               <div
                 class="flex items-center justify-between border-b-2 border-dashed border-stone-300 pb-5"
@@ -200,7 +200,7 @@ import { ProductSummary } from '../../../shared/models/product';
     }
 
     .home-hero {
-      background: #064e3b;
+      background: #075f36;
     }
 
     .home-ticket {
