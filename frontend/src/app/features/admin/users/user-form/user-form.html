@@ -8,15 +8,7 @@
       </div>
     }
 
-    <div class="user-form__section">
-      <div class="user-form__section-heading">
-        <span class="user-form__section-index">01</span>
-        <div>
-          <h3>Identidad</h3>
-          <p>Datos visibles para auditoria y operacion diaria.</p>
-        </div>
-      </div>
-
+    <app-form-section [index]="1" title="Identidad" description="Datos visibles para auditoria y operacion diaria.">
       <div class="user-form__grid">
         <!-- Email -->
         <div class="user-form__field user-form__field--wide">
@@ -128,17 +120,9 @@
           />
         </div>
       </div>
-    </div>
+    </app-form-section>
 
-    <div class="user-form__section user-form__section--access">
-      <div class="user-form__section-heading">
-        <span class="user-form__section-index">02</span>
-        <div>
-          <h3>Permisos y alcance</h3>
-          <p>El rol define permisos; la sucursal limita la operacion local.</p>
-        </div>
-      </div>
-
+    <app-form-section [index]="2" title="Permisos y alcance" description="El rol define permisos; la sucursal limita la operacion local.">
       <div class="user-form__access-grid">
         <!-- Role (always shown) -->
         <div class="user-form__field user-form__access-field">
@@ -153,10 +137,9 @@
             optionLabel="label"
             optionValue="value"
             placeholder="Seleccionar rol"
-            class="w-full user-form__select user-form__select--rich"
+            class="w-full"
             [style]="{ width: '100%' }"
             [appendTo]="'body'"
-            panelStyleClass="user-form__select-panel"
           >
             <ng-template #selectedItem let-option>
               <span class="user-form__selected-option">
@@ -191,12 +174,11 @@
               optionLabel="name"
               optionValue="id"
               placeholder="Seleccionar sucursal"
-              class="w-full user-form__select user-form__select--rich"
+              class="w-full"
               [style]="{ width: '100%' }"
               [showClear]="true"
               [disabled]="branches().length === 0"
               [appendTo]="'body'"
-              panelStyleClass="user-form__select-panel user-form__branch-panel"
               [class.ng-invalid]="formSubmitted() && !formBranchValid()"
             >
               <ng-template #selectedItem let-branch>
@@ -228,7 +210,7 @@
           </div>
         }
       </div>
-    </div>
+    </app-form-section>
 
     <!-- Footer: form actions -->
     <div class="user-form__actions" modalFooter>
