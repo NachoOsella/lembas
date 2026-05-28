@@ -33,3 +33,41 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Global PrimeNG form-control consistency
+   All text inputs, selects and number inputs share the same shape, height and
+   color so every admin form looks homogeneous.
+   --------------------------------------------------------------------------- */
+.p-inputtext,
+.p-select,
+.p-inputnumber,
+.p-inputnumber-input {
+  min-height: 48px;
+  border-color: rgba(47, 141, 114, 0.2) !important;
+  border-radius: 0.95rem !important;
+  background: #fffef9 !important;
+  font-size: 16px !important;
+  letter-spacing: -0.01em;
+  box-shadow: 0 0.55rem 1.1rem rgba(23, 63, 53, 0.06);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.p-inputtext:focus,
+.p-select:not(.p-disabled):focus,
+.p-inputnumber-input:focus {
+  border-color: #2f8d72 !important;
+  box-shadow: 0 0 0 1px #2f8d72 !important;
+}
+
+.p-select .p-select-label {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -152,18 +152,11 @@
   box-shadow: 0 0 0 1px #c82014;
 }
 
+:host ::ng-deep .product-form .p-inputtext,
 :host ::ng-deep .product-form .p-select,
 :host ::ng-deep .product-form .p-inputnumber,
 :host ::ng-deep .product-form .p-inputnumber-input {
   width: 100%;
-}
-
-:host ::ng-deep .product-form .p-select,
-:host ::ng-deep .product-form .p-inputnumber-input {
-  border-color: rgba(47, 141, 114, 0.2);
-  border-radius: 0.95rem;
-  background: #fffef9;
-  box-shadow: 0 0.55rem 1.1rem rgba(23, 63, 53, 0.06);
 }
 
 .product-form textarea {

@@ -214,6 +214,5 @@
 }
 
 :host ::ng-deep .products-filters__select.p-select {
-  border-color: rgba(47, 141, 114, 0.18);
   border-radius: 999px;
 }
