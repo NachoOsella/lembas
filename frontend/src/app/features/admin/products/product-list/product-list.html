@@ -12,11 +12,9 @@
   </section>
 
   @if (error()) {
-    <section class="products-page__alert" role="alert">
-      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
-      <span>{{ error() }}</span>
+    <app-error-alert variant="inline" [title]="error()" message="">
       <app-button variant="secondary" size="sm" (click)="refresh()">Reintentar</app-button>
-    </section>
+    </app-error-alert>
   }
 
   <section class="products-page__directory" aria-label="Directorio de productos del catalogo">

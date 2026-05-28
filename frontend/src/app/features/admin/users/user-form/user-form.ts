@@ -10,6 +10,7 @@ import { UserService } from '../../../../core/services/user';
 import { Branch, InternalRole, UserResponse } from '../../../../shared/models/user';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppModal } from '../../../../shared/components/app-modal/app-modal';
+import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 import { FormSection } from '../../../../shared/components/form-section/form-section';
 
 /** Options for the role selector (internal roles only). */
@@ -35,7 +36,7 @@ const ROLE_ICON: Record<InternalRole, string> = {
 
 @Component({
   selector: 'app-user-form',
-  imports: [FormsModule, Select, InputText, AppButton, AppModal, FormSection],
+  imports: [FormsModule, Select, InputText, AppButton, AppModal, ErrorAlert, FormSection],
   templateUrl: './user-form.html',
   styleUrl: './user-form.css',
 })

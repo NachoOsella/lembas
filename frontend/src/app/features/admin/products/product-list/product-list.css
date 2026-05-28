@@ -97,18 +97,6 @@
   flex: 0 0 auto;
 }
 
-.products-page__alert {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  color: #8a2f24;
-  background: #fff7f3;
-  border: 1px solid rgba(138, 47, 36, 0.16);
-  border-radius: 1rem;
-  font-weight: 700;
-}
-
 .products-page__directory {
   width: 100%;
   min-width: 0;

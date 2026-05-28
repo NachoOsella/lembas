@@ -14,6 +14,7 @@ import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppDataTable, ColumnDef } from '../../../../shared/components/app-data-table/app-data-table';
 import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 import { CategoryDto } from '../../../../shared/models/category';
 import { ProductOnlineStatus, ProductSummary } from '../../../../shared/models/product';
 
@@ -25,7 +26,7 @@ interface Option<T> {
 /** Admin product directory with filters, pagination and deletion flow. */
 @Component({
   selector: 'app-product-list',
-  imports: [AppBadge, AppButton, AppDataTable, AppSearchBar, ButtonDirective, ConfirmDialog, FormsModule, Ripple, RouterLink, Select],
+  imports: [AppBadge, AppButton, AppDataTable, AppSearchBar, ButtonDirective, ConfirmDialog, ErrorAlert, FormsModule, Ripple, RouterLink, Select],
   templateUrl: './product-list.html',
   styleUrl: './product-list.css',
 })

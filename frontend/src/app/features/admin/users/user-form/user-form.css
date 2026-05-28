@@ -59,19 +59,6 @@
   box-shadow: 0 0 0 1px #c82014;
 }
 
-.user-form__alert {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.75rem 0.875rem;
-  border: 1px solid rgba(200, 32, 20, 0.22);
-  border-radius: 0.875rem;
-  background: rgba(200, 32, 20, 0.06);
-  color: #c82014;
-  font-size: 0.82rem;
-  line-height: 1.45;
-}
-
 /* Select template styles */
 .user-form__selected-option {
   display: inline-flex;

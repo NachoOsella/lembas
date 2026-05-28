@@ -11,11 +11,13 @@ import { Message } from 'primeng/message';
 export class ErrorAlert {
   readonly title = input('No pudimos completar la accion.');
   readonly message = input('Intenta nuevamente en unos minutos.');
+  /** 'card' wraps in PrimeNG Message with icon circle; 'inline' renders a lightweight flex row. */
+  readonly variant = input<'card' | 'inline'>('card');
+  readonly testId = input<string | null>(null);
   readonly dismissible = input(false);
 
   readonly dismissed = output<void>();
 
-  /** Notifies parent components when the alert is dismissed. */
   protected onDismiss(): void {
     this.dismissed.emit();
   }

@@ -47,18 +47,6 @@
   font-weight: 500;
 }
 
-.product-form-page__alert {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  color: #8a2f24;
-  background: #fff7f3;
-  border: 1px solid rgba(138, 47, 36, 0.16);
-  border-radius: 1rem;
-  font-weight: 700;
-}
-
 .product-form {
   display: flex;
   flex-direction: column;

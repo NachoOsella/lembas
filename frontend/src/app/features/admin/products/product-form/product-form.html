@@ -9,10 +9,7 @@
   </section>
 
   @if (error()) {
-    <section class="product-form-page__alert" role="alert">
-      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
-      <span>{{ error() }}</span>
-    </section>
+    <app-error-alert variant="inline" [title]="error()" message="" />
   }
 
   @if (loading()) {

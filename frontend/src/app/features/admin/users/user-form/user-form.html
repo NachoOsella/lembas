@@ -2,10 +2,7 @@
 <app-modal [(visible)]="dialogVisible" [title]="dialogTitle()" [width]="'min(94vw, 44rem)'">
   <div class="user-form">
     @if (dialogError()) {
-      <div class="user-form__alert" role="alert" data-testid="user-dialog-error">
-        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
-        <span>{{ dialogError() }}</span>
-      </div>
+      <app-error-alert variant="inline" [title]="dialogError()" message="" />
     }
 
     <app-form-section [index]="1" title="Identidad" description="Datos visibles para auditoria y operacion diaria.">

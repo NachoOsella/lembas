@@ -7,10 +7,11 @@ import { ButtonDirective, ButtonLabel } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 
 import { ApiErrorResponse, AuthService, LoginRequest } from '../../../core/services/auth';
+import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 
 @Component({
   selector: 'app-login',
-  imports: [FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
+  imports: [ErrorAlert, FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })

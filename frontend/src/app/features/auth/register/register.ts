@@ -15,10 +15,11 @@ import { ButtonDirective, ButtonLabel } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 
 import { ApiErrorResponse, AuthService, RegisterRequest } from '../../../core/services/auth';
+import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 
 @Component({
   selector: 'app-register',
-  imports: [FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
+  imports: [ErrorAlert, FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })
