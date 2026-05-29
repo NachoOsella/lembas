@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { RouterLink } from '@angular/router';
 
 import { ProductSummary } from '../../models/product';
-import { AppBadge } from '../app-badge/app-badge';
 
 /** Visual density options for public store product cards. */
 export type StoreProductCardDensity = 'regular' | 'compact';
@@ -16,7 +15,7 @@ export interface StoreProductCardAddToCartEvent {
 
 @Component({
   selector: 'app-store-product-card',
-  imports: [NgClass, RouterLink, AppBadge],
+  imports: [NgClass, RouterLink],
   templateUrl: './store-product-card.html',
   styleUrl: './store-product-card.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

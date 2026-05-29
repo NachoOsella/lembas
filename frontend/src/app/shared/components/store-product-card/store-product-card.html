@@ -30,17 +30,21 @@
       }
 
       @if (product().categoryName) {
-        <app-badge tone="neutral">{{ product().categoryName }}</app-badge>
+        <span class="store-product-card__category">
+          {{ product().categoryName }}
+        </span>
       }
 
       <!-- Stock badge -->
       @if (!isCompact()) {
         @if (isOutOfStock()) {
-          <app-badge tone="danger" icon="pi pi-times-circle">Sin stock</app-badge>
+          <span class="store-product-card__stock store-product-card__stock--out">
+            Sin stock
+          </span>
         } @else if (product().availableStock != null && product().availableStock! <= 5) {
-          <app-badge tone="warning" icon="pi pi-exclamation-circle">
+          <span class="store-product-card__stock store-product-card__stock--low">
             Ultimas {{ product().availableStock }} uds
-          </app-badge>
+          </span>
         }
       }
 

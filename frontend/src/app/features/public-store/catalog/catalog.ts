@@ -237,6 +237,8 @@ export class Catalog implements OnInit {
   protected onPageChange(event: { first: number; rows: number }): void {
     this.first.set(event.first);
     this.loadProducts();
+    // Scroll to the product grid area so the user sees the new page results
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // ---------------------------------------------------------------------------
