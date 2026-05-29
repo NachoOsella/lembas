@@ -102,11 +102,7 @@
       </div>
 
       @if (productsLoading() && !products().length) {
-        <div
-          class="rounded-xl bg-white p-16 border border-[rgba(7,95,54,0.08)] shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]"
-        >
-          <app-loading-spinner label="Preparando estantes..." size="lg" surface="card" />
-        </div>
+        <app-product-grid-skeleton [count]="8" />
       } @else if (productsError()) {
         <div class="rounded-xl border border-[rgba(200,32,20,0.28)] bg-[hsl(4_82%_43%/_5%)] p-4">
           <div class="flex items-start gap-3">
@@ -146,14 +142,10 @@
           />
         </div>
       } @else {
-        <div
-          class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
-          aria-label="Productos"
-        >
-          @for (product of products(); track product.id) {
-            <app-store-product-card [product]="product" cardClass="catalog-page__card" />
-          }
-        </div>
+        <app-product-grid
+          [products]="products()"
+          (addToCart)="onAddToCart($event)"
+        />
 
         @if (totalRecords() > 0) {
           <div

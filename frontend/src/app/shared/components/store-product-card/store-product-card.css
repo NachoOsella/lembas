@@ -137,3 +137,56 @@
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ── Stock badge ─────────────────────────────────────────── */
+.store-product-card__stock {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.store-product-card__stock--out {
+  background: rgba(200, 32, 20, 0.9);
+  color: #fff;
+}
+
+.store-product-card__stock--low {
+  background: rgba(242, 157, 82, 0.9);
+  color: #fff;
+}
+
+/* ── Add-to-cart button ───────────────────────────────────── */
+.store-product-card__add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 1.5px solid #2f8d72;
+  background: transparent;
+  color: #2f8d72;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.store-product-card__add-btn:hover {
+  background: #2f8d72;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(47, 141, 114, 0.3);
+  transform: scale(0.95);
+}
+
+.store-product-card__add-btn:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 2px;
+}

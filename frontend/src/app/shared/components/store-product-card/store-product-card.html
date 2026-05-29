@@ -35,6 +35,19 @@
         </span>
       }
 
+      <!-- Stock badge -->
+      @if (!isCompact()) {
+        @if (isOutOfStock()) {
+          <span class="store-product-card__stock store-product-card__stock--out">
+            Sin stock
+          </span>
+        } @else if (product().availableStock != null && product().availableStock! <= 5) {
+          <span class="store-product-card__stock store-product-card__stock--low">
+            Ultimas {{ product().availableStock }} unidades
+          </span>
+        }
+      }
+
       <div class="store-product-card__hover" aria-hidden="true">
         <span class="store-product-card__hover-icon">
           <i class="pi pi-eye" aria-hidden="true"></i>
@@ -65,11 +78,16 @@
             ${{ product().salePrice.toLocaleString('es-AR') }}
           </strong>
         </div>
-        <span
-          class="flex h-[40px] w-[40px] items-center justify-center rounded-full border-[1.5px] border-[#2f8d72] bg-transparent text-[#2f8d72] transition-all duration-300 group-hover:scale-95 group-hover:bg-[#2f8d72] group-hover:text-white group-hover:shadow-md"
-        >
-          <i class="pi pi-plus text-sm" aria-hidden="true"></i>
-        </span>
+        @if (!isOutOfStock()) {
+          <button
+            type="button"
+            class="store-product-card__add-btn"
+            [attr.aria-label]="'Agregar ' + product().name + ' al pedido'"
+            (click)="onAddToCartClick($event)"
+          >
+            <i class="pi pi-plus text-sm" aria-hidden="true"></i>
+          </button>
+        }
       </div>
     </div>
   </a>

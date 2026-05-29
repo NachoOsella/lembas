@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { Ripple } from 'primeng/ripple';
 
+import { Cart } from '../../../core/services/cart';
 import { CatalogService } from '../../../core/services/catalog';
 import { ProductSummary } from '../../../shared/models/product';
 import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
@@ -17,6 +18,7 @@ import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 })
 export class ProductDetail implements OnInit {
   private readonly catalogService = inject(CatalogService);
+  private readonly cartService = inject(Cart);
   private readonly route = inject(ActivatedRoute);
   private readonly messageService = inject(MessageService);
 
@@ -65,11 +67,21 @@ export class ProductDetail implements OnInit {
   }
 
   protected addToCart(): void {
-    // Placeholder: cart service integration will go here
+    const p = this.product();
+    if (!p) return;
     this.messageService.add({
       severity: 'success',
       summary: 'Agregado',
-      detail: `${this.quantity()}x ${this.product()?.name} agregado al carrito.`,
+      detail: `${this.quantity()}x ${p.name} agregado al pedido.`,
     });
   }
+
+  /** Whether the product is out of stock. */
+  protected readonly isOutOfStock = computed(() => this.product()?.availableStock === 0);
+
+  /** Whether the product has low stock (1-5 units). */
+  protected readonly isLowStock = computed(() => {
+    const stock = this.product()?.availableStock;
+    return stock != null && stock > 0 && stock <= 5;
+  });
 }

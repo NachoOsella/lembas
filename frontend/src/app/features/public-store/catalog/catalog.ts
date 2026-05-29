@@ -4,10 +4,10 @@ import { MessageService } from 'primeng/api';
 
 import { CatalogService } from '../../../core/services/catalog';
 import { Category, ProductSummary } from '../../../shared/models/product';
-import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
+import { ProductGridSkeleton } from '../../../shared/components/product-grid-skeleton/product-grid-skeleton';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { AppPagination } from '../../../shared/components/app-pagination/app-pagination';
-import { StoreProductCard } from '../../../shared/components/store-product-card/store-product-card';
+import { ProductGrid, ProductGridAddToCartEvent } from '../../../shared/components/product-grid/product-grid';
 import { HeroFlowers } from '../../../shared/components/hero-flowers/hero-flowers';
 import { CategoryNav } from '../category-nav/category-nav';
 
@@ -16,7 +16,7 @@ const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-catalog',
-  imports: [LoadingSpinner, EmptyState, AppPagination, StoreProductCard, HeroFlowers, CategoryNav],
+  imports: [EmptyState, AppPagination, ProductGrid, ProductGridSkeleton, HeroFlowers, CategoryNav],
   templateUrl: './catalog.html',
   styleUrl: './catalog.css',
 })
@@ -236,6 +236,17 @@ export class Catalog implements OnInit {
   protected onPageChange(event: { first: number; rows: number }): void {
     this.first.set(event.first);
     this.loadProducts();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Cart integration
+  // ---------------------------------------------------------------------------
+  protected onAddToCart(event: ProductGridAddToCartEvent): void {
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Agregado',
+      detail: `${event.quantity}x ${event.product.name} agregado al pedido.`,
+    });
   }
 
   // ---------------------------------------------------------------------------

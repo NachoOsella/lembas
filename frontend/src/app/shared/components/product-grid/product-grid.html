@@ -1,0 +1,15 @@
+<div
+  class="product-grid grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+  [class]="gridClass()"
+  role="list"
+  aria-label="Productos"
+>
+  @for (product of products(); track product.id) {
+    <div role="listitem">
+      <app-store-product-card
+        [product]="product"
+        (addToCart)="addToCart.emit({ product: $event.product, quantity: $event.quantity })"
+      />
+    </div>
+  }
+</div>

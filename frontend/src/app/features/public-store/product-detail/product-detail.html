@@ -90,50 +90,82 @@
             </p>
           }
 
-          <div class="mt-10 flex flex-wrap items-center gap-4">
-            <!-- Quantity selector -->
-            <div class="flex items-center rounded-full border border-[#e7e7e7] bg-white shadow-sm">
-              <button
-                type="button"
-                class="flex h-11 w-11 items-center justify-center rounded-l-full text-[rgba(0,0,0,0.5)] transition hover:bg-[#f6ead6] hover:text-[#075f36]"
-                (click)="decrement()"
-                aria-label="Disminuir cantidad"
-              >
-                <i class="pi pi-minus text-xs" aria-hidden="true"></i>
-              </button>
-              <span
-                class="flex h-11 w-12 items-center justify-center text-[15px] font-bold text-[rgba(0,0,0,0.87)]"
-              >
-                {{ quantity() }}
-              </span>
-              <button
-                type="button"
-                class="flex h-11 w-11 items-center justify-center rounded-r-full text-[rgba(0,0,0,0.5)] transition hover:bg-[#f6ead6] hover:text-[#075f36]"
-                (click)="increment()"
-                aria-label="Aumentar cantidad"
-              >
-                <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-              </button>
+          <!-- Stock info -->
+          @if (isOutOfStock()) {
+            <div
+              class="mt-6 inline-flex items-center gap-2 rounded-full bg-[rgba(200,32,20,0.08)] px-4 py-2 text-[12px] font-semibold text-[#c82014]"
+            >
+              <i class="pi pi-times-circle" aria-hidden="true"></i>
+              Sin stock disponible
             </div>
+          } @else if (isLowStock()) {
+            <div
+              class="mt-6 inline-flex items-center gap-2 rounded-full bg-[rgba(242,157,82,0.12)] px-4 py-2 text-[12px] font-semibold text-[#c07a2a]"
+            >
+              <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+              Ultimas {{ p.availableStock }} unidades disponibles
+            </div>
+          } @else if (p.availableStock != null) {
+            <div
+              class="mt-6 inline-flex items-center gap-2 rounded-full bg-[#d7eadf]/40 px-4 py-2 text-[12px] font-semibold text-[#075f36]"
+            >
+              <i class="pi pi-check-circle" aria-hidden="true"></i>
+              {{ p.availableStock }} unidades disponibles para retiro en sucursal
+            </div>
+          } @else {
+            <div
+              class="mt-6 inline-flex items-center gap-2 rounded-full bg-[#d7eadf]/40 px-4 py-2 text-[12px] font-semibold text-[#075f36]"
+            >
+              <i class="pi pi-check-circle" aria-hidden="true"></i>
+              Disponible para retiro en sucursal
+            </div>
+          }
+
+          <div class="mt-8 flex flex-wrap items-center gap-4">
+            <!-- Quantity selector -->
+            @if (!isOutOfStock()) {
+              <div class="flex items-center rounded-full border border-[#e7e7e7] bg-white shadow-sm">
+                <button
+                  type="button"
+                  class="flex h-11 w-11 items-center justify-center rounded-l-full text-[rgba(0,0,0,0.5)] transition hover:bg-[#f6ead6] hover:text-[#075f36]"
+                  (click)="decrement()"
+                  aria-label="Disminuir cantidad"
+                >
+                  <i class="pi pi-minus text-xs" aria-hidden="true"></i>
+                </button>
+                <span
+                  class="flex h-11 w-12 items-center justify-center text-[15px] font-bold text-[rgba(0,0,0,0.87)]"
+                >
+                  {{ quantity() }}
+                </span>
+                <button
+                  type="button"
+                  class="flex h-11 w-11 items-center justify-center rounded-r-full text-[rgba(0,0,0,0.5)] transition hover:bg-[#f6ead6] hover:text-[#075f36]"
+                  (click)="increment()"
+                  aria-label="Aumentar cantidad"
+                >
+                  <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+                </button>
+              </div>
+            }
 
             <button
               pButton
               pRipple
               type="button"
-              class="!rounded-full !border-0 !bg-[#2f8d72] !px-8 !py-3 !font-bold !text-white shadow-lg shadow-emerald-950/15 transition-all hover:!bg-[#075f36] hover:-translate-y-0.5"
+              [disabled]="isOutOfStock()"
+              class="!rounded-full !border-0 !px-8 !py-3 !font-bold !text-white shadow-lg transition-all"
+              [class.!bg-[#2f8d72]]="!isOutOfStock()"
+              [class.!bg-gray-300]="isOutOfStock()"
+              [class.cursor-not-allowed]="isOutOfStock()"
+              [class.hover:!bg-[#075f36]]="!isOutOfStock()"
+              [class.hover:-translate-y-0.5]="!isOutOfStock()"
+              [class.shadow-emerald-950/15]="!isOutOfStock()"
               (click)="addToCart()"
             >
               <i class="pi pi-shopping-bag mr-2" aria-hidden="true"></i>
-              Agregar al pedido
+              {{ isOutOfStock() ? 'Sin stock' : 'Agregar al pedido' }}
             </button>
-          </div>
-
-          <!-- Stock hint -->
-          <div
-            class="mt-6 inline-flex items-center gap-2 rounded-full bg-[#d7eadf]/40 px-4 py-2 text-[12px] font-semibold text-[#075f36]"
-          >
-            <i class="pi pi-check-circle" aria-hidden="true"></i>
-            Disponible para retiro en sucursal
           </div>
         </div>
       </div>

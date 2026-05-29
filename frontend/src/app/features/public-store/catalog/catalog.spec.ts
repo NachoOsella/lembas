@@ -219,7 +219,7 @@ describe('Catalog', () => {
   // Loading state
   // -------------------------------------------------------------------------
 
-  it('should show loading spinner while products load', () => {
+  it('should show skeleton grid while products load', () => {
     // Use a Subject so loading never resolves during the test.
     const productsSubject = new Subject<{
       content: ProductSummary[];
@@ -257,8 +257,8 @@ describe('Catalog', () => {
     // Since getProducts returns a Subject that never emits, loading stays true.
     fixture.detectChanges();
 
-    const spinner: HTMLElement | null = fixture.nativeElement.querySelector('app-loading-spinner');
-    expect(spinner).toBeTruthy();
+    const skeleton: HTMLElement | null = fixture.nativeElement.querySelector('app-product-grid-skeleton');
+    expect(skeleton).toBeTruthy();
   });
 
   // -------------------------------------------------------------------------
@@ -301,10 +301,6 @@ describe('Catalog', () => {
 
     expect((c['categoriesError'] as () => boolean)()).toBe(true);
 
-    // The filter section should show the error message instead of pills
-    const filterError: HTMLElement | null = fixture.nativeElement.querySelector(
-      '.catnav + .flex, [class*="border-"][class*="bg-"][class*="text-"][class*="rounded-xl"]',
-    );
     // Verify error state is active and no pills are rendered
     const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav__pill');
     expect(pills.length).toBe(0);
@@ -346,12 +342,15 @@ describe('Catalog', () => {
   // Product rendering
   // -------------------------------------------------------------------------
 
-  it('should render product cards', () => {
+  it('should render product cards inside the grid', () => {
     configure();
     fixture.detectChanges();
 
+    const grid: HTMLElement | null = fixture.nativeElement.querySelector('app-product-grid');
+    expect(grid).toBeTruthy();
+
     const cards: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.catalog-page__card');
+      fixture.nativeElement.querySelectorAll('app-store-product-card');
     expect(cards.length).toBe(2);
 
     const firstCard = cards[0];
