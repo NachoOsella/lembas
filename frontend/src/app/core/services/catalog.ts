@@ -17,6 +17,7 @@ export class CatalogService {
   private readonly http = inject(HttpClient);
   private readonly categoriesUrl = '/api/store/categories';
   private readonly productsUrl = '/api/store/products';
+  private readonly featuredUrl = '/api/store/products/featured';
 
   /**
    * Returns all categories for the store navigation, ordered alphabetically.
@@ -43,7 +44,16 @@ export class CatalogService {
     branchId?: number,
     page = 0,
     size = 20,
-  ): Observable<{ content: ProductSummary[]; totalElements: number; totalPages: number; number: number; size: number; first: boolean; last: boolean; empty: boolean }> {
+  ): Observable<{
+    content: ProductSummary[];
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
+    first: boolean;
+    last: boolean;
+    empty: boolean;
+  }> {
     let params = new HttpParams().set('page', page).set('size', size);
     const normalizedQuery = query?.trim();
     if (normalizedQuery) {
@@ -65,6 +75,36 @@ export class CatalogService {
       last: boolean;
       empty: boolean;
     }>(this.productsUrl, { params });
+  }
+
+  /**
+   * Returns 15 random published products for the home page featured section.
+   *
+   * TODO: Replace random selection with metric-based ranking (views, sales, recency)
+   *       once analytics events are captured.
+   *
+   * @returns an observable emitting the paginated response
+   */
+  getFeaturedProducts(): Observable<{
+    content: ProductSummary[];
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
+    first: boolean;
+    last: boolean;
+    empty: boolean;
+  }> {
+    return this.http.get<{
+      content: ProductSummary[];
+      totalElements: number;
+      totalPages: number;
+      number: number;
+      size: number;
+      first: boolean;
+      last: boolean;
+      empty: boolean;
+    }>(this.featuredUrl);
   }
 
   /**

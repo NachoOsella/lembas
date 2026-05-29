@@ -91,13 +91,22 @@ export class Catalog implements OnInit {
 
     // Read initial query params from the URL (search query may come from store nav).
     this.route.queryParams.subscribe((params) => {
-      const q = (params['q'] as string | undefined) ?? '';
+      const q = ((params['q'] as string | undefined) ?? '').trim();
+      const catId = params['categoryId'] ? Number(params['categoryId']) : null;
+      const nextCategoryId = catId != null && !isNaN(catId) ? catId : null;
+      const queryChanged = this.searchQuery() !== q;
+      const categoryChanged = this.selectedCategoryId() !== nextCategoryId;
+
       this.searchQuery.set(q);
 
-      // After categories are loaded, apply the categoryId filter from URL.
+      // After categories are loaded, URL changes are the single source of truth
+      // for filters, including searches triggered from the store navigation.
       if (this.categoriesReady()) {
-        const catId = params['categoryId'] ? Number(params['categoryId']) : null;
-        this.selectedCategoryId.set(catId != null && !isNaN(catId) ? catId : null);
+        this.selectedCategoryId.set(nextCategoryId);
+        if (queryChanged || categoryChanged) {
+          this.first.set(0);
+          this.loadProducts();
+        }
       }
     });
   }
@@ -135,6 +144,18 @@ export class Catalog implements OnInit {
   }
 
   protected loadProducts(): void {
+    const catChanged = this.prevCategoryId !== this.selectedCategoryId();
+    const searchChanged = this.prevSearchQuery !== this.searchQuery();
+    const isFilterChange = catChanged || searchChanged;
+
+    this.prevCategoryId = this.selectedCategoryId();
+    this.prevSearchQuery = this.searchQuery();
+
+    // Clear products only on category/search switch to avoid flicker on pagination.
+    if (isFilterChange) {
+      this.products.set([]);
+    }
+
     this.productsLoading.set(true);
     this.productsError.set(false);
 
@@ -182,6 +203,12 @@ export class Catalog implements OnInit {
   // ---------------------------------------------------------------------------
   // Category filter
   // ---------------------------------------------------------------------------
+  /** Previous category id to detect category switches. */
+  private prevCategoryId: number | null = null;
+
+  /** Previous search query to detect search changes. */
+  private prevSearchQuery = '';
+
   /** Selects "Todas" (clears the category filter). */
   protected selectAllCategories(): void {
     this.selectedCategoryId.set(null);

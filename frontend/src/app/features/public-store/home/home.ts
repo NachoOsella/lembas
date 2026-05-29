@@ -4,14 +4,13 @@ import { ButtonDirective } from 'primeng/button';
 import { Ripple } from 'primeng/ripple';
 
 import { CatalogService } from '../../../core/services/catalog';
-import { CardBanner } from '../../../shared/components/app-card-banner/app-card-banner';
 import { StoreProductCard } from '../../../shared/components/store-product-card/store-product-card';
 import { HeroFlowers } from '../../../shared/components/hero-flowers/hero-flowers';
 import { ProductSummary } from '../../../shared/models/product';
 
 @Component({
   selector: 'app-home',
-  imports: [CardBanner, RouterLink, ButtonDirective, Ripple, StoreProductCard, HeroFlowers],
+  imports: [RouterLink, ButtonDirective, Ripple, StoreProductCard, HeroFlowers],
   template: `
     <div class="home-page min-h-screen overflow-hidden bg-[#f6ead6] text-stone-950">
       <!-- Editorial hero with organic depth -->
@@ -19,13 +18,21 @@ import { ProductSummary } from '../../../shared/models/product';
         class="home-hero relative isolate overflow-hidden px-4 py-16 sm:px-6 md:py-24 lg:px-8"
       >
         <!-- Decorative organic shapes -->
-        <div class="pointer-events-none absolute -right-20 -top-20 h-[500px] w-[500px] rounded-full bg-[#f29d52]/10 blur-3xl" aria-hidden="true"></div>
-        <div class="pointer-events-none absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-[#2f8d72]/10 blur-3xl" aria-hidden="true"></div>
+        <div
+          class="pointer-events-none absolute -right-20 -top-20 h-[500px] w-[500px] rounded-full bg-[#f29d52]/10 blur-3xl"
+          aria-hidden="true"
+        ></div>
+        <div
+          class="pointer-events-none absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-[#2f8d72]/10 blur-3xl"
+          aria-hidden="true"
+        ></div>
 
         <!-- Decorative Lembas flowers -->
         <app-hero-flowers />
 
-        <div class="relative mx-auto grid w-full max-w-[1600px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_0.85fr] lg:px-10">
+        <div
+          class="relative mx-auto grid w-full max-w-[1600px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_0.85fr] lg:px-10"
+        >
           <section class="w-full max-w-3xl min-w-0">
             <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-50/70 mb-3">
               Dietética Lembas
@@ -37,7 +44,9 @@ import { ProductSummary } from '../../../shared/models/product';
               Tu despensa natural, lista para retirar
             </h1>
 
-            <p class="mt-6 w-full max-w-[660px] text-base font-medium leading-7 text-white/80 sm:text-lg">
+            <p
+              class="mt-6 w-full max-w-[660px] text-base font-medium leading-7 text-white/80 sm:text-lg"
+            >
               Productos saludables para comprar online y retirar en sucursal.
             </p>
 
@@ -58,8 +67,14 @@ import { ProductSummary } from '../../../shared/models/product';
             <div
               class="home-ticket relative ml-auto max-w-sm rounded-[2rem] border border-white/10 bg-white/95 p-7 shadow-2xl shadow-black/30 backdrop-blur-sm"
             >
-              <div class="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#075f36]" aria-hidden="true"></div>
-              <div class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#075f36]" aria-hidden="true"></div>
+              <div
+                class="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#075f36]"
+                aria-hidden="true"
+              ></div>
+              <div
+                class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#075f36]"
+                aria-hidden="true"
+              ></div>
 
               <div
                 class="flex items-center justify-between border-b-2 border-dashed border-stone-300 pb-5"
@@ -67,7 +82,9 @@ import { ProductSummary } from '../../../shared/models/product';
                 <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-black/58">
                   Pedido simple
                 </span>
-                <span class="rounded-full bg-[#075f36] px-3 py-1 text-[11px] font-bold text-white tracking-wide">
+                <span
+                  class="rounded-full bg-[#075f36] px-3 py-1 text-[11px] font-bold text-white tracking-wide"
+                >
                   Pickup
                 </span>
               </div>
@@ -150,43 +167,103 @@ import { ProductSummary } from '../../../shared/models/product';
           }
         </section>
 
-        <!-- Catalog access block -->
+        <!-- Benefits -->
         <section
           class="mx-auto mt-20 w-full max-w-[1600px] px-4 sm:px-6 lg:px-10"
-          aria-label="Acceso al catálogo"
+          aria-labelledby="home-benefits-title"
         >
-          <app-card-banner
-            blobColor="#2f8d72"
-            [blobOpacity]="5"
-            blobPosition="top-right"
-            blobSize="md"
-            padding="2rem"
-          >
-            <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between lg:flex">
-              <div>
-                <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">
-                  Catálogo completo
-                </p>
-                <h2 class="mt-3 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
-                  Todas las categorías en la góndola
-                </h2>
-                <p class="mt-3 w-full max-w-[620px] text-sm font-medium leading-6 text-stone-600 sm:text-base">
-                  Buscá por categoría, marca o nombre del producto.
-                </p>
-              </div>
-              <div class="flex shrink-0 lg:ml-8">
-                <a
-                  pButton
-                  pRipple
-                  routerLink="/store/catalog"
-                  class="!rounded-full !border-0 !bg-[#075f36] !px-8 !py-4 !font-bold !text-white transition-all hover:!bg-[#075f36]/90 hover:-translate-y-0.5"
+          <div class="mb-12 text-center">
+            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">
+              Comprá con confianza
+            </p>
+            <h2
+              id="home-benefits-title"
+              class="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl"
+            >
+              La experiencia Lembas, pensada para vos
+            </h2>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            @for (benefit of benefits; track benefit.title) {
+              <div
+                class="rounded-2xl border border-[rgba(7,95,54,0.08)] bg-white p-8 text-center shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]"
+              >
+                <span
+                  class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#d7eadf]/60 text-[#2f8d72]"
                 >
-                  Abrir catálogo
-                  <i class="pi pi-arrow-right ml-2" aria-hidden="true"></i>
-                </a>
+                  <i [class]="benefit.icon + ' text-xl'" aria-hidden="true"></i>
+                </span>
+                <h3 class="mt-5 text-lg font-bold tracking-[-0.01em]">{{ benefit.title }}</h3>
+                <p class="mt-2 text-sm leading-relaxed text-[rgba(0,0,0,0.58)]">
+                  {{ benefit.description }}
+                </p>
               </div>
+            }
+          </div>
+        </section>
+
+        <!-- Reviews -->
+        <section
+          class="mx-auto mt-20 w-full max-w-[1600px] px-4 sm:px-6 lg:px-10"
+          aria-labelledby="home-reviews-title"
+        >
+          <div class="mb-12 text-center">
+            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">
+              Lo que dicen nuestros clientes
+            </p>
+            <h2
+              id="home-reviews-title"
+              class="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl"
+            >
+              Opiniones de la comunidad
+            </h2>
+            <!-- TODO: Replace mock reviews with real Google Maps / review platform data via API -->
+            <div class="mt-4 flex items-center justify-center gap-2">
+              <div class="flex gap-0.5">
+                @for (star of [1, 2, 3, 4, 5]; track star) {
+                  <i class="pi pi-star-fill text-[#f29d52] text-sm" aria-hidden="true"></i>
+                }
+              </div>
+              <span class="text-sm font-semibold text-[rgba(0,0,0,0.87)]">4.8</span>
+              <span class="text-sm text-[rgba(0,0,0,0.45)]">· 127 reseñas en Google</span>
             </div>
-          </app-card-banner>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            @for (review of reviews; track review.name) {
+              <div
+                class="rounded-2xl border border-[rgba(7,95,54,0.08)] bg-white p-6 shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]"
+              >
+                <div class="flex items-center gap-3">
+                  <span
+                    class="flex h-10 w-10 items-center justify-center rounded-full bg-[#075f36] text-sm font-bold text-white"
+                  >
+                    {{ review.name.charAt(0) }}
+                  </span>
+                  <div>
+                    <p class="text-sm font-bold text-[rgba(0,0,0,0.87)]">{{ review.name }}</p>
+                    <p class="text-[11px] text-[rgba(0,0,0,0.45)]">{{ review.date }}</p>
+                  </div>
+                </div>
+                <div class="mt-3 flex gap-0.5">
+                  @for (star of [1, 2, 3, 4, 5]; track star) {
+                    <i
+                      class="pi text-xs"
+                      [class.pi-star-fill]="star <= review.rating"
+                      [class.pi-star]="star > review.rating"
+                      [class.text-[#f29d52]]="star <= review.rating"
+                      [class.text-[rgba(0,0,0,0.15)]]="star > review.rating"
+                      aria-hidden="true"
+                    ></i>
+                  }
+                </div>
+                <p class="mt-3 text-sm leading-relaxed text-[rgba(0,0,0,0.7)]">
+                  "{{ review.text }}"
+                </p>
+              </div>
+            }
+          </div>
         </section>
       </main>
     </div>
@@ -212,7 +289,8 @@ import { ProductSummary } from '../../../shared/models/product';
       display: flex;
       width: max-content;
       gap: 1.25rem;
-      animation: home-marquee-slide 38s linear infinite;
+      will-change: transform;
+      animation: home-marquee-slide 80s linear infinite;
     }
 
     .home-marquee:hover .home-marquee__track {
@@ -240,9 +318,92 @@ export class Home implements OnInit {
 
   protected readonly featuredProducts = signal<ProductSummary[]>([]);
 
+  // ---------------------------------------------------------------------------
+  // Benefits
+  // ---------------------------------------------------------------------------
+  protected readonly benefits = [
+    {
+      icon: 'pi pi-inbox',
+      title: 'Retiro sin filas',
+      description:
+        'Armá tu pedido online y passá a buscar por sucursal cuando te quede cómodo.',
+    },
+    {
+      icon: 'pi pi-verified',
+      title: 'Productos curados',
+      description:
+        'Seleccionados por expertos en alimentación saludable y bienestar natural.',
+    },
+    {
+      icon: 'pi pi-shield',
+      title: 'Pago seguro',
+      description:
+        'Mercado Pago con todos los medios de pago. Tu información está protegida.',
+    },
+  ];
+
+  // ---------------------------------------------------------------------------
+  // Reviews (mock data)
+  // ---------------------------------------------------------------------------
+  // TODO: Replace with real Google Maps reviews via Places API or a review aggregator.
+  protected readonly reviews = [
+    {
+      name: 'María González',
+      date: this.formatReviewDate(-5),
+      rating: 5,
+      text:
+        'Excelente variedad de productos naturales. El retiro en sucursal es super rápido y el personal siempre es amable.',
+    },
+    {
+      name: 'Carlos Rodríguez',
+      date: this.formatReviewDate(-12),
+      rating: 5,
+      text:
+        'Me encanta poder armar el pedido desde casa y pasar a buscarlo. La granola artesanal es mi favorita.',
+    },
+    {
+      name: 'Laura Martínez',
+      date: this.formatReviewDate(-20),
+      rating: 4,
+      text:
+        'Muy buena experiencia. Solo le pondría más opciones de bebidas, pero la calidad es incomparable.',
+    },
+    {
+      name: 'Diego López',
+      date: this.formatReviewDate(-3),
+      rating: 5,
+      text:
+        'Compro todos los meses acá. Los suplementos son de primera y los precios son justos.',
+    },
+    {
+      name: 'Ana Fernández',
+      date: this.formatReviewDate(-30),
+      rating: 5,
+      text:
+        'La mejor dietética de la zona. Productos que no conseguís en otro lado y un servicio impecable.',
+    },
+    {
+      name: 'Martín Sánchez',
+      date: this.formatReviewDate(-1),
+      rating: 4,
+      text:
+        'Muy práctico el pedido online. El sitio es fácil de usar y los productos llegan en perfecto estado.',
+    },
+  ];
+
   ngOnInit(): void {
-    this.catalogService.getProducts(undefined, undefined, undefined, 0, 8).subscribe((res) => {
+    this.catalogService.getFeaturedProducts().subscribe((res) => {
       this.featuredProducts.set(res.content);
     });
+  }
+
+  /** Formats a review date as DD-MM-YYYY relative to today. */
+  private formatReviewDate(daysOffset: number): string {
+    const date = new Date();
+    date.setDate(date.getDate() + daysOffset);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
   }
 }

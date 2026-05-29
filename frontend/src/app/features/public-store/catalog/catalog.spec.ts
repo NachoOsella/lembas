@@ -155,8 +155,7 @@ describe('Catalog', () => {
 
   it('should render a pill for each category plus "Todas"', () => {
     configure();
-    const pills: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.catnav__pill');
+    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav__pill');
     // "Todas" + 3 categories
     expect(pills.length).toBe(4);
     expect(pills[0].textContent?.trim()).toContain('Todas');
@@ -168,8 +167,7 @@ describe('Catalog', () => {
 
   it('should mark "Todas" as active by default', () => {
     configure();
-    const pills: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.catnav__pill');
+    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav__pill');
     expect(pills[0].classList.contains('catnav__pill--active')).toBe(true);
   });
 
@@ -177,8 +175,7 @@ describe('Catalog', () => {
     configure();
 
     // Click on "Suplementos" (index 2)
-    const pills: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.catnav__pill');
+    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav__pill');
     pills[2].click();
     fixture.detectChanges();
 
@@ -197,8 +194,7 @@ describe('Catalog', () => {
     fixture.detectChanges();
 
     // Then click "Todas"
-    const pills: NodeListOf<HTMLElement> =
-      fixture.nativeElement.querySelectorAll('.catnav__pill');
+    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav__pill');
     pills[0].click();
     fixture.detectChanges();
 
@@ -340,7 +336,9 @@ describe('Catalog', () => {
     expect((c['productsError'] as () => boolean)()).toBe(true);
 
     // The error alert is now inline-styled with the Lembas design system
-    const errorText: HTMLElement | null = fixture.nativeElement.querySelector('button[aria-label="Reintentar"]');
+    const errorText: HTMLElement | null = fixture.nativeElement.querySelector(
+      'button[aria-label="Reintentar"]',
+    );
     expect(errorText).toBeTruthy();
   });
 
