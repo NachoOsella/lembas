@@ -3,7 +3,12 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { PageResponse } from '../../shared/models/page';
-import { ProductDetail, ProductOnlineStatus, ProductRequest, ProductSummary } from '../../shared/models/product';
+import {
+  ProductDetail,
+  ProductOnlineStatus,
+  ProductRequest,
+  ProductSummary,
+} from '../../shared/models/product';
 
 /** Filters accepted by the admin product directory endpoint. */
 export interface ProductFilters {
@@ -59,5 +64,10 @@ export class ProductService {
   /** Soft-deletes a product from admin listings. */
   deleteProduct(id: number): Observable<void> {
     return this.http.delete<void>(`${this.adminUrl}/${id}`);
+  }
+
+  /** Changes the online publishing status of a product. */
+  updateProductStatus(id: number, onlineStatus: ProductOnlineStatus): Observable<ProductSummary> {
+    return this.http.patch<ProductSummary>(`${this.adminUrl}/${id}/status`, { onlineStatus });
   }
 }

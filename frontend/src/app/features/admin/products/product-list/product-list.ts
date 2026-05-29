@@ -2,31 +2,49 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
-import { Ripple } from 'primeng/ripple';
+import { MenuItem, MessageService } from 'primeng/api';
+import { Menu } from 'primeng/menu';
 import { Select } from 'primeng/select';
 
 import { CategoryService } from '../../../../core/services/category';
 import { ProductFilters, ProductService } from '../../../../core/services/product';
-import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppDataTable, ColumnDef } from '../../../../shared/components/app-data-table/app-data-table';
+import {
+  AppDataTable,
+  ColumnDef,
+} from '../../../../shared/components/app-data-table/app-data-table';
 import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
+import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
 import { CategoryDto } from '../../../../shared/models/category';
 import { ProductOnlineStatus, ProductSummary } from '../../../../shared/models/product';
+import {
+  PRODUCT_STATUS_ACTIONS,
+  PRODUCT_STATUS_BADGES,
+  ProductStatusAction,
+} from '../../../../shared/models/product-status';
 
 interface Option<T> {
   readonly label: string;
   readonly value: T;
 }
 
-/** Admin product directory with filters, pagination and deletion flow. */
+/** Admin product directory with filters, pagination, deletion and online-status publishing flow. */
 @Component({
   selector: 'app-product-list',
-  imports: [AppBadge, AppButton, AppDataTable, AppSearchBar, ButtonDirective, ConfirmDialog, ErrorAlert, FormsModule, Ripple, RouterLink, Select],
+  imports: [
+    AppButton,
+    AppDataTable,
+    AppSearchBar,
+    ConfirmDialog,
+    ErrorAlert,
+    FormsModule,
+    Menu,
+    RouterLink,
+    Select,
+    StatusBadge,
+  ],
   templateUrl: './product-list.html',
   styleUrl: './product-list.css',
 })
@@ -50,12 +68,19 @@ export class ProductList {
   protected readonly sortField = signal<string>('name');
   protected readonly sortOrder = signal<number>(1);
 
+  // --- Status change state ---
+  protected readonly productToChangeStatus = signal<ProductSummary | null>(null);
+  protected readonly pendingStatusAction = signal<ProductStatusAction | null>(null);
+  protected readonly changingStatus = signal(false);
+  protected readonly productStatusBadges = PRODUCT_STATUS_BADGES;
+  private readonly statusActionMenuCache = new Map<string, MenuItem[]>();
+
   protected readonly columns: ColumnDef[] = [
     { field: 'name', header: 'Producto', sortable: true },
     { field: 'categoryName', header: 'Categoria', sortable: true },
     { field: 'salePrice', header: 'Precio', sortable: true },
     { field: 'onlineStatus', header: 'Estado online', sortable: true },
-    { field: 'actions', header: 'Acciones', sortable: false, width: '9rem' },
+    { field: 'actions', header: 'Acciones', sortable: false, width: '11rem' },
   ];
 
   protected readonly categoryOptions = computed<Option<number | null>[]>(() => [
@@ -76,6 +101,10 @@ export class ProductList {
     this.refresh();
   }
 
+  // ---------------------------------------------------------------------------
+  // Data loading
+  // ---------------------------------------------------------------------------
+
   /** Reloads the paginated product table using the current filters. */
   protected refresh(): void {
     this.loading.set(true);
@@ -92,6 +121,10 @@ export class ProductList {
       },
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // Filters
+  // ---------------------------------------------------------------------------
 
   /** Applies a text search and resets to the first page. */
   protected onSearch(query: string): void {
@@ -126,16 +159,93 @@ export class ProductList {
     this.refresh();
   }
 
-  /** Returns UI metadata for online-status badges. */
-  protected statusBadge(status: ProductOnlineStatus): { label: string; tone: 'neutral' | 'success' | 'warning' | 'danger' } {
-    const badges = {
-      DRAFT: { label: 'Borrador', tone: 'neutral' },
-      PUBLISHED: { label: 'Publicado', tone: 'success' },
-      PAUSED: { label: 'Pausado', tone: 'warning' },
-      HIDDEN: { label: 'Oculto', tone: 'danger' },
-    } as const;
-    return badges[status];
+  // ---------------------------------------------------------------------------
+  // Status change
+  // ---------------------------------------------------------------------------
+
+  /** Returns the allowed status actions for the current product state as menu items. */
+  protected statusActions(product: ProductSummary): MenuItem[] {
+    const cacheKey = `${product.id}:${product.onlineStatus}`;
+    const cachedActions = this.statusActionMenuCache.get(cacheKey);
+
+    if (cachedActions) {
+      return cachedActions;
+    }
+
+    // Keep PrimeNG menu models stable so the first item click executes the command immediately.
+    const actions = PRODUCT_STATUS_ACTIONS[product.onlineStatus].map((action) => ({
+      label: action.label,
+      icon: action.icon,
+      command: () => this.requestStatusChange(product, action),
+    }));
+
+    this.statusActionMenuCache.set(cacheKey, actions);
+    return actions;
   }
+
+  /** Opens the confirmation dialog for a product status change. */
+  protected requestStatusChange(product: ProductSummary, action: ProductStatusAction): void {
+    this.productToChangeStatus.set(product);
+    this.pendingStatusAction.set(action);
+  }
+
+  /** Confirms and persists a product status change. */
+  protected confirmStatusChange(): void {
+    const product = this.productToChangeStatus();
+    const action = this.pendingStatusAction();
+
+    if (!product || !action || this.changingStatus()) {
+      return;
+    }
+
+    this.changingStatus.set(true);
+
+    this.productService.updateProductStatus(product.id, action.targetStatus).subscribe({
+      next: (updatedProduct) => {
+        this.products.update((items) =>
+          items.map((item) => (item.id === updatedProduct.id ? updatedProduct : item)),
+        );
+
+        this.changingStatus.set(false);
+        this.productToChangeStatus.set(null);
+        this.pendingStatusAction.set(null);
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Estado actualizado',
+          detail: `${updatedProduct.name} ahora esta ${PRODUCT_STATUS_BADGES[updatedProduct.onlineStatus].label.toLowerCase()}.`,
+          life: 3000,
+        });
+      },
+      error: (error: HttpErrorResponse) => {
+        this.changingStatus.set(false);
+        this.productToChangeStatus.set(null);
+        this.pendingStatusAction.set(null);
+
+        const detail =
+          error.error?.code === 'PRODUCT_STATUS_INVALID_TRANSITION'
+            ? 'El producto ya no permite ese cambio de estado. Actualiza la tabla e intenta nuevamente.'
+            : 'No pudimos cambiar el estado del producto.';
+
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al cambiar estado',
+          detail,
+          life: 5000,
+        });
+      },
+    });
+  }
+
+  /** Cancels the pending status-change confirmation. */
+  protected cancelStatusChange(): void {
+    this.productToChangeStatus.set(null);
+    this.pendingStatusAction.set(null);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Delete
+  // ---------------------------------------------------------------------------
 
   /** Formats a product price with Argentine peso conventions. */
   protected formatPrice(value: number): string {
@@ -158,17 +268,32 @@ export class ProductList {
       next: () => {
         this.deleting.set(false);
         this.productToDelete.set(null);
-        this.messageService.add({ severity: 'success', summary: 'Producto eliminado', detail: `${product.name} se elimino del catalogo.`, life: 3000 });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Producto eliminado',
+          detail: `${product.name} se elimino del catalogo.`,
+          life: 3000,
+        });
         this.refresh();
       },
       error: (error: HttpErrorResponse) => {
         this.deleting.set(false);
         this.productToDelete.set(null);
-        const detail = error.error?.message ?? 'No se pudo eliminar el producto. Intenta nuevamente.';
-        this.messageService.add({ severity: 'error', summary: 'Error al eliminar', detail, life: 5000 });
+        const detail =
+          error.error?.message ?? 'No se pudo eliminar el producto. Intenta nuevamente.';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al eliminar',
+          detail,
+          life: 5000,
+        });
       },
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
 
   /** Builds the API filter object from table state. */
   private currentFilters(): ProductFilters {

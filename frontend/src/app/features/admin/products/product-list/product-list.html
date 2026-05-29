@@ -77,38 +77,52 @@
         <tr>
           <td>
             <div class="product-name-cell">
-              <img [src]="product.imageUrl || '/assets/product-placeholder.svg'" [alt]="product.name" class="product-thumb" />
+              <img
+                [src]="product.imageUrl || '/assets/product-placeholder.svg'"
+                [alt]="product.name"
+                class="product-thumb"
+              />
               <div>
                 <span class="product-name">{{ product.name }}</span>
-                <small>{{ product.brandName || 'Sin marca' }} · {{ product.barcode || 'Sin barcode' }}</small>
+                <small
+                  >{{ product.brandName || 'Sin marca' }} ·
+                  {{ product.barcode || 'Sin barcode' }}</small
+                >
               </div>
             </div>
           </td>
           <td>{{ product.categoryName }}</td>
           <td>{{ formatPrice(product.salePrice) }}</td>
           <td>
-            <app-badge [tone]="statusBadge(product.onlineStatus).tone">
-              {{ statusBadge(product.onlineStatus).label }}
-            </app-badge>
+            <app-status-badge [status]="product.onlineStatus" [config]="productStatusBadges" />
           </td>
           <td>
             <div class="product-actions">
-              <button
-                pButton
-                pRipple
+              <p-menu #statusMenu [model]="statusActions(product)" [popup]="true" appendTo="body" />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-sync"
+                [iconOnly]="true"
+                [ariaLabel]="'Cambiar estado de ' + product.name"
+                (click)="statusMenu.toggle($event)"
+              />
+              <app-button
+                variant="ghost"
+                size="sm"
                 icon="pi pi-pencil"
-                class="p-button-text p-button-sm p-button-rounded"
+                [iconOnly]="true"
+                [ariaLabel]="'Editar ' + product.name"
                 [routerLink]="['/admin/products', product.id, 'edit']"
-                [attr.aria-label]="'Editar ' + product.name"
-              ></button>
-              <button
-                pButton
-                pRipple
+              />
+              <app-button
+                variant="ghost"
+                size="sm"
                 icon="pi pi-trash"
-                class="p-button-text p-button-sm p-button-rounded p-button-danger"
-                [attr.aria-label]="'Eliminar ' + product.name"
+                [iconOnly]="true"
+                [ariaLabel]="'Eliminar ' + product.name"
                 (click)="requestDelete(product)"
-              ></button>
+              />
             </div>
           </td>
         </tr>
@@ -117,12 +131,33 @@
   </section>
 </div>
 
+<!-- Delete confirmation -->
 <app-confirm-dialog
   [visible]="!!productToDelete()"
   title="Eliminar producto"
-  [message]="'Vas a eliminar ' + (productToDelete()?.name ?? 'este producto') + ' del catalogo activo.'"
+  [message]="
+    'Vas a eliminar ' + (productToDelete()?.name ?? 'este producto') + ' del catalogo activo.'
+  "
   confirmLabel="Eliminar"
   [destructive]="true"
   (confirmed)="confirmDelete()"
   (cancelled)="productToDelete.set(null)"
-/>
+></app-confirm-dialog>
+
+<!-- Status change confirmation -->
+<app-confirm-dialog
+  [visible]="!!productToChangeStatus() && !!pendingStatusAction()"
+  title="Cambiar estado online"
+  [message]="
+    'Vas a cambiar ' +
+    (productToChangeStatus()?.name ?? 'este producto') +
+    ' a ' +
+    (pendingStatusAction()?.label ?? 'otro estado') +
+    '.'
+  "
+  [confirmLabel]="pendingStatusAction()?.label ?? 'Confirmar'"
+  cancelLabel="Volver"
+  [destructive]="pendingStatusAction()?.targetStatus === 'HIDDEN'"
+  (confirmed)="confirmStatusChange()"
+  (cancelled)="cancelStatusChange()"
+></app-confirm-dialog>

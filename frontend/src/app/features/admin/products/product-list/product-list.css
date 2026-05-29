@@ -136,27 +136,40 @@
 
 .product-actions {
   display: flex;
+  align-items: center;
   gap: 0.35rem;
 }
 
-:host ::ng-deep .product-actions .p-button-text.p-button-rounded {
+.product-actions app-button {
+  width: auto;
+}
+
+/* Status-change and edit buttons */
+:host ::ng-deep .product-actions .app-button--ghost:not(:last-child) {
   color: #2f8d72;
   background: rgba(47, 141, 114, 0.08);
 }
 
-:host ::ng-deep .product-actions .p-button-text.p-button-rounded:hover {
+:host ::ng-deep .product-actions .app-button--ghost:not(:last-child):hover:not(:disabled) {
   color: #ffffff;
   background: #2f8d72;
 }
 
-:host ::ng-deep .product-actions .p-button-text.p-button-danger.p-button-rounded {
+/* Delete button (last child) */
+:host ::ng-deep .product-actions .app-button--ghost:last-child {
   color: #9a3328;
   background: rgba(154, 51, 40, 0.08);
 }
 
-:host ::ng-deep .product-actions .p-button-text.p-button-danger.p-button-rounded:hover {
+:host ::ng-deep .product-actions .app-button--ghost:last-child:hover:not(:disabled) {
   color: #ffffff;
   background: #9a3328;
+}
+
+/* ── Table cell alignment ───────────────────────────────── */
+:host ::ng-deep .app-data-table .p-datatable-tbody > tr > td,
+:host ::ng-deep .app-data-table .p-datatable-thead > tr > th {
+  text-align: left;
 }
 
 @media (max-width: 58rem) {
