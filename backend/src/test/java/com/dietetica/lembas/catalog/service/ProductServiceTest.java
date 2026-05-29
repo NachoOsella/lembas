@@ -193,6 +193,85 @@ class ProductServiceTest {
                 .hasMessageContaining("Category not found");
     }
 
+    // --- changeOnlineStatus ---
+
+    @Test
+    void changeOnlineStatusShouldUpdateWhenTransitionIsValid() {
+        Category category = new Category(5L, null, "Cereales", null);
+        Product product = productWithId(10L, category, "Granola", null, BigDecimal.ONE);
+        product.setOnlineStatus(ProductOnlineStatus.DRAFT);
+        when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
+
+        var result = productService.changeOnlineStatus(10L, ProductOnlineStatus.PUBLISHED);
+
+        assertThat(result.onlineStatus()).isEqualTo(ProductOnlineStatus.PUBLISHED);
+        assertThat(product.getOnlineStatus()).isEqualTo(ProductOnlineStatus.PUBLISHED);
+    }
+
+    @Test
+    void changeOnlineStatusShouldRejectInvalidTransition() {
+        Category category = new Category(5L, null, "Cereales", null);
+        Product product = productWithId(10L, category, "Granola", null, BigDecimal.ONE);
+        product.setOnlineStatus(ProductOnlineStatus.DRAFT);
+        when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
+
+        assertThatThrownBy(() -> productService.changeOnlineStatus(10L, ProductOnlineStatus.HIDDEN))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("transition is not allowed");
+    }
+
+    @Test
+    void changeOnlineStatusShouldRejectMissingProduct() {
+        when(productRepository.findByIdAndActiveTrue(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.changeOnlineStatus(99L, ProductOnlineStatus.PUBLISHED))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("Product not found");
+    }
+
+    // --- listStoreProducts ---
+
+    @Test
+    void listStoreProductsShouldReturnEmptyPageWhenNoPublishedProducts() {
+        when(productRepository.searchStoreProducts(null, null, 
+                org.springframework.data.domain.PageRequest.of(0, 10, org.springframework.data.domain.Sort.by("name").ascending()))
+        ).thenReturn(org.springframework.data.domain.Page.empty());
+
+        var result = productService.listStoreProducts(null, null, 
+                org.springframework.data.domain.PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    // --- getStoreProductDetail ---
+
+    @Test
+    void getStoreProductDetailShouldReturnPublishedProduct() {
+        Category category = new Category(5L, null, "Cereales", null);
+        Product product = productWithId(10L, category, "Granola", null, BigDecimal.valueOf(1200));
+        product.setOnlineStatus(ProductOnlineStatus.PUBLISHED);
+        when(productRepository.findByIdAndActiveTrueAndOnlineStatus(10L, ProductOnlineStatus.PUBLISHED))
+                .thenReturn(Optional.of(product));
+
+        var result = productService.getStoreProductDetail(10L);
+
+        assertThat(result.id()).isEqualTo(10L);
+        assertThat(result.onlineStatus()).isEqualTo(ProductOnlineStatus.PUBLISHED);
+    }
+
+    @Test
+    void getStoreProductDetailShouldRejectNonPublishedProduct() {
+        Category category = new Category(5L, null, "Cereales", null);
+        Product product = productWithId(10L, category, "Granola", null, BigDecimal.ONE);
+        product.setOnlineStatus(ProductOnlineStatus.DRAFT);
+        when(productRepository.findByIdAndActiveTrueAndOnlineStatus(10L, ProductOnlineStatus.PUBLISHED))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.getStoreProductDetail(10L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("Product not found");
+    }
+
     private ProductRequest request(String name, String barcode, Long categoryId, BigDecimal salePrice) {
         return new ProductRequest(name, "Rico y natural", "Lembas", barcode, categoryId, salePrice, 2, null, ProductOnlineStatus.DRAFT);
     }

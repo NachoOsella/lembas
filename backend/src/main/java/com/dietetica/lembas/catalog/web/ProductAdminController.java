@@ -2,6 +2,7 @@ package com.dietetica.lembas.catalog.web;
 
 import com.dietetica.lembas.catalog.dto.ProductDetailDto;
 import com.dietetica.lembas.catalog.dto.ProductRequest;
+import com.dietetica.lembas.catalog.dto.ProductStatusUpdateRequest;
 import com.dietetica.lembas.catalog.dto.ProductSummaryDto;
 import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
 import com.dietetica.lembas.catalog.service.ProductService;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -71,5 +73,14 @@ public class ProductAdminController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         productService.delete(id);
+    }
+
+    /** Changes the product online publishing status. */
+    @PatchMapping("/{id}/status")
+    public ProductSummaryDto changeStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductStatusUpdateRequest request
+    ) {
+        return productService.changeOnlineStatus(id, request.onlineStatus());
     }
 }
