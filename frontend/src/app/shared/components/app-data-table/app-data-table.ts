@@ -36,7 +36,12 @@ export class AppDataTable<T = unknown> {
   readonly sortOrder = input<number | undefined>(undefined);
 
   readonly rowClick = output<T>();
-  readonly pageChange = output<{ first: number; rows: number; page?: number; pageCount?: number }>();
+  readonly pageChange = output<{
+    first: number;
+    rows: number;
+    page?: number;
+    pageCount?: number;
+  }>();
   readonly sortChange = output<{ field: string; order: number }>();
   readonly emptyAction = output<void>();
 

@@ -18,7 +18,11 @@ describe('CategoryForm', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CategoryForm],
-      providers: [provideNoopAnimations(), MessageService, { provide: CategoryService, useValue: categoryService }],
+      providers: [
+        provideNoopAnimations(),
+        MessageService,
+        { provide: CategoryService, useValue: categoryService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CategoryForm);

@@ -5,7 +5,11 @@
       <app-error-alert variant="inline" [title]="dialogError()" message="" />
     }
 
-    <app-form-section [index]="1" title="Identidad" description="Datos visibles para auditoria y operacion diaria.">
+    <app-form-section
+      [index]="1"
+      title="Identidad"
+      description="Datos visibles para auditoria y operacion diaria."
+    >
       <div class="user-form__grid">
         <!-- Email -->
         <div class="user-form__field user-form__field--wide">
@@ -119,7 +123,11 @@
       </div>
     </app-form-section>
 
-    <app-form-section [index]="2" title="Permisos y alcance" description="El rol define permisos; la sucursal limita la operacion local.">
+    <app-form-section
+      [index]="2"
+      title="Permisos y alcance"
+      description="El rol define permisos; la sucursal limita la operacion local."
+    >
       <div class="user-form__access-grid">
         <!-- Role (always shown) -->
         <div class="user-form__field user-form__access-field">

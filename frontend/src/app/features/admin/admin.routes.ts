@@ -27,15 +27,18 @@ export default [
         children: [
           {
             path: '',
-            loadComponent: () => import('./products/product-list/product-list').then((m) => m.ProductList),
+            loadComponent: () =>
+              import('./products/product-list/product-list').then((m) => m.ProductList),
           },
           {
             path: 'new',
-            loadComponent: () => import('./products/product-form/product-form').then((m) => m.ProductForm),
+            loadComponent: () =>
+              import('./products/product-form/product-form').then((m) => m.ProductForm),
           },
           {
             path: ':id/edit',
-            loadComponent: () => import('./products/product-form/product-form').then((m) => m.ProductForm),
+            loadComponent: () =>
+              import('./products/product-form/product-form').then((m) => m.ProductForm),
           },
         ],
       },

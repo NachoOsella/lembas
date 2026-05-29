@@ -111,6 +111,5 @@ describe('Users', () => {
       expect(el.querySelector('app-user-list')).toBeTruthy();
       expect(el.querySelector('app-user-form')).toBeTruthy();
     });
-
   });
 });

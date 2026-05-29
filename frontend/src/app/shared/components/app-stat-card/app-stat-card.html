@@ -2,9 +2,15 @@
   @for (metric of metrics(); track metric.label; let i = $index) {
     <article
       class="metric-strip__item"
-      [class]="'metric-strip__item metric-strip__item--' + (metric.tone ?? 'forest') + (metric.trend ? ' metric-strip__item--trend-' + metric.trend : '')"
+      [class]="
+        'metric-strip__item metric-strip__item--' +
+        (metric.tone ?? 'forest') +
+        (metric.trend ? ' metric-strip__item--trend-' + metric.trend : '')
+      "
       [style.animation-delay]="i * 0.08 + 's'"
-      [attr.aria-label]="metric.label + ': ' + metric.value + (metric.detail ? ', ' + metric.detail : '')"
+      [attr.aria-label]="
+        metric.label + ': ' + metric.value + (metric.detail ? ', ' + metric.detail : '')
+      "
     >
       @if (metric.icon) {
         <span class="metric-strip__icon" aria-hidden="true">
@@ -18,8 +24,13 @@
           @if (metric.trend === 'up' || metric.trend === 'down') {
             <i
               class="metric-strip__trend-icon pi"
-              [class]="'metric-strip__trend-icon pi ' + (metric.trend === 'up' ? 'pi-arrow-up' : 'pi-arrow-down')"
-              [attr.aria-label]="metric.trend === 'up' ? 'Tendencia ascendente' : 'Tendencia descendente'"
+              [class]="
+                'metric-strip__trend-icon pi ' +
+                (metric.trend === 'up' ? 'pi-arrow-up' : 'pi-arrow-down')
+              "
+              [attr.aria-label]="
+                metric.trend === 'up' ? 'Tendencia ascendente' : 'Tendencia descendente'
+              "
               aria-hidden="true"
             ></i>
           }

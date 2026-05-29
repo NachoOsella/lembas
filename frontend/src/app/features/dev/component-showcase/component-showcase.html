@@ -115,6 +115,29 @@
         <app-badge tone="neutral">Borrador</app-badge>
       </div>
     </div>
+
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">StatusBadge -- productos (reutilizable)</span>
+      <p class="showcase-spot-hint">
+        Componente generico que mapea un string de estado a label, tono e icono via config.<br />
+        Reutilizable para productos, ordenes, pagos, caja, stock y cualquier dominio futuro.
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <app-status-badge status="DRAFT" [config]="productStatusBadges" />
+        <app-status-badge status="PUBLISHED" [config]="productStatusBadges" />
+        <app-status-badge status="PAUSED" [config]="productStatusBadges" />
+        <app-status-badge status="HIDDEN" [config]="productStatusBadges" />
+      </div>
+    </div>
+
+    <div class="showcase-spot">
+      <span class="showcase-spot-label">StatusBadge -- ordenes (ejemplo de reusabilidad)</span>
+      <div class="flex flex-wrap gap-2">
+        <app-status-badge status="PENDING_PAYMENT" [config]="orderStatusBadges" />
+        <app-status-badge status="PAID" [config]="orderStatusBadges" />
+        <app-status-badge status="CANCELLED" [config]="orderStatusBadges" />
+      </div>
+    </div>
   </section>
 
   <!-- ════════════════════════════════════════════════════════════════ -->
@@ -132,7 +155,11 @@
       @for (tone of sectionCardTones; track tone) {
         <div class="showcase-spot">
           <span class="showcase-spot-label">AppSectionCard -- {{ tone }}</span>
-          <app-section-card [tone]="tone" title="{{ tone === 'dark' ? 'Fondo oscuro' : 'Fondo claro' }}" description="Tarjeta con tono {{ tone }} ideal para paneles y dashboards.">
+          <app-section-card
+            [tone]="tone"
+            title="{{ tone === 'dark' ? 'Fondo oscuro' : 'Fondo claro' }}"
+            description="Tarjeta con tono {{ tone }} ideal para paneles y dashboards."
+          >
             <p class="text-sm" [class.text-white]="tone === 'dark'">
               Contenido del card. Usa cualquier contenido proyectado aqui.
             </p>
@@ -159,7 +186,9 @@
         <app-card-banner>
           <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">Titulo</p>
           <h3 class="mt-2 text-xl font-semibold tracking-[-0.02em]">Contenido del banner</h3>
-          <p class="mt-2 text-sm text-stone-600">Descripcion breve del componente con mancha decorativa verde.</p>
+          <p class="mt-2 text-sm text-stone-600">
+            Descripcion breve del componente con mancha decorativa verde.
+          </p>
         </app-card-banner>
       </div>
 
@@ -174,7 +203,9 @@
         >
           <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-700">Ofertas</p>
           <h3 class="mt-2 text-xl font-semibold tracking-[-0.02em]">Promociones de la semana</h3>
-          <p class="mt-2 text-sm text-stone-600">Mancha naranja grande en la esquina inferior izquierda.</p>
+          <p class="mt-2 text-sm text-stone-600">
+            Mancha naranja grande en la esquina inferior izquierda.
+          </p>
         </app-card-banner>
       </div>
     </div>
@@ -191,8 +222,12 @@
           blobPosition="center-right"
           blobSize="lg"
         >
-          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300">Feature band</p>
-          <h3 class="mt-2 text-xl font-semibold tracking-[-0.02em] text-white">Titulo sobre fondo oscuro</h3>
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300">
+            Feature band
+          </p>
+          <h3 class="mt-2 text-xl font-semibold tracking-[-0.02em] text-white">
+            Titulo sobre fondo oscuro
+          </h3>
           <p class="mt-2 text-sm text-emerald-100/70">Mancha blanca sutil a la derecha.</p>
         </app-card-banner>
       </div>
@@ -206,7 +241,9 @@
           padding="1.5rem"
         >
           <div class="flex items-center gap-4">
-            <span class="flex h-12 w-12 items-center justify-center rounded-full bg-[#2f8d72]/10 text-[#2f8d72]">
+            <span
+              class="flex h-12 w-12 items-center justify-center rounded-full bg-[#2f8d72]/10 text-[#2f8d72]"
+            >
               <i class="pi pi-arrow-right text-lg"></i>
             </span>
             <div>
@@ -301,12 +338,20 @@
     <div class="showcase-row">
       <div class="showcase-spot showcase-spot--full">
         <span class="showcase-spot-label">FormSection</span>
-        <div class="grid gap-4" style="max-width: 40rem;">
-          <app-form-section [index]="1" title="Seccion de ejemplo" description="Wrapper generico para forms con indice numerico, titulo y descripcion.">
-            <p style="margin:0; color: var(--color-text-muted); font-size: 0.85rem;">Contenido de la seccion proyectado via ng-content.</p>
+        <div class="grid gap-4" style="max-width: 40rem">
+          <app-form-section
+            [index]="1"
+            title="Seccion de ejemplo"
+            description="Wrapper generico para forms con indice numerico, titulo y descripcion."
+          >
+            <p style="margin: 0; color: var(--color-text-muted); font-size: 0.85rem">
+              Contenido de la seccion proyectado via ng-content.
+            </p>
           </app-form-section>
           <app-form-section [index]="2" title="Segunda seccion">
-            <p style="margin:0; color: var(--color-text-muted); font-size: 0.85rem;">Sin descripcion, solo titulo.</p>
+            <p style="margin: 0; color: var(--color-text-muted); font-size: 0.85rem">
+              Sin descripcion, solo titulo.
+            </p>
           </app-form-section>
         </div>
       </div>
@@ -373,8 +418,8 @@
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppDataTable</span>
       <p class="showcase-spot-hint">
-        Tabla generica con toolbar, body template personalizado, sorting y paginacion.
-        Asi se usa en categorias, usuarios y demas modulos del admin.
+        Tabla generica con toolbar, body template personalizado, sorting y paginacion. Asi se usa en
+        categorias, usuarios y demas modulos del admin.
       </p>
       <app-data-table
         [data]="tableData"
@@ -396,7 +441,9 @@
 
         <ng-template #body let-row>
           <tr>
-            <td><span class="font-semibold">{{ row.name }}</span></td>
+            <td>
+              <span class="font-semibold">{{ row.name }}</span>
+            </td>
             <td>{{ row.category }}</td>
             <td>{{ row.price }}</td>
             <td>
@@ -404,7 +451,13 @@
             </td>
             <td>
               <app-badge [tone]="tableStatusTone(row.status)">
-                {{ row.status === 'PUBLISHED' ? 'Publicado' : row.status === 'PAUSED' ? 'Pausado' : 'Borrador' }}
+                {{
+                  row.status === 'PUBLISHED'
+                    ? 'Publicado'
+                    : row.status === 'PAUSED'
+                      ? 'Pausado'
+                      : 'Borrador'
+                }}
               </app-badge>
             </td>
             <td>
@@ -436,8 +489,8 @@
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppStatCard</span>
       <p class="showcase-spot-hint">
-        Strip responsivo de indicadores numericos con tonos semanticos.
-        Reemplaza al anterior componente de tarjeta individual.
+        Strip responsivo de indicadores numericos con tonos semanticos. Reemplaza al anterior
+        componente de tarjeta individual.
       </p>
       <app-stat-card [metrics]="showcaseMetrics" />
     </div>
@@ -445,15 +498,29 @@
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppToast</span>
       <p class="showcase-spot-hint">
-        Notificaciones toast con 4 tipos semanticos. Cada tipo tiene un color de border izquierdo
-        e icono circular diferenciado.
+        Notificaciones toast con 4 tipos semanticos. Cada tipo tiene un color de border izquierdo e
+        icono circular diferenciado.
       </p>
       <div class="flex flex-wrap gap-2 mb-3">
-        <app-button variant="primary" size="sm" icon="pi pi-check" (click)="showToastSuccess()">Exito</app-button>
-        <app-button variant="danger" size="sm" icon="pi pi-times-circle" (click)="showToastError()">Error</app-button>
-        <app-button variant="secondary" size="sm" icon="pi pi-exclamation-triangle" (click)="showToastWarn()">Advertencia</app-button>
-        <app-button variant="ghost" size="sm" icon="pi pi-info-circle" (click)="showToastInfo()">Info</app-button>
-        <app-button variant="primary" size="sm" icon="pi pi-layer-group" (click)="showToastAll()">Mostrar todos</app-button>
+        <app-button variant="primary" size="sm" icon="pi pi-check" (click)="showToastSuccess()"
+          >Exito</app-button
+        >
+        <app-button variant="danger" size="sm" icon="pi pi-times-circle" (click)="showToastError()"
+          >Error</app-button
+        >
+        <app-button
+          variant="secondary"
+          size="sm"
+          icon="pi pi-exclamation-triangle"
+          (click)="showToastWarn()"
+          >Advertencia</app-button
+        >
+        <app-button variant="ghost" size="sm" icon="pi pi-info-circle" (click)="showToastInfo()"
+          >Info</app-button
+        >
+        <app-button variant="primary" size="sm" icon="pi pi-layer-group" (click)="showToastAll()"
+          >Mostrar todos</app-button
+        >
       </div>
       <app-toast />
     </div>
@@ -481,8 +548,6 @@
       </div>
     </div>
   </section>
-
-
 
   <!-- ════════════════════════════════════════════════════════════════ -->
   <!--  Layout de tienda                                              -->
@@ -514,9 +579,7 @@
 
     <div class="showcase-spot">
       <span class="showcase-spot-label">AppStoreFooter</span>
-      <p class="showcase-spot-hint">
-        Pie de pagina minimalista con copyright y enlaces.
-      </p>
+      <p class="showcase-spot-hint">Pie de pagina minimalista con copyright y enlaces.</p>
       <app-store-footer [links]="footerLinks" [copyright]="footerCopyright" />
     </div>
   </section>

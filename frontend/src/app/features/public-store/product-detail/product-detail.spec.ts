@@ -66,6 +66,8 @@ describe('ProductDetail', () => {
   });
 
   it('should load product on init', () => {
-    expect((component as unknown as { product: () => { name: string } }).product().name).toBe('Granola artesanal');
+    expect((component as unknown as { product: () => { name: string } }).product().name).toBe(
+      'Granola artesanal',
+    );
   });
 });

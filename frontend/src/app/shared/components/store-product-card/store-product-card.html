@@ -3,7 +3,11 @@
   [class.store-product-card--compact]="isCompact()"
   [ngClass]="cardClass()"
 >
-  <a [routerLink]="productRoute()" class="block h-full outline-none" [attr.aria-label]="detailLabel()">
+  <a
+    [routerLink]="productRoute()"
+    class="block h-full outline-none"
+    [attr.aria-label]="detailLabel()"
+  >
     <div
       class="store-product-card__image"
       [class.store-product-card__image--regular]="!isCompact()"
@@ -17,7 +21,7 @@
           [alt]="product().name"
           loading="lazy"
           class="store-product-card__img"
-          onload="this.classList.add('store-product-card__img--loaded');"
+          onload="this.classList.add('store-product-card__img--loaded')"
         />
       } @else {
         <div class="store-product-card__placeholder">
@@ -51,7 +55,9 @@
       <div class="mt-auto flex items-end justify-between border-t border-[#f0e6d3] pt-4">
         <div>
           @if (!isCompact()) {
-            <span class="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#2f8d72] mb-0.5">
+            <span
+              class="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#2f8d72] mb-0.5"
+            >
               Precio
             </span>
           }

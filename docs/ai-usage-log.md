@@ -130,3 +130,24 @@
 - `backend/src/main/resources/db/migration/V12__seed_products.sql`, `V13__fix_demo_product_categories.sql`, `backend/src/main/java/com/dietetica/lembas/catalog/repository/ProductRepository.java`, `docker/nginx.conf` -- agregados productos demo, corregido 500 de busqueda paginada por casteo de `search` en PostgreSQL y habilitadas imagenes HTTPS en CSP para previews semilla.
 - `frontend/src/styles.css`, `frontend/src/app/features/admin/products/` -- unificados `border-radius`, `min-height`, `font-size` y focus-ring de todos los controles PrimeNG (`p-inputtext`, `p-select`, `p-inputnumber`) en un override global para que forms de admin sean homogeneos.
 - `frontend/src/app/features/admin/admin-layout/admin-layout.css` -- agrandada sidebar: ancho 16rem, nav links 0.95rem/2.8rem min-height, iconos 1.15rem, spacing generoso, brand 4.2rem.
+
+## 2026-05-29
+
+- `backend/src/main/java/com/dietetica/lembas/catalog/model/ProductOnlineStatus.java` -- agregado metodo `canTransitionTo()` con transiciones controladas: DRAFT->PUBLISHED, PUBLISHED->PAUSED, PAUSED->PUBLISHED|HIDDEN, HIDDEN->PAUSED. Self-transition y null denegados.
+- `backend/src/main/java/com/dietetica/lembas/catalog/dto/ProductStatusUpdateRequest.java` -- nuevo DTO record para `PATCH /api/admin/products/{id}/status` con `@NotNull ProductOnlineStatus`.
+- `backend/src/main/java/com/dietetica/lembas/catalog/service/ProductService.java` -- agregados `changeOnlineStatus()` (transicion controlada con `PRODUCT_STATUS_INVALID_TRANSITION` 409), `listStoreProducts()` y `getStoreProductDetail()` (solo PUBLISHED).
+- `backend/src/main/java/com/dietetica/lembas/catalog/repository/ProductRepository.java` -- agregadas queries publicas `searchStoreProducts()` (solo PUBLISHED, por nombre/descripcion/marca) y `findByIdAndActiveTrueAndOnlineStatus()`.
+- `backend/src/main/java/com/dietetica/lembas/catalog/web/ProductAdminController.java` -- nuevo `PATCH /api/admin/products/{id}/status` retornando `ProductSummaryDto` actualizado.
+- `backend/src/main/java/com/dietetica/lembas/catalog/web/ProductStoreController.java` -- nuevo controller publico `GET /api/store/products` y `GET /api/store/products/{id}` con filtro PUBLISHED, branchId opcional para futuro stock.
+- `backend/src/test/java/com/dietetica/lembas/catalog/model/ProductOnlineStatusTest.java` -- 14 tests cubriendo todas las transiciones validas, invalidas, self-transition y null.
+- `backend/src/test/java/com/dietetica/lembas/catalog/service/ProductServiceTest.java` -- +6 tests: cambio de estado valido/invalido/falta producto, listado y detalle store.
+- `backend/src/test/java/com/dietetica/lembas/catalog/repository/ProductRepositoryTest.java` -- +6 tests: store solo publicados, filtro por categoria, exclusion de inactivos, busqueda, detalle publico y rechazo de draft.
+- `frontend/src/app/shared/components/status-badge/status-badge.ts` -- nuevo componente generico reutilizable `StatusBadge` que mapea un string de estado a label/tone/icon via config dict. Wrappa `AppBadge` internamente. Reutilizable para productos, ordenes, pagos, caja, stock.
+- `frontend/src/app/shared/components/status-badge/status-badge.spec.ts` -- 8 tests: label para cada status, fallback a raw string, tono neutral por defecto.
+- `frontend/src/app/shared/models/product-status.ts` -- centraliza `PRODUCT_STATUS_BADGES` (label/tone/icon por status) y `PRODUCT_STATUS_ACTIONS` (transiciones permitidas por status, espejo del backend).
+- `frontend/src/app/core/services/product.ts` -- nuevo metodo `updateProductStatus()` para `PATCH /api/admin/products/{id}/status`.
+- `frontend/src/app/features/admin/products/product-list/product-list.ts` -- integrado flujo de cambio de estado: `statusActions()` genera MenuItem[], `requestStatusChange()` abre confirm dialog, `confirmStatusChange()` llama API y actualiza la fila localmente sin recargar tabla, `cancelStatusChange()` limpia signals. Eliminado `statusBadge()` en favor de `StatusBadge`.
+- `frontend/src/app/features/admin/products/product-list/product-list.html` -- reemplazado `app-badge` inline por `app-status-badge` con config. Agregado `p-menu` con acciones de estado por fila (boton sync). Agregado segundo `app-confirm-dialog` para cambio de estado con label dinamico y destructive mode para HIDDEN.
+- `frontend/src/app/features/admin/products/product-list/product-list.spec.ts` -- +5 tests: acciones por status, apertura de dialog, llamada a API, no recarga post-exito, limpieza al cancelar.
+- `frontend/src/app/shared/components/index.ts` -- exportado `StatusBadge`.
+- `frontend/src/app/features/dev/component-showcase/component-showcase.ts` y `.html` -- agregadas demos de `StatusBadge` para productos (4 estados) y ordenes (3 estados) mostrando reusabilidad del componente.

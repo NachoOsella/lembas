@@ -34,8 +34,10 @@ import {
   LoadingSpinner,
   Skeleton,
   StoreProductCard,
+  StatusBadge,
 } from '../../../shared/components';
 import { ProductSummary } from '../../../shared/models/product';
+import { PRODUCT_STATUS_BADGES, ProductStatusAction } from '../../../shared/models/product-status';
 
 interface ShowcaseLink {
   readonly label: string;
@@ -74,6 +76,7 @@ interface ShowcaseLink {
     LoadingSpinner,
     Skeleton,
     StoreProductCard,
+    StatusBadge,
   ],
   templateUrl: './component-showcase.html',
   styleUrl: './component-showcase.css',
@@ -85,6 +88,17 @@ export class ComponentShowcase {
   protected readonly dialogVisible = signal(false);
   protected readonly modalVisible = signal(false);
   protected readonly lastAction = signal('Todavia no ejecutaste ninguna accion.');
+  protected readonly productStatusBadges = PRODUCT_STATUS_BADGES;
+
+  protected readonly orderStatusBadges: Record<
+    string,
+    { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral'; icon: string }
+  > = {
+    PENDING_PAYMENT: { label: 'Pendiente de pago', tone: 'warning', icon: 'pi pi-clock' },
+    PAID: { label: 'Pagado', tone: 'success', icon: 'pi pi-check-circle' },
+    CANCELLED: { label: 'Cancelado', tone: 'danger', icon: 'pi pi-times-circle' },
+  };
+
   protected readonly searchValue = signal('');
   protected readonly formValue = signal('');
   protected readonly formError = signal('');
@@ -142,10 +156,38 @@ export class ComponentShowcase {
   // Metrics demo
   // ---------------------------------------------------------------------------
   protected readonly showcaseMetrics: AppMetricItem[] = [
-    { label: 'Ventas hoy', value: '$12.450', detail: '+12% vs ayer', icon: 'pi pi-shopping-cart', tone: 'forest', trend: 'up' },
-    { label: 'Pedidos pendientes', value: '8', detail: '3 requieren atencion', icon: 'pi pi-clock', tone: 'amber', trend: 'neutral' },
-    { label: 'Stock critico', value: '5', detail: 'productos por reponer', icon: 'pi pi-exclamation-triangle', tone: 'ink', trend: 'down' },
-    { label: 'Clientes nuevos', value: '+23', detail: 'este mes', icon: 'pi pi-user-plus', tone: 'sage', trend: 'up' },
+    {
+      label: 'Ventas hoy',
+      value: '$12.450',
+      detail: '+12% vs ayer',
+      icon: 'pi pi-shopping-cart',
+      tone: 'forest',
+      trend: 'up',
+    },
+    {
+      label: 'Pedidos pendientes',
+      value: '8',
+      detail: '3 requieren atencion',
+      icon: 'pi pi-clock',
+      tone: 'amber',
+      trend: 'neutral',
+    },
+    {
+      label: 'Stock critico',
+      value: '5',
+      detail: 'productos por reponer',
+      icon: 'pi pi-exclamation-triangle',
+      tone: 'ink',
+      trend: 'down',
+    },
+    {
+      label: 'Clientes nuevos',
+      value: '+23',
+      detail: 'este mes',
+      icon: 'pi pi-user-plus',
+      tone: 'sage',
+      trend: 'up',
+    },
   ];
 
   // ---------------------------------------------------------------------------
@@ -216,10 +258,34 @@ export class ComponentShowcase {
 
   /** Product row shape used by the showcase table. */
   protected readonly tableData = [
-    { name: 'Granola artesanal', category: 'Cereales', price: '$1.200', stock: 45, status: 'PUBLISHED' },
-    { name: 'Miel organica', category: 'Endulzantes', price: '$850', stock: 32, status: 'PUBLISHED' },
-    { name: 'Almendras tostadas', category: 'Frutos secos', price: '$2.100', stock: 18, status: 'PAUSED' },
-    { name: 'Yerba mate premium', category: 'Bebidas', price: '$1.450', stock: 67, status: 'PUBLISHED' },
+    {
+      name: 'Granola artesanal',
+      category: 'Cereales',
+      price: '$1.200',
+      stock: 45,
+      status: 'PUBLISHED',
+    },
+    {
+      name: 'Miel organica',
+      category: 'Endulzantes',
+      price: '$850',
+      stock: 32,
+      status: 'PUBLISHED',
+    },
+    {
+      name: 'Almendras tostadas',
+      category: 'Frutos secos',
+      price: '$2.100',
+      stock: 18,
+      status: 'PAUSED',
+    },
+    {
+      name: 'Yerba mate premium',
+      category: 'Bebidas',
+      price: '$1.450',
+      stock: 67,
+      status: 'PUBLISHED',
+    },
     { name: 'Chia organica', category: 'Semillas', price: '$780', stock: 12, status: 'DRAFT' },
   ];
 
@@ -318,7 +384,8 @@ export class ComponentShowcase {
     this.messageService.add({
       severity: 'error',
       summary: 'Error al eliminar',
-      detail: 'No se puede eliminar una categoria que tiene subcategorias. Elimina primero las subcategorias.',
+      detail:
+        'No se puede eliminar una categoria que tiene subcategorias. Elimina primero las subcategorias.',
       life: 5000,
     });
     this.lastAction.set('Toast de error enviado.');

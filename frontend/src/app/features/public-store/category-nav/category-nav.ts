@@ -26,9 +26,7 @@ export class CategoryNav {
   protected readonly expanded = signal(false);
 
   /** True when the category count exceeds the collapse threshold. */
-  protected readonly shouldCollapse = computed(
-    () => this.categories().length > COLLAPSE_THRESHOLD,
-  );
+  protected readonly shouldCollapse = computed(() => this.categories().length > COLLAPSE_THRESHOLD);
 
   /** Categories visible in the DOM, respecting the collapse/expand state. */
   protected readonly visibleCategories = computed(() => {

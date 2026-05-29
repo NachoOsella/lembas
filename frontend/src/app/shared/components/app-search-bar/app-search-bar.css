@@ -34,6 +34,6 @@
 }
 
 :host ::ng-deep .search-bar__clear .p-button:hover {
-  color: rgba(0,0,0,0.87);
+  color: rgba(0, 0, 0, 0.87);
   background: rgba(0, 0, 0, 0.06);
 }

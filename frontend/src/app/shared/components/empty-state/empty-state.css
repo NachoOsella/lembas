@@ -66,7 +66,9 @@
   font-size: 1rem;
   padding: 0.75rem 1.5rem;
   letter-spacing: -0.01em;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
 }
 
 /* Hover: no transform — only active gets scale */

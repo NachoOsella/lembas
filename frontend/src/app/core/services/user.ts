@@ -88,5 +88,4 @@ export class UserService {
   listBranches(): Observable<Branch[]> {
     return this.http.get<Branch[]>(this.branchesUrl);
   }
-
 }

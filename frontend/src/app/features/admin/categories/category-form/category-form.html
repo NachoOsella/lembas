@@ -4,8 +4,11 @@
       <app-error-alert variant="inline" [title]="dialogError()" message="" />
     }
 
-    <app-form-section [index]="1" title="Datos de categoria" description="Nombre publico, jerarquia y descripcion para la gondola digital.">
-
+    <app-form-section
+      [index]="1"
+      title="Datos de categoria"
+      description="Nombre publico, jerarquia y descripcion para la gondola digital."
+    >
       <div class="category-form__grid">
         <div class="category-form__field category-form__field--wide">
           <label for="category-name" class="category-form__label">
@@ -70,7 +73,9 @@
             placeholder="Notas internas o texto visible en tienda"
             class="w-full"
           ></textarea>
-          <small class="category-form__hint">Opcional. Ayuda a diferenciar categorias similares.</small>
+          <small class="category-form__hint"
+            >Opcional. Ayuda a diferenciar categorias similares.</small
+          >
         </div>
       </div>
     </app-form-section>

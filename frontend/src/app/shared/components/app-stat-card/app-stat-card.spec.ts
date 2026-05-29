@@ -20,9 +20,7 @@ describe('AppStatCard', () => {
   });
 
   it('should render trend-up icon', () => {
-    fixture.componentRef.setInput('metrics', [
-      { label: 'Ventas', value: '+12%', trend: 'up' },
-    ]);
+    fixture.componentRef.setInput('metrics', [{ label: 'Ventas', value: '+12%', trend: 'up' }]);
     fixture.detectChanges();
     const icon = fixture.nativeElement.querySelector('.metric-strip__trend-icon');
     expect(icon).toBeTruthy();
@@ -30,9 +28,7 @@ describe('AppStatCard', () => {
   });
 
   it('should render trend-down icon', () => {
-    fixture.componentRef.setInput('metrics', [
-      { label: 'Perdidas', value: '-5%', trend: 'down' },
-    ]);
+    fixture.componentRef.setInput('metrics', [{ label: 'Perdidas', value: '-5%', trend: 'down' }]);
     fixture.detectChanges();
     const icon = fixture.nativeElement.querySelector('.metric-strip__trend-icon');
     expect(icon).toBeTruthy();
@@ -40,45 +36,35 @@ describe('AppStatCard', () => {
   });
 
   it('should not render trend icon for neutral trend', () => {
-    fixture.componentRef.setInput('metrics', [
-      { label: 'Total', value: '42', trend: 'neutral' },
-    ]);
+    fixture.componentRef.setInput('metrics', [{ label: 'Total', value: '42', trend: 'neutral' }]);
     fixture.detectChanges();
     const icon = fixture.nativeElement.querySelector('.metric-strip__trend-icon');
     expect(icon).toBeFalsy();
   });
 
   it('should not render trend icon when trend is absent', () => {
-    fixture.componentRef.setInput('metrics', [
-      { label: 'Total', value: '42' },
-    ]);
+    fixture.componentRef.setInput('metrics', [{ label: 'Total', value: '42' }]);
     fixture.detectChanges();
     const icon = fixture.nativeElement.querySelector('.metric-strip__trend-icon');
     expect(icon).toBeFalsy();
   });
 
   it('should apply trend-up CSS class to the article', () => {
-    fixture.componentRef.setInput('metrics', [
-      { label: 'Ventas', value: '+12%', trend: 'up' },
-    ]);
+    fixture.componentRef.setInput('metrics', [{ label: 'Ventas', value: '+12%', trend: 'up' }]);
     fixture.detectChanges();
     const article = fixture.nativeElement.querySelector('.metric-strip__item');
     expect(article.classList).toContain('metric-strip__item--trend-up');
   });
 
   it('should apply trend-down CSS class to the article', () => {
-    fixture.componentRef.setInput('metrics', [
-      { label: 'Perdidas', value: '-5%', trend: 'down' },
-    ]);
+    fixture.componentRef.setInput('metrics', [{ label: 'Perdidas', value: '-5%', trend: 'down' }]);
     fixture.detectChanges();
     const article = fixture.nativeElement.querySelector('.metric-strip__item');
     expect(article.classList).toContain('metric-strip__item--trend-down');
   });
 
   it('should apply trend-neutral CSS class to the article', () => {
-    fixture.componentRef.setInput('metrics', [
-      { label: 'Total', value: '42', trend: 'neutral' },
-    ]);
+    fixture.componentRef.setInput('metrics', [{ label: 'Total', value: '42', trend: 'neutral' }]);
     fixture.detectChanges();
     const article = fixture.nativeElement.querySelector('.metric-strip__item');
     expect(article.classList).toContain('metric-strip__item--trend-neutral');

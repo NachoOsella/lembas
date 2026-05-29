@@ -71,11 +71,18 @@ export class StoreLayout {
   /** Copyright string for app-store-footer. */
   protected readonly copyright = `\u00a9 ${new Date().getFullYear()} Lembas`;
 
-  /** Navigate to store catalog with a search query parameter. */
+  /** Navigate to store catalog with the submitted search query parameter. */
   onSearch(query: string): void {
     const trimmed = query.trim();
     if (trimmed) {
       this.router.navigate(['/store/catalog'], { queryParams: { q: trimmed } });
+      return;
+    }
+
+    // Empty submissions only clear an existing catalog search; they should not
+    // unexpectedly move users from another store page into the catalog.
+    if (this.router.url.startsWith('/store/catalog') && this.router.url.includes('q=')) {
+      this.router.navigate(['/store/catalog'], { queryParams: {} });
     }
   }
 
