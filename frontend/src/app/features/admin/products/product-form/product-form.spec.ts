@@ -103,11 +103,13 @@ describe('ProductForm', () => {
 
     (component as unknown as { save: () => void }).save();
 
-    expect(productService.createProduct).toHaveBeenCalledWith(expect.objectContaining({
-      name: 'Granola',
-      categoryId: 1,
-      salePrice: 1200,
-    }));
+    expect(productService.createProduct).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Granola',
+        categoryId: 1,
+        salePrice: 1200,
+      }),
+    );
     expect(router.navigate).toHaveBeenCalledWith(['/admin/products']);
   });
 
@@ -147,7 +149,10 @@ describe('ProductForm', () => {
 
     (component as unknown as { save: () => void }).save();
 
-    expect(productService.updateProduct).toHaveBeenCalledWith(9, expect.objectContaining({ name: 'Granola updated' }));
+    expect(productService.updateProduct).toHaveBeenCalledWith(
+      9,
+      expect.objectContaining({ name: 'Granola updated' }),
+    );
     expect(router.navigate).toHaveBeenCalledWith(['/admin/products']);
   });
 
@@ -203,7 +208,9 @@ describe('ProductForm', () => {
 
   it('shows image url when set', async () => {
     await setup();
-    (component as unknown as { imageUrl: { set: (v: string) => void } }).imageUrl.set('https://example.com/photo.jpg');
+    (component as unknown as { imageUrl: { set: (v: string) => void } }).imageUrl.set(
+      'https://example.com/photo.jpg',
+    );
     fixture.detectChanges();
 
     const img = fixture.nativeElement.querySelector('.product-form__preview img');
@@ -275,7 +282,9 @@ describe('ProductForm', () => {
     await setup();
     (component as unknown as { name: { set: (v: string) => void } }).name.set('Test');
     (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
-    (component as unknown as { salePrice: { set: (v: number | null) => void } }).salePrice.set(null);
+    (component as unknown as { salePrice: { set: (v: number | null) => void } }).salePrice.set(
+      null,
+    );
 
     (component as unknown as { save: () => void }).save();
 
@@ -286,7 +295,9 @@ describe('ProductForm', () => {
 
   it('shows error message when create fails', async () => {
     await setup();
-    productService.createProduct.mockReturnValue(throwError(() => ({ error: { code: 'PRODUCT_BARCODE_DUPLICATED' } })));
+    productService.createProduct.mockReturnValue(
+      throwError(() => ({ error: { code: 'PRODUCT_BARCODE_DUPLICATED' } })),
+    );
     (component as unknown as { name: { set: (v: string) => void } }).name.set('Test');
     (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
     (component as unknown as { salePrice: { set: (v: number) => void } }).salePrice.set(100);
@@ -294,7 +305,9 @@ describe('ProductForm', () => {
     (component as unknown as { save: () => void }).save();
     await fixture.whenStable();
 
-    expect(fixture.nativeElement.textContent).toContain('Ya existe un producto activo con ese barcode');
+    expect(fixture.nativeElement.textContent).toContain(
+      'Ya existe un producto activo con ese barcode',
+    );
   });
 
   it('shows generic error when save fails with unknown code', async () => {
@@ -312,7 +325,9 @@ describe('ProductForm', () => {
 
   it('shows error when update fails', async () => {
     await setup('9');
-    productService.updateProduct.mockReturnValue(throwError(() => ({ error: { code: 'PRODUCT_NOT_FOUND' } })));
+    productService.updateProduct.mockReturnValue(
+      throwError(() => ({ error: { code: 'PRODUCT_NOT_FOUND' } })),
+    );
 
     (component as unknown as { save: () => void }).save();
     await fixture.whenStable();
@@ -322,7 +337,9 @@ describe('ProductForm', () => {
 
   it('clears error on successful retry', async () => {
     await setup();
-    productService.createProduct.mockReturnValueOnce(throwError(() => ({ error: {} }))).mockReturnValueOnce(of({ id: 1 }));
+    productService.createProduct
+      .mockReturnValueOnce(throwError(() => ({ error: {} })))
+      .mockReturnValueOnce(of({ id: 1 }));
     (component as unknown as { name: { set: (v: string) => void } }).name.set('Test');
     (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
     (component as unknown as { salePrice: { set: (v: number) => void } }).salePrice.set(100);

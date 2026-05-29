@@ -13,7 +13,12 @@ import { ErrorAlert } from '../../../../shared/components/error-alert/error-aler
 import { FormSection } from '../../../../shared/components/form-section/form-section';
 import { Skeleton } from '../../../../shared/components/skeleton/skeleton';
 import { CategoryDto } from '../../../../shared/models/category';
-import { ProductDetail, ProductOnlineStatus, ProductRequest } from '../../../../shared/models/product';
+import {
+  ProductDetail,
+  ProductOnlineStatus,
+  ProductRequest,
+} from '../../../../shared/models/product';
+import { PRODUCT_STATUS_ACTIONS } from '../../../../shared/models/product-status';
 
 interface Option<T> {
   readonly label: string;
@@ -23,7 +28,17 @@ interface Option<T> {
 /** Create and edit form for admin catalog products with local image preview. */
 @Component({
   selector: 'app-product-form',
-  imports: [AppButton, ErrorAlert, FormSection, FormsModule, InputNumber, InputText, RouterLink, Select, Skeleton],
+  imports: [
+    AppButton,
+    ErrorAlert,
+    FormSection,
+    FormsModule,
+    InputNumber,
+    InputText,
+    RouterLink,
+    Select,
+    Skeleton,
+  ],
   templateUrl: './product-form.html',
   styleUrl: './product-form.css',
 })
@@ -51,23 +66,34 @@ export class ProductForm {
   protected readonly onlineStatus = signal<ProductOnlineStatus>('DRAFT');
 
   protected readonly editing = computed(() => this.productId() !== null);
-  protected readonly title = computed(() => (this.editing() ? 'Editar producto' : 'Nuevo producto'));
-  protected readonly imagePreview = computed(() => this.imageUrl().trim() || '/assets/product-placeholder.svg');
+  protected readonly title = computed(() =>
+    this.editing() ? 'Editar producto' : 'Nuevo producto',
+  );
+  protected readonly imagePreview = computed(
+    () => this.imageUrl().trim() || '/assets/product-placeholder.svg',
+  );
   protected readonly categoryOptions = computed<Option<number>[]>(() =>
     this.categories().map((category) => ({ label: category.name, value: category.id })),
   );
-  protected readonly statusOptions: Option<ProductOnlineStatus>[] = [
-    { label: 'Borrador', value: 'DRAFT' },
-    { label: 'Publicado', value: 'PUBLISHED' },
-    { label: 'Pausado', value: 'PAUSED' },
-    { label: 'Oculto', value: 'HIDDEN' },
-  ];
-  protected readonly formValid = computed(() =>
-    this.name().trim().length > 0 &&
-    !!this.categoryId() &&
-    this.salePrice() !== null &&
-    Number(this.salePrice()) >= 0 &&
-    this.barcodeValid(),
+  protected readonly statusOptions = computed(() => {
+    const current = this.onlineStatus();
+    if (!this.editing()) {
+      // New product: only DRAFT is valid as initial status.
+      return [{ label: 'Borrador', value: 'DRAFT' as ProductOnlineStatus }];
+    }
+    // Editing: show only valid transitions from the current status.
+    return PRODUCT_STATUS_ACTIONS[current].map((action) => ({
+      label: action.label,
+      value: action.targetStatus,
+    }));
+  });
+  protected readonly formValid = computed(
+    () =>
+      this.name().trim().length > 0 &&
+      !!this.categoryId() &&
+      this.salePrice() !== null &&
+      Number(this.salePrice()) >= 0 &&
+      this.barcodeValid(),
   );
   protected readonly barcodeValid = computed(() => {
     const value = this.barcode().trim();
@@ -94,7 +120,9 @@ export class ProductForm {
     this.submitting.set(true);
     const payload = this.toRequest();
     const id = this.productId();
-    const request$ = id ? this.productService.updateProduct(id, payload) : this.productService.createProduct(payload);
+    const request$ = id
+      ? this.productService.updateProduct(id, payload)
+      : this.productService.createProduct(payload);
     request$.subscribe({
       next: () => {
         this.submitting.set(false);
