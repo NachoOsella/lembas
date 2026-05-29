@@ -123,6 +123,19 @@ public class ProductService {
         return toDetailDto(product);
     }
 
+    /** Returns random published products from the same category, excluding the current product. */
+    @Transactional(readOnly = true)
+    public Page<ProductSummaryDto> listRandomRelatedProducts(Long productId) {
+        Product product = productRepository.findByIdAndActiveTrueAndOnlineStatus(
+                        productId, ProductOnlineStatus.PUBLISHED)
+                .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
+        Long categoryId = product.getCategory().getId();
+        var products = productRepository.findRandomRelatedProducts(
+                categoryId, productId, PageRequest.of(0, 6));
+        var dtos = products.stream().map(this::toSummaryDto).toList();
+        return new org.springframework.data.domain.PageImpl<>(dtos);
+    }
+
     /** Copies validated request fields into the entity. */
     private void applyRequest(Product product, ProductRequest request) {
         Category category = categoryRepository.findById(request.categoryId())

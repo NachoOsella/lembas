@@ -19,8 +19,11 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.List;
 
 /** Unit tests for product catalog creation, edition and validation rules. */
 @ExtendWith(MockitoExtension.class)
@@ -268,6 +271,37 @@ class ProductServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> productService.getStoreProductDetail(10L))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("Product not found");
+    }
+
+    // --- listRandomRelatedProducts ---
+
+    @Test
+    void listRandomRelatedProductsShouldReturnProductsFromSameCategory() {
+        Category category = new Category(5L, null, "Cereales", null);
+        Product product = productWithId(10L, category, "Granola", null, BigDecimal.valueOf(1200));
+        product.setOnlineStatus(ProductOnlineStatus.PUBLISHED);
+        when(productRepository.findByIdAndActiveTrueAndOnlineStatus(10L, ProductOnlineStatus.PUBLISHED))
+                .thenReturn(Optional.of(product));
+
+        Product related = productWithId(11L, category, "Avena", null, BigDecimal.valueOf(800));
+        related.setOnlineStatus(ProductOnlineStatus.PUBLISHED);
+        when(productRepository.findRandomRelatedProducts(eq(5L), eq(10L), any()))
+                .thenReturn(List.of(related));
+
+        var result = productService.listRandomRelatedProducts(10L);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).name()).isEqualTo("Avena");
+    }
+
+    @Test
+    void listRandomRelatedProductsShouldRejectNonExistentProduct() {
+        when(productRepository.findByIdAndActiveTrueAndOnlineStatus(99L, ProductOnlineStatus.PUBLISHED))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.listRandomRelatedProducts(99L))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Product not found");
     }

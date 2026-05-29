@@ -180,6 +180,56 @@ class ProductRepositoryTest {
         assertThat(result).isEmpty();
     }
 
+    // ---------------------------------------------------------------------------
+    // Related products queries
+    // ---------------------------------------------------------------------------
+
+    @Test
+    void findRandomRelatedProductsShouldReturnSameCategoryExcludingCurrent() {
+        Category cat1 = categoryRepository.save(new Category("Repo Related Cats", null));
+        Category cat2 = categoryRepository.save(new Category("Repo Related Other", null));
+
+        Product current = product("Current product", "779999000070", cat1, ProductOnlineStatus.PUBLISHED);
+        productRepository.save(current);
+
+        Product related1 = product("Related A", "779999000071", cat1, ProductOnlineStatus.PUBLISHED);
+        Product related2 = product("Related B", "779999000072", cat1, ProductOnlineStatus.PUBLISHED);
+        productRepository.save(related1);
+        productRepository.save(related2);
+
+        Product otherCategory = product("Other cat product", "779999000073", cat2, ProductOnlineStatus.PUBLISHED);
+        productRepository.save(otherCategory);
+
+        Product draft = product("Draft in same cat", "779999000074", cat1, ProductOnlineStatus.DRAFT);
+        productRepository.save(draft);
+
+        productRepository.flush();
+
+        var result = productRepository.findRandomRelatedProducts(
+                cat1.getId(), current.getId(), PageRequest.of(0, 10));
+
+        assertThat(result)
+                .extracting(Product::getName)
+                .containsExactlyInAnyOrder("Related A", "Related B");
+
+        assertThat(result)
+                .extracting(Product::getName)
+                .doesNotContain("Current product", "Other cat product", "Draft in same cat");
+    }
+
+    @Test
+    void findRandomRelatedProductsShouldReturnEmptyWhenNoOtherProductsInCategory() {
+        Category category = categoryRepository.save(new Category("Repo Related Empty", null));
+        Product only = product("Only product", "779999000080", category, ProductOnlineStatus.PUBLISHED);
+        productRepository.save(only);
+        productRepository.flush();
+
+        var result = productRepository.findRandomRelatedProducts(
+                category.getId(), only.getId(), PageRequest.of(0, 6));
+
+        assertThat(result).isEmpty();
+    }
+
     /** Creates a product entity for repository tests. */
     private Product product(String name, String barcode, Category category, ProductOnlineStatus status) {
         Product product = new Product();

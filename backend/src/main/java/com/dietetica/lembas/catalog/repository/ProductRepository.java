@@ -81,4 +81,24 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             order by function('RANDOM')
             """)
     List<Product> findRandomPublishedProducts(Pageable pageable);
+
+    // ---------------------------------------------------------------------------
+    // Related products (same category, random, excluding current)
+    // ---------------------------------------------------------------------------
+
+    @EntityGraph(attributePaths = "category")
+    @Query("""
+            select p from Product p
+            join p.category c
+            where p.active = true
+              and p.onlineStatus = com.dietetica.lembas.catalog.model.ProductOnlineStatus.PUBLISHED
+              and c.id = :categoryId
+              and p.id <> :excludeId
+            order by function('RANDOM')
+            """)
+    List<Product> findRandomRelatedProducts(
+            @Param("categoryId") Long categoryId,
+            @Param("excludeId") Long excludeId,
+            Pageable pageable
+    );
 }

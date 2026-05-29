@@ -153,4 +153,31 @@ describe('CatalogService', () => {
     expect(req.request.params.get('branchId')).toBe('5');
     req.flush({ id: 42 });
   });
+
+  // --- getRelatedProducts ---
+
+  it('should GET /api/store/products/:id/related', () => {
+    const mockResponse = {
+      content: [
+        { id: 10, name: 'Related A', salePrice: 1000 },
+        { id: 11, name: 'Related B', salePrice: 2000 },
+      ],
+      totalElements: 2,
+      totalPages: 1,
+      number: 0,
+      size: 6,
+      first: true,
+      last: true,
+      empty: false,
+    };
+
+    service.getRelatedProducts(42).subscribe((res) => {
+      expect(res.content.length).toBe(2);
+      expect(res.content[0].name).toBe('Related A');
+    });
+
+    const req = httpMock.expectOne('/api/store/products/42/related');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockResponse);
+  });
 });

@@ -48,4 +48,10 @@ public class ProductStoreController {
     public Page<ProductSummaryDto> featured() {
         return productService.listRandomPublishedProducts();
     }
+
+    /** Returns random published products from the same category, excluding the current product. */
+    @GetMapping("/{id}/related")
+    public Page<ProductSummaryDto> related(@PathVariable Long id) {
+        return productService.listRandomRelatedProducts(id);
+    }
 }

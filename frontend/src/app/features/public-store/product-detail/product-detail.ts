@@ -63,15 +63,11 @@ export class ProductDetail implements OnInit {
     });
   }
 
-  /** Load products from the same category, excluding the current one. */
+  /** Load random products from the same category, excluding the current one. */
   private loadRelatedProducts(current: ProductSummary): void {
-    if (!current.categoryId) return;
-
-    this.catalogService.getRelatedProducts(current.categoryId, current.id, 6).subscribe({
+    this.catalogService.getRelatedProducts(current.id).subscribe({
       next: (res) => {
-        // Filter out the current product in case the backend includes it
-        const related = res.content.filter((p) => p.id !== current.id).slice(0, 6);
-        this.relatedProducts.set(related);
+        this.relatedProducts.set(res.content);
       },
       // Silently ignore — related products are non-critical
     });

@@ -123,15 +123,13 @@ export class CatalogService {
   }
 
   /**
-   * Returns published products in the same category, excluding the current product.
+   * Returns random published products from the same category, excluding the current product.
    * Used by the product detail page to show related products.
    *
-   * @param categoryId the category to filter by
-   * @param excludeId  the current product ID to exclude
-n   * @param size       max number of related products (default 6)
+   * @param productId the current product ID (backend resolves category and excludes it)
    * @returns an observable emitting the paginated response
    */
-  getRelatedProducts(categoryId: number, excludeId: number, size = 6): Observable<{
+  getRelatedProducts(productId: number): Observable<{
     content: ProductSummary[];
     totalElements: number;
     totalPages: number;
@@ -141,10 +139,6 @@ n   * @param size       max number of related products (default 6)
     last: boolean;
     empty: boolean;
   }> {
-    let params = new HttpParams()
-      .set('categoryId', categoryId)
-      .set('page', 0)
-      .set('size', size + 10); // fetch extra to account for exclusions
     return this.http.get<{
       content: ProductSummary[];
       totalElements: number;
@@ -154,6 +148,6 @@ n   * @param size       max number of related products (default 6)
       first: boolean;
       last: boolean;
       empty: boolean;
-    }>(this.productsUrl, { params });
+    }>(`${this.productsUrl}/${productId}/related`);
   }
 }
