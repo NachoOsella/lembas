@@ -23,11 +23,11 @@
 
 .product-detail-hero__image {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 1 / 1;
 }
 
 @media (min-width: 64rem) {
   .product-detail-hero__image {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 1 / 1;
   }
 }

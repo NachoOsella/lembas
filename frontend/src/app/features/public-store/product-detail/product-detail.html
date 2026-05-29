@@ -47,7 +47,7 @@
                 <img
                   [src]="p.imageUrl"
                   [alt]="p.name"
-                  class="relative z-[1] h-full w-full object-contain p-8 sm:p-12"
+                  class="relative z-[1] h-full w-full object-cover"
                 />
               } @else {
                 <div
@@ -222,16 +222,18 @@
               Segui explorando
             </p>
             <h2 class="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-              Mas de {{ p.categoryName }}
+              {{ relatedTitle() }}
             </h2>
           </div>
-          <a
-            [routerLink]="['/store/catalog']"
-            [queryParams]="{ categoryId: p.categoryId }"
-            class="text-sm font-bold text-[#2f8d72] transition hover:text-[#075f36]"
-          >
-            Ver todo <i class="pi pi-arrow-right ml-1" aria-hidden="true"></i>
-          </a>
+          @if (relatedLink(); as link) {
+            <a
+              [routerLink]="['/store/catalog']"
+              [queryParams]="{ categoryId: link.categoryId }"
+              class="text-sm font-bold text-[#2f8d72] transition hover:text-[#075f36]"
+            >
+              Ver todo <i class="pi pi-arrow-right ml-1" aria-hidden="true"></i>
+            </a>
+          }
         </div>
 
         <div

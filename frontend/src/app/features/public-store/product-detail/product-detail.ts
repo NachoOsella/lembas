@@ -31,6 +31,12 @@ export class ProductDetail implements OnInit {
   /** Related products from the same category (excludes current product). */
   protected readonly relatedProducts = signal<ProductSummary[]>([]);
 
+  /** Dynamic title for the related products section. */
+  protected readonly relatedTitle = signal('Productos relacionados');
+
+  /** Category link for the related section header (null for featured fallback). */
+  protected readonly relatedLink = signal<{ categoryId: number } | null>(null);
+
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!id || isNaN(id)) {
@@ -63,13 +69,37 @@ export class ProductDetail implements OnInit {
     });
   }
 
-  /** Load random products from the same category, excluding the current one. */
+  /**
+   * Load random products from the same category, excluding the current one.
+   * Falls back to featured (recommended) products when the category has no other products.
+   */
   private loadRelatedProducts(current: ProductSummary): void {
     this.catalogService.getRelatedProducts(current.id).subscribe({
       next: (res) => {
-        this.relatedProducts.set(res.content);
+        if (res.content.length > 0) {
+          this.relatedProducts.set(res.content);
+          this.relatedTitle.set(`Mas de ${current.categoryName}`);
+          this.relatedLink.set({ categoryId: current.categoryId });
+        } else {
+          this.loadFeaturedAsFallback();
+        }
       },
-      // Silently ignore — related products are non-critical
+      error: () => this.loadFeaturedAsFallback(),
+    });
+  }
+
+  /** Load featured/recommended products as fallback when no same-category products exist. */
+  private loadFeaturedAsFallback(): void {
+    this.catalogService.getFeaturedProducts().subscribe({
+      next: (res) => {
+        // Exclude the current product from featured list
+        const p = this.product();
+        const featured = res.content.filter((item) => item.id !== p?.id).slice(0, 6);
+        this.relatedProducts.set(featured);
+        this.relatedTitle.set('Recomendados para vos');
+        this.relatedLink.set(null); // No category link for featured
+      },
+      // Silently ignore
     });
   }
 
