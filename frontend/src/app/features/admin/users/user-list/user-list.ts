@@ -1,8 +1,6 @@
 import { Component, OnInit, inject, input, output, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitch } from 'primeng/toggleswitch';
-import { ButtonDirective } from 'primeng/button';
-import { Ripple } from 'primeng/ripple';
 import { MessageService } from 'primeng/api';
 
 import { UserService } from '../../../../core/services/user';
@@ -48,8 +46,6 @@ const USER_SORT_FIELDS = new Set(['firstName', 'email', 'role', 'enabled']);
   imports: [
     FormsModule,
     ToggleSwitch,
-    ButtonDirective,
-    Ripple,
     AppDataTable,
     AppButton,
     AppBadge,
@@ -113,14 +109,16 @@ export class UserList implements OnInit {
     const page = Math.floor(this.first() / this.pageSize());
     const sort = this.buildSortParam();
     this.loading.set(true);
-    this.userService.listUsers(undefined, undefined, page, this.pageSize(), this.searchQuery(), sort).subscribe({
-      next: (response) => {
-        this.users.set(response.content);
-        this.totalRecords.set(response.totalElements);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
+    this.userService
+      .listUsers(undefined, undefined, page, this.pageSize(), this.searchQuery(), sort)
+      .subscribe({
+        next: (response) => {
+          this.users.set(response.content);
+          this.totalRecords.set(response.totalElements);
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
   }
 
   /** Exposed so parent can refresh after user changes. */

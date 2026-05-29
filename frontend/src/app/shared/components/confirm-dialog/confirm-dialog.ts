@@ -1,10 +1,11 @@
 import { Component, input, output } from '@angular/core';
-import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
+
+import { AppButton } from '../app-button/app-button';
 
 @Component({
   selector: 'app-confirm-dialog',
-  imports: [Button, Dialog],
+  imports: [AppButton, Dialog],
   templateUrl: './confirm-dialog.html',
   styleUrl: './confirm-dialog.css',
 })

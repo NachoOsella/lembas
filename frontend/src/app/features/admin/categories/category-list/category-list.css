@@ -136,25 +136,32 @@
 
 .category-actions {
   display: flex;
+  align-items: center;
   gap: 0.35rem;
 }
 
-:host ::ng-deep .category-actions .p-button-text.p-button-rounded {
+.category-actions app-button {
+  width: auto;
+}
+
+/* Edit button */
+:host ::ng-deep .category-actions .app-button--ghost:first-child {
   color: #2f8d72;
   background: rgba(47, 141, 114, 0.08);
 }
 
-:host ::ng-deep .category-actions .p-button-text.p-button-rounded:hover {
+:host ::ng-deep .category-actions .app-button--ghost:first-child:hover:not(:disabled) {
   color: #ffffff;
   background: #2f8d72;
 }
 
-:host ::ng-deep .category-actions .p-button-text.p-button-danger.p-button-rounded {
+/* Delete button (last child) */
+:host ::ng-deep .category-actions .app-button--ghost:last-child {
   color: #9a3328;
   background: rgba(154, 51, 40, 0.08);
 }
 
-:host ::ng-deep .category-actions .p-button-text.p-button-danger.p-button-rounded:hover {
+:host ::ng-deep .category-actions .app-button--ghost:last-child:hover:not(:disabled) {
   color: #ffffff;
   background: #9a3328;
 }

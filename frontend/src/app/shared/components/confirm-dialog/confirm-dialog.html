@@ -30,18 +30,15 @@
   </div>
 
   <ng-template #footer>
-    <p-button
-      [label]="cancelLabel()"
-      severity="secondary"
-      outlined="true"
-      rounded="true"
-      (onClick)="onCancel()"
-    />
-    <p-button
-      [label]="confirmLabel()"
-      [severity]="destructive() ? 'danger' : 'success'"
-      rounded="true"
-      (onClick)="onConfirm()"
-    />
+    <app-button variant="secondary" type="button" (click)="onCancel()">
+      {{ cancelLabel() }}
+    </app-button>
+    <app-button
+      [variant]="destructive() ? 'danger' : 'primary'"
+      type="button"
+      (click)="onConfirm()"
+    >
+      {{ confirmLabel() }}
+    </app-button>
   </ng-template>
 </p-dialog>

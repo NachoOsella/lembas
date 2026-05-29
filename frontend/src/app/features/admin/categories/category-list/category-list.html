@@ -59,22 +59,22 @@
           </td>
           <td>
             <div class="category-actions">
-              <button
-                pButton
-                pRipple
+              <app-button
+                variant="ghost"
+                size="sm"
                 icon="pi pi-pencil"
-                class="p-button-text p-button-sm p-button-rounded"
-                [attr.aria-label]="'Editar ' + category.name"
+                [iconOnly]="true"
+                [ariaLabel]="'Editar ' + category.name"
                 (click)="editCategory.emit(category)"
-              ></button>
-              <button
-                pButton
-                pRipple
+              />
+              <app-button
+                variant="ghost"
+                size="sm"
                 icon="pi pi-trash"
-                class="p-button-text p-button-sm p-button-rounded p-button-danger"
-                [attr.aria-label]="'Eliminar ' + category.name"
+                [iconOnly]="true"
+                [ariaLabel]="'Eliminar ' + category.name"
                 (click)="requestDelete(category)"
-              ></button>
+              />
             </div>
           </td>
         </tr>
@@ -86,7 +86,11 @@
 <app-confirm-dialog
   [visible]="!!categoryToDelete()"
   title="Eliminar categoria"
-  [message]="'Vas a eliminar ' + (categoryToDelete()?.name ?? 'esta categoria') + '. La accion se rechazara si tiene productos o subcategorias.'"
+  [message]="
+    'Vas a eliminar ' +
+    (categoryToDelete()?.name ?? 'esta categoria') +
+    '. La accion se rechazara si tiene productos o subcategorias.'
+  "
   confirmLabel="Eliminar"
   [destructive]="true"
   (confirmed)="confirmDelete()"

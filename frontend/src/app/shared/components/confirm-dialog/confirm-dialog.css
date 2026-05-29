@@ -117,29 +117,12 @@
   margin: 0.65rem 0 0;
 }
 
-:host ::ng-deep .confirm-dialog .p-button-success {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-:host ::ng-deep .confirm-dialog .p-button-danger {
-  background: #c82014;
-  border-color: #c82014;
-}
-
-:host ::ng-deep .confirm-dialog .p-button-success,
-:host ::ng-deep .confirm-dialog .p-button-danger,
-:host ::ng-deep .confirm-dialog .p-button-success .p-button-label,
-:host ::ng-deep .confirm-dialog .p-button-danger .p-button-label {
-  color: #ffffff;
-}
-
 @media (max-width: 34rem) {
   :host ::ng-deep .confirm-dialog .p-dialog-footer {
     flex-direction: column-reverse;
   }
 
-  :host ::ng-deep .confirm-dialog .p-dialog-footer .p-button {
+  :host ::ng-deep .confirm-dialog .p-dialog-footer .app-button {
     width: 100%;
   }
 }

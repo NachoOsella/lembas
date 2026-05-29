@@ -28,7 +28,11 @@ function buildUser(overrides: Partial<UserResponse> = {}): UserResponse {
 }
 
 /** Builds a paginated response with the given users. */
-function userPage(users: UserResponse[], totalElements = users.length, size = 10): Page<UserResponse> {
+function userPage(
+  users: UserResponse[],
+  totalElements = users.length,
+  size = 10,
+): Page<UserResponse> {
   return {
     content: users,
     totalElements,
@@ -125,7 +129,10 @@ describe('UserList', () => {
       configure([buildUser()], 50);
       svc['listUsers'].mockClear();
 
-      (c['onPageChange'] as (event: { first: number; rows: number }) => void)({ first: 20, rows: 20 });
+      (c['onPageChange'] as (event: { first: number; rows: number }) => void)({
+        first: 20,
+        rows: 20,
+      });
 
       expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 1, 20, '', undefined);
       expect((c['first'] as () => number)()).toBe(20);
@@ -153,7 +160,14 @@ describe('UserList', () => {
       (c['first'] as { set(v: number): void }).set(40);
       (c['onSearch'] as (query: string) => void)('gandalf');
 
-      expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, 'gandalf', undefined);
+      expect(svc['listUsers']).toHaveBeenCalledWith(
+        undefined,
+        undefined,
+        0,
+        10,
+        'gandalf',
+        undefined,
+      );
       expect((c['first'] as () => number)()).toBe(0);
       expect((c['users'] as () => UserResponse[])()[0].email).toBe('gandalf@lembas.com');
       expect((c['totalRecords'] as () => number)()).toBe(1);
@@ -182,7 +196,10 @@ describe('UserList', () => {
       configure([buildUser()]);
       svc['listUsers'].mockClear();
 
-      (c['onSort'] as (event: { field: string; order: number }) => void)({ field: 'email', order: 1 });
+      (c['onSort'] as (event: { field: string; order: number }) => void)({
+        field: 'email',
+        order: 1,
+      });
 
       expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '', 'email,asc');
       expect((c['first'] as () => number)()).toBe(0);
@@ -192,7 +209,10 @@ describe('UserList', () => {
       configure([buildUser()]);
       svc['listUsers'].mockClear();
 
-      (c['onSort'] as (event: { field: string; order: number }) => void)({ field: 'role', order: -1 });
+      (c['onSort'] as (event: { field: string; order: number }) => void)({
+        field: 'role',
+        order: -1,
+      });
 
       expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '', 'role,desc');
     });
@@ -201,7 +221,10 @@ describe('UserList', () => {
       configure([buildUser()]);
       svc['listUsers'].mockClear();
 
-      (c['onSort'] as (event: { field: string; order: number }) => void)({ field: 'email', order: 0 });
+      (c['onSort'] as (event: { field: string; order: number }) => void)({
+        field: 'email',
+        order: 0,
+      });
 
       expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '', undefined);
     });
@@ -210,7 +233,10 @@ describe('UserList', () => {
       configure([buildUser()]);
       svc['listUsers'].mockClear();
 
-      (c['onSort'] as (event: { field: string; order: number }) => void)({ field: 'branchId', order: 1 });
+      (c['onSort'] as (event: { field: string; order: number }) => void)({
+        field: 'branchId',
+        order: 1,
+      });
 
       expect(svc['listUsers']).toHaveBeenCalledWith(undefined, undefined, 0, 10, '', undefined);
     });

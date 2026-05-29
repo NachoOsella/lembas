@@ -1,14 +1,15 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
-import { Ripple } from 'primeng/ripple';
 
 import { CategoryService } from '../../../../core/services/category';
 import { CategoryDto } from '../../../../shared/models/category';
 import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppDataTable, ColumnDef } from '../../../../shared/components/app-data-table/app-data-table';
+import {
+  AppDataTable,
+  ColumnDef,
+} from '../../../../shared/components/app-data-table/app-data-table';
 import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
@@ -19,7 +20,14 @@ const DUPLICATE_TOAST_MS = 2000;
 /** Displays the admin category directory using shared Lembas table and action components. */
 @Component({
   selector: 'app-category-list',
-  imports: [AppBadge, AppButton, AppDataTable, AppSearchBar, ButtonDirective, ConfirmDialog, ErrorAlert, Ripple],
+  imports: [
+    AppBadge,
+    AppButton,
+    AppDataTable,
+    AppSearchBar,
+    ConfirmDialog,
+    ErrorAlert,
+  ],
   templateUrl: './category-list.html',
   styleUrl: './category-list.css',
 })
@@ -58,7 +66,9 @@ export class CategoryList {
 
   /** Returns a human-readable parent label for the table. */
   protected parentName(category: CategoryDto): string {
-    return category.parentId ? (this.parentNameById().get(category.parentId) ?? 'Sin encontrar') : 'Raiz';
+    return category.parentId
+      ? (this.parentNameById().get(category.parentId) ?? 'Sin encontrar')
+      : 'Raiz';
   }
 
   // ---------------------------------------------------------------------------
@@ -83,8 +93,10 @@ export class CategoryList {
   /** Maps backend delete error codes to Spanish copy. */
   private deleteErrorForCode(code?: string): string {
     const messages: Record<string, string> = {
-      CATEGORY_HAS_CHILDREN: 'No se puede eliminar una categoria que tiene subcategorias. Elimina primero las subcategorias.',
-      CATEGORY_HAS_PRODUCTS: 'No se puede eliminar una categoria que tiene productos asociados. Reasigna los productos a otra categoria primero.',
+      CATEGORY_HAS_CHILDREN:
+        'No se puede eliminar una categoria que tiene subcategorias. Elimina primero las subcategorias.',
+      CATEGORY_HAS_PRODUCTS:
+        'No se puede eliminar una categoria que tiene productos asociados. Reasigna los productos a otra categoria primero.',
     };
     return messages[code ?? ''] ?? 'No se pudo eliminar la categoria. Intenta nuevamente.';
   }
@@ -115,11 +127,19 @@ export class CategoryList {
         const detail = this.deleteErrorForCode(code);
         const key = `delete-category|${detail}`;
         const now = Date.now();
-        if (this.lastDeleteError?.key === key && now - this.lastDeleteError.timestamp < DUPLICATE_TOAST_MS) {
+        if (
+          this.lastDeleteError?.key === key &&
+          now - this.lastDeleteError.timestamp < DUPLICATE_TOAST_MS
+        ) {
           return;
         }
         this.lastDeleteError = { key, timestamp: now };
-        this.messageService.add({ severity: 'error', summary: 'Error al eliminar', detail, life: 5000 });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al eliminar',
+          detail,
+          life: 5000,
+        });
       },
     });
   }

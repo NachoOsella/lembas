@@ -70,14 +70,14 @@
             />
           </td>
           <td>
-            <button
-              pButton
-              pRipple
+            <app-button
+              variant="ghost"
+              size="sm"
               icon="pi pi-pencil"
-              class="p-button-text p-button-sm p-button-rounded"
-              [attr.aria-label]="'Editar ' + user.email"
+              [iconOnly]="true"
+              [ariaLabel]="'Editar ' + user.email"
               (click)="editUser.emit(user)"
-            ></button>
+            />
           </td>
         </tr>
       </ng-template>

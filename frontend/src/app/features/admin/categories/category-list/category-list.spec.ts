@@ -16,7 +16,11 @@ describe('CategoryList', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CategoryList, AppSearchBar],
-      providers: [provideNoopAnimations(), MessageService, { provide: CategoryService, useValue: categoryService }],
+      providers: [
+        provideNoopAnimations(),
+        MessageService,
+        { provide: CategoryService, useValue: categoryService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CategoryList);
@@ -45,7 +49,9 @@ describe('CategoryList', () => {
     const emitSpy = vi.spyOn(component.deleted, 'emit');
     fixture.componentRef.setInput('categories', [{ id: 1, name: 'Almacen' }]);
 
-    (component as unknown as { requestDelete: (category: { id: number; name: string }) => void }).requestDelete({
+    (
+      component as unknown as { requestDelete: (category: { id: number; name: string }) => void }
+    ).requestDelete({
       id: 1,
       name: 'Almacen',
     });
