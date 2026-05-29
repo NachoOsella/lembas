@@ -45,7 +45,7 @@ class ProductRepositoryTest {
         Product product = product("Granola repo", "779999000001", category, ProductOnlineStatus.PUBLISHED);
         productRepository.saveAndFlush(product);
 
-        var result = productRepository.searchAdminProducts(null, null, null, PageRequest.of(0, 10));
+        var result = productRepository.searchAdminProducts(null, null, null, PageRequest.of(0, 100));
 
         assertThat(result.getContent())
                 .extracting(Product::getName)
@@ -65,6 +65,119 @@ class ProductRepositoryTest {
         assertThat(result.getContent())
                 .extracting(Product::getName)
                 .containsExactly("Proteina repo");
+    }
+
+    // ---------------------------------------------------------------------------
+    // Store queries
+    // ---------------------------------------------------------------------------
+
+    @Test
+    void searchStoreProductsShouldReturnOnlyPublishedProducts() {
+        Category category = categoryRepository.save(new Category("Repo Store", null));
+        productRepository.save(product("Published item", "779999000010", category, ProductOnlineStatus.PUBLISHED));
+        productRepository.save(product("Draft item", "779999000011", category, ProductOnlineStatus.DRAFT));
+        productRepository.save(product("Paused item", "779999000012", category, ProductOnlineStatus.PAUSED));
+        productRepository.flush();
+
+        var result = productRepository.searchStoreProducts(null, null, PageRequest.of(0, 100));
+
+        assertThat(result.getContent())
+                .extracting(Product::getName)
+                .contains("Published item");
+
+        assertThat(result.getContent())
+                .extracting(Product::getName)
+                .doesNotContain("Draft item", "Paused item");
+    }
+
+    @Test
+    void searchStoreProductsShouldFilterByCategory() {
+        Category cat1 = categoryRepository.save(new Category("Repo Store Cats", null));
+        Category cat2 = categoryRepository.save(new Category("Repo Store Other", null));
+        productRepository.save(product("Cat1 product", "779999000020", cat1, ProductOnlineStatus.PUBLISHED));
+        productRepository.save(product("Cat2 product", "779999000021", cat2, ProductOnlineStatus.PUBLISHED));
+        productRepository.flush();
+
+        var result = productRepository.searchStoreProducts(null, cat1.getId(), PageRequest.of(0, 10));
+
+        assertThat(result.getContent())
+                .extracting(Product::getName)
+                .containsExactly("Cat1 product");
+    }
+
+    @Test
+    void searchStoreProductsShouldNotReturnInactiveProducts() {
+        Category category = categoryRepository.save(new Category("Repo Store Inactive", null));
+        Product inactive = product("Inactive product", "779999000030", category, ProductOnlineStatus.PUBLISHED);
+        inactive.setActive(false);
+        productRepository.save(inactive);
+        productRepository.flush();
+
+        var result = productRepository.searchStoreProducts(null, null, PageRequest.of(0, 100));
+
+        assertThat(result.getContent())
+                .extracting(Product::getName)
+                .doesNotContain("Inactive product");
+    }
+
+    @Test
+    void searchStoreProductsShouldFilterBySearch() {
+        Category category = categoryRepository.save(new Category("Repo Store Search", null));
+        productRepository.save(product("Granola integral", "779999000040", category, ProductOnlineStatus.PUBLISHED));
+        productRepository.save(product("Yerba premium", "779999000041", category, ProductOnlineStatus.PUBLISHED));
+        productRepository.flush();
+
+        var result = productRepository.searchStoreProducts("granola integral", null, PageRequest.of(0, 100));
+
+        assertThat(result.getContent())
+                .extracting(Product::getName)
+                .contains("Granola integral");
+
+        assertThat(result.getContent())
+                .extracting(Product::getName)
+                .doesNotContain("Yerba premium");
+    }
+
+    @Test
+    void searchStoreProductsShouldMatchBarcodeAndCategoryName() {
+        Category category = categoryRepository.save(new Category("Repo Cereales", null));
+        productRepository.save(product("Avena fina", "779999000060", category, ProductOnlineStatus.PUBLISHED));
+        productRepository.flush();
+
+        var barcodeResult = productRepository.searchStoreProducts("779999000060", null, PageRequest.of(0, 100));
+        var categoryResult = productRepository.searchStoreProducts("cereales", null, PageRequest.of(0, 100));
+
+        assertThat(barcodeResult.getContent())
+                .extracting(Product::getName)
+                .contains("Avena fina");
+        assertThat(categoryResult.getContent())
+                .extracting(Product::getName)
+                .contains("Avena fina");
+    }
+
+    @Test
+    void findByIdAndActiveTrueAndOnlineStatusShouldReturnPublishedProduct() {
+        Category category = categoryRepository.save(new Category("Repo Store Detail", null));
+        Product product = product("Published detail", "779999000050", category, ProductOnlineStatus.PUBLISHED);
+        productRepository.save(product);
+        productRepository.flush();
+
+        var result = productRepository.findByIdAndActiveTrueAndOnlineStatus(product.getId(), ProductOnlineStatus.PUBLISHED);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getName()).isEqualTo("Published detail");
+    }
+
+    @Test
+    void findByIdAndActiveTrueAndOnlineStatusShouldReturnEmptyForDraft() {
+        Category category = categoryRepository.save(new Category("Repo Store Detail Draft", null));
+        Product product = product("Draft detail", "779999000051", category, ProductOnlineStatus.DRAFT);
+        productRepository.save(product);
+        productRepository.flush();
+
+        var result = productRepository.findByIdAndActiveTrueAndOnlineStatus(product.getId(), ProductOnlineStatus.PUBLISHED);
+
+        assertThat(result).isEmpty();
     }
 
     /** Creates a product entity for repository tests. */
