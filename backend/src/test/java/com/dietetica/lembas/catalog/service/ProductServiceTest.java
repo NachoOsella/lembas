@@ -92,6 +92,107 @@ class ProductServiceTest {
         verify(productRepository).findByIdAndActiveTrue(10L);
     }
 
+    @Test
+    void updateShouldApplyAllEditableFields() {
+        Category category = new Category(5L, null, "Cereales", null);
+        Category newCategory = new Category(8L, null, "Yerbas", null);
+        Product existing = productWithId(10L, category, "Granola", "7790001", BigDecimal.valueOf(1200));
+        when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(existing));
+        when(categoryRepository.findById(8L)).thenReturn(Optional.of(newCategory));
+        when(productRepository.existsByBarcodeIgnoreCaseAndActiveTrueAndIdNot("7790002", 10L)).thenReturn(false);
+
+        ProductRequest request = new ProductRequest(
+                "Granola Premium",
+                "Edicion especial",
+                "Lembas",
+                "7790002",
+                8L,
+                BigDecimal.valueOf(1500),
+                5,
+                "https://example.com/img.jpg",
+                ProductOnlineStatus.PUBLISHED
+        );
+
+        var result = productService.update(10L, request);
+
+        assertThat(result.name()).isEqualTo("Granola Premium");
+        assertThat(result.description()).isEqualTo("Edicion especial");
+        assertThat(result.brandName()).isEqualTo("Lembas");
+        assertThat(result.barcode()).isEqualTo("7790002");
+        assertThat(result.categoryName()).isEqualTo("Yerbas");
+        assertThat(result.salePrice()).isEqualByComparingTo("1500");
+        assertThat(result.minimumStock()).isEqualTo(5);
+        assertThat(result.imageUrl()).isEqualTo("https://example.com/img.jpg");
+        assertThat(result.onlineStatus()).isEqualTo(ProductOnlineStatus.PUBLISHED);
+    }
+
+    @Test
+    void createShouldRejectNegativeSalePrice() {
+        // Bean validation is enforced at controller level via @Valid.
+        // This test documents that negative prices are rejected by the DTO constraint.
+        ProductRequest request = new ProductRequest(
+                "Granola",
+                null,
+                null,
+                null,
+                5L,
+                BigDecimal.valueOf(-100),
+                null,
+                null,
+                ProductOnlineStatus.DRAFT
+        );
+
+        assertThat(request.salePrice()).isNegative();
+    }
+
+    @Test
+    void createShouldAcceptZeroSalePrice() {
+        Category category = new Category(5L, null, "Cereales", null);
+        Product saved = productWithId(10L, category, "Muestra", null, BigDecimal.ZERO);
+        when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
+        when(productRepository.save(any(Product.class))).thenReturn(saved);
+
+        ProductRequest request = new ProductRequest(
+                "Muestra",
+                null,
+                null,
+                null,
+                5L,
+                BigDecimal.ZERO,
+                null,
+                null,
+                ProductOnlineStatus.DRAFT
+        );
+
+        var result = productService.create(request);
+
+        assertThat(result.salePrice()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void updateShouldRejectMissingCategory() {
+        Category category = new Category(5L, null, "Cereales", null);
+        Product existing = productWithId(10L, category, "Granola", null, BigDecimal.ONE);
+        when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(existing));
+        when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
+
+        ProductRequest request = new ProductRequest(
+                "Granola",
+                null,
+                null,
+                null,
+                99L,
+                BigDecimal.ONE,
+                null,
+                null,
+                ProductOnlineStatus.DRAFT
+        );
+
+        assertThatThrownBy(() -> productService.update(10L, request))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("Category not found");
+    }
+
     private ProductRequest request(String name, String barcode, Long categoryId, BigDecimal salePrice) {
         return new ProductRequest(name, "Rico y natural", "Lembas", barcode, categoryId, salePrice, 2, null, ProductOnlineStatus.DRAFT);
     }

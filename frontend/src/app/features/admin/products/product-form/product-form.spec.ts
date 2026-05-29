@@ -235,4 +235,107 @@ describe('ProductForm', () => {
 
     expect(errorFixture.nativeElement.textContent).toContain('No pudimos cargar el producto');
   });
+
+  // --- Sale price validation ---
+
+  it('rejects negative sale price', async () => {
+    await setup();
+    (component as unknown as { name: { set: (v: string) => void } }).name.set('Test');
+    (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
+    (component as unknown as { salePrice: { set: (v: number) => void } }).salePrice.set(-100);
+
+    (component as unknown as { save: () => void }).save();
+
+    expect(productService.createProduct).not.toHaveBeenCalled();
+  });
+
+  it('accepts zero sale price', async () => {
+    await setup();
+    (component as unknown as { name: { set: (v: string) => void } }).name.set('Free Sample');
+    (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
+    (component as unknown as { salePrice: { set: (v: number) => void } }).salePrice.set(0);
+
+    (component as unknown as { save: () => void }).save();
+
+    expect(productService.createProduct).toHaveBeenCalled();
+  });
+
+  it('accepts positive sale price', async () => {
+    await setup();
+    (component as unknown as { name: { set: (v: string) => void } }).name.set('Granola');
+    (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
+    (component as unknown as { salePrice: { set: (v: number) => void } }).salePrice.set(1200);
+
+    (component as unknown as { save: () => void }).save();
+
+    expect(productService.createProduct).toHaveBeenCalled();
+  });
+
+  it('rejects form when sale price is null', async () => {
+    await setup();
+    (component as unknown as { name: { set: (v: string) => void } }).name.set('Test');
+    (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
+    (component as unknown as { salePrice: { set: (v: number | null) => void } }).salePrice.set(null);
+
+    (component as unknown as { save: () => void }).save();
+
+    expect(productService.createProduct).not.toHaveBeenCalled();
+  });
+
+  // --- Save error handling ---
+
+  it('shows error message when create fails', async () => {
+    await setup();
+    productService.createProduct.mockReturnValue(throwError(() => ({ error: { code: 'PRODUCT_BARCODE_DUPLICATED' } })));
+    (component as unknown as { name: { set: (v: string) => void } }).name.set('Test');
+    (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
+    (component as unknown as { salePrice: { set: (v: number) => void } }).salePrice.set(100);
+
+    (component as unknown as { save: () => void }).save();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('Ya existe un producto activo con ese barcode');
+  });
+
+  it('shows generic error when save fails with unknown code', async () => {
+    await setup();
+    productService.createProduct.mockReturnValue(throwError(() => ({ error: {} })));
+    (component as unknown as { name: { set: (v: string) => void } }).name.set('Test');
+    (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
+    (component as unknown as { salePrice: { set: (v: number) => void } }).salePrice.set(100);
+
+    (component as unknown as { save: () => void }).save();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('No pudimos guardar el producto');
+  });
+
+  it('shows error when update fails', async () => {
+    await setup('9');
+    productService.updateProduct.mockReturnValue(throwError(() => ({ error: { code: 'PRODUCT_NOT_FOUND' } })));
+
+    (component as unknown as { save: () => void }).save();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('El producto ya no existe o fue eliminado');
+  });
+
+  it('clears error on successful retry', async () => {
+    await setup();
+    productService.createProduct.mockReturnValueOnce(throwError(() => ({ error: {} }))).mockReturnValueOnce(of({ id: 1 }));
+    (component as unknown as { name: { set: (v: string) => void } }).name.set('Test');
+    (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
+    (component as unknown as { salePrice: { set: (v: number) => void } }).salePrice.set(100);
+
+    // First save fails
+    (component as unknown as { save: () => void }).save();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('No pudimos guardar el producto');
+
+    // Second save succeeds
+    (component as unknown as { save: () => void }).save();
+    await fixture.whenStable();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/admin/products']);
+  });
 });

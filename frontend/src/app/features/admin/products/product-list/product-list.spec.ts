@@ -52,4 +52,100 @@ describe('ProductList', () => {
 
     expect(productService.deleteProduct).toHaveBeenCalledWith(7);
   });
+
+  // --- Category filter ---
+
+  it('reloads products when category filter changes', () => {
+    (component as unknown as { categoryId: { set: (v: number) => void }; onFilterChange: () => void }).categoryId.set(3);
+    (component as unknown as { onFilterChange: () => void }).onFilterChange();
+
+    expect(productService.listAdminProducts).toHaveBeenLastCalledWith(expect.objectContaining({ categoryId: 3, page: 0 }));
+  });
+
+  it('includes category filter in request params', () => {
+    (component as unknown as { categoryId: { set: (v: number) => void }; onFilterChange: () => void }).categoryId.set(5);
+    (component as unknown as { onFilterChange: () => void }).onFilterChange();
+
+    const calls = productService.listAdminProducts.mock.calls;
+    const lastCall = calls[calls.length - 1][0];
+    expect(lastCall.categoryId).toBe(5);
+  });
+
+  // --- Online status filter ---
+
+  it('reloads products when online status filter changes', () => {
+    (component as unknown as { onlineStatus: { set: (v: string) => void }; onFilterChange: () => void }).onlineStatus.set('PUBLISHED');
+    (component as unknown as { onFilterChange: () => void }).onFilterChange();
+
+    expect(productService.listAdminProducts).toHaveBeenLastCalledWith(expect.objectContaining({ onlineStatus: 'PUBLISHED', page: 0 }));
+  });
+
+  it('includes online status filter in request params', () => {
+    (component as unknown as { onlineStatus: { set: (v: string) => void }; onFilterChange: () => void }).onlineStatus.set('DRAFT');
+    (component as unknown as { onFilterChange: () => void }).onFilterChange();
+
+    const calls = productService.listAdminProducts.mock.calls;
+    const lastCall = calls[calls.length - 1][0];
+    expect(lastCall.onlineStatus).toBe('DRAFT');
+  });
+
+  // --- Pagination ---
+
+  it('reloads products when page changes', () => {
+    (component as unknown as { onPageChange: (event: { first: number; rows: number }) => void }).onPageChange({ first: 20, rows: 10 });
+
+    expect(productService.listAdminProducts).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
+  });
+
+  it('updates first and rows signals on page change', () => {
+    (component as unknown as { onPageChange: (event: { first: number; rows: number }) => void }).onPageChange({ first: 30, rows: 20 });
+
+    const comp = component as unknown as { first: () => number; rows: () => number };
+    expect(comp.first()).toBe(30);
+    expect(comp.rows()).toBe(20);
+  });
+
+  it('resets to first page when search changes', () => {
+    (component as unknown as { first: { set: (v: number) => void }; onPageChange: (event: { first: number; rows: number }) => void }).onPageChange({ first: 20, rows: 10 });
+    (component as unknown as { onSearch: (query: string) => void }).onSearch('yerba');
+
+    const calls = productService.listAdminProducts.mock.calls;
+    const lastCall = calls[calls.length - 1][0];
+    expect(lastCall.page).toBe(0);
+  });
+
+  // --- Sorting ---
+
+  it('reloads products when sort changes', () => {
+    (component as unknown as { onSort: (event: { field: string; order: number }) => void }).onSort({ field: 'salePrice', order: -1 });
+
+    const calls = productService.listAdminProducts.mock.calls;
+    const lastCall = calls[calls.length - 1][0];
+    expect(lastCall.sort).toBe('salePrice,desc');
+  });
+
+  it('resets to first page on sort change', () => {
+    (component as unknown as { first: { set: (v: number) => void }; onSort: (event: { field: string; order: number }) => void }).onSort({ field: 'name', order: 1 });
+
+    const calls = productService.listAdminProducts.mock.calls;
+    const lastCall = calls[calls.length - 1][0];
+    expect(lastCall.page).toBe(0);
+  });
+
+  // --- Combined filters ---
+
+  it('combines search, category and status filters', () => {
+    (component as unknown as { searchQuery: { set: (v: string) => void }; categoryId: { set: (v: number) => void }; onlineStatus: { set: (v: string) => void }; refresh: () => void }).searchQuery.set('granola');
+    (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(2);
+    (component as unknown as { onlineStatus: { set: (v: string) => void } }).onlineStatus.set('PUBLISHED');
+    (component as unknown as { refresh: () => void }).refresh();
+
+    const calls = productService.listAdminProducts.mock.calls;
+    const lastCall = calls[calls.length - 1][0];
+    expect(lastCall).toEqual(expect.objectContaining({
+      search: 'granola',
+      categoryId: 2,
+      onlineStatus: 'PUBLISHED',
+    }));
+  });
 });
