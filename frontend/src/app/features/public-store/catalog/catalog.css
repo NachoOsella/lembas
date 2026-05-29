@@ -2,6 +2,13 @@
   display: block;
 }
 
+/* Design-system card shadow token */
+.catalog-page__card {
+  box-shadow:
+    0 0 0.5px rgba(0, 0, 0, 0.14),
+    0 1px 1px rgba(0, 0, 0, 0.24);
+}
+
 .catnav__pill:focus-visible,
 .catalog-page__card a:focus-visible {
   outline: 2px solid #2f8d72;

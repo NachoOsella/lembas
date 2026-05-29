@@ -1,18 +1,18 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
-import { Ripple } from 'primeng/ripple';
 
 import { Cart } from '../../../core/services/cart';
 import { CatalogService } from '../../../core/services/catalog';
 import { ProductSummary } from '../../../shared/models/product';
-import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
+import { AppBadge } from '../../../shared/components/app-badge/app-badge';
+import { AppButton } from '../../../shared/components/app-button/app-button';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
 
 @Component({
   selector: 'app-product-detail',
-  imports: [RouterLink, ButtonDirective, Ripple, LoadingSpinner, ErrorAlert],
+  imports: [RouterLink, AppBadge, AppButton, ErrorAlert, LoadingSpinner],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css',
 })

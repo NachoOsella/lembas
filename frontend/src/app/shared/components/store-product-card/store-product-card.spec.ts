@@ -90,31 +90,38 @@ describe('StoreProductCard', () => {
   it('should not show stock badge when stock is healthy (> 5)', async () => {
     create(PRODUCT);
     await fixture.whenStable();
-    const badge = fixture.nativeElement.querySelector('.store-product-card__stock');
-    expect(badge).toBeNull();
+    // Only the category badge should be present, no stock badge
+    const badges = fixture.nativeElement.querySelectorAll('app-badge');
+    expect(badges.length).toBe(1); // category only
   });
 
   it('should show low stock badge when stock is 1-5', async () => {
     create(PRODUCT_LOW_STOCK);
     await fixture.whenStable();
-    const badge = fixture.nativeElement.querySelector('.store-product-card__stock--low');
-    expect(badge).toBeTruthy();
-    expect(badge.textContent).toContain('3 unidades');
+    // Should have category badge + warning stock badge
+    const badges = fixture.nativeElement.querySelectorAll('app-badge');
+    expect(badges.length).toBe(2);
+    // Check the full card text contains the low stock message
+    const text = fixture.nativeElement.textContent ?? '';
+    expect(text).toContain('3 uds');
   });
 
   it('should show out-of-stock badge when stock is 0', async () => {
     create(PRODUCT_OUT_OF_STOCK);
     await fixture.whenStable();
-    const badge = fixture.nativeElement.querySelector('.store-product-card__stock--out');
-    expect(badge).toBeTruthy();
-    expect(badge.textContent).toContain('Sin stock');
+    // Should have category badge + danger stock badge
+    const badges = fixture.nativeElement.querySelectorAll('app-badge');
+    expect(badges.length).toBe(2);
+    const stockBadge = badges[1];
+    expect(stockBadge.textContent).toContain('Sin stock');
   });
 
   it('should not show stock badge when availableStock is undefined', async () => {
     create(PRODUCT_NO_STOCK_INFO);
     await fixture.whenStable();
-    const badge = fixture.nativeElement.querySelector('.store-product-card__stock');
-    expect(badge).toBeNull();
+    // Only the category badge should be present
+    const badges = fixture.nativeElement.querySelectorAll('app-badge');
+    expect(badges.length).toBe(1);
   });
 
   // --- Add-to-cart button tests ---
