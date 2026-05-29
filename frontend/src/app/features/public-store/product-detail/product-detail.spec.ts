@@ -51,6 +51,18 @@ function setupActivatedRoute(id: string | number = '1'): unknown {
 function setupCatalogService(product: ProductSummary = MOCK_PRODUCT): unknown {
   return {
     getProductDetail: vi.fn().mockReturnValue(of(product)),
+    getRelatedProducts: vi.fn().mockReturnValue(
+      of({
+        content: [],
+        totalElements: 0,
+        totalPages: 0,
+        number: 0,
+        size: 6,
+        first: true,
+        last: true,
+        empty: true,
+      }),
+    ),
   };
 }
 
@@ -140,6 +152,9 @@ describe('ProductDetail', () => {
           provide: CatalogService,
           useValue: {
             getProductDetail: vi.fn().mockReturnValue(throwError(() => new Error('fail'))),
+            getRelatedProducts: vi.fn().mockReturnValue(
+              of({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 6, first: true, last: true, empty: true }),
+            ),
           },
         },
       ],
@@ -176,7 +191,7 @@ describe('ProductDetail', () => {
   it('should show generic availability when availableStock is undefined', async () => {
     await configure({ ...MOCK_PRODUCT, availableStock: undefined } as ProductSummary);
     const text = fixture.nativeElement.textContent ?? '';
-    expect(text).toContain('Disponible para retiro en sucursal');
+    expect(text).toContain('Disponible para retiro');
   });
 
   // --- Add-to-cart tests ---

@@ -9,10 +9,11 @@ import { AppBadge } from '../../../shared/components/app-badge/app-badge';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
+import { StoreProductCard } from '../../../shared/components/store-product-card/store-product-card';
 
 @Component({
   selector: 'app-product-detail',
-  imports: [RouterLink, AppBadge, AppButton, ErrorAlert, LoadingSpinner],
+  imports: [RouterLink, AppBadge, AppButton, ErrorAlert, LoadingSpinner, StoreProductCard],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css',
 })
@@ -26,6 +27,9 @@ export class ProductDetail implements OnInit {
   protected readonly loading = signal(true);
   protected readonly error = signal(false);
   protected readonly quantity = signal(1);
+
+  /** Related products from the same category (excludes current product). */
+  protected readonly relatedProducts = signal<ProductSummary[]>([]);
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -45,6 +49,7 @@ export class ProductDetail implements OnInit {
       next: (p) => {
         this.product.set(p);
         this.loading.set(false);
+        this.loadRelatedProducts(p);
       },
       error: () => {
         this.error.set(true);
@@ -55,6 +60,20 @@ export class ProductDetail implements OnInit {
           detail: 'No se pudo cargar el producto.',
         });
       },
+    });
+  }
+
+  /** Load products from the same category, excluding the current one. */
+  private loadRelatedProducts(current: ProductSummary): void {
+    if (!current.categoryId) return;
+
+    this.catalogService.getRelatedProducts(current.categoryId, current.id, 6).subscribe({
+      next: (res) => {
+        // Filter out the current product in case the backend includes it
+        const related = res.content.filter((p) => p.id !== current.id).slice(0, 6);
+        this.relatedProducts.set(related);
+      },
+      // Silently ignore — related products are non-critical
     });
   }
 

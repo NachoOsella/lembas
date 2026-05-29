@@ -121,4 +121,39 @@ export class CatalogService {
     }
     return this.http.get<ProductSummary>(`${this.productsUrl}/${id}`, { params });
   }
+
+  /**
+   * Returns published products in the same category, excluding the current product.
+   * Used by the product detail page to show related products.
+   *
+   * @param categoryId the category to filter by
+   * @param excludeId  the current product ID to exclude
+n   * @param size       max number of related products (default 6)
+   * @returns an observable emitting the paginated response
+   */
+  getRelatedProducts(categoryId: number, excludeId: number, size = 6): Observable<{
+    content: ProductSummary[];
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
+    first: boolean;
+    last: boolean;
+    empty: boolean;
+  }> {
+    let params = new HttpParams()
+      .set('categoryId', categoryId)
+      .set('page', 0)
+      .set('size', size + 10); // fetch extra to account for exclusions
+    return this.http.get<{
+      content: ProductSummary[];
+      totalElements: number;
+      totalPages: number;
+      number: number;
+      size: number;
+      first: boolean;
+      last: boolean;
+      empty: boolean;
+    }>(this.productsUrl, { params });
+  }
 }

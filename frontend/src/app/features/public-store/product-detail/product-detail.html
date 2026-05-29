@@ -1,4 +1,4 @@
-<div class="product-detail-page min-h-screen bg-[#f6ead6] pb-20 text-[rgba(0,0,0,0.87)]">
+<div class="product-detail-page min-h-screen bg-[#f6ead6] text-[rgba(0,0,0,0.87)]">
   <!-- Breadcrumb -->
   <nav class="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8" aria-label="Migas de pan">
     <a
@@ -25,130 +25,227 @@
       />
     </div>
   } @else if (product(); as p) {
+    <!-- ═══════════════════════════════════════════════════════════════
+         PRODUCT HERO: image + info side by side
+         ═══════════════════════════════════════════════════════════════ -->
     <article class="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
-      <div class="grid gap-10 lg:grid-cols-[1fr_1fr] lg:gap-16">
-        <!-- Image -->
-        <div
-          class="relative overflow-hidden rounded-xl bg-white shadow-card"
-        >
-          <div
-            class="pointer-events-none absolute inset-0 opacity-50"
-            style="
-              background-image:
-                radial-gradient(circle at 20% 30%, rgba(242, 157, 82, 0.06) 0%, transparent 40%),
-                radial-gradient(circle at 80% 70%, rgba(47, 141, 114, 0.05) 0%, transparent 40%);
-            "
-            aria-hidden="true"
-          ></div>
-          <div class="flex aspect-square items-center justify-center p-8 sm:p-12">
-            @if (p.imageUrl) {
-              <img
-                [src]="p.imageUrl"
-                [alt]="p.name"
-                class="h-full w-full object-contain drop-shadow-lg"
-              />
-            } @else {
+      <div class="product-detail-hero rounded-2xl bg-white p-6 sm:p-8 lg:p-10">
+        <div class="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12 xl:gap-16">
+          <!-- ── Image ──────────────────────────────────────────────── -->
+          <div class="product-detail-hero__image-wrap">
+            <div class="product-detail-hero__image rounded-xl overflow-hidden bg-[#faf6ef]">
               <div
-                class="flex h-24 w-24 items-center justify-center rounded-full bg-[#f6ead6] text-[rgba(0,0,0,0.15)]"
+                class="pointer-events-none absolute inset-0 opacity-40"
+                style="
+                  background-image:
+                    radial-gradient(circle at 25% 25%, rgba(242, 157, 82, 0.08) 0%, transparent 50%),
+                    radial-gradient(circle at 75% 75%, rgba(47, 141, 114, 0.06) 0%, transparent 50%);
+                "
+                aria-hidden="true"
+              ></div>
+              @if (p.imageUrl) {
+                <img
+                  [src]="p.imageUrl"
+                  [alt]="p.name"
+                  class="relative z-[1] h-full w-full object-contain p-8 sm:p-12"
+                />
+              } @else {
+                <div
+                  class="relative z-[1] flex h-40 w-full items-center justify-center text-[rgba(0,0,0,0.12)]"
+                >
+                  <i class="pi pi-image text-6xl" aria-hidden="true"></i>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- ── Info ───────────────────────────────────────────────── -->
+          <div class="flex flex-col">
+            <!-- Category eyebrow -->
+            <a
+              [routerLink]="['/store/catalog']"
+              [queryParams]="{ categoryId: p.categoryId }"
+              class="self-start rounded-full bg-[#d7eadf]/50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#2f8d72] transition hover:bg-[#d7eadf]"
+            >
+              {{ p.categoryName }}
+            </a>
+
+            <!-- Product name -->
+            <h1
+              class="mt-4 text-3xl font-semibold leading-tight tracking-tight text-[rgba(0,0,0,0.87)] sm:text-4xl lg:text-[2.75rem]"
+            >
+              {{ p.name }}
+            </h1>
+
+            <!-- Brand -->
+            @if (p.brandName) {
+              <p class="mt-2 text-sm font-medium text-[rgba(0,0,0,0.4)]">
+                {{ p.brandName }}
+              </p>
+            }
+
+            <!-- Price -->
+            <div class="mt-6 flex items-baseline gap-3">
+              <strong class="text-4xl font-semibold tracking-tight text-[rgba(0,0,0,0.87)] sm:text-5xl">
+                ${{ p.salePrice.toLocaleString('es-AR') }}
+              </strong>
+            </div>
+
+            <!-- Description -->
+            @if (p.description) {
+              <p class="mt-5 max-w-lg text-[15px] leading-relaxed text-[rgba(0,0,0,0.58)]">
+                {{ p.description }}
+              </p>
+            }
+
+            <!-- Divider -->
+            <div class="my-6 h-px bg-[#f0e6d3]"></div>
+
+            <!-- Stock status -->
+            <div class="mb-6">
+              @if (isOutOfStock()) {
+                <app-badge tone="danger" icon="pi pi-times-circle">Sin stock disponible</app-badge>
+              } @else if (isLowStock()) {
+                <app-badge tone="warning" icon="pi pi-exclamation-circle">
+                  Ultimas {{ p.availableStock }} unidades
+                </app-badge>
+              } @else if (p.availableStock != null) {
+                <app-badge tone="success" icon="pi pi-check-circle">
+                  {{ p.availableStock }} unidades disponibles
+                </app-badge>
+              } @else {
+                <app-badge tone="success" icon="pi pi-check-circle">
+                  Disponible para retiro
+                </app-badge>
+              }
+            </div>
+
+            <!-- Quantity + Add to cart -->
+            <div class="flex flex-wrap items-center gap-4">
+              @if (!isOutOfStock()) {
+                <div class="flex items-center rounded-full border border-[#e7e7e7] bg-white shadow-sm">
+                  <button
+                    type="button"
+                    class="flex h-12 w-12 items-center justify-center rounded-l-full text-[rgba(0,0,0,0.5)] transition hover:bg-[#f6ead6] hover:text-[#075f36]"
+                    (click)="decrement()"
+                    aria-label="Disminuir cantidad"
+                  >
+                    <i class="pi pi-minus text-xs" aria-hidden="true"></i>
+                  </button>
+                  <span
+                    class="flex h-12 w-14 items-center justify-center text-base font-bold text-[rgba(0,0,0,0.87)]"
+                  >
+                    {{ quantity() }}
+                  </span>
+                  <button
+                    type="button"
+                    class="flex h-12 w-12 items-center justify-center rounded-r-full text-[rgba(0,0,0,0.5)] transition hover:bg-[#f6ead6] hover:text-[#075f36]"
+                    (click)="increment()"
+                    aria-label="Aumentar cantidad"
+                  >
+                    <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+                  </button>
+                </div>
+              }
+
+              <app-button
+                [variant]="isOutOfStock() ? 'secondary' : 'primary'"
+                [disabled]="isOutOfStock()"
+                icon="pi pi-shopping-bag"
+                size="lg"
+                (click)="addToCart()"
               >
-                <i class="pi pi-image text-4xl" aria-hidden="true"></i>
-              </div>
-            }
-          </div>
-        </div>
+                {{ isOutOfStock() ? 'Sin stock' : 'Agregar al pedido' }}
+              </app-button>
+            </div>
 
-        <!-- Info -->
-        <div class="flex flex-col py-2 lg:py-8">
-          <span class="text-xs font-bold uppercase tracking-wider text-[#2f8d72]">
-            {{ p.categoryName }}
-          </span>
-
-          <h1
-            class="mt-3 text-4xl font-semibold leading-tight tracking-tight text-[rgba(0,0,0,0.87)] sm:text-5xl"
-          >
-            {{ p.name }}
-          </h1>
-
-          @if (p.brandName) {
-            <p class="mt-2 text-sm font-semibold text-[rgba(0,0,0,0.45)]">
-              {{ p.brandName }}
-            </p>
-          }
-
-          <div class="mt-8 flex items-baseline gap-3">
-            <span class="text-xs font-bold uppercase tracking-wider text-[rgba(0,0,0,0.4)]"
-              >Precio</span
-            >
-            <strong class="text-4xl font-semibold tracking-tight text-[rgba(0,0,0,0.87)]">
-              ${{ p.salePrice.toLocaleString('es-AR') }}
-            </strong>
-          </div>
-
-          @if (p.description) {
-            <p class="mt-8 max-w-lg text-[15px] font-medium leading-7 text-[rgba(0,0,0,0.6)]">
-              {{ p.description }}
-            </p>
-          }
-
-          <!-- Stock info using design-system badges -->
-          <div class="mt-6">
-            @if (isOutOfStock()) {
-              <app-badge tone="danger" icon="pi pi-times-circle">Sin stock disponible</app-badge>
-            } @else if (isLowStock()) {
-              <app-badge tone="warning" icon="pi pi-exclamation-circle">
-                Ultimas {{ p.availableStock }} unidades disponibles
-              </app-badge>
-            } @else if (p.availableStock != null) {
-              <app-badge tone="success" icon="pi pi-check-circle">
-                {{ p.availableStock }} unidades disponibles para retiro en sucursal
-              </app-badge>
-            } @else {
-              <app-badge tone="success" icon="pi pi-check-circle">
-                Disponible para retiro en sucursal
-              </app-badge>
-            }
-          </div>
-
-          <div class="mt-8 flex flex-wrap items-center gap-4">
-            <!-- Quantity selector -->
-            @if (!isOutOfStock()) {
-              <div class="flex items-center rounded-full border border-[#e7e7e7] bg-white shadow-sm">
-                <button
-                  type="button"
-                  class="flex h-11 w-11 items-center justify-center rounded-l-full text-[rgba(0,0,0,0.5)] transition hover:bg-[#f6ead6] hover:text-[#075f36]"
-                  (click)="decrement()"
-                  aria-label="Disminuir cantidad"
-                >
-                  <i class="pi pi-minus text-xs" aria-hidden="true"></i>
-                </button>
-                <span
-                  class="flex h-11 w-12 items-center justify-center text-[15px] font-bold text-[rgba(0,0,0,0.87)]"
-                >
-                  {{ quantity() }}
+            <!-- Trust signals -->
+            <div class="mt-8 flex flex-col gap-3">
+              <div class="flex items-center gap-3 text-sm text-[rgba(0,0,0,0.5)]">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf]/50 text-[#2f8d72]">
+                  <i class="pi pi-map-marker text-xs" aria-hidden="true"></i>
                 </span>
-                <button
-                  type="button"
-                  class="flex h-11 w-11 items-center justify-center rounded-r-full text-[rgba(0,0,0,0.5)] transition hover:bg-[#f6ead6] hover:text-[#075f36]"
-                  (click)="increment()"
-                  aria-label="Aumentar cantidad"
-                >
-                  <i class="pi pi-plus text-xs" aria-hidden="true"></i>
-                </button>
+                Retiro sin filas en sucursal
               </div>
-            }
-
-            <!-- Add-to-cart button using design-system AppButton -->
-            <app-button
-              [variant]="isOutOfStock() ? 'secondary' : 'primary'"
-              [disabled]="isOutOfStock()"
-              icon="pi pi-shopping-bag"
-              (click)="addToCart()"
-            >
-              {{ isOutOfStock() ? 'Sin stock' : 'Agregar al pedido' }}
-            </app-button>
+              <div class="flex items-center gap-3 text-sm text-[rgba(0,0,0,0.5)]">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf]/50 text-[#2f8d72]">
+                  <i class="pi pi-verified text-xs" aria-hidden="true"></i>
+                </span>
+                Productos curados por expertos
+              </div>
+              <div class="flex items-center gap-3 text-sm text-[rgba(0,0,0,0.5)]">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf]/50 text-[#2f8d72]">
+                  <i class="pi pi-shield text-xs" aria-hidden="true"></i>
+                </span>
+                Pago seguro con Mercado Pago
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </article>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         PICKUP INFO BAND (dark-green)
+         ═══════════════════════════════════════════════════════════════ -->
+    <section class="mt-10 w-full bg-[#075f36]">
+      <div class="mx-auto flex max-w-[1440px] flex-col items-center gap-6 px-4 py-10 text-center sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-12 sm:text-left lg:px-8">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-50/60">
+            Como funciona
+          </p>
+          <h2 class="mt-2 text-2xl font-semibold text-white sm:text-3xl">
+            Compra online, retira en sucursal
+          </h2>
+          <p class="mt-2 max-w-lg text-[15px] leading-relaxed text-white/70">
+            Armá tu pedido desde casa y pasá a buscarlo cuando te quede comodo. Sin filas, sin espera.
+          </p>
+        </div>
+        <a
+          routerLink="/store/catalog"
+          class="shrink-0 rounded-full border border-white bg-white px-8 py-3.5 text-sm font-bold text-[#075f36] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+        >
+          Explorar catalogo
+          <i class="pi pi-arrow-right ml-2" aria-hidden="true"></i>
+        </a>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         RELATED PRODUCTS (same category)
+         ═══════════════════════════════════════════════════════════════ -->
+    @if (relatedProducts().length > 0) {
+      <section class="mx-auto max-w-[1440px] px-4 py-16 sm:px-6 lg:px-8">
+        <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">
+              Segui explorando
+            </p>
+            <h2 class="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+              Mas de {{ p.categoryName }}
+            </h2>
+          </div>
+          <a
+            [routerLink]="['/store/catalog']"
+            [queryParams]="{ categoryId: p.categoryId }"
+            class="text-sm font-bold text-[#2f8d72] transition hover:text-[#075f36]"
+          >
+            Ver todo <i class="pi pi-arrow-right ml-1" aria-hidden="true"></i>
+          </a>
+        </div>
+
+        <div
+          class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+          role="list"
+          aria-label="Productos relacionados"
+        >
+          @for (related of relatedProducts(); track related.id) {
+            <div role="listitem">
+              <app-store-product-card [product]="related" />
+            </div>
+          }
+        </div>
+      </section>
+    }
   }
 </div>
