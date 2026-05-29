@@ -1,0 +1,12 @@
+<section class="form-section">
+  <div class="form-section__heading">
+    <span class="form-section__index">{{ index() }}</span>
+    <div>
+      <h2 class="form-section__title">{{ title() }}</h2>
+      @if (description()) {
+        <p class="form-section__description">{{ description() }}</p>
+      }
+    </div>
+  </div>
+  <ng-content />
+</section>

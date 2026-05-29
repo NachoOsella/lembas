@@ -8,6 +8,8 @@ import { CategoryService } from '../../../../core/services/category';
 import { CategoryDto, CategoryRequest } from '../../../../shared/models/category';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppModal } from '../../../../shared/components/app-modal/app-modal';
+import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
+import { FormSection } from '../../../../shared/components/form-section/form-section';
 
 interface ParentOption {
   readonly label: string;
@@ -17,7 +19,7 @@ interface ParentOption {
 /** Modal form for creating and editing product categories with realtime validation. */
 @Component({
   selector: 'app-category-form',
-  imports: [AppButton, AppModal, FormsModule, InputText, Select],
+  imports: [AppButton, AppModal, ErrorAlert, FormSection, FormsModule, InputText, Select],
   templateUrl: './category-form.html',
   styleUrl: './category-form.css',
 })

@@ -15,10 +15,11 @@ import { ButtonDirective, ButtonLabel } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 
 import { ApiErrorResponse, AuthService, RegisterRequest } from '../../../core/services/auth';
+import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 
 @Component({
   selector: 'app-register',
-  imports: [FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
+  imports: [ErrorAlert, FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })
@@ -136,7 +137,7 @@ export class Register {
    */
   private buildBackendErrorMessage(err: unknown): string | null {
     if (!(err instanceof HttpErrorResponse)) {
-      return 'Error al registrar. Intente nuevamente';
+      return 'Error al registrar. Intenta nuevamente.';
     }
 
     if (err.status === 0 || err.status >= 500) {
@@ -150,7 +151,7 @@ export class Register {
       case 'VALIDATION_ERROR':
         return this.formatValidationError(apiError);
       default:
-        return 'Error al registrar. Intente nuevamente';
+        return 'Error al registrar. Intenta nuevamente.';
     }
   }
 
@@ -160,14 +161,14 @@ export class Register {
   private formatValidationError(apiError: ApiErrorResponse): string {
     const fieldErrors = apiError.details?.fieldErrors ?? [];
     if (fieldErrors.length === 0) {
-      return 'Verifique los datos ingresados';
+      return 'Verifica los datos ingresados.';
     }
 
     const details = fieldErrors
       .map((fieldError) => `${this.translateFieldName(fieldError.field)}: ${fieldError.message}`)
       .join('. ');
 
-    return `Verifique los datos ingresados. ${details}`;
+    return `Verifica los datos ingresados. ${details}`;
   }
 
   /**

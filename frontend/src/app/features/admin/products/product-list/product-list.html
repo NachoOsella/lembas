@@ -1,0 +1,128 @@
+<div class="products-page">
+  <section class="products-page__hero" aria-labelledby="products-title">
+    <div class="products-page__hero-copy">
+      <p class="products-page__eyebrow">Catalogo</p>
+      <h1 id="products-title">Productos</h1>
+      <p>Gestion de precios, categorias, imagenes y estado online de la tienda.</p>
+    </div>
+
+    <div class="products-page__hero-actions">
+      <app-button icon="pi pi-plus" routerLink="/admin/products/new"> Nuevo producto </app-button>
+    </div>
+  </section>
+
+  @if (error()) {
+    <app-error-alert variant="inline" [title]="error()" message="">
+      <app-button variant="secondary" size="sm" (click)="refresh()">Reintentar</app-button>
+    </app-error-alert>
+  }
+
+  <section class="products-page__directory" aria-label="Directorio de productos del catalogo">
+    <app-data-table
+      [data]="products()"
+      [columns]="columns"
+      [loading]="loading()"
+      [sortable]="true"
+      [paginated]="true"
+      [lazy]="true"
+      [totalRecords]="totalRecords()"
+      [first]="first()"
+      [rows]="rows()"
+      [rowsPerPageOptions]="[10, 20, 30]"
+      [sortField]="sortField()"
+      [sortOrder]="sortOrder()"
+      emptyTitle="No hay productos"
+      emptyDescription="Crea el primer producto para empezar a publicar el catalogo."
+      (pageChange)="onPageChange($event)"
+      (sortChange)="onSort($event)"
+    >
+      <ng-template #toolbar>
+        <div class="table-toolbar__info">
+          <p class="table-toolbar__kicker">Catalogo comercial</p>
+          <h2 class="table-toolbar__title">Productos disponibles</h2>
+        </div>
+        <div class="table-toolbar__actions products-filters">
+          <app-search-bar
+            [(value)]="searchQuery"
+            placeholder="Buscar por nombre o barcode..."
+            (search)="onSearch($event)"
+            (clear)="onSearchClear()"
+          />
+          <p-select
+            [options]="categoryOptions()"
+            [ngModel]="categoryId()"
+            (ngModelChange)="categoryId.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            class="products-filters__select"
+            [style]="{ width: '13rem' }"
+            appendTo="body"
+            (onChange)="onFilterChange()"
+          />
+          <p-select
+            [options]="statusOptions"
+            [ngModel]="onlineStatus()"
+            (ngModelChange)="onlineStatus.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            class="products-filters__select"
+            [style]="{ width: '12rem' }"
+            appendTo="body"
+            (onChange)="onFilterChange()"
+          />
+        </div>
+      </ng-template>
+
+      <ng-template #body let-product>
+        <tr>
+          <td>
+            <div class="product-name-cell">
+              <img [src]="product.imageUrl || '/assets/product-placeholder.svg'" [alt]="product.name" class="product-thumb" />
+              <div>
+                <span class="product-name">{{ product.name }}</span>
+                <small>{{ product.brandName || 'Sin marca' }} · {{ product.barcode || 'Sin barcode' }}</small>
+              </div>
+            </div>
+          </td>
+          <td>{{ product.categoryName }}</td>
+          <td>{{ formatPrice(product.salePrice) }}</td>
+          <td>
+            <app-badge [tone]="statusBadge(product.onlineStatus).tone">
+              {{ statusBadge(product.onlineStatus).label }}
+            </app-badge>
+          </td>
+          <td>
+            <div class="product-actions">
+              <button
+                pButton
+                pRipple
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-rounded"
+                [routerLink]="['/admin/products', product.id, 'edit']"
+                [attr.aria-label]="'Editar ' + product.name"
+              ></button>
+              <button
+                pButton
+                pRipple
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-rounded p-button-danger"
+                [attr.aria-label]="'Eliminar ' + product.name"
+                (click)="requestDelete(product)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </app-data-table>
+  </section>
+</div>
+
+<app-confirm-dialog
+  [visible]="!!productToDelete()"
+  title="Eliminar producto"
+  [message]="'Vas a eliminar ' + (productToDelete()?.name ?? 'este producto') + ' del catalogo activo.'"
+  confirmLabel="Eliminar"
+  [destructive]="true"
+  (confirmed)="confirmDelete()"
+  (cancelled)="productToDelete.set(null)"
+/>

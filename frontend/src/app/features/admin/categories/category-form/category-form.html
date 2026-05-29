@@ -1,20 +1,10 @@
 <app-modal [(visible)]="dialogVisible" [title]="dialogTitle()" [width]="'min(94vw, 36rem)'">
   <form class="category-form" (submit)="onSubmit(); $event.preventDefault()">
     @if (dialogError()) {
-      <div class="category-form__alert" role="alert" data-testid="category-dialog-error">
-        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
-        <span>{{ dialogError() }}</span>
-      </div>
+      <app-error-alert variant="inline" [title]="dialogError()" message="" />
     }
 
-    <div class="category-form__section">
-      <div class="category-form__section-heading">
-        <span class="category-form__section-index">01</span>
-        <div>
-          <h3>Datos de categoria</h3>
-          <p>Nombre publico, jerarquia y descripcion para la gondola digital.</p>
-        </div>
-      </div>
+    <app-form-section [index]="1" title="Datos de categoria" description="Nombre publico, jerarquia y descripcion para la gondola digital.">
 
       <div class="category-form__grid">
         <div class="category-form__field category-form__field--wide">
@@ -83,7 +73,7 @@
           <small class="category-form__hint">Opcional. Ayuda a diferenciar categorias similares.</small>
         </div>
       </div>
-    </div>
+    </app-form-section>
 
     <div class="category-form__actions">
       <app-button variant="secondary" type="button" (click)="dialogVisible.set(false)">

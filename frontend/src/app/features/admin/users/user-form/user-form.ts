@@ -10,6 +10,8 @@ import { UserService } from '../../../../core/services/user';
 import { Branch, InternalRole, UserResponse } from '../../../../shared/models/user';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppModal } from '../../../../shared/components/app-modal/app-modal';
+import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
+import { FormSection } from '../../../../shared/components/form-section/form-section';
 
 /** Options for the role selector (internal roles only). */
 const ROLE_OPTIONS: { label: string; value: InternalRole }[] = [
@@ -34,7 +36,7 @@ const ROLE_ICON: Record<InternalRole, string> = {
 
 @Component({
   selector: 'app-user-form',
-  imports: [FormsModule, Select, InputText, AppButton, AppModal],
+  imports: [FormsModule, Select, InputText, AppButton, AppModal, ErrorAlert, FormSection],
   templateUrl: './user-form.html',
   styleUrl: './user-form.css',
 })
@@ -293,7 +295,7 @@ export class UserForm {
 
   private buildErrorMessage(err: unknown): string | null {
     if (!(err instanceof HttpErrorResponse)) {
-      return 'No se pudo completar la operacion. Intente nuevamente.';
+      return 'No se pudo completar la operacion. Intenta nuevamente.';
     }
     if (err.status === 0 || err.status >= 500) return null;
 
@@ -356,7 +358,7 @@ export class UserForm {
       case 409:
         return 'La operacion no se puede completar por una regla de negocio.';
       default:
-        return 'No se pudo completar la operacion. Intente nuevamente.';
+        return 'No se pudo completar la operacion. Intenta nuevamente.';
     }
   }
 

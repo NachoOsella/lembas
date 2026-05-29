@@ -81,14 +81,12 @@
 
         <!-- General API error -->
         @if (generalError()) {
-          <div
-            class="mb-5 flex items-center gap-2 rounded-2xl border border-red bg-red/5 px-4 py-3 text-sm text-red"
-            role="alert"
-            data-testid="general-error"
-          >
-            <i class="pi pi-times-circle shrink-0 text-sm" aria-hidden="true"></i>
-            <span>{{ generalError() }}</span>
-          </div>
+          <app-error-alert
+            variant="inline"
+            [title]="generalError()"
+            message=""
+            testId="general-error"
+          />
         }
 
         <form (submit)="onSubmit(); $event.preventDefault()" class="grid gap-4" novalidate>

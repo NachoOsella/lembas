@@ -298,6 +298,19 @@
         </div>
       </div>
     </div>
+    <div class="showcase-row">
+      <div class="showcase-spot showcase-spot--full">
+        <span class="showcase-spot-label">FormSection</span>
+        <div class="grid gap-4" style="max-width: 40rem;">
+          <app-form-section [index]="1" title="Seccion de ejemplo" description="Wrapper generico para forms con indice numerico, titulo y descripcion.">
+            <p style="margin:0; color: var(--color-text-muted); font-size: 0.85rem;">Contenido de la seccion proyectado via ng-content.</p>
+          </app-form-section>
+          <app-form-section [index]="2" title="Segunda seccion">
+            <p style="margin:0; color: var(--color-text-muted); font-size: 0.85rem;">Sin descripcion, solo titulo.</p>
+          </app-form-section>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- ════════════════════════════════════════════════════════════════ -->

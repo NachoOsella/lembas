@@ -11,6 +11,7 @@ import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppDataTable, ColumnDef } from '../../../../shared/components/app-data-table/app-data-table';
 import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 
 /** Time window for collapsing duplicate error toasts in this component. */
 const DUPLICATE_TOAST_MS = 2000;
@@ -18,7 +19,7 @@ const DUPLICATE_TOAST_MS = 2000;
 /** Displays the admin category directory using shared Lembas table and action components. */
 @Component({
   selector: 'app-category-list',
-  imports: [AppBadge, AppButton, AppDataTable, AppSearchBar, ButtonDirective, ConfirmDialog, Ripple],
+  imports: [AppBadge, AppButton, AppDataTable, AppSearchBar, ButtonDirective, ConfirmDialog, ErrorAlert, Ripple],
   templateUrl: './category-list.html',
   styleUrl: './category-list.css',
 })

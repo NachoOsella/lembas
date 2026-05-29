@@ -1,23 +1,44 @@
-<p-message severity="error" styleClass="error-alert" role="alert" aria-live="assertive">
-  <ng-template #container>
-    <span class="error-alert__icon" aria-hidden="true">
-      <i class="pi pi-exclamation-triangle"></i>
-    </span>
-
-    <span class="error-alert__content">
+@if (variant() === 'card') {
+  <p-message severity="error" styleClass="error-alert" role="alert" aria-live="assertive">
+    <ng-template #container>
+      <span class="error-alert__icon" aria-hidden="true">
+        <i class="pi pi-exclamation-triangle"></i>
+      </span>
+      <span class="error-alert__content">
+        <strong>{{ title() }}</strong>
+        <span>{{ message() }}</span>
+      </span>
+      @if (dismissible()) {
+        <p-button
+          icon="pi pi-times"
+          severity="danger"
+          text="true"
+          rounded="true"
+          ariaLabel="Cerrar alerta"
+          (onClick)="onDismiss()"
+        />
+      }
+    </ng-template>
+  </p-message>
+} @else {
+  <div class="error-alert-inline" role="alert" aria-live="assertive" [attr.data-testid]="testId()">
+    <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+    <span class="error-alert-inline__text">
       <strong>{{ title() }}</strong>
-      <span>{{ message() }}</span>
+      @if (message()) {
+        <span>{{ message() }}</span>
+      }
     </span>
-
+    <ng-content />
     @if (dismissible()) {
-      <p-button
-        icon="pi pi-times"
-        severity="danger"
-        text="true"
-        rounded="true"
+      <button
+        type="button"
+        class="error-alert-inline__dismiss"
         ariaLabel="Cerrar alerta"
-        (onClick)="onDismiss()"
-      />
+        (click)="onDismiss()"
+      >
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
     }
-  </ng-template>
-</p-message>
+  </div>
+}
