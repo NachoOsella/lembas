@@ -71,6 +71,58 @@ public class ProductService {
         product.setActive(false);
     }
 
+    /** Changes the online publishing status after validating the allowed transition. */
+    @Transactional
+    public ProductSummaryDto changeOnlineStatus(Long id, ProductOnlineStatus targetStatus) {
+        Product product = findActiveById(id);
+        ProductOnlineStatus currentStatus = product.getOnlineStatus();
+
+        if (!currentStatus.canTransitionTo(targetStatus)) {
+            throw new DomainException(
+                    "PRODUCT_STATUS_INVALID_TRANSITION",
+                    org.springframework.http.HttpStatus.CONFLICT,
+                    "Product status transition is not allowed"
+            );
+        }
+
+        product.setOnlineStatus(targetStatus);
+        return toSummaryDto(product);
+    }
+
+    // ---------------------------------------------------------------------------
+    // Public store methods
+    // ---------------------------------------------------------------------------
+
+    /** Returns 15 random published products for the home page featured section. */
+    @Transactional(readOnly = true)
+    public Page<ProductSummaryDto> listRandomPublishedProducts() {
+        // TODO: Replace random selection with metric-based ranking (views, sales, recency)
+        //       once analytics events are captured in the products table.
+        var products = productRepository.findRandomPublishedProducts(PageRequest.of(0, 15));
+        var dtos = products.stream().map(this::toSummaryDto).toList();
+        return new org.springframework.data.domain.PageImpl<>(dtos);
+    }
+
+    /** Lists products visible in the public online store. */
+    @Transactional(readOnly = true)
+    public Page<ProductSummaryDto> listStoreProducts(String search, Long categoryId, Pageable pageable) {
+        String normalizedSearch = search == null || search.isBlank() ? null : search.trim().toLowerCase(Locale.ROOT);
+        Pageable sortedPageable = pageable.getSort().isUnsorted()
+                ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("name").ascending())
+                : pageable;
+
+        return productRepository.searchStoreProducts(normalizedSearch, categoryId, sortedPageable)
+                .map(this::toSummaryDto);
+    }
+
+    /** Returns a product visible in the public online store. */
+    @Transactional(readOnly = true)
+    public ProductDetailDto getStoreProductDetail(Long id) {
+        Product product = productRepository.findByIdAndActiveTrueAndOnlineStatus(id, ProductOnlineStatus.PUBLISHED)
+                .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
+        return toDetailDto(product);
+    }
+
     /** Copies validated request fields into the entity. */
     private void applyRequest(Product product, ProductRequest request) {
         Category category = categoryRepository.findById(request.categoryId())
