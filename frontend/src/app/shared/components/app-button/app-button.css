@@ -38,6 +38,24 @@
   font-size: 0.82rem;
 }
 
+.app-button--sm.app-button--icon-only {
+  min-height: 2.1rem;
+  min-width: 2.1rem;
+  padding: 0;
+}
+
+.app-button--md.app-button--icon-only {
+  min-height: 2.5rem;
+  min-width: 2.5rem;
+  padding: 0;
+}
+
+.app-button--lg.app-button--icon-only {
+  min-height: 2.9rem;
+  min-width: 2.9rem;
+  padding: 0;
+}
+
 .app-button--md {
   min-height: 2.75rem;
   padding: 0.75rem 1.15rem;

@@ -28,4 +28,34 @@ describe('AppButton', () => {
     expect(button.disabled).toBe(true);
     expect(button.getAttribute('aria-busy')).toBe('true');
   });
+
+  /** Should add icon-only class when iconOnly is true. */
+  it('Should_addIconOnlyClass_when_iconOnlyIsTrue', () => {
+    fixture.componentRef.setInput('icon', 'pi pi-check');
+    fixture.componentRef.setInput('iconOnly', true);
+    fixture.detectChanges();
+
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(button.classList.contains('app-button--icon-only')).toBe(true);
+  });
+
+  /** Should not render the label span when iconOnly is true. */
+  it('Should_hideLabelSpan_when_iconOnlyIsTrue', () => {
+    fixture.componentRef.setInput('icon', 'pi pi-check');
+    fixture.componentRef.setInput('iconOnly', true);
+    fixture.detectChanges();
+
+    const span = fixture.nativeElement.querySelector('span[pbuttonlabel]');
+    expect(span).toBeNull();
+  });
+
+  /** Should render the label span when iconOnly is false. */
+  it('Should_showLabelSpan_when_iconOnlyIsFalse', () => {
+    fixture.componentRef.setInput('icon', 'pi pi-check');
+    fixture.componentRef.setInput('iconOnly', false);
+    fixture.detectChanges();
+
+    const span = fixture.nativeElement.querySelector('span[pbuttonlabel]');
+    expect(span).not.toBeNull();
+  });
 });

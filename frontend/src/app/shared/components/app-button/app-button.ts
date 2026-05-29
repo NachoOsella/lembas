@@ -14,6 +14,7 @@ export class AppButton {
   readonly disabled = input(false);
   readonly loading = input(false);
   readonly icon = input<string | null>(null);
+  readonly iconOnly = input(false);
   readonly loadingLabel = input('Cargando...');
   readonly ariaLabel = input<string | null>(null);
   readonly testId = input<string | null>(null);
@@ -22,7 +23,11 @@ export class AppButton {
   protected readonly isDisabled = computed(() => this.disabled() || this.loading());
 
   /** Builds PrimeNG-compatible classes for the selected semantic variant and size. */
-  protected readonly buttonClass = computed(() =>
-    ['app-button', `app-button--${this.variant()}`, `app-button--${this.size()}`].join(' '),
-  );
+  protected readonly buttonClass = computed(() => {
+    const classes = ['app-button', `app-button--${this.variant()}`, `app-button--${this.size()}`];
+    if (this.iconOnly()) {
+      classes.push('app-button--icon-only');
+    }
+    return classes.join(' ');
+  });
 }

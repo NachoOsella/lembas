@@ -9,11 +9,15 @@
 >
   @if (loading()) {
     <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
-    <span pButtonLabel>{{ loadingLabel() }}</span>
+    @if (!iconOnly()) {
+      <span pButtonLabel>{{ loadingLabel() }}</span>
+    }
   } @else {
     @if (icon()) {
       <i [class]="icon()" aria-hidden="true"></i>
     }
-    <span pButtonLabel><ng-content /></span>
+    @if (!iconOnly()) {
+      <span pButtonLabel><ng-content /></span>
+    }
   }
 </button>
