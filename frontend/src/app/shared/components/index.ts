@@ -19,6 +19,7 @@ export * from './empty-state/empty-state';
 export * from './error-alert/error-alert';
 export * from './loading-spinner/loading-spinner';
 export * from './skeleton/skeleton';
+export * from './status-badge/status-badge';
 export * from './app-store-nav/app-store-nav';
 export * from './app-store-footer/app-store-footer';
 export * from './app-stat-card/app-stat-card';
