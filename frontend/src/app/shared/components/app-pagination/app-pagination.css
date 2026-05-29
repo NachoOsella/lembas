@@ -16,7 +16,7 @@
   min-width: 40px;
   height: 40px;
   border-radius: 50%;
-  color: rgba(0,0,0,0.87);
+  color: rgba(0, 0, 0, 0.87);
   font-size: 14px;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -49,7 +49,7 @@
 }
 
 :host ::ng-deep .app-pagination .p-paginator-current {
-  color: rgba(0,0,0,0.58);
+  color: rgba(0, 0, 0, 0.58);
   font-size: 14px;
   letter-spacing: -0.01em;
   padding: 0 16px;
@@ -67,11 +67,23 @@
 
 :host ::ng-deep .app-pagination .p-dropdown-label {
   font-size: 14px;
-  color: rgba(0,0,0,0.87);
+  color: rgba(0, 0, 0, 0.87);
 }
 
-/* Mobile: larger touch targets (WCAG 44px minimum) */
+/* Mobile: larger touch targets (WCAG 44px minimum) + 2-row wrap */
 @media (max-width: 34rem) {
+  :host ::ng-deep .app-pagination .p-paginator {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  :host ::ng-deep .app-pagination .p-paginator-current {
+    width: 100%;
+    text-align: center;
+    padding: 0 0 0.25rem;
+  }
+
   :host ::ng-deep .app-pagination .p-paginator-page,
   :host ::ng-deep .app-pagination .p-paginator-first,
   :host ::ng-deep .app-pagination .p-paginator-prev,
