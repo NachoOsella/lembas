@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, model, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
@@ -53,7 +53,7 @@ export class Catalog implements OnInit {
   protected readonly productsError = signal(false);
 
   protected readonly totalRecords = signal(0);
-  protected readonly first = signal(0);
+  protected readonly first = model(0);
 
   /** Current search query from the URL. */
   protected readonly searchQuery = signal('');

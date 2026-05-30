@@ -122,7 +122,7 @@
           <app-pagination
             [totalRecords]="totalRecords()"
             [rows]="20"
-            [first]="first()"
+            [(first)]="first"
             (pageChange)="onPageChange($event)"
             [showCurrentPageReport]="true"
             currentPageReportTemplate="Mostrando {first}-{last} de {totalRecords} productos"
