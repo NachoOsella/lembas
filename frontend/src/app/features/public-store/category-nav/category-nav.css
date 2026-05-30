@@ -53,8 +53,15 @@
 @keyframes catnav-scale-in{from{opacity:0;transform:translate(-50%,-48%) scale(.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 
 /* ── Mobile ───────────────────────────────────────────────────────────── */
+.catnav-mobile{display:none}
 @media(max-width:767px){
   .catnav-pills{display:none}
+  .catnav-mobile{display:inline-flex;align-items:center;gap:.55rem;width:100%;border:1px solid rgba(47,141,114,.18);border-radius:999px;background:#fff;color:rgba(0,0,0,.78);font:600 .88rem/1 'Plus Jakarta Sans',system-ui,sans-serif;padding:.7rem 1rem;cursor:pointer;transition:all .15s ease}
+  .catnav-mobile:hover{border-color:rgba(47,141,114,.3);background:rgba(47,141,114,.04)}
+  .catnav-mobile:active{transform:scale(.98)}
+  .catnav-mobile:focus-visible{outline:2px solid #2f8d72;outline-offset:2px}
+  .catnav-mobile i{color:#2f8d72;font-size:.9rem}
+  .catnav-mobile span{flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .catnav-modal{width:100%;max-height:min(88vh,44rem);top:auto;bottom:0;left:0;transform:none;border-radius:1.25rem 1.25rem 0 0;animation:catnav-slide-up .28s cubic-bezier(.2,.8,.24,1)}
   .catnav-modal__grid{grid-template-columns:1fr}
 }

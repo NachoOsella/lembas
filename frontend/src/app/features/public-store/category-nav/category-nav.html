@@ -47,6 +47,20 @@
     </button>
   </nav>
 
+  <!-- Mobile-only category button -->
+  <button
+    type="button"
+    class="catnav-mobile"
+    (click)="togglePanel()"
+  >
+    <i class="pi pi-th-large" aria-hidden="true"></i>
+    @if (selectedCategory(); as cat) {
+      <span>{{ cat.name }}</span>
+    } @else {
+      <span>Todas las categorías</span>
+    }
+  </button>
+
   <!-- Full category overlay modal -->
   @if (panelOpen()) {
     <div class="catnav-overlay" (click)="closePanel()" aria-hidden="true"></div>

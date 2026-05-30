@@ -155,4 +155,30 @@ describe('CategoryNav', () => {
     const active = fixture.nativeElement.querySelector('.catnav-pills__item--active');
     expect(active.textContent).toContain('Hierbas');
   });
+
+  it('should render a mobile category button', async () => {
+    configure();
+    await fixture.whenStable();
+    const btn = fixture.nativeElement.querySelector('.catnav-mobile');
+    expect(btn).toBeTruthy();
+    expect(btn.textContent).toContain('Todas las categorías');
+  });
+
+  it('should show selected category name on mobile button', async () => {
+    configure();
+    fixture.componentRef.setInput('selectedCategoryId', 7);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const btn = fixture.nativeElement.querySelector('.catnav-mobile');
+    expect(btn.textContent).toContain('Hierbas');
+  });
+
+  it('should open panel from mobile button', async () => {
+    configure();
+    await fixture.whenStable();
+    const btn: HTMLButtonElement = fixture.nativeElement.querySelector('.catnav-mobile');
+    btn.click();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.catnav-modal')).toBeTruthy();
+  });
 });
