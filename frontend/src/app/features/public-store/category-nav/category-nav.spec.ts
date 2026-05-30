@@ -173,6 +173,31 @@ describe('CategoryNav', () => {
     expect(btn.textContent).toContain('Hierbas');
   });
 
+  it('should show selected non-quick category in the pill row', async () => {
+    TestBed.configureTestingModule({ imports: [CategoryNav] });
+    fixture = TestBed.createComponent(CategoryNav);
+    component = fixture.componentInstance;
+    fixture.componentRef.setInput('categories', CATEGORIES);
+    fixture.componentRef.setInput('selectedCategoryId', 8); // Panaderia, not in top 6
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    // Verify computed works at component level
+    const selected = (component as any).selectedCategory();
+    expect(selected).toBeTruthy();
+    expect(selected.id).toBe(8);
+
+    const display = (component as any).displayCategories();
+    const displayIds = display.map((c: any) => c.id);
+    expect(displayIds).toContain(8);
+
+    // Now verify DOM
+    const pills: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.catnav-pills__item'));
+    expect(pills.length).toBe(display.length + 2); // +2 for Todas + Todas las categorías
+    const activePill = pills.find((p) => p.classList.contains('catnav-pills__item--active') && p.textContent?.includes('Panaderia'));
+    expect(activePill).toBeTruthy();
+  });
+
   it('should open panel from mobile button', async () => {
     configure();
     await fixture.whenStable();

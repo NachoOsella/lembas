@@ -40,6 +40,16 @@ export class CategoryNav {
       .slice(0, 6),
   );
 
+  /** Pill list: quick categories + selected if it is not already in the top. */
+  protected readonly displayCategories = computed(() => {
+    const quick = this.quickCategories();
+    const selected = this.selectedCategory();
+    if (!selected || quick.some((c) => c.id === selected.id)) {
+      return quick;
+    }
+    return [...quick, selected];
+  });
+
   protected readonly filteredCategories = computed(() => {
     const q = this.normalize(this.searchTerm());
     const cats = [...this.categories()].sort((a, b) => a.name.localeCompare(b.name));
