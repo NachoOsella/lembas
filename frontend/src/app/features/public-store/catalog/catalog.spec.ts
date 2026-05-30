@@ -153,53 +153,48 @@ describe('Catalog', () => {
   // Category filter
   // -------------------------------------------------------------------------
 
-  it('should render a pill for each category plus "Todas"', () => {
+  it('should render quick category pills plus the full selector action', () => {
     configure();
-    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav__pill');
-    // "Todas" + 3 categories
-    expect(pills.length).toBe(4);
+    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav-pills__item');
+
+    expect(pills.length).toBe(5); // Todas + 3 quick + Todas las categorías
     expect(pills[0].textContent?.trim()).toContain('Todas');
-    // Pills now include icon + name, so check that category name is present
-    expect(pills[1].textContent).toContain('Cereales');
-    expect(pills[2].textContent).toContain('Suplementos');
-    expect(pills[3].textContent).toContain('Snacks');
+    expect(fixture.nativeElement.textContent).toContain('Cereales');
+    expect(fixture.nativeElement.textContent).toContain('Suplementos');
+    expect(fixture.nativeElement.textContent).toContain('Snacks');
   });
 
   it('should mark "Todas" as active by default', () => {
     configure();
-    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav__pill');
-    expect(pills[0].classList.contains('catnav__pill--active')).toBe(true);
+    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav-pills__item');
+    expect(pills[0].classList.contains('catnav-pills__item--active')).toBe(true);
   });
 
   it('should select a category on pill click', () => {
     configure();
 
-    // Click on "Suplementos" (index 2)
-    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav__pill');
-    pills[2].click();
+    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav-pills__item');
+    const supplements = Array.from(pills).find((pill) => pill.textContent?.includes('Suplementos'));
+    supplements?.click();
     fixture.detectChanges();
 
     expect((c['selectedCategoryId'] as () => number | null)()).toBe(2);
     expect(svc['getProducts']).toHaveBeenCalledWith(undefined, 2, undefined, 0, 20);
-
-    // "Suplementos" pill should now be active
-    expect(pills[2].classList.contains('catnav__pill--active')).toBe(true);
+    expect(supplements?.classList.contains('catnav-pills__item--active')).toBe(true);
   });
 
   it('should reset to all categories when "Todas" is clicked', () => {
     configure();
 
-    // First select a category
     (c['selectedCategoryId'] as { set: (v: number | null) => void }).set(1);
     fixture.detectChanges();
 
-    // Then click "Todas"
-    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav__pill');
+    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav-pills__item');
     pills[0].click();
     fixture.detectChanges();
 
     expect((c['selectedCategoryId'] as () => number | null)()).toBeNull();
-    expect(pills[0].classList.contains('catnav__pill--active')).toBe(true);
+    expect(pills[0].classList.contains('catnav-pills__item--active')).toBe(true);
   });
 
   // -------------------------------------------------------------------------

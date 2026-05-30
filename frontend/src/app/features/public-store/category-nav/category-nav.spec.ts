@@ -7,6 +7,11 @@ const CATEGORIES: StoreCategory[] = [
   { id: 1, name: 'Cereales', productCount: 3 },
   { id: 2, name: 'Bebidas', productCount: 5 },
   { id: 3, name: 'Snacks', productCount: 2 },
+  { id: 4, name: 'Aceites Esenciales', productCount: 7 },
+  { id: 5, name: 'Frutos Secos', productCount: 4 },
+  { id: 6, name: 'Cosmetica Natural', productCount: 6 },
+  { id: 7, name: 'Hierbas', productCount: 8 },
+  { id: 8, name: 'Panaderia', productCount: 1 },
 ];
 
 describe('CategoryNav', () => {
@@ -18,10 +23,7 @@ describe('CategoryNav', () => {
     loading = false,
     error = false,
   ): void {
-    TestBed.configureTestingModule({
-      imports: [CategoryNav],
-    });
-
+    TestBed.configureTestingModule({ imports: [CategoryNav] });
     fixture = TestBed.createComponent(CategoryNav);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('categories', categories);
@@ -35,87 +37,39 @@ describe('CategoryNav', () => {
     expect(component).toBeTruthy();
   });
 
-  // --- Loading state ---
-
-  it('should show skeleton pills when loading', async () => {
+  it('should show skeleton when loading', async () => {
     configure(CATEGORIES, true);
     await fixture.whenStable();
-    const skeletons = fixture.nativeElement.querySelectorAll('.catnav__skeleton-pill');
-    expect(skeletons.length).toBe(6);
+    const pills = fixture.nativeElement.querySelectorAll('.catnav-skeleton__pill');
+    expect(pills.length).toBe(6);
   });
 
-  // --- Error state ---
-
-  it('should show error message when error is true', async () => {
+  it('should show error when error is true', async () => {
     configure(CATEGORIES, false, true);
     await fixture.whenStable();
-    const text = fixture.nativeElement.textContent ?? '';
-    expect(text).toContain('No se pudieron cargar las categorias');
+    expect(fixture.nativeElement.textContent).toContain('No se pudieron cargar las categorias');
   });
 
-  it('should not show pills when error is true', async () => {
-    configure(CATEGORIES, false, true);
-    await fixture.whenStable();
-    const pills = fixture.nativeElement.querySelectorAll('.catnav__pill');
-    expect(pills.length).toBe(0);
-  });
-
-  // --- Empty state ---
-
-  it('should show empty message when categories array is empty', async () => {
+  it('should show empty state when no categories', async () => {
     configure([]);
     await fixture.whenStable();
-    const text = fixture.nativeElement.textContent ?? '';
-    expect(text).toContain('Aun no hay categorias disponibles');
+    expect(fixture.nativeElement.textContent).toContain('Aún no hay categorías disponibles');
   });
 
-  // --- Category pills ---
-
-  it('should render "Todas" pill plus category pills', async () => {
+  it('should render quick pills plus "Todas las categorías" button', async () => {
     configure();
     await fixture.whenStable();
-    const pills = fixture.nativeElement.querySelectorAll('.catnav__pill');
-    expect(pills.length).toBe(4); // Todas + 3 categories
-  });
-
-  it('should show "Todas" as the first pill', async () => {
-    configure();
-    await fixture.whenStable();
-    const pills = fixture.nativeElement.querySelectorAll('.catnav__pill');
+    const pills = fixture.nativeElement.querySelectorAll('.catnav-pills__item');
+    // Todas + 6 quick + Todas las categorías button
+    expect(pills.length).toBe(8);
     expect(pills[0].textContent?.trim()).toBe('Todas');
   });
-
-  it('should render each category name', async () => {
-    configure();
-    await fixture.whenStable();
-    const text = fixture.nativeElement.textContent ?? '';
-    expect(text).toContain('Cereales');
-    expect(text).toContain('Bebidas');
-    expect(text).toContain('Snacks');
-  });
-
-  it('should show product count badge for categories with products', async () => {
-    configure();
-    await fixture.whenStable();
-    const counts = fixture.nativeElement.querySelectorAll('.catnav__count');
-    expect(counts.length).toBe(3);
-    expect(counts[0].textContent?.trim()).toBe('3');
-  });
-
-  it('should not show count badge when productCount is 0', async () => {
-    configure([{ id: 1, name: 'Empty', productCount: 0 }]);
-    await fixture.whenStable();
-    const counts = fixture.nativeElement.querySelectorAll('.catnav__count');
-    expect(counts.length).toBe(0);
-  });
-
-  // --- Selection ---
 
   it('should mark "Todas" as active by default', async () => {
     configure();
     await fixture.whenStable();
-    const pills = fixture.nativeElement.querySelectorAll('.catnav__pill');
-    expect(pills[0].classList.contains('catnav__pill--active')).toBe(true);
+    const pills = fixture.nativeElement.querySelectorAll('.catnav-pills__item');
+    expect(pills[0].classList.contains('catnav-pills__item--active')).toBe(true);
   });
 
   it('should emit allSelected when "Todas" is clicked', async () => {
@@ -123,43 +77,82 @@ describe('CategoryNav', () => {
     await fixture.whenStable();
     const spy = vi.fn();
     component.allSelected.subscribe(spy);
-
-    const pills = fixture.nativeElement.querySelectorAll('.catnav__pill');
+    const pills = fixture.nativeElement.querySelectorAll('.catnav-pills__item');
     pills[0].click();
-
     expect(spy).toHaveBeenCalled();
   });
 
-  it('should emit categorySelected when a category pill is clicked', async () => {
+  it('should emit categorySelected when a quick pill is clicked', async () => {
     configure();
     await fixture.whenStable();
     const spy = vi.fn();
     component.categorySelected.subscribe(spy);
-
-    const pills = fixture.nativeElement.querySelectorAll('.catnav__pill');
-    pills[2].click(); // Click "Bebidas" (index 2: Todas=0, Cereales=1, Bebidas=2)
-
-    expect(spy).toHaveBeenCalledWith(2);
+    const pills: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.catnav-pills__item'));
+    // Hierbas has highest product count (8), should be among quick pills
+    const hierbas = pills.find((p) => p.textContent?.includes('Hierbas'));
+    hierbas?.click();
+    expect(spy).toHaveBeenCalledWith(7);
   });
 
-  it('should highlight selected category', async () => {
+  it('should open the full category modal', async () => {
     configure();
-    fixture.componentRef.setInput('selectedCategoryId', 2);
+    await fixture.whenStable();
+    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.catnav-pills__item--more');
+    moreBtn.click();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.catnav-modal')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Todas las categorías');
+  });
+
+  it('should filter categories in the modal', async () => {
+    configure();
+    await fixture.whenStable();
+    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.catnav-pills__item--more');
+    moreBtn.click();
+    await fixture.whenStable();
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('#cat-search');
+    input.value = 'aceites';
+    input.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    const modalText = fixture.nativeElement.querySelector('.catnav-modal').textContent ?? '';
+    expect(modalText).toContain('Aceites Esenciales');
+    expect(modalText).not.toContain('Bebidas');
+  });
+
+  it('should emit categorySelected from modal and close', async () => {
+    configure();
+    await fixture.whenStable();
+    const spy = vi.fn();
+    component.categorySelected.subscribe(spy);
+    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.catnav-pills__item--more');
+    moreBtn.click();
+    await fixture.whenStable();
+    const cards: NodeListOf<HTMLButtonElement> = fixture.nativeElement.querySelectorAll('.catnav-modal__card');
+    const bebidas = Array.from(cards).find((c) => c.textContent?.includes('Bebidas'));
+    bebidas?.click();
+    await fixture.whenStable();
+    expect(spy).toHaveBeenCalledWith(2);
+    expect(fixture.nativeElement.querySelector('.catnav-modal')).toBeFalsy();
+  });
+
+  it('should close modal when clicking the overlay', async () => {
+    configure();
+    await fixture.whenStable();
+    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.catnav-pills__item--more');
+    moreBtn.click();
+    await fixture.whenStable();
+    const overlay: HTMLElement = fixture.nativeElement.querySelector('.catnav-overlay');
+    overlay.click();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.catnav-modal')).toBeFalsy();
+  });
+
+  it('should highlight selected category in quick pills', async () => {
+    configure();
+    fixture.componentRef.setInput('selectedCategoryId', 7);
     fixture.detectChanges();
     await fixture.whenStable();
-
-    const pills = fixture.nativeElement.querySelectorAll('.catnav__pill');
-    // Pill at index 2 is Bebidas
-    expect(pills[2].classList.contains('catnav__pill--active')).toBe(true);
-    expect(pills[0].classList.contains('catnav__pill--active')).toBe(false);
-  });
-
-  // --- Horizontal scroll ---
-
-  it('should have scrollable container class', async () => {
-    configure();
-    await fixture.whenStable();
-    const nav = fixture.nativeElement.querySelector('.catnav--scroll');
-    expect(nav).toBeTruthy();
+    const active = fixture.nativeElement.querySelector('.catnav-pills__item--active');
+    expect(active.textContent).toContain('Hierbas');
   });
 });

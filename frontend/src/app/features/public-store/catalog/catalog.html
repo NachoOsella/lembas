@@ -33,7 +33,7 @@
     </div>
   </header>
 
-  <!-- Category nav — horizontal scrollable strip -->
+  <!-- Category selector — quick filters plus searchable full category panel -->
   <div class="mx-auto max-w-[1600px] px-4 pt-8 sm:px-6 lg:px-10">
     <app-category-nav
       [categories]="categories()"
@@ -123,6 +123,7 @@
             [totalRecords]="totalRecords()"
             [rows]="pageSize()"
             [first]="first()"
+            [rowsPerPageOptions]="[20, 50, 100]"
             (pageChange)="onPageChange($event)"
             [showCurrentPageReport]="true"
             currentPageReportTemplate="Mostrando {first}-{last} de {totalRecords} productos"

@@ -48,21 +48,22 @@ function setupActivatedRoute(id: string | number = '1'): unknown {
   };
 }
 
+const EMPTY_PRODUCT_PAGE = {
+  content: [],
+  totalElements: 0,
+  totalPages: 0,
+  number: 0,
+  size: 6,
+  first: true,
+  last: true,
+  empty: true,
+};
+
 function setupCatalogService(product: ProductSummary = MOCK_PRODUCT): unknown {
   return {
     getProductDetail: vi.fn().mockReturnValue(of(product)),
-    getRelatedProducts: vi.fn().mockReturnValue(
-      of({
-        content: [],
-        totalElements: 0,
-        totalPages: 0,
-        number: 0,
-        size: 6,
-        first: true,
-        last: true,
-        empty: true,
-      }),
-    ),
+    getRelatedProducts: vi.fn().mockReturnValue(of(EMPTY_PRODUCT_PAGE)),
+    getFeaturedProducts: vi.fn().mockReturnValue(of(EMPTY_PRODUCT_PAGE)),
   };
 }
 
@@ -152,9 +153,8 @@ describe('ProductDetail', () => {
           provide: CatalogService,
           useValue: {
             getProductDetail: vi.fn().mockReturnValue(throwError(() => new Error('fail'))),
-            getRelatedProducts: vi.fn().mockReturnValue(
-              of({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 6, first: true, last: true, empty: true }),
-            ),
+            getRelatedProducts: vi.fn().mockReturnValue(of(EMPTY_PRODUCT_PAGE)),
+            getFeaturedProducts: vi.fn().mockReturnValue(of(EMPTY_PRODUCT_PAGE)),
           },
         },
       ],

@@ -11,7 +11,7 @@ export class AppPagination {
   readonly totalRecords = input.required<number>();
   readonly rows = input(10);
   readonly first = model(0);
-  readonly rowsPerPageOptions = input<number[]>([10, 25, 50]);
+  readonly rowsPerPageOptions = input<number[]>([10, 20, 50]);
   readonly showCurrentPageReport = input(true);
   readonly currentPageReportTemplate = input('{first}-{last} de {totalRecords}');
 

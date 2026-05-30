@@ -1,44 +1,112 @@
 @if (loading()) {
-  <div class="catnav catnav--scroll" aria-hidden="true">
+  <div class="catnav-skeleton" aria-hidden="true">
     @for (_ of [1, 2, 3, 4, 5, 6]; track _) {
-      <div class="catnav__skeleton-pill"></div>
+      <div class="catnav-skeleton__pill"></div>
     }
   </div>
 } @else if (error()) {
-  <div
-    class="flex items-center gap-2 rounded-full border border-[rgba(200,32,20,0.15)] bg-[hsl(4_82%_43%/_5%)] px-4 py-2 text-[13px] font-semibold text-[#c82014]"
-  >
+  <div class="catnav-error" role="status">
     <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
-    <p>No se pudieron cargar las categorias.</p>
+    <span>No se pudieron cargar las categorias.</span>
   </div>
 } @else if (categories().length) {
-  <nav class="catnav catnav--scroll" aria-label="Filtro de categorias">
-    <!-- "Todas" pill -->
+  <!-- Quick-access pill row -->
+  <nav class="catnav-pills" aria-label="Filtro de categorias">
     <button
       type="button"
-      class="catnav__pill"
-      [class.catnav__pill--active]="selectedCategoryId() === null"
-      (click)="allSelected.emit()"
+      class="catnav-pills__item"
+      [class.catnav-pills__item--active]="selectedCategoryId() === null"
+      (click)="selectAll()"
       [attr.aria-pressed]="selectedCategoryId() === null"
     >
       Todas
     </button>
 
-    @for (cat of categories(); track cat.id) {
+    @for (cat of quickCategories(); track cat.id) {
       <button
         type="button"
-        class="catnav__pill"
-        [class.catnav__pill--active]="selectedCategoryId() === cat.id"
-        (click)="categorySelected.emit(cat.id)"
+        class="catnav-pills__item"
+        [class.catnav-pills__item--active]="selectedCategoryId() === cat.id"
+        (click)="selectCategory(cat.id)"
         [attr.aria-pressed]="selectedCategoryId() === cat.id"
       >
         {{ cat.name }}
         @if (cat.productCount > 0) {
-          <span class="catnav__count">{{ cat.productCount }}</span>
+          <span class="catnav-pills__count">{{ cat.productCount }}</span>
         }
       </button>
     }
+
+    <button
+      type="button"
+      class="catnav-pills__item catnav-pills__item--more"
+      (click)="togglePanel()"
+    >
+      <i class="pi pi-th-large" aria-hidden="true"></i>
+      Todas las categorías
+    </button>
   </nav>
+
+  <!-- Full category overlay modal -->
+  @if (panelOpen()) {
+    <div class="catnav-overlay" (click)="closePanel()" aria-hidden="true"></div>
+    <div
+      class="catnav-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Todas las categorías"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="catnav-modal__head">
+        <div>
+          <p class="catnav-modal__label">Navegá por categoría</p>
+          <h3 class="catnav-modal__title">Todas las categorías</h3>
+        </div>
+        <button type="button" class="catnav-modal__close" (click)="closePanel()" aria-label="Cerrar">
+          <i class="pi pi-times" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <label class="catnav-modal__search" for="cat-search">
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <input
+          id="cat-search"
+          type="search"
+          [value]="searchTerm()"
+          (input)="searchTerm.set($any($event.target).value)"
+          placeholder="Buscar categoría..."
+          autocomplete="off"
+        />
+      </label>
+
+      <div class="catnav-modal__grid">
+        <!-- "Todas" option -->
+        <button
+          type="button"
+          class="catnav-modal__card catnav-modal__card--all"
+          [class.catnav-modal__card--active]="selectedCategoryId() === null"
+          (click)="selectAll()"
+        >
+          <span class="catnav-modal__card-name">Todas las categorías</span>
+          <span class="catnav-modal__card-meta">{{ totalProductCount() }} productos</span>
+        </button>
+
+        @for (cat of filteredCategories(); track cat.id) {
+          <button
+            type="button"
+            class="catnav-modal__card"
+            [class.catnav-modal__card--active]="selectedCategoryId() === cat.id"
+            (click)="selectCategory(cat.id)"
+          >
+            <span class="catnav-modal__card-name">{{ cat.name }}</span>
+            <span class="catnav-modal__card-meta">{{ cat.productCount }} productos</span>
+          </button>
+        } @empty {
+          <p class="catnav-modal__empty">No se encontraron categorías.</p>
+        }
+      </div>
+    </div>
+  }
 } @else {
-  <p class="text-sm font-semibold text-[rgba(0,0,0,0.48)]">Aun no hay categorias disponibles.</p>
+  <p class="catnav-empty">Aún no hay categorías disponibles.</p>
 }
