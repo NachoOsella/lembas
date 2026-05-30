@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, model, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
@@ -53,7 +53,8 @@ export class Catalog implements OnInit {
   protected readonly productsError = signal(false);
 
   protected readonly totalRecords = signal(0);
-  protected readonly first = model(0);
+  protected readonly first = signal(0);
+  protected readonly pageSize = signal(20);
 
   /** Current search query from the URL. */
   protected readonly searchQuery = signal('');
@@ -160,7 +161,7 @@ export class Catalog implements OnInit {
     this.productsLoading.set(true);
     this.productsError.set(false);
 
-    const page = Math.floor(this.first() / PAGE_SIZE);
+    const page = Math.floor(this.first() / this.pageSize());
 
     this.catalogService
       .getProducts(
@@ -168,7 +169,7 @@ export class Catalog implements OnInit {
         this.selectedCategoryId() ?? undefined,
         undefined,
         page,
-        PAGE_SIZE,
+        this.pageSize(),
       )
       .subscribe({
         next: (response) => {
@@ -236,8 +237,8 @@ export class Catalog implements OnInit {
   // ---------------------------------------------------------------------------
   protected onPageChange(event: { first: number; rows: number }): void {
     this.first.set(event.first);
+    this.pageSize.set(event.rows);
     this.loadProducts();
-    // Scroll to the product grid area so the user sees the new page results
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 

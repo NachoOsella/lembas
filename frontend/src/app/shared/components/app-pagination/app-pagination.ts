@@ -1,4 +1,4 @@
-import { Component, input, model, output } from '@angular/core';
+import { Component, computed, input, model, output } from '@angular/core';
 import { Paginator } from 'primeng/paginator';
 
 @Component({
@@ -21,6 +21,9 @@ export class AppPagination {
     page?: number;
     pageCount?: number;
   }>();
+
+  /** Unwrapped first value for PrimeNG paginator (plain number, not model). */
+  protected readonly firstValue = computed(() => this.first());
 
   protected onPageChange(event: {
     first?: number;
