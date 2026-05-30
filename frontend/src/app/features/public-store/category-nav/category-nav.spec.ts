@@ -159,9 +159,11 @@ describe('CategoryNav', () => {
   it('should render a mobile category button', async () => {
     configure();
     await fixture.whenStable();
-    const btn = fixture.nativeElement.querySelector('.catnav-mobile');
-    expect(btn).toBeTruthy();
-    expect(btn.textContent).toContain('Todas las categorías');
+    const wrapper = fixture.nativeElement.querySelector('.catnav-mobile');
+    expect(wrapper).toBeTruthy();
+    expect(wrapper.textContent).toContain('Filtrar por categoría');
+    expect(wrapper.textContent).toContain('8 categorías');
+    expect(wrapper.textContent).toContain('Todas las categorías');
   });
 
   it('should show selected category name on mobile button', async () => {
@@ -169,8 +171,8 @@ describe('CategoryNav', () => {
     fixture.componentRef.setInput('selectedCategoryId', 7);
     fixture.detectChanges();
     await fixture.whenStable();
-    const btn = fixture.nativeElement.querySelector('.catnav-mobile');
-    expect(btn.textContent).toContain('Hierbas');
+    const wrapper = fixture.nativeElement.querySelector('.catnav-mobile');
+    expect(wrapper.textContent).toContain('Hierbas');
   });
 
   it('should show selected non-quick category in the pill row', async () => {
@@ -201,7 +203,7 @@ describe('CategoryNav', () => {
   it('should open panel from mobile button', async () => {
     configure();
     await fixture.whenStable();
-    const btn: HTMLButtonElement = fixture.nativeElement.querySelector('.catnav-mobile');
+    const btn: HTMLButtonElement = fixture.nativeElement.querySelector('.catnav-mobile__btn');
     btn.click();
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('.catnav-modal')).toBeTruthy();

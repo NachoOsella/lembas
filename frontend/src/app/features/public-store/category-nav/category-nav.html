@@ -48,18 +48,22 @@
   </nav>
 
   <!-- Mobile-only category button -->
-  <button
-    type="button"
-    class="catnav-mobile"
-    (click)="togglePanel()"
-  >
-    <i class="pi pi-th-large" aria-hidden="true"></i>
-    @if (selectedCategory(); as cat) {
-      <span>{{ cat.name }}</span>
-    } @else {
-      <span>Todas las categorías</span>
-    }
-  </button>
+  <div class="catnav-mobile">
+    <p class="catnav-mobile__label">Filtrar por categoría</p>
+    <button
+      type="button"
+      class="catnav-mobile__btn"
+      (click)="togglePanel()"
+    >
+      <i class="pi pi-th-large" aria-hidden="true"></i>
+      @if (selectedCategory(); as cat) {
+        <span>{{ cat.name }}</span>
+      } @else {
+        <span>Todas las categorías</span>
+      }
+      <span class="catnav-mobile__count">{{ categories().length }} categorías</span>
+    </button>
+  </div>
 
   <!-- Full category overlay modal -->
   @if (panelOpen()) {
