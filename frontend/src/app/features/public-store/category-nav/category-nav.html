@@ -1,62 +1,40 @@
 @if (loading()) {
-  <div class="space-y-2" aria-hidden="true">
+  <div class="catnav catnav--scroll" aria-hidden="true">
     @for (_ of [1, 2, 3, 4, 5, 6]; track _) {
-      <div class="catnav-skeleton"></div>
+      <div class="catnav__skeleton-pill"></div>
     }
   </div>
 } @else if (error()) {
   <div
-    class="flex items-start gap-3 rounded-xl border border-[rgba(200,32,20,0.15)] bg-[hsl(4_82%_43%/_5%)] p-4 text-[13px] font-semibold text-[#c82014]"
+    class="flex items-center gap-2 rounded-full border border-[rgba(200,32,20,0.15)] bg-[hsl(4_82%_43%/_5%)] px-4 py-2 text-[13px] font-semibold text-[#c82014]"
   >
-    <i class="pi pi-exclamation-circle mt-0.5" aria-hidden="true"></i>
+    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
     <p>No se pudieron cargar las categorias.</p>
   </div>
 } @else if (categories().length) {
-  <nav class="catnav" aria-label="Filtro de categorias">
-    <div class="catnav__list">
-      <!-- "Todas" pill -->
+  <nav class="catnav catnav--scroll" aria-label="Filtro de categorias">
+    <!-- "Todas" pill -->
+    <button
+      type="button"
+      class="catnav__pill"
+      [class.catnav__pill--active]="selectedCategoryId() === null"
+      (click)="allSelected.emit()"
+      [attr.aria-pressed]="selectedCategoryId() === null"
+    >
+      Todas
+    </button>
+
+    @for (cat of categories(); track cat.id) {
       <button
         type="button"
         class="catnav__pill"
-        [class.catnav__pill--active]="selectedCategoryId() === null"
-        (click)="allSelected.emit()"
-        [attr.aria-pressed]="selectedCategoryId() === null"
+        [class.catnav__pill--active]="selectedCategoryId() === cat.id"
+        (click)="categorySelected.emit(cat.id)"
+        [attr.aria-pressed]="selectedCategoryId() === cat.id"
       >
-        <i class="pi pi-th-large catnav__icon" aria-hidden="true"></i>
-        <span class="catnav__label">Todas</span>
-      </button>
-
-      @for (cat of visibleCategories(); track cat.id) {
-        <button
-          type="button"
-          class="catnav__pill"
-          [class.catnav__pill--active]="selectedCategoryId() === cat.id"
-          (click)="categorySelected.emit(cat.id)"
-          [attr.aria-pressed]="selectedCategoryId() === cat.id"
-        >
-          <i class="pi pi-tag catnav__icon" aria-hidden="true"></i>
-          <span class="catnav__label">{{ cat.name }}</span>
-          @if (cat.productCount > 0) {
-            <span class="catnav__count">{{ cat.productCount }}</span>
-          }
-        </button>
-      }
-    </div>
-
-    <!-- "Ver mas" toggle -->
-    @if (shouldCollapse()) {
-      <button
-        type="button"
-        class="catnav__toggle"
-        (click)="toggleExpanded()"
-        [attr.aria-expanded]="expanded()"
-      >
-        @if (expanded()) {
-          <span>Mostrar menos</span>
-          <i class="pi pi-chevron-up text-[10px]" aria-hidden="true"></i>
-        } @else {
-          <span>Ver todas ({{ hiddenCount() }} mas)</span>
-          <i class="pi pi-chevron-down text-[10px]" aria-hidden="true"></i>
+        {{ cat.name }}
+        @if (cat.productCount > 0) {
+          <span class="catnav__count">{{ cat.productCount }}</span>
         }
       </button>
     }

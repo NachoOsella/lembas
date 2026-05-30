@@ -9,17 +9,6 @@ const CATEGORIES: StoreCategory[] = [
   { id: 3, name: 'Snacks', productCount: 2 },
 ];
 
-const MANY_CATEGORIES: StoreCategory[] = [
-  { id: 1, name: 'Aceites', productCount: 4 },
-  { id: 2, name: 'Bebidas', productCount: 5 },
-  { id: 3, name: 'Cereales', productCount: 3 },
-  { id: 4, name: 'Frutos secos', productCount: 6 },
-  { id: 5, name: 'Harinas', productCount: 2 },
-  { id: 6, name: 'Snacks', productCount: 8 },
-  { id: 7, name: 'Tés', productCount: 1 },
-  { id: 8, name: 'Suplementos', productCount: 10 },
-];
-
 describe('CategoryNav', () => {
   let component: CategoryNav;
   let fixture: ComponentFixture<CategoryNav>;
@@ -48,10 +37,10 @@ describe('CategoryNav', () => {
 
   // --- Loading state ---
 
-  it('should show skeleton loaders when loading', async () => {
+  it('should show skeleton pills when loading', async () => {
     configure(CATEGORIES, true);
     await fixture.whenStable();
-    const skeletons = fixture.nativeElement.querySelectorAll('.catnav-skeleton');
+    const skeletons = fixture.nativeElement.querySelectorAll('.catnav__skeleton-pill');
     expect(skeletons.length).toBe(6);
   });
 
@@ -93,7 +82,7 @@ describe('CategoryNav', () => {
     configure();
     await fixture.whenStable();
     const pills = fixture.nativeElement.querySelectorAll('.catnav__pill');
-    expect(pills[0].textContent).toContain('Todas');
+    expect(pills[0].textContent?.trim()).toBe('Todas');
   });
 
   it('should render each category name', async () => {
@@ -165,42 +154,12 @@ describe('CategoryNav', () => {
     expect(pills[0].classList.contains('catnav__pill--active')).toBe(false);
   });
 
-  // --- Collapse / expand ---
+  // --- Horizontal scroll ---
 
-  it('should collapse when more than 6 categories', async () => {
-    configure(MANY_CATEGORIES);
+  it('should have scrollable container class', async () => {
+    configure();
     await fixture.whenStable();
-    const visiblePills = fixture.nativeElement.querySelectorAll('.catnav__pill');
-    // 6 visible + Todas = 7
-    expect(visiblePills.length).toBe(7);
-  });
-
-  it('should show "ver mas" toggle when collapsed', async () => {
-    configure(MANY_CATEGORIES);
-    await fixture.whenStable();
-    const toggle = fixture.nativeElement.querySelector('.catnav__toggle');
-    expect(toggle).toBeTruthy();
-    expect(toggle.textContent).toContain('Ver todas');
-  });
-
-  it('should expand all categories when toggle is clicked', async () => {
-    configure(MANY_CATEGORIES);
-    await fixture.whenStable();
-
-    const toggle = fixture.nativeElement.querySelector('.catnav__toggle');
-    toggle.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    const pills = fixture.nativeElement.querySelectorAll('.catnav__pill');
-    // Todas + 8 categories = 9
-    expect(pills.length).toBe(9);
-  });
-
-  it('should not show toggle when 6 or fewer categories', async () => {
-    configure(CATEGORIES);
-    await fixture.whenStable();
-    const toggle = fixture.nativeElement.querySelector('.catnav__toggle');
-    expect(toggle).toBeNull();
+    const nav = fixture.nativeElement.querySelector('.catnav--scroll');
+    expect(nav).toBeTruthy();
   });
 });
