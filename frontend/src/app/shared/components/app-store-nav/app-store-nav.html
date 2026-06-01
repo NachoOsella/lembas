@@ -4,17 +4,15 @@
   <div
     class="app-store-nav__inner mx-auto flex h-[64px] w-full max-w-[1600px] items-center justify-between px-4 sm:h-[72px] sm:px-6 md:h-[83px] lg:h-[99px] lg:px-10"
   >
-    <!-- Brand -->
-    <a [routerLink]="brand().homeRoute" class="app-store-nav__brand" aria-label="Ir al inicio">
-      <img [src]="brand().logoUrl" alt="" width="32" height="32" class="app-store-nav__logo" />
-      <span class="app-store-nav__brand-text">
-        <strong>{{ brand().title }}</strong>
-        <span>{{ brand().subtitle }}</span>
-      </span>
-    </a>
-
-    <!-- Center Navigation + Search -->
-    <div class="app-store-nav__center">
+    <!-- Brand + Nav links -->
+    <div class="app-store-nav__left">
+      <a [routerLink]="brand().homeRoute" class="app-store-nav__brand" aria-label="Ir al inicio">
+        <img [src]="brand().logoUrl" alt="" width="32" height="32" class="app-store-nav__logo" />
+        <span class="app-store-nav__brand-text">
+          <strong>{{ brand().title }}</strong>
+          <span>{{ brand().subtitle }}</span>
+        </span>
+      </a>
       <nav class="app-store-nav__links" aria-label="Navegación principal">
         <a
           routerLink="/store"
@@ -27,6 +25,10 @@
           >Catálogo</a
         >
       </nav>
+    </div>
+
+    <!-- Center: Search only (desktop) -->
+    <div class="app-store-nav__center">
       @if (showSearch()) {
         <div class="app-store-nav__search">
           <app-search-bar
