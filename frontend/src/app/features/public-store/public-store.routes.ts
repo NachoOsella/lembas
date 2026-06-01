@@ -33,6 +33,11 @@ export default [
         data: { errorCode: '404' },
       },
       {
+        path: 'error/403',
+        component: ErrorPage,
+        data: { errorCode: '403' },
+      },
+      {
         path: 'error/500',
         component: ErrorPage,
         data: { errorCode: '500' },

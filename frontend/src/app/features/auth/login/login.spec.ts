@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { MessageService } from 'primeng/api';
 
 import { Login } from './login';
 
@@ -13,6 +14,7 @@ describe('Login', () => {
       imports: [Login],
       providers: [
         provideRouter([]),
+        MessageService,
         {
           provide: ActivatedRoute,
           useValue: {

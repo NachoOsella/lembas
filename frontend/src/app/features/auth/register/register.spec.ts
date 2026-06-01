@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
 
 import { Register } from './register';
 import { AuthResponse, AuthService } from '../../../core/services/auth';
@@ -49,7 +50,7 @@ describe('Register component', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Register],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), MessageService],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Register);

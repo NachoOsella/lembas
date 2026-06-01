@@ -4,13 +4,14 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 
 /**
- * Error page component for displaying 404 and 500 errors.
+ * Error page component for displaying 403, 404 and 500 errors.
  *
  * Follows the Lembas design system with warm cream backgrounds, decorative blurred blobs,
  * tight tracking typography, and pill buttons matching the home page aesthetic.
  *
  * Usage in routes:
  * ```typescript
+ * { path: 'error/403', component: ErrorPage, data: { errorCode: '403' } }
  * { path: 'error/404', component: ErrorPage, data: { errorCode: '404' } }
  * { path: 'error/500', component: ErrorPage, data: { errorCode: '500' } }
  * ```
@@ -43,7 +44,7 @@ import { map } from 'rxjs';
         </div>
 
         <!-- Helpful suggestions -->
-        @if (!isServerError()) {
+        @if (errorCode() === '404') {
           <div class="suggestions-section">
             <p class="suggestions-label">¿Qué podés hacer?</p>
             <div class="suggestions-grid">
@@ -318,51 +319,56 @@ export class ErrorPage {
    * Error code input (if used directly in template).
    * Takes precedence over route data.
    */
-  readonly errorCodeInput = input<'404' | '500' | null>(null);
+  readonly errorCodeInput = input<'403' | '404' | '500' | null>(null);
 
   /**
    * Final error code: input takes precedence, then route data, then defaults to 404.
    */
-  readonly errorCode = computed<'404' | '500'>(() => {
-    return this.errorCodeInput() ?? (this.routeErrorCode() as '404' | '500') ?? '404';
+  readonly errorCode = computed<'403' | '404' | '500'>(() => {
+    return this.errorCodeInput() ?? (this.routeErrorCode() as '403' | '404' | '500') ?? '404';
   });
 
   /**
    * Computed title based on error code.
    */
   protected readonly title = computed(() => {
-    return this.errorCode() === '404'
-      ? 'No encontramos esta página'
-      : 'Algo salió mal';
+    switch (this.errorCode()) {
+      case '403':
+        return 'No tenés permiso para acceder';
+      case '404':
+        return 'No encontramos esta página';
+      case '500':
+        return 'Algo salió mal';
+    }
   });
 
   /**
    * Computed message based on error code.
    */
   protected readonly message = computed(() => {
-    return this.errorCode() === '404'
-      ? 'La página que buscás no existe o fue movida. Explorá nuestro catálogo para encontrar productos saludables.'
-      : 'Tuvimos un problema inesperado. Intentá nuevamente en unos minutos.';
+    switch (this.errorCode()) {
+      case '403':
+        return 'No tenés los permisos necesarios para ver esta página. Volvé al inicio o contactá al administrador.';
+      case '404':
+        return 'La página que buscás no existe o fue movida. Explorá nuestro catálogo para encontrar productos saludables.';
+      case '500':
+        return 'Tuvimos un problema inesperado. Intentá nuevamente en unos minutos.';
+    }
   });
 
   /**
    * Primary action route based on error type.
    */
   protected readonly primaryRoute = computed(() => {
-    return this.isServerError() ? '/store' : '/store/products';
+    return this.errorCode() === '404' ? '/store/products' : '/store';
   });
 
   /**
    * Primary action label based on error type.
    */
   protected readonly primaryLabel = computed(() => {
-    return this.isServerError() ? 'Volver al inicio' : 'Explorar catálogo';
+    return this.errorCode() === '404' ? 'Explorar catálogo' : 'Volver al inicio';
   });
-
-  /**
-   * Whether this is a server error (500) which uses danger styling.
-   */
-  protected readonly isServerError = computed(() => this.errorCode() === '500');
 
   /**
    * Helpful suggestions for 404 errors.

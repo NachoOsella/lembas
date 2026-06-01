@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { signal, WritableSignal } from '@angular/core';
+import { MessageService } from 'primeng/api';
 
 import { StoreLayout } from './store-layout';
 import { AuthService, AuthUser } from '../../../core/services/auth';
@@ -35,7 +36,7 @@ describe('StoreLayout', () => {
 
     TestBed.configureTestingModule({
       imports: [StoreLayout],
-      providers: [provideRouter([]), { provide: AuthService, useValue: mockAuthService }],
+      providers: [provideRouter([]), MessageService, { provide: AuthService, useValue: mockAuthService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(StoreLayout);

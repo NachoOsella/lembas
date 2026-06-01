@@ -11,10 +11,11 @@ import {
   AppStoreFooter,
   StoreFooterLink,
 } from '../../../shared/components/app-store-footer/app-store-footer';
+import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
 @Component({
   selector: 'app-store-layout',
-  imports: [RouterOutlet, AppStoreNav, AppStoreFooter],
+  imports: [RouterOutlet, AppStoreNav, AppStoreFooter, AppToast],
   templateUrl: './store-layout.html',
   styleUrl: './store-layout.css',
 })

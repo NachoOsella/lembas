@@ -18,10 +18,11 @@ import { AuthService, RegisterRequest } from '../../../core/services/auth';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { getApiError } from '../../../shared/models/api-error';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
+import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
 @Component({
   selector: 'app-register',
-  imports: [ErrorAlert, FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
+  imports: [ErrorAlert, AppToast, FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })

@@ -10,10 +10,11 @@ import { AuthService, LoginRequest } from '../../../core/services/auth';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { ApiErrorResponse } from '../../../shared/models/api-error';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
+import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
 @Component({
   selector: 'app-login',
-  imports: [ErrorAlert, FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
+  imports: [ErrorAlert, AppToast, FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
