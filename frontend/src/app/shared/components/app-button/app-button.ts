@@ -10,7 +10,7 @@ import { ButtonDirective, ButtonLabel } from 'primeng/button';
 })
 export class AppButton {
   readonly type = input<'button' | 'submit' | 'reset'>('button');
-  readonly variant = input<'primary' | 'secondary' | 'ghost' | 'danger' | 'hero'>('primary');
+  readonly variant = input<'primary' | 'secondary' | 'ghost' | 'danger' | 'hero' | 'success'>('primary');
   readonly size = input<'sm' | 'md' | 'lg'>('md');
   readonly disabled = input(false);
   readonly loading = input(false);

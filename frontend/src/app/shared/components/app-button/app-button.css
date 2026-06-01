@@ -131,6 +131,16 @@
     0 2px 4px rgba(200, 32, 20, 0.18);
 }
 
+/* ── Success (temporary feedback after successful action) ──────── */
+.app-button--success {
+  color: #ffffff;
+  background: #10b981;
+  border-color: #10b981;
+  box-shadow:
+    0 0 0.5px rgba(16, 185, 129, 0.12),
+    0 1px 2px rgba(16, 185, 129, 0.14);
+}
+
 /* ── Hero (white-on-green CTA for dark feature bands) ────────── */
 .app-button--hero {
   color: #075f36;
@@ -172,8 +182,7 @@
 }
 
 .app-button span {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Allow text to display fully */
 }
 
 @media (max-width: 34rem) {

@@ -149,13 +149,13 @@
               }
 
               <app-button
-                [variant]="isOutOfStock() ? 'secondary' : 'primary'"
-                [disabled]="isOutOfStock()"
-                icon="pi pi-shopping-bag"
+                [variant]="isOutOfStock() ? 'secondary' : justAdded() ? 'success' : 'primary'"
+                [disabled]="isOutOfStock() || justAdded()"
+                [icon]="justAdded() ? 'pi pi-check' : 'pi pi-shopping-bag'"
                 size="lg"
                 (click)="addToCart()"
               >
-                {{ isOutOfStock() ? 'Sin stock' : 'Agregar al pedido' }}
+                {{ isOutOfStock() ? 'Sin stock' : justAdded() ? 'Agregado' : 'Agregar al pedido' }}
               </app-button>
             </div>
 

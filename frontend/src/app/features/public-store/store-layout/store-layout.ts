@@ -1,8 +1,9 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 
 import { AuthService } from '../../../core/services/auth';
+import { Cart } from '../../../core/services/cart';
 import {
   AppStoreNav,
   StoreBrandConfig,
@@ -11,11 +12,10 @@ import {
   AppStoreFooter,
   StoreFooterLink,
 } from '../../../shared/components/app-store-footer/app-store-footer';
-import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
 @Component({
   selector: 'app-store-layout',
-  imports: [RouterOutlet, AppStoreNav, AppStoreFooter, AppToast],
+  imports: [RouterOutlet, AppStoreNav, AppStoreFooter],
   templateUrl: './store-layout.html',
   styleUrl: './store-layout.css',
 })
@@ -23,8 +23,9 @@ import { AppToast } from '../../../shared/components/app-toast/app-toast';
 export class StoreLayout {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly cart = inject(Cart);
 
-  protected readonly cartItemsCount = signal(0);
+  protected readonly cartItemsCount = computed(() => this.cart.totalItems());
 
   /** Whether a user is currently logged in. */
   protected readonly isLoggedIn = computed(() => this.auth.isAuthenticated());
