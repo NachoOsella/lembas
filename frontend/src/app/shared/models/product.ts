@@ -16,6 +16,12 @@ export interface ProductSummary {
   salePrice: number;
   onlineStatus: ProductOnlineStatus;
   imageUrl?: string;
+  /**
+   * Branch-level stock availability.
+   *
+   * TODO: Populate this field when the inventory module exposes stock lots by branch.
+   * Until then, undefined means the public catalog does not know real availability.
+   */
   availableStock?: number;
   minimumStock?: number;
   categoryId: number;

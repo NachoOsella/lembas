@@ -63,7 +63,7 @@ export class StoreLayout {
 
   /** Flat footer links for app-store-footer. Only real, working links. */
   protected readonly footerLinks: readonly StoreFooterLink[] = [
-    { label: 'Catálogo', path: '/store/catalog' },
+    { label: 'Catálogo', path: '/store/products' },
     { label: 'Instagram', path: 'https://www.instagram.com/dietetica.lembas', external: true },
     { label: 'Facebook', path: 'https://www.facebook.com/dietetica.lembas', external: true },
   ];
@@ -75,14 +75,14 @@ export class StoreLayout {
   onSearch(query: string): void {
     const trimmed = query.trim();
     if (trimmed) {
-      this.router.navigate(['/store/catalog'], { queryParams: { q: trimmed } });
+      this.router.navigate(['/store/products'], { queryParams: { q: trimmed } });
       return;
     }
 
     // Empty submissions only clear an existing catalog search; they should not
     // unexpectedly move users from another store page into the catalog.
-    if (this.router.url.startsWith('/store/catalog') && this.router.url.includes('q=')) {
-      this.router.navigate(['/store/catalog'], { queryParams: {} });
+    if (this.router.url.startsWith('/store/products') && this.router.url.includes('q=')) {
+      this.router.navigate(['/store/products'], { queryParams: {} });
     }
   }
 

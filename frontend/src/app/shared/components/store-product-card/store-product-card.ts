@@ -34,7 +34,7 @@ export class StoreProductCard {
   readonly addToCart = output<StoreProductCardAddToCartEvent>();
 
   /** Detail route for the current product. */
-  protected readonly productRoute = computed(() => ['/store/product', this.product().id]);
+  protected readonly productRoute = computed(() => ['/store/products', this.product().id]);
 
   /** Accessible label for the card link. */
   protected readonly detailLabel = computed(() => `Ver detalle de ${this.product().name}`);

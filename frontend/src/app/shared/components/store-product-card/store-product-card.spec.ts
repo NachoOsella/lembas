@@ -165,7 +165,7 @@ describe('StoreProductCard', () => {
     const link = fixture.nativeElement.querySelector('a');
     expect(link).toBeTruthy();
     const href = link.getAttribute('href') ?? '';
-    expect(href).toContain('/store/product/42');
+    expect(href).toContain('/store/products/42');
   });
 
   it('should have accessible aria-label on the card link', async () => {

@@ -168,7 +168,6 @@ export class Catalog implements OnInit {
       .getProducts(
         this.searchQuery() || undefined,
         this.selectedCategoryId() ?? undefined,
-        undefined,
         page,
         this.pageSize(),
       )

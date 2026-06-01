@@ -33,15 +33,15 @@ export class CatalogService {
    *
    * @param query     optional full-text search query
    * @param categoryId optional category filter
-   * @param branchId   optional branch filter (for stock availability)
    * @param page       zero-based page index
    * @param size       page size
    * @returns an observable emitting the paginated response
+   *
+   * TODO: Add branchId once the inventory module exposes branch-level stock availability.
    */
   getProducts(
     query?: string,
     categoryId?: number,
-    branchId?: number,
     page = 0,
     size = 20,
   ): Observable<{
@@ -61,9 +61,6 @@ export class CatalogService {
     }
     if (categoryId != null) {
       params = params.set('categoryId', categoryId);
-    }
-    if (branchId != null) {
-      params = params.set('branchId', branchId);
     }
     return this.http.get<{
       content: ProductSummary[];
@@ -110,16 +107,13 @@ export class CatalogService {
   /**
    * Returns a single product detail by ID.
    *
-   * @param id       the product ID
-   * @param branchId optional branch ID for stock availability
+   * @param id the product ID
    * @returns an observable emitting the product detail
+   *
+   * TODO: Add branchId once the inventory module exposes branch-level stock availability.
    */
-  getProductDetail(id: number, branchId?: number): Observable<ProductSummary> {
-    let params = new HttpParams();
-    if (branchId != null) {
-      params = params.set('branchId', branchId);
-    }
-    return this.http.get<ProductSummary>(`${this.productsUrl}/${id}`, { params });
+  getProductDetail(id: number): Observable<ProductSummary> {
+    return this.http.get<ProductSummary>(`${this.productsUrl}/${id}`);
   }
 
   /**

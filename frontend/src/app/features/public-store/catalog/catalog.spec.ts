@@ -179,7 +179,7 @@ describe('Catalog', () => {
     fixture.detectChanges();
 
     expect((c['selectedCategoryId'] as () => number | null)()).toBe(2);
-    expect(svc['getProducts']).toHaveBeenCalledWith(undefined, 2, undefined, 0, 20);
+    expect(svc['getProducts']).toHaveBeenCalledWith(undefined, 2, 0, 20);
     expect(supplements?.classList.contains('catnav-pills__item--active')).toBe(true);
   });
 

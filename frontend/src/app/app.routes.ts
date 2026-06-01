@@ -16,7 +16,7 @@ export const routes: Routes = [
   },
   {
     path: 'catalog',
-    redirectTo: '/store/catalog',
+    redirectTo: '/store/products',
     pathMatch: 'full',
   },
   {

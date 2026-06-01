@@ -68,7 +68,7 @@ describe('CatalogService', () => {
     req.flush(mockResponse);
   });
 
-  it('should include query params when provided', () => {
+  it('should include query, category and pagination params when provided', () => {
     const mockResponse = {
       content: [{ id: 1, name: 'Test', salePrice: 100 }],
       totalElements: 1,
@@ -80,19 +80,19 @@ describe('CatalogService', () => {
       empty: false,
     };
 
-    service.getProducts('granola', 2, 5, 1, 10).subscribe();
+    service.getProducts('granola', 2, 1, 10).subscribe();
 
     const req = httpMock.expectOne((r) => r.url === '/api/store/products');
     expect(req.request.params.get('q')).toBe('granola');
     expect(req.request.params.get('categoryId')).toBe('2');
-    expect(req.request.params.get('branchId')).toBe('5');
+    expect(req.request.params.has('branchId')).toBe(false);
     expect(req.request.params.get('page')).toBe('1');
     expect(req.request.params.get('size')).toBe('10');
     req.flush(mockResponse);
   });
 
   it('should not include optional params when undefined', () => {
-    service.getProducts(undefined, undefined, undefined, 0, 20).subscribe();
+    service.getProducts(undefined, undefined, 0, 20).subscribe();
 
     const req = httpMock.expectOne((r) => r.url === '/api/store/products');
     expect(req.request.params.has('q')).toBe(false);
@@ -144,14 +144,6 @@ describe('CatalogService', () => {
     const req = httpMock.expectOne('/api/store/products/42');
     expect(req.request.method).toBe('GET');
     req.flush(mockProduct);
-  });
-
-  it('should include branchId param when provided', () => {
-    service.getProductDetail(42, 5).subscribe();
-
-    const req = httpMock.expectOne((r) => r.url === '/api/store/products/42');
-    expect(req.request.params.get('branchId')).toBe('5');
-    req.flush({ id: 42 });
   });
 
   // --- getRelatedProducts ---

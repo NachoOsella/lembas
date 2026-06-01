@@ -53,7 +53,7 @@ import { ProductSummary } from '../../../shared/models/product';
               <app-button
                 variant="hero"
                 size="lg"
-                routerLink="/store/catalog"
+                routerLink="/store/products"
                 icon="pi pi-arrow-right"
               >
                 Explorar catálogo
@@ -131,7 +131,7 @@ import { ProductSummary } from '../../../shared/models/product';
               </h2>
             </div>
             <a
-              routerLink="/store/catalog"
+              routerLink="/store/products"
               class="inline-flex items-center gap-2 text-sm font-bold text-[#2f8d72] transition hover:text-[#075f36]"
             >
               Ver catálogo completo <i class="pi pi-arrow-right" aria-hidden="true"></i>

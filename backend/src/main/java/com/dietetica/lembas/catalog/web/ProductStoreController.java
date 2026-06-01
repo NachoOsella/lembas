@@ -23,23 +23,29 @@ public class ProductStoreController {
         this.productService = productService;
     }
 
-    /** Returns products published in the public online store. */
+    /**
+     * Returns products published in the public online store.
+     *
+     * TODO: Add branch-level stock availability when the inventory module exposes
+     * stock lots by branch. Until then, the public catalog intentionally avoids
+     * accepting a branchId parameter to prevent a misleading stock contract.
+     */
     @GetMapping
     public Page<ProductSummaryDto> list(
             @RequestParam(name = "q", required = false) String search,
             @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) Long branchId,
             @PageableDefault(size = 20, sort = "name") Pageable pageable
     ) {
         return productService.listStoreProducts(search, categoryId, pageable);
     }
 
-    /** Returns a published product detail for the public online store. */
+    /**
+     * Returns a published product detail for the public online store.
+     *
+     * TODO: Include branch-level available stock once inventory is implemented.
+     */
     @GetMapping("/{id}")
-    public ProductDetailDto detail(
-            @PathVariable Long id,
-            @RequestParam(required = false) Long branchId
-    ) {
+    public ProductDetailDto detail(@PathVariable Long id) {
         return productService.getStoreProductDetail(id);
     }
 

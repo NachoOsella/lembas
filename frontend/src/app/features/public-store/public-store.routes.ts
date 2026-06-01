@@ -10,12 +10,21 @@ export default [
         loadComponent: () => import('./home/home').then((m) => m.Home),
       },
       {
-        path: 'catalog',
+        path: 'products',
         loadComponent: () => import('./catalog/catalog').then((m) => m.Catalog),
       },
       {
-        path: 'product/:id',
+        path: 'products/:id',
         loadComponent: () => import('./product-detail/product-detail').then((m) => m.ProductDetail),
+      },
+      {
+        path: 'catalog',
+        redirectTo: 'products',
+        pathMatch: 'full',
+      },
+      {
+        path: 'product/:id',
+        redirectTo: 'products/:id',
       },
     ],
   },
