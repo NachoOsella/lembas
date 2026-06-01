@@ -141,6 +141,19 @@ export class ComponentShowcase {
     { label: 'Usuarios', path: '/admin/users', description: 'Gestion de roles y accesos.' },
   ];
 
+  protected readonly errorScreens: readonly ShowcaseLink[] = [
+    {
+      label: 'Error 404',
+      path: '/store/error/404',
+      description: 'Pagina no encontrada (wildcard route).',
+    },
+    {
+      label: 'Error 500',
+      path: '/store/error/500',
+      description: 'Error interno del servidor.',
+    },
+  ];
+
   protected readonly breadcrumbItems: MenuItem[] = [
     { label: 'Tienda', routerLink: '/store' },
     { label: 'Productos', routerLink: '/store' },

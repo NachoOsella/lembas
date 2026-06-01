@@ -637,6 +637,20 @@
           }
         </div>
       </div>
+
+      <!-- Errores -->
+      <div class="screen-group">
+        <h3 class="screen-group-title">Errores</h3>
+        <div class="screen-list">
+          @for (screen of errorScreens; track screen.path) {
+            <a [routerLink]="screen.path" class="screen-link">
+              <strong class="screen-link-label">{{ screen.label }}</strong>
+              <span class="screen-link-desc">{{ screen.description }}</span>
+              <code class="screen-link-route">{{ screen.path }}</code>
+            </a>
+          }
+        </div>
+      </div>
     </div>
   </section>
 </main>

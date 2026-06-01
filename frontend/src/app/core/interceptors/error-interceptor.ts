@@ -89,6 +89,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           });
           break;
 
+        case 404:
+          // Not-found errors are propagated to the component for contextual handling.
+          // No global toast or redirect -- the owning page decides how to react.
+          break;
+
         default:
           // Only unexpected server failures are global. 4xx business errors stay local.
           if (error.status >= 500) {
