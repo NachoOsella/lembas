@@ -1,15 +1,16 @@
 import { Component, computed, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ButtonDirective, ButtonLabel } from 'primeng/button';
 
 @Component({
   selector: 'app-button',
-  imports: [ButtonDirective, ButtonLabel],
+  imports: [RouterLink, ButtonDirective, ButtonLabel],
   templateUrl: './app-button.html',
   styleUrl: './app-button.css',
 })
 export class AppButton {
   readonly type = input<'button' | 'submit' | 'reset'>('button');
-  readonly variant = input<'primary' | 'secondary' | 'ghost' | 'danger'>('primary');
+  readonly variant = input<'primary' | 'secondary' | 'ghost' | 'danger' | 'hero'>('primary');
   readonly size = input<'sm' | 'md' | 'lg'>('md');
   readonly disabled = input(false);
   readonly loading = input(false);
@@ -19,8 +20,14 @@ export class AppButton {
   readonly ariaLabel = input<string | null>(null);
   readonly testId = input<string | null>(null);
 
+  /** Optional routerLink — when set, renders as <a> instead of <button>. */
+  readonly routerLink = input<string | string[] | null>(null);
+
   /** Prevents user interaction while the button is disabled or submitting. */
   protected readonly isDisabled = computed(() => this.disabled() || this.loading());
+
+  /** Whether to render as an anchor tag. */
+  protected readonly isLink = computed(() => this.routerLink() != null);
 
   /** Builds PrimeNG-compatible classes for the selected semantic variant and size. */
   protected readonly buttonClass = computed(() => {

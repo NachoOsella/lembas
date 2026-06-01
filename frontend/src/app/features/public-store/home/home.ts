@@ -1,16 +1,17 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ButtonDirective } from 'primeng/button';
-import { Ripple } from 'primeng/ripple';
 
 import { CatalogService } from '../../../core/services/catalog';
+import { AppButton } from '../../../shared/components/app-button/app-button';
+import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
+import { ProductGridSkeleton } from '../../../shared/components/product-grid-skeleton/product-grid-skeleton';
 import { StoreProductCard } from '../../../shared/components/store-product-card/store-product-card';
 import { HeroFlowers } from '../../../shared/components/hero-flowers/hero-flowers';
 import { ProductSummary } from '../../../shared/models/product';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, ButtonDirective, Ripple, StoreProductCard, HeroFlowers],
+  imports: [RouterLink, AppButton, AppEyebrow, ProductGridSkeleton, StoreProductCard, HeroFlowers],
   template: `
     <div class="home-page min-h-screen overflow-hidden bg-[#f6ead6] text-stone-950">
       <!-- Editorial hero with organic depth -->
@@ -34,12 +35,10 @@ import { ProductSummary } from '../../../shared/models/product';
           class="relative mx-auto grid w-full max-w-[1600px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_0.85fr] lg:px-10"
         >
           <section class="w-full max-w-3xl min-w-0">
-            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-50/70 mb-3">
-              Dietética Lembas
-            </p>
+            <app-eyebrow color="light">Dietetica Lembas</app-eyebrow>
 
             <h1
-              class="mt-8 max-w-[760px] text-5xl font-semibold leading-[1.05] tracking-[-0.04em] text-white sm:text-6xl lg:text-[5rem]"
+              class="mt-8 max-w-[760px] text-5xl font-semibold leading-[1.05] tracking-[-0.01em] text-white sm:text-6xl lg:text-[5rem]"
             >
               Tu despensa natural, lista para retirar
             </h1>
@@ -51,15 +50,14 @@ import { ProductSummary } from '../../../shared/models/product';
             </p>
 
             <div class="mt-10 flex flex-col gap-3 sm:flex-row">
-              <a
-                pButton
-                pRipple
+              <app-button
+                variant="hero"
+                size="lg"
                 routerLink="/store/catalog"
-                class="!rounded-full !border-0 !bg-white !px-8 !py-4 !font-bold !text-[#075f36] shadow-xl shadow-black/20 transition-all hover:-translate-y-0.5 hover:shadow-2xl"
+                icon="pi pi-arrow-right"
               >
                 Explorar catálogo
-                <i class="pi pi-arrow-right ml-2" aria-hidden="true"></i>
-              </a>
+              </app-button>
             </div>
           </section>
 
@@ -124,9 +122,7 @@ import { ProductSummary } from '../../../shared/models/product';
         >
           <div class="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">
-                Selección curada
-              </p>
+              <app-eyebrow color="green">Seleccion curada</app-eyebrow>
               <h2
                 id="home-products-title"
                 class="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl"
@@ -142,7 +138,11 @@ import { ProductSummary } from '../../../shared/models/product';
             </a>
           </div>
 
-          @if (featuredProducts().length > 0) {
+          @if (featuredLoading()) {
+            <div class="rounded-[2rem] border border-black/8 bg-white p-5 shadow-sm">
+              <app-product-grid-skeleton [count]="6" />
+            </div>
+          } @else if (featuredProducts().length > 0) {
             <div
               class="home-marquee rounded-[2rem] border border-black/8 bg-white p-5 shadow-sm"
               aria-label="Productos recomendados en movimiento"
@@ -173,9 +173,7 @@ import { ProductSummary } from '../../../shared/models/product';
           aria-labelledby="home-benefits-title"
         >
           <div class="mb-12 text-center">
-            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">
-              Comprá con confianza
-            </p>
+            <app-eyebrow color="green">Comprá con confianza</app-eyebrow>
             <h2
               id="home-benefits-title"
               class="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl"
@@ -209,9 +207,7 @@ import { ProductSummary } from '../../../shared/models/product';
           aria-labelledby="home-reviews-title"
         >
           <div class="mb-12 text-center">
-            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">
-              Lo que dicen nuestros clientes
-            </p>
+            <app-eyebrow color="green">Lo que dicen nuestros clientes</app-eyebrow>
             <h2
               id="home-reviews-title"
               class="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl"
@@ -317,6 +313,7 @@ export class Home implements OnInit {
   private readonly catalogService = inject(CatalogService);
 
   protected readonly featuredProducts = signal<ProductSummary[]>([]);
+  protected readonly featuredLoading = signal(true);
 
   // ---------------------------------------------------------------------------
   // Benefits
@@ -392,8 +389,12 @@ export class Home implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.catalogService.getFeaturedProducts().subscribe((res) => {
-      this.featuredProducts.set(res.content);
+    this.catalogService.getFeaturedProducts().subscribe({
+      next: (res) => {
+        this.featuredProducts.set(res.content);
+        this.featuredLoading.set(false);
+      },
+      error: () => this.featuredLoading.set(false),
     });
   }
 

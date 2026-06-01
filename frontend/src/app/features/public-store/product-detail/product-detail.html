@@ -191,9 +191,7 @@
     <section class="mt-10 w-full bg-[#075f36]">
       <div class="mx-auto flex max-w-[1440px] flex-col items-center gap-6 px-4 py-10 text-center sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-12 sm:text-left lg:px-8">
         <div>
-          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-50/60">
-            Como funciona
-          </p>
+          <app-eyebrow color="light">Como funciona</app-eyebrow>
           <h2 class="mt-2 text-2xl font-semibold text-white sm:text-3xl">
             Compra online, retira en sucursal
           </h2>
@@ -201,13 +199,15 @@
             Armá tu pedido desde casa y pasá a buscarlo cuando te quede comodo. Sin filas, sin espera.
           </p>
         </div>
-        <a
+        <app-button
+          variant="hero"
+          size="lg"
           routerLink="/store/catalog"
-          class="shrink-0 rounded-full border border-white bg-white px-8 py-3.5 text-sm font-bold text-[#075f36] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+          icon="pi pi-arrow-right"
+          class="shrink-0"
         >
           Explorar catalogo
-          <i class="pi pi-arrow-right ml-2" aria-hidden="true"></i>
-        </a>
+        </app-button>
       </div>
     </section>
 
@@ -218,9 +218,7 @@
       <section class="mx-auto max-w-[1440px] px-4 py-16 sm:px-6 lg:px-8">
         <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#2f8d72]">
-              Segui explorando
-            </p>
+            <app-eyebrow color="green">Segui explorando</app-eyebrow>
             <h2 class="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
               {{ relatedTitle() }}
             </h2>
@@ -236,17 +234,9 @@
           }
         </div>
 
-        <div
-          class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
-          role="list"
-          aria-label="Productos relacionados"
-        >
-          @for (related of relatedProducts(); track related.id) {
-            <div role="listitem">
-              <app-store-product-card [product]="related" />
-            </div>
-          }
-        </div>
+        <app-product-grid
+          [products]="relatedProducts()"
+        />
       </section>
     }
   }

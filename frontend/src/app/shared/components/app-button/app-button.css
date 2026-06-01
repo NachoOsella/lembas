@@ -131,6 +131,26 @@
     0 2px 4px rgba(200, 32, 20, 0.18);
 }
 
+/* ── Hero (white-on-green CTA for dark feature bands) ────────── */
+.app-button--hero {
+  color: #075f36;
+  background: #ffffff;
+  border-color: #ffffff;
+  box-shadow:
+    0 0 0.5px rgba(255, 255, 255, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.app-button--hero:hover:not(:disabled) {
+  color: #075f36;
+  background: #f0f9f4;
+  border-color: #f0f9f4;
+  box-shadow:
+    0 0 0.5px rgba(255, 255, 255, 0.16),
+    0 8px 20px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px);
+}
+
 /* ── Hover: no transform ────────────────────────────────────── */
 .app-button:hover:not(:disabled) {
   /* Intentionally no transform — only active gets scale */

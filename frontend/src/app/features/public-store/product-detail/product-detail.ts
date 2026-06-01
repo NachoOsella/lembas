@@ -7,13 +7,14 @@ import { CatalogService } from '../../../core/services/catalog';
 import { ProductSummary } from '../../../shared/models/product';
 import { AppBadge } from '../../../shared/components/app-badge/app-badge';
 import { AppButton } from '../../../shared/components/app-button/app-button';
+import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
-import { StoreProductCard } from '../../../shared/components/store-product-card/store-product-card';
+import { ProductGrid } from '../../../shared/components/product-grid/product-grid';
 
 @Component({
   selector: 'app-product-detail',
-  imports: [RouterLink, AppBadge, AppButton, ErrorAlert, LoadingSpinner, StoreProductCard],
+  imports: [RouterLink, AppBadge, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css',
 })

@@ -1,0 +1,28 @@
+:host {
+  display: block;
+}
+
+.app-eyebrow {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  line-height: 1;
+}
+
+/* Leaf Green — for light / white backgrounds */
+.app-eyebrow--green {
+  color: #2f8d72;
+}
+
+/* White at 70% opacity — for dark green backgrounds */
+.app-eyebrow--light {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Brown Bark — for editorial / category modal surfaces */
+.app-eyebrow--bark {
+  color: #9a5b19;
+}
