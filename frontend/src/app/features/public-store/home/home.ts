@@ -172,28 +172,34 @@ import { ProductSummary } from '../../../shared/models/product';
           class="mx-auto mt-20 w-full max-w-[1600px] px-4 sm:px-6 lg:px-10"
           aria-labelledby="home-benefits-title"
         >
-          <div class="mb-12 text-center">
+          <div class="mb-16 text-center">
             <app-eyebrow color="green">Comprá con confianza</app-eyebrow>
             <h2
               id="home-benefits-title"
-              class="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl"
+              class="mt-4 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl lg:text-5xl"
             >
               La experiencia Lembas, pensada para vos
             </h2>
           </div>
 
-          <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div class="grid grid-cols-1 gap-8 sm:grid-cols-3">
             @for (benefit of benefits; track benefit.title) {
               <div
-                class="rounded-2xl border border-[rgba(7,95,54,0.08)] bg-white p-8 text-center shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]"
+                class="group relative rounded-2xl border border-[rgba(7,95,54,0.08)] bg-white p-10 text-center shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_2px_8px_0_rgba(0,0,0,0.08)] transition-all duration-300 hover:shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_8px_24px_0_rgba(47,141,114,0.12)] hover:-translate-y-1"
               >
+                <!-- Decorative accent line -->
+                <div
+                  class="absolute left-0 top-1/2 h-16 w-1 -translate-y-1/2 rounded-r-full bg-[#2f8d72] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  aria-hidden="true"
+                ></div>
+                
                 <span
-                  class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#d7eadf]/60 text-[#2f8d72]"
+                  class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#d7eadf] to-[#e9f3ea] text-[#2f8d72] shadow-[0_4px_12px_rgba(47,141,114,0.15)]"
                 >
-                  <i [class]="benefit.icon + ' text-xl'" aria-hidden="true"></i>
+                  <i [class]="benefit.icon + ' text-3xl'" aria-hidden="true"></i>
                 </span>
-                <h3 class="mt-5 text-lg font-bold tracking-[-0.01em]">{{ benefit.title }}</h3>
-                <p class="mt-2 text-sm leading-relaxed text-[rgba(0,0,0,0.58)]">
+                <h3 class="mt-6 text-xl font-bold tracking-[-0.01em] text-[rgba(0,0,0,0.87)]">{{ benefit.title }}</h3>
+                <p class="mt-3 text-base leading-relaxed text-[rgba(0,0,0,0.58)]">
                   {{ benefit.description }}
                 </p>
               </div>
@@ -206,22 +212,22 @@ import { ProductSummary } from '../../../shared/models/product';
           class="mx-auto mt-20 w-full max-w-[1600px] px-4 sm:px-6 lg:px-10"
           aria-labelledby="home-reviews-title"
         >
-          <div class="mb-12 text-center">
+          <div class="mb-16 text-center">
             <app-eyebrow color="green">Lo que dicen nuestros clientes</app-eyebrow>
             <h2
               id="home-reviews-title"
-              class="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl"
+              class="mt-4 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl lg:text-5xl"
             >
               Opiniones de la comunidad
             </h2>
             <!-- TODO: Replace mock reviews with real Google Maps / review platform data via API -->
-            <div class="mt-4 flex items-center justify-center gap-2">
-              <div class="flex gap-0.5">
+            <div class="mt-6 flex items-center justify-center gap-3">
+              <div class="flex gap-1">
                 @for (star of [1, 2, 3, 4, 5]; track star) {
-                  <i class="pi pi-star-fill text-[#f29d52] text-sm" aria-hidden="true"></i>
+                  <i class="pi pi-star-fill text-[#f29d52] text-lg" aria-hidden="true"></i>
                 }
               </div>
-              <span class="text-sm font-semibold text-[rgba(0,0,0,0.87)]">4.8</span>
+              <span class="text-base font-bold text-[rgba(0,0,0,0.87)]">4.8</span>
               <span class="text-sm text-[rgba(0,0,0,0.45)]">· 127 reseñas en Google</span>
             </div>
           </div>
@@ -229,23 +235,31 @@ import { ProductSummary } from '../../../shared/models/product';
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             @for (review of reviews; track review.name) {
               <div
-                class="rounded-2xl border border-[rgba(7,95,54,0.08)] bg-white p-6 shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_1px_1px_0_rgba(0,0,0,0.24)]"
+                class="group relative overflow-hidden rounded-2xl border border-[rgba(7,95,54,0.08)] bg-white p-7 shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_2px_8px_0_rgba(0,0,0,0.08)] transition-all duration-300 hover:shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_8px_24px_0_rgba(47,141,114,0.12)] hover:-translate-y-1"
               >
-                <div class="flex items-center gap-3">
+                <!-- Decorative quote mark -->
+                <div
+                  class="pointer-events-none absolute -right-4 -top-4 text-[8rem] font-serif leading-none text-[#d7eadf]/30"
+                  aria-hidden="true"
+                >
+                  "
+                </div>
+                
+                <div class="relative flex items-center gap-4">
                   <span
-                    class="flex h-10 w-10 items-center justify-center rounded-full bg-[#075f36] text-sm font-bold text-white"
+                    class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#075f36] to-[#2f8d72] text-base font-bold text-white shadow-[0_4px_12px_rgba(7,95,54,0.2)]"
                   >
                     {{ review.name.charAt(0) }}
                   </span>
                   <div>
-                    <p class="text-sm font-bold text-[rgba(0,0,0,0.87)]">{{ review.name }}</p>
-                    <p class="text-[11px] text-[rgba(0,0,0,0.45)]">{{ review.date }}</p>
+                    <p class="text-base font-bold text-[rgba(0,0,0,0.87)]">{{ review.name }}</p>
+                    <p class="text-xs text-[rgba(0,0,0,0.45)]">{{ review.date }}</p>
                   </div>
                 </div>
-                <div class="mt-3 flex gap-0.5">
+                <div class="relative mt-4 flex gap-1">
                   @for (star of [1, 2, 3, 4, 5]; track star) {
                     <i
-                      class="pi text-xs"
+                      class="pi text-sm"
                       [class.pi-star-fill]="star <= review.rating"
                       [class.pi-star]="star > review.rating"
                       [class.text-[#f29d52]]="star <= review.rating"
@@ -254,7 +268,7 @@ import { ProductSummary } from '../../../shared/models/product';
                     ></i>
                   }
                 </div>
-                <p class="mt-3 text-sm leading-relaxed text-[rgba(0,0,0,0.7)]">
+                <p class="relative mt-4 text-base leading-relaxed text-[rgba(0,0,0,0.7)]">
                   "{{ review.text }}"
                 </p>
               </div>
