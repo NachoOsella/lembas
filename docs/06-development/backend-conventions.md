@@ -79,10 +79,10 @@ List<StockLot> findAvailableLotsFifo(@Param("productId") Long productId, @Param(
 
 ## Exception conventions
 
-All domain exceptions inherit from `DomainException`:
+Business-rule failures use `DomainException` with a stable error code and HTTP status:
 
 ```java
-public abstract class DomainException extends RuntimeException {
+public class DomainException extends RuntimeException {
     private final String code;
     private final HttpStatus status;
 
@@ -93,6 +93,8 @@ public abstract class DomainException extends RuntimeException {
     }
 }
 ```
+
+Prefer throwing `DomainException` directly unless a dedicated subclass adds real behavior. Keep error codes documented in `docs/05-api/api-guidelines.md` and map frontend messages by code.
 
 ## Testing conventions
 

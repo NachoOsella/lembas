@@ -120,13 +120,6 @@ Admin routes: /api/admin/** (ADMIN, MANAGER, EMPLOYEE)
 
 ## Error handling
 
-All domain exceptions inherit from `DomainException` and are handled by a global `@ControllerAdvice`. Response format is standardized `ApiError`.
+Business-rule failures use `DomainException`, which carries a stable `code`, an HTTP `status`, and a backend `message`. A global `@ControllerAdvice` converts those exceptions into the standardized `ApiError` response format documented in `docs/05-api/error-handling.md`.
 
-| Module | Exceptions |
-|---|---|
-| catalog | ProductNotFoundException, ProductNotPublishedException |
-| inventory | InsufficientStockException, LotExpiredException |
-| orders | OrderNotFoundException, OrderInvalidStateException |
-| payments | PaymentFailedException, MercadoPagoException |
-| cash | CashSessionNotOpenException, CashSessionAlreadyOpenException, CashDifferenceException |
-| auth | InvalidCredentialsException, AccountDisabledException |
+Clients must map user-facing messages from the error `code`, not from Java exception class names or raw backend messages.

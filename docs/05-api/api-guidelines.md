@@ -125,8 +125,17 @@ All errors use a uniform `ApiError` object:
 | ACCOUNT_DISABLED | Auth | 403 |
 | INVALID_REFRESH_TOKEN | Auth | 401 |
 | EMAIL_DUPLICATED | Auth, Users | 409 |
+| INVALID_USER_BRANCH | Users | 400 |
 | PRODUCT_NOT_FOUND | Catalog | 404 |
 | PRODUCT_NOT_PUBLISHED | Catalog | 404 |
+| PRODUCT_BARCODE_DUPLICATED | Catalog | 409 |
+| PRODUCT_STATUS_INVALID_TRANSITION | Catalog | 409 |
+| CATEGORY_NOT_FOUND | Catalog | 404 |
+| PARENT_NOT_FOUND | Catalog | 404 |
+| PARENT_INVALID | Catalog | 409 |
+| CATEGORY_NAME_DUPLICATED | Catalog | 409 |
+| CATEGORY_HAS_CHILDREN | Catalog | 409 |
+| CATEGORY_HAS_PRODUCTS | Catalog | 409 |
 | INSUFFICIENT_STOCK | Inventory | 409 |
 | LOT_EXPIRED | Inventory | 409 |
 | ORDER_NOT_FOUND | Orders | 404 |

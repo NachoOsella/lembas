@@ -35,24 +35,34 @@ All API errors follow a uniform format. This enables the frontend interceptor to
 
 ## Backend implementation
 
-### DomainException hierarchy
+### DomainException model
 
-```text
-DomainException (base)
-  ├── ProductNotFoundException
-  ├── ProductNotPublishedException
-  ├── InsufficientStockException
-  ├── LotExpiredException
-  ├── OrderNotFoundException
-  ├── OrderInvalidStateException
-  ├── PaymentFailedException
-  ├── MercadoPagoException
-  ├── CashSessionNotOpenException
-  ├── CashSessionAlreadyOpenException
-  ├── CashDifferenceException
-  ├── InvalidCredentialsException
-  ├── AccountDisabledException
-```
+Business-rule failures use `DomainException`, which carries the complete error contract for the frontend:
+
+- `code`: stable machine-readable error code used by clients for message mapping
+- `status`: HTTP status returned by the API
+- `message`: backend error description; clients should prefer `code` for user-facing copy
+
+Services may throw `DomainException` directly when a dedicated exception subclass is not needed. The frontend must not depend on Java exception class names or raw backend messages.
+
+### Sprint 1 business error codes
+
+| Code | Module | HTTP status | Typical scenario |
+|---|---|---|---|
+| INVALID_CREDENTIALS | Auth | 401 | Login credentials do not match an active user |
+| ACCOUNT_DISABLED | Auth | 403 | User account exists but is disabled |
+| EMAIL_DUPLICATED | Auth, Users | 409 | Email already belongs to another user |
+| INVALID_USER_BRANCH | Users | 400 | MANAGER or EMPLOYEE has no branch, or ADMIN has one |
+| PRODUCT_NOT_FOUND | Catalog | 404 | Product does not exist or is inactive |
+| PRODUCT_NOT_PUBLISHED | Catalog | 404 | Storefront product is not published |
+| PRODUCT_BARCODE_DUPLICATED | Catalog | 409 | Active product already uses the barcode |
+| PRODUCT_STATUS_INVALID_TRANSITION | Catalog | 409 | Online status transition is not allowed |
+| CATEGORY_NOT_FOUND | Catalog | 404 | Category does not exist |
+| PARENT_NOT_FOUND | Catalog | 404 | Parent category does not exist |
+| PARENT_INVALID | Catalog | 409 | Category parent assignment is invalid |
+| CATEGORY_NAME_DUPLICATED | Catalog | 409 | Same-level category name already exists |
+| CATEGORY_HAS_CHILDREN | Catalog | 409 | Category cannot be deleted while subcategories exist |
+| CATEGORY_HAS_PRODUCTS | Catalog | 409 | Category cannot be deleted while products reference it |
 
 ### Global exception handler
 

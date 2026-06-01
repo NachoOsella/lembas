@@ -153,3 +153,7 @@
 - `frontend/src/app/features/dev/component-showcase/component-showcase.ts` y `.html` -- agregadas demos de `StatusBadge` para productos (4 estados) y ordenes (3 estados) mostrando reusabilidad del componente.
 - `backend/src/main/java/com/dietetica/lembas/catalog/web/ProductStoreController.java`, `frontend/src/app/core/services/catalog.ts`, `frontend/src/app/shared/models/product.ts` -- ajustado S1-US10 para dejar stock por sucursal fuera del catalogo inicial: eliminado `branchId` del contrato publico actual, mantenido `availableStock` solo como campo frontend futuro con TODO y actualizados tests para no inventar stock hasta implementar inventory.
 - `frontend/src/app/features/public-store/public-store.routes.ts`, `frontend/src/app/features/public-store/home/home.spec.ts` -- alineadas rutas canonicas del catalogo publico a `/store/products` y `/store/products/:id` con redirects legacy, y agregada cobertura unitaria de Home.
+
+## 2026-06-01
+
+- `docs/05-api/{api-guidelines,error-handling}.md`, `docs/03-architecture/backend-architecture.md`, `docs/06-development/backend-conventions.md` -- alineada documentacion de errores S1-US11 con el modelo real `DomainException(code,status,message)` y agregados codigos de negocio Sprint 1 para auth, usuarios, categorias y productos.
