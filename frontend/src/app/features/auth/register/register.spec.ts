@@ -298,7 +298,7 @@ describe('Register component', () => {
 
     const errEl = fixture.nativeElement.querySelector('[data-testid="general-error"]');
     expect(errEl).toBeTruthy();
-    expect(errEl.textContent).toContain('Ya existe una cuenta con este email');
+    expect(errEl.textContent).toContain('Ya existe un usuario con este email.');
     expect(component.registrationSucceeded()).toBe(false);
     expect(component.submitting()).toBe(false);
     // User should NOT be saved
@@ -342,7 +342,7 @@ describe('Register component', () => {
     const errEl = fixture.nativeElement.querySelector('[data-testid="general-error"]');
     expect(errEl).toBeTruthy();
     expect(errEl.textContent).toContain('Verifica los datos ingresados');
-    expect(errEl.textContent).toContain('Contrasena: size must be between 8 and 128');
+    expect(errEl.textContent).toContain('Contrasena: debe tener entre 8 y 128 caracteres');
     expect(authService.currentUser()).toBeNull();
     expect(navigateSpy).not.toHaveBeenCalled();
   });

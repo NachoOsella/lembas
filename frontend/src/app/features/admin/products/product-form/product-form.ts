@@ -6,7 +6,9 @@ import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 
+import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
 import { CategoryService } from '../../../../core/services/category';
+import { ErrorMappingService } from '../../../../core/services/error-mapping';
 import { ProductService } from '../../../../core/services/product';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
@@ -46,6 +48,7 @@ export class ProductForm {
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
   private readonly messageService = inject(MessageService);
+  private readonly errorMapping = inject(ErrorMappingService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -136,18 +139,35 @@ export class ProductForm {
       },
       error: (error) => {
         this.submitting.set(false);
-        this.error.set(this.messageForError(error?.error?.code));
+        this.error.set(this.messageForError(error));
       },
     });
   }
 
-  /** Reads an image file as a local data URL for preview and request persistence. */
+  /** Reads a validated image file as a local data URL for preview and request persistence. */
   protected onImageSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
+
     if (!file) {
       return;
     }
+
+    const maxBytes = 2 * 1024 * 1024;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    if (!allowedTypes.includes(file.type)) {
+      this.error.set('Selecciona una imagen JPG, PNG o WebP.');
+      input.value = '';
+      return;
+    }
+
+    if (file.size > maxBytes) {
+      this.error.set('La imagen no puede superar los 2 MB.');
+      input.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => this.imageUrl.set(String(reader.result ?? ''));
     reader.readAsDataURL(file);
@@ -204,14 +224,24 @@ export class ProductForm {
     };
   }
 
-  /** Maps backend errors to actionable Spanish copy. */
-  private messageForError(code?: string): string {
-    const messages: Record<string, string> = {
-      VALIDATION_ERROR: 'Revisa los campos obligatorios y el formato del barcode.',
-      PRODUCT_BARCODE_DUPLICATED: 'Ya existe un producto activo con ese barcode.',
-      CATEGORY_NOT_FOUND: 'La categoria seleccionada ya no existe.',
-      PRODUCT_NOT_FOUND: 'El producto ya no existe o fue eliminado.',
-    };
-    return messages[code ?? ''] ?? 'No pudimos guardar el producto. Intenta nuevamente.';
+  /** Maps backend errors to actionable Spanish copy using centralized service. */
+  private messageForError(error: unknown): string {
+    const apiError = getApiError(error);
+    const code = apiError?.code;
+
+    if (!code) {
+      return 'No pudimos guardar el producto. Intenta nuevamente.';
+    }
+
+    // Feature-specific validation guidance
+    if (code === 'VALIDATION_ERROR') {
+      return 'Revisa los campos obligatorios antes de guardar.';
+    }
+
+    // Use centralized error mapping with product-specific context fallback
+    return this.errorMapping.getMessage(
+      code,
+      'No pudimos guardar el producto. Intenta nuevamente.'
+    );
   }
 }

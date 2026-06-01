@@ -1,9 +1,10 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../../../core/services/category';
+import { ErrorMappingService } from '../../../../core/services/error-mapping';
 import { CategoryDto } from '../../../../shared/models/category';
+import { getApiError } from '../../../../shared/models/api-error';
 import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import {
@@ -34,6 +35,7 @@ const DUPLICATE_TOAST_MS = 2000;
 export class CategoryList {
   private readonly categoryService = inject(CategoryService);
   private readonly messageService = inject(MessageService);
+  private readonly errorMapping = inject(ErrorMappingService);
 
   readonly categories = input.required<CategoryDto[]>();
   readonly loading = input(false);
@@ -90,15 +92,12 @@ export class CategoryList {
     this.categoryToDelete.set(category);
   }
 
-  /** Maps backend delete error codes to Spanish copy. */
+  /** Maps backend delete error codes to Spanish copy using centralized service. */
   private deleteErrorForCode(code?: string): string {
-    const messages: Record<string, string> = {
-      CATEGORY_HAS_CHILDREN:
-        'No se puede eliminar una categoria que tiene subcategorias. Elimina primero las subcategorias.',
-      CATEGORY_HAS_PRODUCTS:
-        'No se puede eliminar una categoria que tiene productos asociados. Reasigna los productos a otra categoria primero.',
-    };
-    return messages[code ?? ''] ?? 'No se pudo eliminar la categoria. Intenta nuevamente.';
+    return this.errorMapping.getMessage(
+      code ?? '',
+      'No se pudo eliminar la categoria. Intenta nuevamente.',
+    );
   }
 
   /** Deletes the selected category after explicit confirmation. */
@@ -120,11 +119,11 @@ export class CategoryList {
         this.deleting.set(false);
         this.deleted.emit();
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: unknown) => {
         this.categoryToDelete.set(null);
         this.deleting.set(false);
-        const code: string | undefined = err.error?.code;
-        const detail = this.deleteErrorForCode(code);
+        const apiError = getApiError(err);
+        const detail = this.deleteErrorForCode(apiError?.code);
         const key = `delete-category|${detail}`;
         const now = Date.now();
         if (

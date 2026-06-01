@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { CategoryService } from '../../../../core/services/category';
 import { ProductService } from '../../../../core/services/product';
@@ -353,5 +354,143 @@ describe('ProductList', () => {
     };
     expect(comp.productToChangeStatus()).toBeNull();
     expect(comp.pendingStatusAction()).toBeNull();
+  });
+
+  // --- Delete error handling ---
+
+  it('shows mapped error message when delete fails with PRODUCT_HAS_ORDERS', async () => {
+    const messageService = TestBed.inject(MessageService);
+    const addSpy = vi.spyOn(messageService, 'add');
+
+    productService.deleteProduct.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({
+        error: { code: 'PRODUCT_HAS_ORDERS' },
+        status: 409,
+        statusText: 'Conflict',
+      })),
+    );
+
+    (
+      component as unknown as { requestDelete: (product: { id: number; name: string }) => void }
+    ).requestDelete({ id: 7, name: 'Granola' });
+    (component as unknown as { confirmDelete: () => void }).confirmDelete();
+    await fixture.whenStable();
+
+    expect(addSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        severity: 'error',
+        detail: 'No se puede eliminar un producto que tiene pedidos asociados.',
+      }),
+    );
+  });
+
+  it('shows generic error message when delete fails with unknown code', async () => {
+    const messageService = TestBed.inject(MessageService);
+    const addSpy = vi.spyOn(messageService, 'add');
+
+    productService.deleteProduct.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({
+        error: { code: 'UNKNOWN_ERROR' },
+        status: 500,
+        statusText: 'Internal Server Error',
+      })),
+    );
+
+    (
+      component as unknown as { requestDelete: (product: { id: number; name: string }) => void }
+    ).requestDelete({ id: 7, name: 'Granola' });
+    (component as unknown as { confirmDelete: () => void }).confirmDelete();
+    await fixture.whenStable();
+
+    expect(addSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        severity: 'error',
+        detail: 'No se pudo eliminar el producto. Intenta nuevamente.',
+      }),
+    );
+  });
+
+  // --- Status change error handling ---
+
+  it('shows mapped error message when status change fails with PRODUCT_STATUS_INVALID_TRANSITION', async () => {
+    const messageService = TestBed.inject(MessageService);
+    const addSpy = vi.spyOn(messageService, 'add');
+
+    productService.updateProductStatus.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({
+        error: { code: 'PRODUCT_STATUS_INVALID_TRANSITION' },
+        status: 409,
+        statusText: 'Conflict',
+      })),
+    );
+
+    const product = {
+      id: 7,
+      name: 'Granola',
+      onlineStatus: 'DRAFT',
+    } as unknown as import('../../../../shared/models/product').ProductSummary;
+    const action = {
+      targetStatus: 'PUBLISHED',
+      label: 'Publicar',
+    } as import('../../../../shared/models/product-status').ProductStatusAction;
+
+    (
+      component as unknown as {
+        requestStatusChange: (
+          p: import('../../../../shared/models/product').ProductSummary,
+          a: import('../../../../shared/models/product-status').ProductStatusAction,
+        ) => void;
+      }
+    ).requestStatusChange(product, action);
+    (component as unknown as { confirmStatusChange: () => void }).confirmStatusChange();
+    await fixture.whenStable();
+
+    expect(addSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        severity: 'error',
+        detail: 'El producto ya no permite ese cambio de estado. Actualiza la tabla e intenta nuevamente.',
+      }),
+    );
+  });
+
+  it('shows generic error message when status change fails with unknown code', async () => {
+    const messageService = TestBed.inject(MessageService);
+    const addSpy = vi.spyOn(messageService, 'add');
+
+    productService.updateProductStatus.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({
+        error: { code: 'UNKNOWN_ERROR' },
+        status: 500,
+        statusText: 'Internal Server Error',
+      })),
+    );
+
+    const product = {
+      id: 7,
+      name: 'Granola',
+      onlineStatus: 'DRAFT',
+    } as unknown as import('../../../../shared/models/product').ProductSummary;
+    const action = {
+      targetStatus: 'PUBLISHED',
+      label: 'Publicar',
+    } as import('../../../../shared/models/product-status').ProductStatusAction;
+
+    (
+      component as unknown as {
+        requestStatusChange: (
+          p: import('../../../../shared/models/product').ProductSummary,
+          a: import('../../../../shared/models/product-status').ProductStatusAction,
+        ) => void;
+      }
+    ).requestStatusChange(product, action);
+    (component as unknown as { confirmStatusChange: () => void }).confirmStatusChange();
+    await fixture.whenStable();
+
+    expect(addSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        severity: 'error',
+        detail: 'No pudimos cambiar el estado del producto.',
+      }),
+    );
   });
 });

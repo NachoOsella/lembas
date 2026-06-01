@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -296,7 +297,11 @@ describe('ProductForm', () => {
   it('shows error message when create fails', async () => {
     await setup();
     productService.createProduct.mockReturnValue(
-      throwError(() => ({ error: { code: 'PRODUCT_BARCODE_DUPLICATED' } })),
+      throwError(() => new HttpErrorResponse({
+        error: { code: 'PRODUCT_BARCODE_DUPLICATED' },
+        status: 400,
+        statusText: 'Bad Request',
+      })),
     );
     (component as unknown as { name: { set: (v: string) => void } }).name.set('Test');
     (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
@@ -306,13 +311,19 @@ describe('ProductForm', () => {
     await fixture.whenStable();
 
     expect(fixture.nativeElement.textContent).toContain(
-      'Ya existe un producto activo con ese barcode',
+      'Ya existe un producto con ese código de barras.',
     );
   });
 
   it('shows generic error when save fails with unknown code', async () => {
     await setup();
-    productService.createProduct.mockReturnValue(throwError(() => ({ error: {} })));
+    productService.createProduct.mockReturnValue(
+      throwError(() => new HttpErrorResponse({
+        error: {},
+        status: 400,
+        statusText: 'Bad Request',
+      })),
+    );
     (component as unknown as { name: { set: (v: string) => void } }).name.set('Test');
     (component as unknown as { categoryId: { set: (v: number) => void } }).categoryId.set(1);
     (component as unknown as { salePrice: { set: (v: number) => void } }).salePrice.set(100);
@@ -326,13 +337,17 @@ describe('ProductForm', () => {
   it('shows error when update fails', async () => {
     await setup('9');
     productService.updateProduct.mockReturnValue(
-      throwError(() => ({ error: { code: 'PRODUCT_NOT_FOUND' } })),
+      throwError(() => new HttpErrorResponse({
+        error: { code: 'PRODUCT_NOT_FOUND' },
+        status: 404,
+        statusText: 'Not Found',
+      })),
     );
 
     (component as unknown as { save: () => void }).save();
     await fixture.whenStable();
 
-    expect(fixture.nativeElement.textContent).toContain('El producto ya no existe o fue eliminado');
+    expect(fixture.nativeElement.textContent).toContain('El producto solicitado no fue encontrado.');
   });
 
   it('clears error on successful retry', async () => {

@@ -5,7 +5,8 @@ import { Select } from 'primeng/select';
 import { InputText } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
 
-import { ApiErrorResponse } from '../../../../core/services/auth';
+import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
+import { ErrorMappingService } from '../../../../core/services/error-mapping';
 import { UserService } from '../../../../core/services/user';
 import { Branch, InternalRole, UserResponse } from '../../../../shared/models/user';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
@@ -44,6 +45,7 @@ const ROLE_ICON: Record<InternalRole, string> = {
 export class UserForm {
   private readonly userService = inject(UserService);
   private readonly messageService = inject(MessageService);
+  private readonly errorMapping = inject(ErrorMappingService);
 
   // ---------------------------------------------------------------------------
   // Inputs
@@ -299,27 +301,31 @@ export class UserForm {
     }
     if (err.status === 0 || err.status >= 500) return null;
 
-    const apiError = err.error as ApiErrorResponse | undefined;
-    switch (apiError?.code) {
-      case 'EMAIL_DUPLICATED':
-        return 'Ya existe un usuario con este email.';
-      case 'INVALID_USER_BRANCH':
-        this.showBranchPolicyToast(apiError);
-        return null;
-      case 'VALIDATION_ERROR':
-        return this.formatValidationError(apiError);
-      default:
-        return apiError?.message || this.defaultMessage(err.status);
-    }
-  }
+    const apiError = getApiError(err);
+    const code = apiError?.code;
 
-  private formatValidationError(apiError: ApiErrorResponse): string {
-    const fieldErrors = apiError.details?.fieldErrors ?? [];
-    if (fieldErrors.length === 0) return 'Revise los datos ingresados.';
-    const details = fieldErrors
-      .map((fe) => `${this.translateField(fe.field)}: ${fe.message}`)
-      .join('. ');
-    return `Revise los datos ingresados. ${details}`;
+    if (!code || !apiError) {
+      return this.defaultMessage(err.status);
+    }
+
+    // Special handling for branch policy violations (show toast instead of inline error)
+    if (code === 'INVALID_USER_BRANCH') {
+      this.showBranchPolicyToast(apiError);
+      return null;
+    }
+
+    // Special handling for validation errors with field translation
+    if (code === 'VALIDATION_ERROR') {
+      return this.errorMapping.formatValidationErrors(
+        apiError,
+        this.translateField,
+        'Revise los datos ingresados.',
+        this.translateValidationMessage
+      );
+    }
+
+    // Use centralized error mapping with frontend-controlled fallback only
+    return this.errorMapping.getMessage(code, this.defaultMessage(err.status));
   }
 
   private showBranchPolicyToast(apiError: ApiErrorResponse): void {
@@ -346,6 +352,17 @@ export class UserForm {
       enabled: 'Estado',
     };
     return labels[field] ?? field;
+  }
+
+  private translateValidationMessage(message: string): string {
+    const messages: Record<string, string> = {
+      'must be well-formed': 'debe tener un formato válido',
+      'size must be between 8 and 128': 'debe tener entre 8 y 128 caracteres',
+      'must not be blank': 'es obligatorio',
+      'must not be empty': 'es obligatorio',
+      'must not be null': 'es obligatorio',
+    };
+    return messages[message] ?? message;
   }
 
   private defaultMessage(status: number): string {
