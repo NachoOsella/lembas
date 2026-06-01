@@ -1,26 +1,11 @@
 import { Injectable } from '@angular/core';
+import { ApiErrorResponse } from '../../shared/models/api-error';
 
 /**
- * Field-level validation error returned inside ApiError.details.fieldErrors.
+ * Re-export for backward compatibility with existing imports.
+ * @deprecated Import directly from 'shared/models/api-error' instead.
  */
-export interface ApiFieldError {
-  field: string;
-  message: string;
-}
-
-/**
- * Standard API error response from the backend.
- */
-export interface ApiError {
-  status: number;
-  code: string;
-  message: string;
-  details?: {
-    fieldErrors?: ApiFieldError[];
-  };
-  timestamp: string;
-  path: string;
-}
+export type { ApiErrorResponse, ApiFieldError } from '../../shared/models/api-error';
 
 /**
  * Centralized service for mapping backend error codes to user-friendly Spanish messages.
@@ -48,6 +33,13 @@ export class ErrorMappingService {
    * - INSUFFICIENT_STOCK: Not enough stock for the requested operation
    * - ORDER_INVALID_STATE: Order state transition not allowed
    * - NOT_FOUND: Resource not found
+   * - NAME_REQUIRED: Name field is required
+   * - PARENT_NOT_FOUND: Parent category does not exist
+   * - PARENT_INVALID: Category cannot be parent of itself
+   * - CATEGORY_NAME_DUPLICATED: Category name already exists at same level
+   * - PRODUCT_BARCODE_DUPLICATED: Product barcode already exists
+   * - CATEGORY_NOT_FOUND: Category does not exist
+   * - PRODUCT_NOT_FOUND: Product does not exist
    */
   private readonly errorMessages: Record<string, string> = {
     // Auth errors
@@ -56,11 +48,29 @@ export class ErrorMappingService {
     UNAUTHORIZED: 'Debe iniciar sesión para continuar.',
 
     // User management errors
-    EMAIL_DUPLICATED: 'Ya existe una cuenta con este email.',
-    INVALID_USER_BRANCH: 'No se puede asignar esta sucursal al usuario.',
+    EMAIL_DUPLICATED: 'Ya existe un usuario con este email.',
+    INVALID_USER_BRANCH: 'Los usuarios Gerente y Empleado deben tener una sucursal asignada.',
 
     // Validation errors
     VALIDATION_ERROR: 'Revise los datos ingresados.',
+    NAME_REQUIRED: 'El nombre es obligatorio.',
+
+    // Category errors
+    PARENT_NOT_FOUND: 'La categoría padre ya no existe.',
+    PARENT_INVALID: 'Una categoría no puede ser padre de sí misma.',
+    CATEGORY_NAME_DUPLICATED: 'Ya existe una categoría con ese nombre en el mismo nivel.',
+    CATEGORY_NOT_FOUND: 'La categoría seleccionada ya no existe.',
+    CATEGORY_HAS_CHILDREN:
+      'No se puede eliminar una categoria que tiene subcategorias. Elimina primero las subcategorias.',
+    CATEGORY_HAS_PRODUCTS:
+      'No se puede eliminar una categoria que tiene productos asociados. Reasigna los productos a otra categoria primero.',
+
+    // Product errors
+    PRODUCT_BARCODE_DUPLICATED: 'Ya existe un producto con ese código de barras.',
+    PRODUCT_NOT_FOUND: 'El producto solicitado no fue encontrado.',
+    PRODUCT_HAS_ORDERS: 'No se puede eliminar un producto que tiene pedidos asociados.',
+    PRODUCT_STATUS_INVALID_TRANSITION:
+      'El producto ya no permite ese cambio de estado. Actualiza la tabla e intenta nuevamente.',
 
     // Database errors
     DATA_INTEGRITY_VIOLATION: 'Los datos ingresados conflictan con información existente.',
@@ -94,17 +104,33 @@ export class ErrorMappingService {
    * Formats validation errors with field-level details.
    *
    * @param apiError - The API error response containing fieldErrors
+   * @param fieldTranslator - Optional function to translate field names to user-friendly labels
+   * @param prefix - Optional custom prefix for the message (defaults to VALIDATION_ERROR message)
+   * @param messageTranslator - Optional function to translate backend validation messages to user-friendly text
    * @returns A formatted message listing all field errors
    */
-  formatValidationErrors(apiError: ApiError): string {
+  formatValidationErrors(
+    apiError: ApiErrorResponse,
+    fieldTranslator?: (field: string) => string,
+    prefix?: string,
+    messageTranslator?: (message: string) => string
+  ): string {
     const fieldErrors = apiError.details?.fieldErrors ?? [];
 
     if (fieldErrors.length === 0) {
-      return this.getMessage('VALIDATION_ERROR');
+      return prefix ?? this.getMessage('VALIDATION_ERROR');
     }
 
-    const details = fieldErrors.map((err) => `${err.field}: ${err.message}`).join(', ');
-    return `Error de validación: ${details}`;
+    const details = fieldErrors
+      .map((err) => {
+        const fieldName = fieldTranslator ? fieldTranslator(err.field) : err.field;
+        const fieldMessage = messageTranslator ? messageTranslator(err.message) : err.message;
+        return `${fieldName}: ${fieldMessage}`;
+      })
+      .join('. ');
+
+    const messagePrefix = prefix ?? this.getMessage('VALIDATION_ERROR');
+    return `${messagePrefix} ${details}`;
   }
 
 }
