@@ -25,32 +25,6 @@
   isolation: isolate;
 }
 
-/* Decorative shapes create an organic grocery-market atmosphere. */
-.register-hero::before,
-.register-hero::after {
-  position: absolute;
-  content: '';
-  border-radius: 999px;
-  pointer-events: none;
-}
-
-.register-hero::before {
-  width: 19rem;
-  height: 19rem;
-  right: -6rem;
-  top: 7rem;
-  background: rgba(212, 233, 226, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.register-hero::after {
-  width: 13rem;
-  height: 13rem;
-  left: -4rem;
-  bottom: 8rem;
-  background: rgba(250, 246, 238, 0.14);
-}
-
 /* Auth inputs: pill shape inherits from global styles.css (border-radius: 50px).
    Only keep overrides for hover, focus, invalid and placeholder that differ. */
 .register-page .p-inputtext {
@@ -106,26 +80,6 @@
   pointer-events: none;
 }
 
-:host ::ng-deep .register-eye-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  color: rgba(0, 0, 0, 0.5);
-  background: transparent;
-  border: 0;
-  border-radius: 999px;
-  cursor: pointer;
-  transition:
-    color 0.18s ease,
-    background-color 0.18s ease;
-}
-
-:host ::ng-deep .register-eye-btn:hover {
-  color: #2f8d72;
-  background: rgba(47, 141, 114, 0.08);
-}
 
 .register-error {
   display: flex;

@@ -11,10 +11,11 @@ import { ApiErrorResponse } from '../../../shared/models/api-error';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
+import { PasswordToggle } from '../../../shared/components/password-toggle/password-toggle';
 
 @Component({
   selector: 'app-login',
-  imports: [ErrorAlert, AppToast, FormField, RouterLink, AppButton, InputText],
+  imports: [ErrorAlert, AppToast, FormField, RouterLink, AppButton, InputText, PasswordToggle],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })

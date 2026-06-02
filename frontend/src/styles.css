@@ -132,3 +132,100 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ---------------------------------------------------------------------------
+   Admin page layout wrapper
+   Shared layout for admin list pages (products, users, categories, etc.).
+   --------------------------------------------------------------------------- */
+.admin-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(0.55rem, 1.15vw, 0.8rem);
+  width: 100%;
+  max-width: 98rem;
+  min-width: 0;
+  margin: 0 auto;
+  padding-bottom: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.admin-page > * {
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Auth hero panel decorative shapes
+   Shared pseudo-element styles for login/register hero panels.
+   --------------------------------------------------------------------------- */
+.auth-hero::before,
+.auth-hero::after {
+  position: absolute;
+  content: '';
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.auth-hero::before {
+  width: 16rem;
+  height: 16rem;
+  right: 1.5rem;
+  top: 7.5rem;
+  background: rgba(212, 233, 226, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.auth-hero::after {
+  width: 13rem;
+  height: 13rem;
+  left: -4rem;
+  bottom: 8rem;
+  background: rgba(250, 246, 238, 0.14);
+}
+
+/* ---------------------------------------------------------------------------
+   Shared select option templates
+   Used in user-form and category-form for rich select dropdowns.
+   --------------------------------------------------------------------------- */
+.select-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--color-primary-dark, #075f36);
+  font-weight: 800;
+}
+
+.select-option i,
+.select-option-item i {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 999px;
+  color: var(--color-primary-dark, #075f36);
+  background: rgba(47, 141, 114, 0.12);
+}
+
+.select-option-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.select-option-item div {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.select-option-item strong {
+  color: var(--color-primary-dark, #075f36);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.select-option-item span {
+  color: var(--color-text-muted);
+  font-size: 0.73rem;
+  line-height: 1.35;
+}

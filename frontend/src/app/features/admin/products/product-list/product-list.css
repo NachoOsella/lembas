@@ -2,49 +2,6 @@
   display: block;
 }
 
-.products-page {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: clamp(0.55rem, 1.15vw, 0.8rem);
-  width: 100%;
-  max-width: 98rem;
-  min-width: 0;
-  margin: 0 auto;
-  padding-bottom: clamp(1.25rem, 3vw, 2.5rem);
-}
-
-.products-page > * {
-  min-width: 0;
-}
-
-.products-page__directory {
-  width: 100%;
-  min-width: 0;
-}
-
-.table-toolbar__info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0;
-}
-
-.table-toolbar__kicker {
-  margin: 0;
-  color: #9a5b19;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.table-toolbar__title {
-  margin: 0;
-  color: var(--color-text);
-  font-size: clamp(1.1rem, 2.4vw, 1.55rem);
-  font-weight: 800;
-  letter-spacing: -0.045em;
-}
 
 .product-name {
   display: inline-flex;
@@ -54,37 +11,6 @@
   letter-spacing: var(--tracking-tight);
 }
 
-.product-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.product-actions app-button {
-  width: auto;
-}
-
-/* Status-change and edit buttons */
-:host ::ng-deep .product-actions .app-button--ghost:not(:last-child) {
-  color: #2f8d72;
-  background: rgba(47, 141, 114, 0.08);
-}
-
-:host ::ng-deep .product-actions .app-button--ghost:not(:last-child):hover:not(:disabled) {
-  color: #ffffff;
-  background: #2f8d72;
-}
-
-/* Delete button (last child) */
-:host ::ng-deep .product-actions .app-button--ghost:last-child {
-  color: #9a3328;
-  background: rgba(154, 51, 40, 0.08);
-}
-
-:host ::ng-deep .product-actions .app-button--ghost:last-child:hover:not(:disabled) {
-  color: #ffffff;
-  background: #a41810;
-}
 
 /* ── Table cell alignment ───────────────────────────────── */
 :host ::ng-deep .app-data-table .p-datatable-tbody > tr > td,

@@ -11,6 +11,7 @@ import { ErrorMappingService } from '../../../../core/services/error-mapping';
 import { ProductService } from '../../../../core/services/product';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
+import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 import { FormSection } from '../../../../shared/components/form-section/form-section';
 import { Skeleton } from '../../../../shared/components/skeleton/skeleton';
@@ -33,6 +34,7 @@ interface Option<T> {
   imports: [
     AppButton,
     AppFormField,
+    AppPageHeader,
     ErrorAlert,
     FormSection,
     FormsModule,

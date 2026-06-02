@@ -6,7 +6,7 @@
       class="register-card bg-surface rounded-[28px] shadow-card overflow-hidden grid lg:grid-cols-[0.95fr_1.05fr]"
     >
       <!-- Brand panel: adds warmth and continuity with the public store header. -->
-      <aside class="register-hero relative hidden lg:flex flex-col justify-between p-9 text-white">
+      <aside class="register-hero auth-hero relative hidden lg:flex flex-col justify-between p-9 text-white">
         <div class="relative z-10 flex items-center gap-3">
           <img
             src="/brand/lembas-icon.svg?v=4"
@@ -169,25 +169,11 @@
                   placeholder="Min. 8 caracteres"
                   class="w-full pr-11"
                 />
-                <button
-                  pButton
-                  type="button"
-                  severity="secondary"
-                  text="true"
-                  rounded="true"
-                  class="register-eye-btn"
-                  [attr.aria-label]="
-                    passwordVisible() ? 'Ocultar contrasena' : 'Mostrar contrasena'
-                  "
-                  tabindex="-1"
+                <app-password-toggle
+                  [(visible)]="passwordVisible"
+                  fieldId="password"
                   data-testid="toggle-password"
-                  (click)="passwordVisible.set(!passwordVisible())"
-                >
-                  <i
-                    [class]="passwordVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'"
-                    aria-hidden="true"
-                  ></i>
-                </button>
+                />
               </div>
               @if (
                 (form.password().touched() && form.password().errors().length) ||
@@ -211,25 +197,11 @@
                   placeholder="Repetir"
                   class="w-full pr-11"
                 />
-                <button
-                  pButton
-                  type="button"
-                  severity="secondary"
-                  text="true"
-                  rounded="true"
-                  class="register-eye-btn"
-                  [attr.aria-label]="
-                    confirmPasswordVisible() ? 'Ocultar contrasena' : 'Mostrar contrasena'
-                  "
-                  tabindex="-1"
+                <app-password-toggle
+                  [(visible)]="confirmPasswordVisible"
+                  fieldId="confirmPassword"
                   data-testid="toggle-confirm-password"
-                  (click)="confirmPasswordVisible.set(!confirmPasswordVisible())"
-                >
-                  <i
-                    [class]="confirmPasswordVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'"
-                    aria-hidden="true"
-                  ></i>
-                </button>
+                />
               </div>
               @if (
                 (form.confirmPassword().touched() && form.confirmPassword().errors().length) ||

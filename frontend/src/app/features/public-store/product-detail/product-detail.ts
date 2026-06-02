@@ -1,7 +1,9 @@
 import { ViewportScroller } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
+import { InputNumber } from 'primeng/inputnumber';
 
 import { Cart } from '../../../core/services/cart';
 import { CatalogService } from '../../../core/services/catalog';
@@ -16,7 +18,7 @@ import { ProductGrid } from '../../../shared/components/product-grid/product-gri
 
 @Component({
   selector: 'app-product-detail',
-  imports: [RouterLink, AppBadge, AppBreadcrumb, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid],
+  imports: [FormsModule, InputNumber, RouterLink, AppBadge, AppBreadcrumb, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css',
 })

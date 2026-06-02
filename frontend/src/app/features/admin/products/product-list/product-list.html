@@ -1,4 +1,4 @@
-<div class="products-page">
+<div class="admin-page">
   <app-page-header
     eyebrow="Catalogo"
     title="Productos"
@@ -93,7 +93,7 @@
             <app-status-badge [status]="product.onlineStatus" [config]="productStatusBadges" />
           </td>
           <td>
-            <div class="product-actions">
+            <div class="table-actions">
               <p-menu #statusMenu [model]="statusActions(product)" [popup]="true" appendTo="body" />
               <app-button
                 variant="ghost"

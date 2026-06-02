@@ -60,51 +60,6 @@
   box-shadow: none;
 }
 
-/* Select template styles */
-.user-form__selected-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  color: #075f36;
-  font-weight: 800;
-}
-
-.user-form__selected-option i,
-.user-form__option i {
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  width: 1.65rem;
-  height: 1.65rem;
-  border-radius: 999px;
-  color: #075f36;
-  background: rgba(47, 141, 114, 0.12);
-}
-
-.user-form__option {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.7rem;
-  min-width: 0;
-}
-
-.user-form__option div {
-  display: grid;
-  gap: 0.12rem;
-  min-width: 0;
-}
-
-.user-form__option strong {
-  color: #075f36;
-  font-size: 0.86rem;
-  font-weight: 800;
-}
-
-.user-form__option span {
-  color: var(--color-text-muted);
-  font-size: 0.73rem;
-  line-height: 1.35;
-}
 
 /* Footer */
 .user-form__actions {

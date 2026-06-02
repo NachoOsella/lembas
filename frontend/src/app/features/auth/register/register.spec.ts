@@ -383,8 +383,9 @@ describe('Register component', () => {
   /** Should toggle password input type when eye icon is clicked. */
   it('Should_togglePasswordVisibility_when_clickEyeIcon', () => {
     const passwordInput = fixture.nativeElement.querySelector('#password') as HTMLInputElement;
+    // The toggle button is inside app-password-toggle component
     const toggleBtn = fixture.nativeElement.querySelector(
-      '[data-testid="toggle-password"]',
+      'app-password-toggle .password-toggle',
     ) as HTMLButtonElement;
 
     expect(passwordInput.type).toBe('password');
@@ -403,9 +404,11 @@ describe('Register component', () => {
     const confirmInput = fixture.nativeElement.querySelector(
       '#confirmPassword',
     ) as HTMLInputElement;
-    const toggleBtn = fixture.nativeElement.querySelector(
-      '[data-testid="toggle-confirm-password"]',
-    ) as HTMLButtonElement;
+    // The toggle button is inside the second app-password-toggle component
+    const toggleBtns = fixture.nativeElement.querySelectorAll(
+      'app-password-toggle .password-toggle',
+    );
+    const toggleBtn = toggleBtns[1] as HTMLButtonElement;
 
     expect(confirmInput.type).toBe('password');
 
