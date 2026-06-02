@@ -245,8 +245,11 @@ describe('ProductDetail', () => {
     await configure();
     const before = (component as any).quantity() as number;
 
-    // Directly call increment method to test the logic
-    (component as any).increment();
+    // Find and click the increment button in the quantity stepper
+    const incrementBtn = fixture.nativeElement.querySelector('app-quantity-stepper .quantity-stepper__btn:last-child');
+    incrementBtn?.click();
+    fixture.detectChanges();
+
     expect((component as any).quantity()).toBe(before + 1);
   });
 
@@ -256,20 +259,24 @@ describe('ProductDetail', () => {
     (component as any).quantity.set(3);
     fixture.detectChanges();
 
-    (component as any).decrement();
+    const decrementBtn = fixture.nativeElement.querySelector('app-quantity-stepper .quantity-stepper__btn:first-child');
+    decrementBtn?.click();
+    fixture.detectChanges();
     expect((component as any).quantity()).toBe(2);
 
-    (component as any).decrement();
+    decrementBtn?.click();
+    fixture.detectChanges();
     expect((component as any).quantity()).toBe(1);
 
     // Should not go below 1
-    (component as any).decrement();
+    decrementBtn?.click();
+    fixture.detectChanges();
     expect((component as any).quantity()).toBe(1);
   });
 
   it('should hide quantity selector when out of stock', async () => {
     await configure(MOCK_PRODUCT_OUT_OF_STOCK);
-    const quantityInput = fixture.nativeElement.querySelector('p-inputnumber');
-    expect(quantityInput).toBeNull();
+    const quantityStepper = fixture.nativeElement.querySelector('app-quantity-stepper');
+    expect(quantityStepper).toBeNull();
   });
 });

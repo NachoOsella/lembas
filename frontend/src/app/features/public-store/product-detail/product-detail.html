@@ -117,16 +117,7 @@
             <!-- Quantity + Add to cart -->
             <div class="flex flex-wrap items-center gap-4">
               @if (!isOutOfStock()) {
-                <p-inputnumber
-                  [ngModel]="quantity()"
-                  (ngModelChange)="quantity.set($event)"
-                  [min]="1"
-                  [showButtons]="true"
-                  mode="decimal"
-                  [useGrouping]="false"
-                  [style]="{ width: '8rem' }"
-                  inputId="quantity-input"
-                />
+                <app-quantity-stepper [(value)]="quantity" />
               }
 
               <app-button

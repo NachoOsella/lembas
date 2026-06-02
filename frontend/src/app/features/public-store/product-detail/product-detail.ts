@@ -1,9 +1,7 @@
 import { ViewportScroller } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
-import { InputNumber } from 'primeng/inputnumber';
 
 import { Cart } from '../../../core/services/cart';
 import { CatalogService } from '../../../core/services/catalog';
@@ -15,10 +13,11 @@ import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
 import { ProductGrid } from '../../../shared/components/product-grid/product-grid';
+import { QuantityStepper } from '../../../shared/components/quantity-stepper/quantity-stepper';
 
 @Component({
   selector: 'app-product-detail',
-  imports: [FormsModule, InputNumber, RouterLink, AppBadge, AppBreadcrumb, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid],
+  imports: [RouterLink, AppBadge, AppBreadcrumb, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid, QuantityStepper],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css',
 })

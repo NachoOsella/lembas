@@ -11,6 +11,7 @@ export * from './app-input/app-input';
 export * from './app-modal/app-modal';
 export * from './app-page-header/app-page-header';
 export * from './password-toggle/password-toggle';
+export * from './quantity-stepper/quantity-stepper';
 export * from './app-pagination/app-pagination';
 export * from './app-search-bar/app-search-bar';
 export * from './app-section-card/app-section-card';
