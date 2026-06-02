@@ -13,111 +13,64 @@
       <div class="user-form__grid">
         <!-- Email -->
         <div class="user-form__field user-form__field--wide">
-          <label for="user-email" class="user-form__label">
-            Email <span class="user-form__required" aria-hidden="true">*</span>
-          </label>
-          <input
-            id="user-email"
-            pInputText
+          <app-form-field
+            label="Email"
+            [required]="true"
             type="email"
-            [ngModel]="formEmail()"
-            (ngModelChange)="formEmail.set($event); formSubmitted.set(false)"
+            [(value)]="formEmail"
             placeholder="correo@ejemplo.com"
-            class="w-full"
-            [class.ng-invalid]="formSubmitted() && !formEmailValid()"
-            autocomplete="email"
+            [error]="emailErrorMessage()"
             [disabled]="isEditMode()"
+            testId="user-email"
           />
-          @if (formSubmitted() && !formEmailValid() && formEmail().trim().length > 0) {
-            <small class="user-form__error"
-              >Ingrese un email valido (ej: correo@ejemplo.com).</small
-            >
-          }
-          @if (formSubmitted() && !formEmail().trim()) {
-            <small class="user-form__error">El email es obligatorio.</small>
-          }
         </div>
 
         <!-- Password -->
         <div class="user-form__field user-form__field--wide">
-          <label for="user-password" class="user-form__label">
-            Contrasena
-            @if (!isEditMode()) {
-              <span class="user-form__required" aria-hidden="true">*</span>
-            }
-          </label>
-          <input
-            id="user-password"
-            pInputText
+          <app-form-field
+            label="Contrasena"
+            [required]="!isEditMode()"
             type="password"
-            [ngModel]="formPassword()"
-            (ngModelChange)="formPassword.set($event); formSubmitted.set(false)"
+            [(value)]="formPassword"
             [placeholder]="isEditMode() ? 'Dejar en blanco para mantener' : 'Min. 8 caracteres'"
-            class="w-full"
-            [class.ng-invalid]="formSubmitted() && !formPasswordValid()"
-            autocomplete="new-password"
+            [error]="passwordErrorMessage()"
+            [hint]="isEditMode() ? 'Deje en blanco para mantener la contrasena actual.' : ''"
+            testId="user-password"
           />
-          @if (formSubmitted() && !formPasswordValid()) {
-            <small class="user-form__error">La contrasena debe tener al menos 8 caracteres.</small>
-          }
-          @if (isEditMode()) {
-            <small class="user-form__hint"
-              >Deje en blanco para mantener la contrasena actual.</small
-            >
-          }
         </div>
 
         <!-- First name -->
         <div class="user-form__field">
-          <label for="user-first-name" class="user-form__label">
-            Nombre <span class="user-form__required" aria-hidden="true">*</span>
-          </label>
-          <input
-            id="user-first-name"
-            pInputText
-            type="text"
-            [ngModel]="formFirstName()"
-            (ngModelChange)="formFirstName.set($event); formSubmitted.set(false)"
+          <app-form-field
+            label="Nombre"
+            [required]="true"
+            [(value)]="formFirstName"
             placeholder="Nombre"
-            class="w-full"
-            [class.ng-invalid]="formSubmitted() && !formFirstName().trim()"
+            [error]="firstNameErrorMessage()"
+            testId="user-first-name"
           />
-          @if (formSubmitted() && !formFirstName().trim()) {
-            <small class="user-form__error">El nombre es obligatorio.</small>
-          }
         </div>
 
         <!-- Last name -->
         <div class="user-form__field">
-          <label for="user-last-name" class="user-form__label">
-            Apellido <span class="user-form__required" aria-hidden="true">*</span>
-          </label>
-          <input
-            id="user-last-name"
-            pInputText
-            type="text"
-            [ngModel]="formLastName()"
-            (ngModelChange)="formLastName.set($event); formSubmitted.set(false)"
+          <app-form-field
+            label="Apellido"
+            [required]="true"
+            [(value)]="formLastName"
             placeholder="Apellido"
-            class="w-full"
-            [class.ng-invalid]="formSubmitted() && !formLastName().trim()"
+            [error]="lastNameErrorMessage()"
+            testId="user-last-name"
           />
-          @if (formSubmitted() && !formLastName().trim()) {
-            <small class="user-form__error">El apellido es obligatorio.</small>
-          }
         </div>
 
         <!-- Phone -->
         <div class="user-form__field user-form__field--wide">
-          <label for="user-phone" class="user-form__label">Telefono</label>
-          <input
-            id="user-phone"
-            pInputText
+          <app-form-field
+            label="Telefono"
             type="tel"
-            [ngModel]="formPhone()"
-            (ngModelChange)="formPhone.set($event)"
+            [(value)]="formPhone"
             placeholder="+54 351 123 4567"
-            class="w-full"
+            testId="user-phone"
           />
         </div>
       </div>

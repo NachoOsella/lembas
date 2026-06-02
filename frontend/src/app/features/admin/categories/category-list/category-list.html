@@ -1,15 +1,11 @@
 <div class="categories-page">
-  <section class="categories-page__hero" aria-labelledby="categories-title">
-    <div class="categories-page__hero-copy">
-      <p class="categories-page__eyebrow">Catalogo</p>
-      <h1 id="categories-title">Categorias</h1>
-      <p>Organizacion de gondolas digitales, jerarquias y filtros de tienda.</p>
-    </div>
-
-    <div class="categories-page__hero-actions">
-      <app-button icon="pi pi-plus" (click)="createCategory.emit()"> Nueva categoria </app-button>
-    </div>
-  </section>
+  <app-page-header
+    eyebrow="Catalogo"
+    title="Categorias"
+    description="Organizacion de gondolas digitales, jerarquias y filtros de tienda."
+  >
+    <app-button icon="pi pi-plus" (click)="createCategory.emit()"> Nueva categoria </app-button>
+  </app-page-header>
 
   @if (error()) {
     <app-error-alert variant="inline" [title]="error()" message="">

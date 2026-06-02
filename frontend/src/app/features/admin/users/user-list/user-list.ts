@@ -10,6 +10,7 @@ import { AppDataTable } from '../../../../shared/components/app-data-table/app-d
 
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
+import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
 import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
 
 /** Maps a role to an AppBadge tone. */
@@ -49,6 +50,7 @@ const USER_SORT_FIELDS = new Set(['firstName', 'email', 'role', 'enabled']);
     AppDataTable,
     AppButton,
     AppBadge,
+    AppPageHeader,
     AppSearchBar,
   ],
   templateUrl: './user-list.html',

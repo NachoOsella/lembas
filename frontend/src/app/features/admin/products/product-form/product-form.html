@@ -25,21 +25,14 @@
       >
         <div class="product-form__grid">
           <div class="product-form__field product-form__field--wide">
-            <label for="product-name" class="product-form__label"
-              >Nombre <span aria-hidden="true">*</span></label
-            >
-            <input
-              id="product-name"
-              pInputText
-              [ngModel]="name()"
-              (ngModelChange)="name.set($event)"
-              name="name"
+            <app-form-field
+              label="Nombre"
+              [required]="true"
+              [error]="submitted() && !name().trim() ? 'El nombre es obligatorio.' : ''"
+              [(value)]="name"
               placeholder="Ej. Granola artesanal"
-              [class.ng-invalid]="submitted() && !name().trim()"
+              testId="product-name"
             />
-            @if (submitted() && !name().trim()) {
-              <small class="product-form__error">El nombre es obligatorio.</small>
-            }
           </div>
 
           <div class="product-form__field">
@@ -64,33 +57,22 @@
           </div>
 
           <div class="product-form__field">
-            <label for="product-brand" class="product-form__label">Marca</label>
-            <input
-              id="product-brand"
-              pInputText
-              [ngModel]="brandName()"
-              (ngModelChange)="brandName.set($event)"
-              name="brandName"
+            <app-form-field
+              label="Marca"
+              [(value)]="brandName"
               placeholder="Ej. Lembas"
+              testId="product-brand"
             />
           </div>
 
           <div class="product-form__field">
-            <label for="product-barcode" class="product-form__label">Barcode</label>
-            <input
-              id="product-barcode"
-              pInputText
-              [ngModel]="barcode()"
-              (ngModelChange)="barcode.set($event)"
-              name="barcode"
+            <app-form-field
+              label="Barcode"
+              [error]="submitted() && !barcodeValid() ? 'Usa entre 4 y 100 caracteres.' : ''"
+              [(value)]="barcode"
               placeholder="7790001000012"
-              [class.ng-invalid]="submitted() && !barcodeValid()"
+              testId="product-barcode"
             />
-            @if (submitted() && !barcodeValid()) {
-              <small class="product-form__error"
-                >Usa entre 4 y 100 caracteres alfanumericos, punto, guion o guion bajo.</small
-              >
-            }
           </div>
 
           <div class="product-form__field">
@@ -108,16 +90,13 @@
           </div>
 
           <div class="product-form__field product-form__field--wide">
-            <label for="product-description" class="product-form__label">Descripcion</label>
-            <textarea
-              id="product-description"
-              pInputText
-              rows="4"
-              [ngModel]="description()"
-              (ngModelChange)="description.set($event)"
-              name="description"
+            <app-form-field
+              label="Descripcion"
+              [multiline]="true"
+              [(value)]="description"
               placeholder="Descripcion comercial para tienda y administracion"
-            ></textarea>
+              testId="product-description"
+            />
           </div>
         </div>
       </app-form-section>
@@ -161,18 +140,13 @@
             </div>
 
             <div class="product-form__field product-form__field--wide">
-              <label for="product-image-url" class="product-form__label">URL de imagen</label>
-              <input
-                id="product-image-url"
-                pInputText
-                [ngModel]="imageUrl()"
-                (ngModelChange)="imageUrl.set($event)"
-                name="imageUrl"
+              <app-form-field
+                label="URL de imagen"
+                [(value)]="imageUrl"
                 placeholder="https://..."
+                hint="Tambien podes seleccionar un archivo local para generar preview."
+                testId="product-image-url"
               />
-              <small class="product-form__hint"
-                >Tambien podes seleccionar un archivo local para generar preview.</small
-              >
             </div>
 
             <div class="product-form__field product-form__field--wide">

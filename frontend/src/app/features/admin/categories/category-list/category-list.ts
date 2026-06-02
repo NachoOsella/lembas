@@ -13,6 +13,7 @@ import {
 } from '../../../../shared/components/app-data-table/app-data-table';
 import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 
 /** Time window for collapsing duplicate error toasts in this component. */
@@ -25,6 +26,7 @@ const DUPLICATE_TOAST_MS = 2000;
     AppBadge,
     AppButton,
     AppDataTable,
+    AppPageHeader,
     AppSearchBar,
     ConfirmDialog,
     ErrorAlert,

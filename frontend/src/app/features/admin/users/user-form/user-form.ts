@@ -2,7 +2,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, input, output, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Select } from 'primeng/select';
-import { InputText } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
 
 import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
@@ -10,6 +9,7 @@ import { ErrorMappingService } from '../../../../core/services/error-mapping';
 import { UserService } from '../../../../core/services/user';
 import { Branch, InternalRole, UserResponse } from '../../../../shared/models/user';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
+import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
 import { AppModal } from '../../../../shared/components/app-modal/app-modal';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 import { FormSection } from '../../../../shared/components/form-section/form-section';
@@ -37,7 +37,7 @@ const ROLE_ICON: Record<InternalRole, string> = {
 
 @Component({
   selector: 'app-user-form',
-  imports: [FormsModule, Select, InputText, AppButton, AppModal, ErrorAlert, FormSection],
+  imports: [FormsModule, Select, AppButton, AppFormField, AppModal, ErrorAlert, FormSection],
   templateUrl: './user-form.html',
   styleUrl: './user-form.css',
 })
@@ -69,6 +69,36 @@ export class UserForm {
 
   /** True after the first submit attempt, used to reveal inline errors. */
   protected readonly formSubmitted = signal(false);
+
+  /** Returns the validation error message for the email field, or empty if valid. */
+  protected readonly emailErrorMessage = computed(() => {
+    if (!this.formSubmitted()) return '';
+    const email = this.formEmail().trim();
+    if (!email) return 'El email es obligatorio.';
+    if (!UserForm.EMAIL_REGEX.test(email)) return 'Ingrese un email valido (ej: correo@ejemplo.com).';
+    return '';
+  });
+
+  /** Returns the validation error message for the password field, or empty if valid. */
+  protected readonly passwordErrorMessage = computed(() => {
+    if (!this.formSubmitted()) return '';
+    const pwd = this.formPassword();
+    if (this.isEditMode() && !pwd) return '';
+    if (!pwd || pwd.length < 8) return 'La contrasena debe tener al menos 8 caracteres.';
+    return '';
+  });
+
+  /** Returns the validation error message for the first name field, or empty if valid. */
+  protected readonly firstNameErrorMessage = computed(() => {
+    if (!this.formSubmitted()) return '';
+    return this.formFirstName().trim() ? '' : 'El nombre es obligatorio.';
+  });
+
+  /** Returns the validation error message for the last name field, or empty if valid. */
+  protected readonly lastNameErrorMessage = computed(() => {
+    if (!this.formSubmitted()) return '';
+    return this.formLastName().trim() ? '' : 'El apellido es obligatorio.';
+  });
 
   protected readonly formEmailValid = computed(
     () => this.formEmail().trim().length > 0 && UserForm.EMAIL_REGEX.test(this.formEmail().trim()),

@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MenuItem, MessageService } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 import { Select } from 'primeng/select';
@@ -16,6 +16,7 @@ import {
 import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
+import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
 import { CategoryDto } from '../../../../shared/models/category';
 import { ProductOnlineStatus, ProductSummary } from '../../../../shared/models/product';
@@ -37,6 +38,7 @@ interface Option<T> {
   imports: [
     AppButton,
     AppDataTable,
+    AppPageHeader,
     AppSearchBar,
     ConfirmDialog,
     ErrorAlert,
@@ -50,6 +52,7 @@ interface Option<T> {
   styleUrl: './product-list.css',
 })
 export class ProductList {
+  private readonly router = inject(Router);
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
   private readonly messageService = inject(MessageService);
@@ -101,6 +104,11 @@ export class ProductList {
   constructor() {
     this.loadCategories();
     this.refresh();
+  }
+
+  /** Navigates to the create-product form. */
+  protected onCreate(): void {
+    this.router.navigate(['/admin/products', 'new']);
   }
 
   // ---------------------------------------------------------------------------

@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { InputNumber } from 'primeng/inputnumber';
-import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 
 import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
@@ -11,6 +10,7 @@ import { CategoryService } from '../../../../core/services/category';
 import { ErrorMappingService } from '../../../../core/services/error-mapping';
 import { ProductService } from '../../../../core/services/product';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
+import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 import { FormSection } from '../../../../shared/components/form-section/form-section';
 import { Skeleton } from '../../../../shared/components/skeleton/skeleton';
@@ -32,11 +32,11 @@ interface Option<T> {
   selector: 'app-product-form',
   imports: [
     AppButton,
+    AppFormField,
     ErrorAlert,
     FormSection,
     FormsModule,
     InputNumber,
-    InputText,
     RouterLink,
     Select,
     Skeleton,

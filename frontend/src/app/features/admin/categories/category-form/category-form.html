@@ -11,22 +11,14 @@
     >
       <div class="category-form__grid">
         <div class="category-form__field category-form__field--wide">
-          <label for="category-name" class="category-form__label">
-            Nombre <span class="category-form__required" aria-hidden="true">*</span>
-          </label>
-          <input
-            id="category-name"
-            pInputText
-            type="text"
-            [ngModel]="formName()"
-            (ngModelChange)="formName.set($event); formSubmitted.set(false)"
+          <app-form-field
+            label="Nombre"
+            [required]="true"
+            [(value)]="formName"
             placeholder="Ej. Cereales integrales"
-            class="w-full"
-            [class.ng-invalid]="formSubmitted() && !formNameValid()"
+            [error]="formSubmitted() && !formNameValid() ? 'El nombre es obligatorio.' : ''"
+            testId="category-name"
           />
-          @if (formSubmitted() && !formNameValid()) {
-            <small class="category-form__error">El nombre es obligatorio.</small>
-          }
         </div>
 
         <div class="category-form__field category-form__field--wide">
@@ -63,19 +55,14 @@
         </div>
 
         <div class="category-form__field category-form__field--wide">
-          <label for="category-description" class="category-form__label">Descripcion</label>
-          <textarea
-            id="category-description"
-            pInputText
-            [ngModel]="formDescription()"
-            (ngModelChange)="formDescription.set($event)"
-            rows="4"
+          <app-form-field
+            label="Descripcion"
+            [multiline]="true"
+            [(value)]="formDescription"
+            hint="Opcional. Ayuda a diferenciar categorias similares."
             placeholder="Notas internas o texto visible en tienda"
-            class="w-full"
-          ></textarea>
-          <small class="category-form__hint"
-            >Opcional. Ayuda a diferenciar categorias similares.</small
-          >
+            testId="category-description"
+          />
         </div>
       </div>
     </app-form-section>
