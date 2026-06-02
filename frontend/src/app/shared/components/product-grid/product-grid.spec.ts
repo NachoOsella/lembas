@@ -72,10 +72,10 @@ describe('ProductGrid', () => {
   it('should have the responsive grid CSS classes', async () => {
     const grid = fixture.nativeElement.querySelector('.product-grid');
     expect(grid).toBeTruthy();
-    expect(grid.classList.contains('grid')).toBe(true);
-    expect(grid.classList.contains('sm:grid-cols-2')).toBe(true);
-    expect(grid.classList.contains('xl:grid-cols-3')).toBe(true);
-    expect(grid.classList.contains('2xl:grid-cols-4')).toBe(true);
+    // Uses flexbox with centered items for balanced last-row layout
+    expect(grid.classList.contains('product-grid')).toBe(true);
+    const items = fixture.nativeElement.querySelectorAll('.product-grid__item');
+    expect(items.length).toBe(3);
   });
 
   it('should have role="list" for accessibility', async () => {

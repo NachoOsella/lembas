@@ -73,6 +73,15 @@ export class StoreLayout {
   /** Copyright string for app-store-footer. */
   protected readonly copyright = `\u00a9 ${new Date().getFullYear()} Lembas`;
 
+  /** Handwritten brand-moment tagline for the footer. */
+  protected readonly footerTagline = 'Tu dietética de confianza';
+
+  /** City / pickup marker for the footer. */
+  protected readonly footerCity = 'Córdoba, Argentina';
+
+  /** Pickup label that introduces the city marker. */
+  protected readonly footerPickupLabel = 'Retiro en sucursal';
+
   /** Navigate to store catalog with the submitted search query parameter. */
   onSearch(query: string): void {
     const trimmed = query.trim();

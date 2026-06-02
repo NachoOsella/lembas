@@ -1,0 +1,21 @@
+<div class="quantity-stepper" [class.quantity-stepper--disabled]="disabled()">
+  <button
+    type="button"
+    class="quantity-stepper__btn"
+    [disabled]="disabled() || value() <= min()"
+    (click)="decrement()"
+    aria-label="Disminuir cantidad"
+  >
+    <i class="pi pi-minus text-xs" aria-hidden="true"></i>
+  </button>
+  <span class="quantity-stepper__value">{{ value() }}</span>
+  <button
+    type="button"
+    class="quantity-stepper__btn"
+    [disabled]="disabled() || value() >= max()"
+    (click)="increment()"
+    aria-label="Aumentar cantidad"
+  >
+    <i class="pi pi-plus text-xs" aria-hidden="true"></i>
+  </button>
+</div>

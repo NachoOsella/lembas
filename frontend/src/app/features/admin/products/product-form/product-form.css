@@ -11,41 +11,6 @@
   padding-bottom: clamp(1.25rem, 3vw, 2.5rem);
 }
 
-.product-form-page__hero {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: clamp(0.95rem, 1.8vw, 1.35rem);
-  background: #ffffff;
-  border: 1px solid rgba(7, 95, 54, 0.1);
-  border-radius: var(--radius-card, 12px);
-  box-shadow: var(--shadow-card);
-}
-
-.product-form-page__eyebrow {
-  margin: 0 0 0.45rem;
-  color: #9a5b19;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.17em;
-  text-transform: uppercase;
-}
-
-.product-form-page__hero h1 {
-  margin: 0;
-  color: var(--color-text);
-  font-size: clamp(1.9rem, 3.8vw, 3.15rem);
-  font-weight: 800;
-  line-height: 0.92;
-  letter-spacing: -0.07em;
-}
-
-.product-form-page__hero p:not(.product-form-page__eyebrow) {
-  margin: 0.55rem 0 0;
-  color: rgba(0, 0, 0, 0.58);
-  font-weight: 500;
-}
 
 .product-form {
   display: flex;

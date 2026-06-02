@@ -3,46 +3,322 @@
 }
 
 .app-store-footer {
-  background: var(--color-primary-dark);
+  position: relative;
+  background: var(--color-primary-dark, #075f36);
+  color: #ffffff;
+  font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, sans-serif);
+  letter-spacing: var(--tracking-tight, -0.01em);
+  overflow: hidden;
 }
 
-.app-store-footer__inner {
-  display: flex;
+/* Dashed perforation hairline — subtle receipt motif echoing the home ticket theme.
+   A 1px band of repeating mint-wash dots across the top of the band. */
+.app-store-footer__perforation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(215, 234, 223, 0.32) 0 6px,
+    transparent 6px 12px
+  );
+  pointer-events: none;
+}
+
+/* Inner content layout */
+.app-store-footer__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.4rem;
+}
+
+/* Tablet: 2 cols (brand + tienda), social goes full-width as a hairline-divided row. */
+@media (min-width: 640px) {
+  .app-store-footer__grid {
+    grid-template-columns: 1.4fr 1fr;
+    column-gap: 2rem;
+    row-gap: 2.4rem;
+    align-items: start;
+  }
+
+  .app-store-footer__social {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .app-store-footer__social .app-store-footer__col-title {
+    margin: 0;
+  }
+}
+
+/* Desktop: 3 cols (brand | tienda | social) */
+@media (min-width: 1024px) {
+  .app-store-footer__grid {
+    grid-template-columns: 1.4fr 1fr auto;
+    column-gap: 3.2rem;
+  }
+
+  .app-store-footer__social {
+    grid-column: auto;
+    padding-top: 0;
+    border-top: 0;
+    display: block;
+  }
+}
+
+/* ── Brand block ────────────────────────────────────────────── */
+.app-store-footer__brand-link {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  column-gap: 1.5rem;
-  row-gap: 0.4rem;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 0 var(--spacing-xl);
-  min-height: 3.2rem;
+  gap: 0.85rem;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: opacity 0.2s ease;
 }
 
-.app-store-footer__copy {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.78rem;
-  font-weight: 500;
+.app-store-footer__brand-link:hover {
+  opacity: 0.95;
+}
+
+.app-store-footer__brand-link:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
+}
+
+.app-store-footer__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9999px;
+  background: rgba(215, 234, 223, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.app-store-footer__brand-link:hover .app-store-footer__mark {
+  transform: rotate(-6deg);
+  background: rgba(215, 234, 223, 0.18);
+  border-color: rgba(215, 234, 223, 0.22);
+}
+
+.app-store-footer__mark img {
+  display: block;
+  width: 22px;
+  height: 22px;
+  filter: brightness(0) invert(1);
+  opacity: 0.94;
+}
+
+.app-store-footer__brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.app-store-footer__wordmark {
+  font-size: 1.25rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
+  color: #ffffff;
 }
 
-.app-store-footer__links {
-  display: flex;
+.app-store-footer__tagline {
+  font-family: var(--font-script, 'Caveat', cursive);
+  font-size: 1.45rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  margin-top: 0.1rem;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.app-store-footer__meta {
+  margin: 0.95rem 0 0;
+  padding-left: 3.3rem;
+  display: inline-flex;
   align-items: center;
-  column-gap: 1.25rem;
-  row-gap: 0.3rem;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.app-store-footer__meta-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #f29d52;
+  box-shadow: 0 0 0 3px rgba(242, 157, 82, 0.16);
+  flex-shrink: 0;
+}
+
+/* ── Column titles ──────────────────────────────────────────── */
+.app-store-footer__col-title {
+  margin: 0 0 0.9rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #6cc6a8;
+}
+
+/* ── Link column ────────────────────────────────────────────── */
+.app-store-footer__col-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
 }
 
 .app-store-footer__link {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.76rem;
+  position: relative;
+  display: inline-block;
+  font-size: 0.875rem;
   font-weight: 500;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.78);
   text-decoration: none;
-  white-space: nowrap;
+  padding: 0.1rem 0;
+  border-radius: 4px;
   transition: color 0.2s ease;
+}
+
+.app-store-footer__link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 1px;
+  width: 100%;
+  background: #2f8d72;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .app-store-footer__link:hover {
   color: #ffffff;
+}
+
+.app-store-footer__link:hover::after {
+  transform: scaleX(1);
+}
+
+.app-store-footer__link:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
+}
+
+/* ── Social cluster ─────────────────────────────────────────── */
+.app-store-footer__social-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.app-store-footer__social-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  font-size: 1.05rem;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.app-store-footer__social-btn:hover {
+  background: rgba(47, 141, 114, 0.18);
+  border-color: rgba(47, 141, 114, 0.5);
+  color: #ffffff;
+}
+
+.app-store-footer__social-btn:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 4px;
+}
+
+.app-store-footer__social-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── Bottom strip ───────────────────────────────────────────── */
+.app-store-footer__strip {
+  position: relative;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .app-store-footer__strip {
+    margin-top: 2rem;
+  }
+}
+
+.app-store-footer__copy {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.app-store-footer__crafted {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.app-store-footer__crafted-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: #f29d52;
+  flex-shrink: 0;
+}
+
+/* ── Reduced motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .app-store-footer__brand-link:hover .app-store-footer__mark,
+  .app-store-footer__social-btn,
+  .app-store-footer__link::after,
+  .app-store-footer__brand-link {
+    transition: none;
+  }
 }

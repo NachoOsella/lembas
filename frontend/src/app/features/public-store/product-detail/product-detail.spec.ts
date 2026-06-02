@@ -45,6 +45,9 @@ function setupActivatedRoute(id: string | number = '1'): unknown {
         get: (key: string) => (key === 'id' ? String(id) : null),
       },
     },
+    paramMap: of({
+      get: (key: string) => (key === 'id' ? String(id) : null),
+    }),
   };
 }
 
@@ -222,45 +225,58 @@ describe('ProductDetail', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  it('should show toast on addToCart', async () => {
+  it('should show feedback after addToCart', async () => {
     await configure();
-    const spy = vi.spyOn((component as any).messageService, 'add');
 
     // Call addToCart directly
     (component as any).addToCart();
 
-    expect(spy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        severity: 'success',
-        summary: 'Agregado',
-      }),
-    );
+    // The component sets justAdded to true as temporary feedback
+    expect((component as any).justAdded()).toBe(true);
+
+    // Wait for the timeout to reset the feedback
+    await new Promise((resolve) => setTimeout(resolve, 2100));
+    expect((component as any).justAdded()).toBe(false);
   });
 
   // --- Quantity selector tests ---
 
-  it('should increment quantity', async () => {
+  it('should increment quantity via signal', async () => {
     await configure();
     const before = (component as any).quantity() as number;
 
-    const incrementBtns = fixture.nativeElement.querySelectorAll('button[aria-label="Aumentar cantidad"]');
-    incrementBtns[0]?.click();
+    // Find and click the increment button in the quantity stepper
+    const incrementBtn = fixture.nativeElement.querySelector('app-quantity-stepper .quantity-stepper__btn:last-child');
+    incrementBtn?.click();
+    fixture.detectChanges();
 
     expect((component as any).quantity()).toBe(before + 1);
   });
 
-  it('should decrement quantity but not below 1', async () => {
+  it('should decrement quantity via signal but not below 1', async () => {
     await configure();
-    const decrementBtns = fixture.nativeElement.querySelectorAll('button[aria-label="Disminuir cantidad"]');
-    decrementBtns[0]?.click();
-    decrementBtns[0]?.click();
+    // Set quantity to 3 first
+    (component as any).quantity.set(3);
+    fixture.detectChanges();
 
+    const decrementBtn = fixture.nativeElement.querySelector('app-quantity-stepper .quantity-stepper__btn:first-child');
+    decrementBtn?.click();
+    fixture.detectChanges();
+    expect((component as any).quantity()).toBe(2);
+
+    decrementBtn?.click();
+    fixture.detectChanges();
+    expect((component as any).quantity()).toBe(1);
+
+    // Should not go below 1
+    decrementBtn?.click();
+    fixture.detectChanges();
     expect((component as any).quantity()).toBe(1);
   });
 
   it('should hide quantity selector when out of stock', async () => {
     await configure(MOCK_PRODUCT_OUT_OF_STOCK);
-    const quantityBtns = fixture.nativeElement.querySelectorAll('button[aria-label="Aumentar cantidad"]');
-    expect(quantityBtns.length).toBe(0);
+    const quantityStepper = fixture.nativeElement.querySelector('app-quantity-stepper');
+    expect(quantityStepper).toBeNull();
   });
 });

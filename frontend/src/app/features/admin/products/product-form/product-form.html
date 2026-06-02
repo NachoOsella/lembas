@@ -1,14 +1,13 @@
 <div class="product-form-page">
-  <section class="product-form-page__hero" aria-labelledby="product-form-title">
-    <div>
-      <p class="product-form-page__eyebrow">Catalogo</p>
-      <h1 id="product-form-title">{{ title() }}</h1>
-      <p>Completa la informacion comercial, precio, categoria e imagen visible del producto.</p>
-    </div>
-    <app-button variant="secondary" routerLink="/admin/products" icon="pi pi-arrow-left"
-      >Volver</app-button
-    >
-  </section>
+  <app-page-header
+    eyebrow="Catalogo"
+    [title]="title()"
+    description="Completa la informacion comercial, precio, categoria e imagen visible del producto."
+  >
+    <app-button variant="secondary" routerLink="/admin/products" icon="pi pi-arrow-left">
+      Volver
+    </app-button>
+  </app-page-header>
 
   @if (error()) {
     <app-error-alert variant="inline" [title]="error()" message="" />

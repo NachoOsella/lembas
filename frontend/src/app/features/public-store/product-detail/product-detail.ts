@@ -13,10 +13,11 @@ import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
 import { ProductGrid } from '../../../shared/components/product-grid/product-grid';
+import { QuantityStepper } from '../../../shared/components/quantity-stepper/quantity-stepper';
 
 @Component({
   selector: 'app-product-detail',
-  imports: [RouterLink, AppBadge, AppBreadcrumb, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid],
+  imports: [RouterLink, AppBadge, AppBreadcrumb, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid, QuantityStepper],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css',
 })

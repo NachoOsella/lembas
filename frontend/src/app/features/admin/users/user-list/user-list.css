@@ -7,63 +7,6 @@
   display: block;
 }
 
-.users-page {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: clamp(0.55rem, 1.15vw, 0.8rem);
-  width: 100%;
-  max-width: 98rem;
-  min-width: 0;
-  margin: 0 auto;
-  padding-bottom: clamp(1.25rem, 3vw, 2.5rem);
-}
-
-.users-page > * {
-  min-width: 0;
-}
-
-/* Hero section delegated to <app-page-header> component. */
-
-.users-page__directory {
-  width: 100%;
-  min-width: 0;
-}
-.table-toolbar__info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0;
-}
-
-.table-toolbar__kicker {
-  margin: 0;
-  color: #9a5b19;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.table-toolbar__title {
-  margin: 0;
-  color: var(--color-text);
-  font-size: clamp(1.1rem, 2.4vw, 1.55rem);
-  font-weight: 800;
-  letter-spacing: -0.045em;
-}
-
-.table-toolbar__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: min(100%, 25rem);
-}
-
-.table-toolbar__actions app-search-bar {
-  flex: 1 1 auto;
-  min-width: 12rem;
-}
-
 /* ---------------------------------------------------------------------------
    User name display in table
    --------------------------------------------------------------------------- */
@@ -100,22 +43,6 @@
 :host ::ng-deep .users-page .p-datatable-tbody .app-button--ghost:hover:not(:disabled) {
   color: #ffffff;
   background: #2f8d72;
-}
-
-@media (max-width: 48rem) {
-  .table-toolbar__actions {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .table-toolbar__actions app-search-bar {
-    flex: 0 0 auto;
-    width: 100%;
-    min-width: 0;
-  }
 }
 
 @media (max-width: 34rem) {

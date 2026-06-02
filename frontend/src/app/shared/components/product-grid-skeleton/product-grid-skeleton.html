@@ -1,10 +1,12 @@
 <div
-  class="product-grid-skeleton grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+  class="product-grid-skeleton"
   role="status"
   aria-label="Cargando productos"
 >
   @for (_ of skeletonItems(); track $index) {
-    <app-catalog-skeleton-card />
+    <div class="product-grid-skeleton__item">
+      <app-catalog-skeleton-card />
+    </div>
   }
   <span class="sr-only">Cargando productos...</span>
 </div>
