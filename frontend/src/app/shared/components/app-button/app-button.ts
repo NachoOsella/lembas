@@ -9,7 +9,10 @@ import { RouterLink } from '@angular/router';
 })
 export class AppButton {
   readonly type = input<'button' | 'submit' | 'reset'>('button');
-  readonly variant = input<'primary' | 'secondary' | 'ghost' | 'danger' | 'hero' | 'success'>('primary');
+  readonly variant = input<
+    'primary' | 'secondary' | 'ghost' | 'danger' | 'hero' | 'success' |
+    'green-on-green' | 'outlined-on-dark' | 'consent'
+  >('primary');
   readonly size = input<'sm' | 'md' | 'lg'>('md');
   readonly disabled = input(false);
   readonly loading = input(false);

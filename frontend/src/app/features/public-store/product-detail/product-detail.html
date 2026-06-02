@@ -123,23 +123,23 @@
             <!-- Quantity + Add to cart -->
             <div class="flex flex-wrap items-center gap-4">
               @if (!isOutOfStock()) {
-                <div class="flex items-center rounded-full border border-[#e7e7e7] bg-white shadow-sm">
+                <div class="flex items-center gap-2">
                   <button
                     type="button"
-                    class="flex h-12 w-12 items-center justify-center rounded-l-full text-[rgba(0,0,0,0.5)] transition hover:bg-[#f6ead6] hover:text-[#075f36]"
+                    class="quantity-stepper__btn"
                     (click)="decrement()"
                     aria-label="Disminuir cantidad"
                   >
                     <i class="pi pi-minus text-xs" aria-hidden="true"></i>
                   </button>
                   <span
-                    class="flex h-12 w-14 items-center justify-center text-base font-bold text-[rgba(0,0,0,0.87)]"
+                    class="flex h-8 w-8 items-center justify-center text-base font-bold text-[rgba(0,0,0,0.87)]"
                   >
                     {{ quantity() }}
                   </span>
                   <button
                     type="button"
-                    class="flex h-12 w-12 items-center justify-center rounded-r-full text-[rgba(0,0,0,0.5)] transition hover:bg-[#f6ead6] hover:text-[#075f36]"
+                    class="quantity-stepper__btn"
                     (click)="increment()"
                     aria-label="Aumentar cantidad"
                   >

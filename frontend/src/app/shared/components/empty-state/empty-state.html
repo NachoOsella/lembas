@@ -9,6 +9,12 @@
   </div>
 
   @if (actionLabel()) {
-    <p-button [label]="actionLabel() ?? ''" rounded="true" (onClick)="onAction()" />
+    <app-button
+      [variant]="'primary'"
+      [size]="'md'"
+      (click)="onAction()"
+    >
+      {{ actionLabel() }}
+    </app-button>
   }
 </section>

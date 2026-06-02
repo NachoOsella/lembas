@@ -4,7 +4,7 @@
 
 /* ── Card variant (PrimeNG Message wrapper) ───────────────── */
 :host ::ng-deep .error-alert {
-  background: hsl(4 82% 43% / 5%);
+  background: #ffffff;
   border: 1px solid rgba(200, 32, 20, 0.28);
   border-radius: var(--radius-card, 12px);
   color: var(--color-text);

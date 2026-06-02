@@ -34,7 +34,7 @@
 }
 
 :host ::ng-deep .p-progressspinner-circle {
-  stroke: var(--color-accent);
+  stroke: #2f8d72;
 }
 
 .loading-spinner--band ::ng-deep .p-progressspinner-circle {

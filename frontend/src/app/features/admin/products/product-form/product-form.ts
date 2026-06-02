@@ -112,6 +112,11 @@ export class ProductForm {
     }
   }
 
+  /** Navigates back to the product list without saving. */
+  protected cancel(): void {
+    this.router.navigate(['/admin/products']);
+  }
+
   /** Saves the form if all required fields are valid. */
   protected save(): void {
     this.submitted.set(true);

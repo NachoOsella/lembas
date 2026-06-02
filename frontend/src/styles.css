@@ -14,7 +14,26 @@
   --color-orange-wash: #fff2df;
   --color-text: rgba(0, 0, 0, 0.87);
   --color-text-muted: rgba(0, 0, 0, 0.58);
+  --color-text-on-dark: #ffffff;
   --color-text-on-dark-muted: rgba(255, 255, 255, 0.7);
+  --color-orange: #f29d52;
+  --color-orange-light: #f9c88e;
+  --color-orange-lightest: #fff2df;
+  --color-red: #c82014;
+  --color-red-dark: #a41810;
+  --color-amber: #d9822b;
+  --color-amber-text: #7a4f00;
+  --color-amber-tint: #fff4d8;
+  --color-bark: #9a5b19;
+  --color-mint-wash: #d7eadf;
+  --color-mint-wash-light: #e9f3ea;
+  --color-mint-wash-subtle: #eef6f1;
+  --color-mint-wash-pale: #f6fbf7;
+  --color-border-neutral: #e7e7e7;
+  --color-border-warm: #f0e6d3;
+  --color-surface-warm: #faf6ef;
+  --color-surface-warmest: #fffef9;
+  --color-neutral-cool: #f9f9f9;
 
   --radius-card: 12px;
   --radius-pill: 50px;
@@ -23,8 +42,35 @@
   --shadow-nav:
     0 1px 3px rgba(0, 0, 0, 0.1), 0 2px 2px rgba(0, 0, 0, 0.06), 0 0 2px rgba(0, 0, 0, 0.07);
 
+  --space-1: 0.4rem;
+  --space-2: 0.8rem;
+  --space-3: 1.6rem;
+  --space-4: 2.4rem;
+  --space-5: 3.2rem;
+  --space-6: 4rem;
+  --space-7: 4.8rem;
+  --space-8: 5.6rem;
+  --space-9: 6.4rem;
+
   --spacing-xl: clamp(1.25rem, 4vw, 3rem);
   --spacing-2xl: clamp(2rem, 6vw, 4rem);
+
+  --shadow-button-primary:
+    0 0 0.5px rgba(47, 141, 114, 0.12),
+    0 1px 2px rgba(47, 141, 114, 0.14);
+  --shadow-button-danger:
+    0 0 0.5px rgba(200, 32, 20, 0.12),
+    0 1px 2px rgba(200, 32, 20, 0.14);
+  --shadow-modal:
+    0 0 0.5px rgba(0, 0, 0, 0.14),
+    0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-toast:
+    0 0 0.5px rgba(0, 0, 0, 0.14),
+    0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-leaf-cta-base:
+    0 0 6px rgba(0, 0, 0, 0.24);
+  --shadow-leaf-cta-ambient:
+    0 8px 12px rgba(0, 0, 0, 0.14);
 }
 
 @layer base {

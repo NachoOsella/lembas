@@ -108,7 +108,6 @@ import { map } from 'rxjs';
       line-height: 1;
       color: #2f8d72;
       letter-spacing: -0.04em;
-      text-shadow: 0 4px 20px rgba(47, 141, 114, 0.15);
       animation: slideDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
@@ -171,13 +170,15 @@ import { map } from 'rxjs';
     .btn-primary {
       background: #2f8d72;
       color: white;
-      box-shadow: 0 4px 12px rgba(47, 141, 114, 0.25);
+      box-shadow: 0 0 0.5px rgba(47, 141, 114, 0.12), 0 1px 2px rgba(47, 141, 114, 0.14);
     }
 
     .btn-primary:hover {
-      background: #256f5a;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(47, 141, 114, 0.35);
+      background: #075f36;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.95);
     }
 
     .btn-secondary {
@@ -189,7 +190,10 @@ import { map } from 'rxjs';
     .btn-secondary:hover {
       background: #2f8d72;
       color: white;
-      transform: translateY(-2px);
+    }
+
+    .btn-secondary:active {
+      transform: scale(0.95);
     }
 
     .suggestions-section {
@@ -219,17 +223,19 @@ import { map } from 'rxjs';
       align-items: flex-start;
       padding: 1.5rem;
       background: white;
-      border-radius: 16px;
+      border-radius: 12px;
       text-decoration: none;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s ease;
       border: 1px solid rgba(47, 141, 114, 0.08);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 0 0.5px rgba(0, 0, 0, 0.14), 0 1px 1px rgba(0, 0, 0, 0.24);
     }
 
     .suggestion-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(47, 141, 114, 0.15);
       border-color: rgba(47, 141, 114, 0.2);
+    }
+
+    .suggestion-card:active {
+      transform: scale(0.98);
     }
 
     .suggestion-icon {
@@ -251,7 +257,6 @@ import { map } from 'rxjs';
 
     .suggestion-card:hover .suggestion-icon {
       background: #2f8d72;
-      transform: scale(1.1);
     }
 
     .suggestion-card:hover .suggestion-icon i {

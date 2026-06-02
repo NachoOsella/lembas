@@ -71,7 +71,7 @@ import { ProductSummary } from '../../../shared/models/product';
               <!-- Ticket body -->
               <div class="relative overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
                 <!-- Header -->
-                <div class="border-b-2 border-dashed border-[rgba(7,95,54,0.12)] bg-gradient-to-br from-[#f6fbf7] to-white px-6 py-5">
+                <div class="border-b-2 border-dashed border-[rgba(7,95,54,0.12)] bg-[#f6fbf7] px-6 py-5">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
                       <div class="flex h-9 w-9 items-center justify-center rounded-full bg-[#2f8d72] text-white">
@@ -136,7 +136,7 @@ import { ProductSummary } from '../../../shared/models/product';
                 </div>
 
                 <!-- Footer (barcode decorativo) -->
-                <div class="border-t-2 border-dashed border-[rgba(7,95,54,0.12)] bg-gradient-to-br from-white to-[#f6fbf7] px-6 py-4">
+                <div class="border-t-2 border-dashed border-[rgba(7,95,54,0.12)] bg-[#f6fbf7] px-6 py-4">
                   <div class="flex items-center justify-between">
                     <div class="flex gap-0.5">
                       <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>

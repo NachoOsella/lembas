@@ -151,6 +151,10 @@
   color: #2f8d72;
 }
 
+.app-store-nav__menu-btn:active {
+  transform: scale(0.95);
+}
+
 .app-store-nav__auth {
   display: none;
   align-items: center;
@@ -165,13 +169,13 @@
 
 .app-store-nav__login {
   border-radius: 9999px;
-  border: 1px solid #e7e7e7;
+  border: 1px solid rgba(0, 0, 0, 0.87);
   background: transparent;
   padding: 0.375rem 0.875rem;
   font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(0, 0, 0, 0.87);
   text-decoration: none;
   transition: all 0.2s ease;
 }
@@ -179,6 +183,10 @@
 .app-store-nav__login:hover {
   border-color: rgba(0, 0, 0, 0.87);
   color: rgba(0, 0, 0, 0.87);
+}
+
+.app-store-nav__login:active {
+  transform: scale(0.95);
 }
 
 .app-store-nav__login:focus-visible {
@@ -204,6 +212,10 @@
   border-color: #075f36;
 }
 
+.app-store-nav__cta:active {
+  transform: scale(0.95);
+}
+
 .app-store-nav__cta:focus-visible {
   outline: 2px solid #2f8d72;
   outline-offset: 4px;
@@ -227,7 +239,7 @@
 :host ::ng-deep .app-store-nav__dropdown {
   width: 200px;
   border: none;
-  background: #ffffff;
+  background: #f9f9f9;
   box-shadow:
     0 0 0.5px rgba(0, 0, 0, 0.14),
     0 2px 4px rgba(0, 0, 0, 0.12);
@@ -286,8 +298,8 @@
   transition: all 0.3s ease;
 }
 
-.app-store-nav__cart:hover {
-  transform: scale(1.1);
+.app-store-nav__cart:active {
+  transform: scale(0.95);
 }
 
 .app-store-nav__cart:focus-visible {
@@ -313,7 +325,7 @@
   height: 1.5rem;
   border-radius: 9999px;
   border: 2px solid #2f8d72;
-  background: #f29d52;
+  background: #c82014;
   font-size: 0.6875rem;
   font-weight: 700;
   color: #ffffff;
