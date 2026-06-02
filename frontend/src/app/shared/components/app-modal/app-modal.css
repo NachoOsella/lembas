@@ -1,8 +1,8 @@
-:host {
+.app-modal-host {
   display: contents;
 }
 
-:host ::ng-deep .app-modal {
+.app-modal {
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-card);
@@ -14,25 +14,25 @@
   overflow: hidden;
 }
 
-:host ::ng-deep .app-modal .p-dialog-header,
-:host ::ng-deep .app-modal .p-dialog-content,
-:host ::ng-deep .app-modal .p-dialog-footer {
+.app-modal .p-dialog-header,
+.app-modal .p-dialog-content,
+.app-modal .p-dialog-footer {
   background: #ffffff;
   color: var(--color-text);
 }
 
-:host ::ng-deep .app-modal .p-dialog-header {
+.app-modal .p-dialog-header {
   padding: 1.25rem var(--space-4, 2.4rem) 0;
   border: none;
 }
 
-:host ::ng-deep .app-modal .p-dialog-content {
+.app-modal .p-dialog-content {
   max-height: min(80vh, 50rem);
   padding: 1rem var(--space-4, 2.4rem);
   overflow-y: auto;
 }
 
-:host ::ng-deep .app-modal .p-dialog-footer {
+.app-modal .p-dialog-footer {
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
@@ -69,32 +69,32 @@
 }
 
 @media (max-width: 48rem) {
-  :host ::ng-deep .app-modal {
+  .app-modal {
     max-width: calc(100vw - 1rem);
     max-height: calc(100dvh - 1rem);
     border-radius: 1rem;
   }
 
-  :host ::ng-deep .app-modal .p-dialog-header {
+  .app-modal .p-dialog-header {
     padding: 1rem 1rem 0;
   }
 
-  :host ::ng-deep .app-modal .p-dialog-content {
+  .app-modal .p-dialog-content {
     max-height: calc(100dvh - 9.5rem);
     padding: 0.85rem 1rem;
   }
 
-  :host ::ng-deep .app-modal .p-dialog-footer {
+  .app-modal .p-dialog-footer {
     padding: 0.75rem 1rem 1rem;
   }
 }
 
 @media (max-width: 34rem) {
-  :host ::ng-deep .app-modal .p-dialog-footer {
+  .app-modal .p-dialog-footer {
     flex-direction: column-reverse;
   }
 
-  :host ::ng-deep .app-modal .p-dialog-footer .p-button {
+  .app-modal .p-dialog-footer .p-button {
     width: 100%;
   }
 }

@@ -1,8 +1,8 @@
-:host {
+.confirm-dialog-host {
   display: contents;
 }
 
-:host ::ng-deep .confirm-dialog {
+.confirm-dialog {
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-card);
@@ -14,18 +14,18 @@
   overflow: hidden;
 }
 
-:host ::ng-deep .confirm-dialog .p-dialog-header,
-:host ::ng-deep .confirm-dialog .p-dialog-content,
-:host ::ng-deep .confirm-dialog .p-dialog-footer {
+.confirm-dialog .p-dialog-header,
+.confirm-dialog .p-dialog-content,
+.confirm-dialog .p-dialog-footer {
   background: #ffffff;
   color: var(--color-text);
 }
 
-:host ::ng-deep .confirm-dialog .p-dialog-header {
+.confirm-dialog .p-dialog-header {
   padding: 1.25rem var(--space-4, 2.4rem) 0;
 }
 
-:host ::ng-deep .confirm-dialog .p-dialog-header-icon {
+.confirm-dialog .p-dialog-header-icon {
   width: 2rem;
   height: 2rem;
   display: flex;
@@ -36,21 +36,21 @@
   transition: all 0.18s ease;
 }
 
-:host ::ng-deep .confirm-dialog .p-dialog-header-icon:hover {
+.confirm-dialog .p-dialog-header-icon:hover {
   background: rgba(47, 141, 114, 0.1);
   color: #2f8d72;
 }
 
-:host ::ng-deep .confirm-dialog .p-dialog-header-icon:focus-visible {
+.confirm-dialog .p-dialog-header-icon:focus-visible {
   outline: 2px solid #2f8d72;
   outline-offset: 2px;
 }
 
-:host ::ng-deep .confirm-dialog .p-dialog-content {
+.confirm-dialog .p-dialog-content {
   padding: 1.25rem var(--space-4, 2.4rem) 0.5rem;
 }
 
-:host ::ng-deep .confirm-dialog .p-dialog-footer {
+.confirm-dialog .p-dialog-footer {
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
@@ -118,11 +118,11 @@
 }
 
 @media (max-width: 34rem) {
-  :host ::ng-deep .confirm-dialog .p-dialog-footer {
+  .confirm-dialog .p-dialog-footer {
     flex-direction: column-reverse;
   }
 
-  :host ::ng-deep .confirm-dialog .p-dialog-footer .app-button {
+  .confirm-dialog .p-dialog-footer .app-button {
     width: 100%;
   }
 }

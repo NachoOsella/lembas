@@ -162,3 +162,7 @@
 - `frontend/src/app/features/public-store/public-store.routes.ts` -- agregada ruta `error/403` con ErrorPage component.
 - `frontend/src/app/features/public-store/store-layout/{store-layout.ts,store-layout.html}`, `frontend/src/app/features/auth/{login/login.ts,login.html,register/register.ts,register.html}` -- agregado `<app-toast />` en store-layout, login y register para notificaciones globales. Actualizados specs con MessageService provider.
 - Jira LEMBAS-17 (S1-US11) -- completados todos los subtasks: [01] ApiError record, [02] ControllerAdvice, [03] MessageService+Toast, [04] DomainException, [05] VALIDATION_ERROR mapping, [06] Error code mapping (22 códigos), [07] Form validation integration, [08] HttpErrorInterceptor contextual, [09] ToastComponent, [10] ErrorPageComponent (403/404/500), [11] HTTP status handling, [12-13] Tests. LEMBAS-616 cerrado como duplicado de LEMBAS-83.
+
+## 2026-06-02
+
+- `frontend/src/app/shared/components/{app-modal,confirm-dialog}/` -- corregidos dialogos PrimeNG para renderizarse con `appendTo='body'`, evitando que el overlay quede limitado por contenedores transformados por animaciones de ruta; los estilos se hicieron globales para conservar el aspecto al portalizar.
