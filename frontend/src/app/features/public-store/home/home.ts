@@ -36,21 +36,23 @@ import { ProductSummary } from '../../../shared/models/product';
           class="relative mx-auto grid w-full max-w-[1600px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_0.85fr] lg:px-10"
         >
           <section class="w-full max-w-3xl min-w-0">
-            <app-eyebrow color="light">Dietetica Lembas</app-eyebrow>
+            <div class="home-reveal home-reveal--eyebrow">
+              <app-eyebrow color="light">Dietetica Lembas</app-eyebrow>
+            </div>
 
             <h1
-              class="mt-8 max-w-[760px] text-5xl font-semibold leading-[1.2] tracking-[-0.01em] text-white sm:text-6xl lg:text-[5rem]"
+              class="home-reveal home-reveal--title mt-8 max-w-[760px] text-5xl font-semibold leading-[1.2] tracking-[-0.01em] text-white sm:text-6xl lg:text-[5rem]"
             >
               Tu despensa natural, lista para retirar
             </h1>
 
             <p
-              class="mt-6 w-full max-w-[660px] text-base font-medium leading-7 text-white/80 sm:text-lg"
+              class="home-reveal home-reveal--copy mt-6 w-full max-w-[660px] text-base font-medium leading-7 text-white/80 sm:text-lg"
             >
               Productos saludables para comprar online y retirar en sucursal.
             </p>
 
-            <div class="mt-10 flex flex-col gap-3 sm:flex-row">
+            <div class="home-reveal home-reveal--cta mt-10 flex flex-col gap-3 sm:flex-row">
               <app-button
                 variant="hero"
                 size="lg"
@@ -62,14 +64,10 @@ import { ProductSummary } from '../../../shared/models/product';
             </div>
           </section>
 
-          <aside class="hidden lg:block" aria-label="Resumen de compra">
+          <aside class="home-ticket-stage hidden lg:block" aria-label="Resumen de compra">
             <div class="home-ticket relative ml-auto max-w-sm">
-              <!-- Notches (perforaciones laterales) -->
-              <div class="absolute -left-3 top-20 h-6 w-6 rounded-full bg-primary-dark"></div>
-              <div class="absolute -right-3 top-20 h-6 w-6 rounded-full bg-primary-dark"></div>
-
               <!-- Ticket body -->
-              <div class="relative overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+              <div class="home-ticket__body relative overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
                 <!-- Header -->
                 <div class="border-b-2 border-dashed border-[rgba(7,95,54,0.12)] bg-mint-wash-pale px-6 py-5">
                   <div class="flex items-center justify-between">
@@ -138,7 +136,7 @@ import { ProductSummary } from '../../../shared/models/product';
                 <!-- Footer (barcode decorativo) -->
                 <div class="border-t-2 border-dashed border-[rgba(7,95,54,0.12)] bg-mint-wash-pale px-6 py-4">
                   <div class="flex items-center justify-between">
-                    <div class="flex gap-0.5">
+                    <div class="home-barcode flex gap-0.5">
                       <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
                       <div class="h-8 w-1 bg-[rgba(0,0,0,0.87)]"></div>
                       <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
@@ -168,7 +166,7 @@ import { ProductSummary } from '../../../shared/models/product';
           class="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10"
           aria-labelledby="home-products-title"
         >
-          <div class="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div class="home-section-reveal mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <app-eyebrow color="green">Seleccion curada</app-eyebrow>
               <h2
@@ -192,7 +190,7 @@ import { ProductSummary } from '../../../shared/models/product';
             </div>
           } @else if (featuredProducts().length > 0) {
             <div
-              class="home-marquee rounded-xl border border-[rgba(7,95,54,0.08)] bg-white p-5 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.24)]"
+              class="home-marquee home-surface-reveal rounded-xl border border-[rgba(7,95,54,0.08)] bg-white p-5 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.24)]"
               aria-label="Productos recomendados en movimiento"
             >
               <div class="home-marquee__track">
@@ -239,7 +237,7 @@ import { ProductSummary } from '../../../shared/models/product';
                   padding="2rem"
                   [showBlob]="false"
                   [clickable]="true"
-                  class="home-benefits-card"
+                  class="home-benefits-card home-card-rise"
                 >
                   <div class="text-center">
                     <span
@@ -318,7 +316,7 @@ import { ProductSummary } from '../../../shared/models/product';
                   padding="1.5rem"
                   [showBlob]="false"
                   [clickable]="true"
-                  class="home-reviews-card"
+                  class="home-reviews-card home-card-rise"
                 >
                   <div class="flex items-center gap-4">
                     <span
@@ -391,134 +389,7 @@ import { ProductSummary } from '../../../shared/models/product';
       </main>
     </div>
   `,
-  styles: `
-    :host {
-      display: block;
-    }
-
-    .home-hero {
-      background: #075f36;
-    }
-
-    .home-ticket {
-      transform: rotate(1deg);
-    }
-
-    .home-marquee {
-      overflow: hidden;
-    }
-
-    .home-marquee__track {
-      display: flex;
-      width: max-content;
-      gap: 1.25rem;
-      will-change: transform;
-      animation: home-marquee-slide 80s linear infinite;
-    }
-
-    .home-marquee:hover .home-marquee__track {
-      animation-play-state: paused;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .home-marquee__track {
-        animation: none;
-      }
-    }
-
-    @keyframes home-marquee-slide {
-      from {
-        transform: translateX(0);
-      }
-      to {
-        transform: translateX(-50%);
-      }
-    }
-
-    /* ── Benefits marquee (mobile infinite loop) ─────────────── */
-    .home-benefits-marquee {
-      overflow: hidden;
-    }
-
-    .home-benefits-marquee__track {
-      width: max-content;
-      gap: 1rem;
-      will-change: transform;
-      animation: home-marquee-slide 45s linear infinite;
-    }
-
-    .home-benefits-marquee:hover .home-benefits-marquee__track {
-      animation-play-state: paused;
-    }
-
-    .home-benefits-card {
-      min-width: 280px;
-      flex-shrink: 0;
-    }
-
-    /* ── Reviews marquee (mobile infinite loop, reverse) ─────── */
-    .home-reviews-marquee {
-      overflow: hidden;
-    }
-
-    .home-reviews-marquee__track {
-      width: max-content;
-      gap: 1rem;
-      will-change: transform;
-      animation: home-reviews-slide 60s linear infinite;
-    }
-
-    .home-reviews-marquee:hover .home-reviews-marquee__track {
-      animation-play-state: paused;
-    }
-
-    .home-reviews-card {
-      min-width: 300px;
-      flex-shrink: 0;
-    }
-
-    @keyframes home-reviews-slide {
-      from {
-        transform: translateX(-50%);
-      }
-      to {
-        transform: translateX(0);
-      }
-    }
-
-    /* ── Disable marquees on desktop (grid takes over) ──────── */
-    @media (min-width: 640px) {
-      .home-benefits-marquee,
-      .home-reviews-marquee {
-        overflow: visible;
-      }
-
-      .home-benefits-marquee__track,
-      .home-reviews-marquee__track {
-        animation: none;
-        width: auto;
-      }
-
-      .home-benefits-card,
-      .home-reviews-card {
-        min-width: 0;
-        flex-shrink: 1;
-      }
-
-      /* Hide duplicated cards for marquee effect */
-      .home-benefits-card[aria-hidden="true"],
-      .home-reviews-card[aria-hidden="true"] {
-        display: none;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .home-benefits-marquee__track,
-      .home-reviews-marquee__track {
-        animation: none;
-      }
-    }
-  `,
+  styleUrl: './home.css',
 })
 export class Home implements OnInit {
   private readonly catalogService = inject(CatalogService);

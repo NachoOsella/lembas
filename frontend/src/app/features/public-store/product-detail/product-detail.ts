@@ -1,11 +1,13 @@
 import { ViewportScroller } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { MenuItem } from 'primeng/api';
 
 import { Cart } from '../../../core/services/cart';
 import { CatalogService } from '../../../core/services/catalog';
 import { ProductSummary } from '../../../shared/models/product';
 import { AppBadge } from '../../../shared/components/app-badge/app-badge';
+import { AppBreadcrumb } from '../../../shared/components/app-breadcrumb/app-breadcrumb';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
@@ -14,7 +16,7 @@ import { ProductGrid } from '../../../shared/components/product-grid/product-gri
 
 @Component({
   selector: 'app-product-detail',
-  imports: [RouterLink, AppBadge, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid],
+  imports: [RouterLink, AppBadge, AppBreadcrumb, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css',
 })
@@ -138,4 +140,19 @@ export class ProductDetail implements OnInit {
     const stock = this.product()?.availableStock;
     return stock != null && stock > 0 && stock <= 5;
   });
+
+  /** Breadcrumb items for navigation trail: Catalogo / {Product name}. */
+  protected readonly breadcrumbItems = computed<MenuItem[]>(() => {
+    const p = this.product();
+    return [
+      { label: 'Catalogo', routerLink: '/store/products' },
+      { label: p?.name ?? 'Producto' },
+    ];
+  });
+
+  /** Home item for the breadcrumb. */
+  protected readonly breadcrumbHome: MenuItem = {
+    icon: 'pi pi-home',
+    routerLink: '/store',
+  };
 }

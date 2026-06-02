@@ -51,9 +51,9 @@
   background: rgba(250, 246, 238, 0.14);
 }
 
-/* ── Auth inputs: pill shape overrides global PrimeNG styles ── */
+/* Auth inputs: pill shape inherits from global styles.css (border-radius: 50px).
+   Only keep overrides for hover, focus, invalid and placeholder that differ. */
 .register-page .p-inputtext {
-  border-radius: 50px !important;
   min-height: 2.95rem;
   border-color: rgba(0, 0, 0, 0.12) !important;
   background: #ffffff !important;

@@ -1,0 +1,282 @@
+:host {
+      display: block;
+    }
+
+    .home-hero {
+      background:
+        radial-gradient(circle at 12% 92%, rgba(47, 141, 114, 0.24), transparent 24rem),
+        #075f36;
+    }
+
+    .home-reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      animation: home-reveal-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .home-reveal--eyebrow {
+      animation-delay: 0.08s;
+    }
+
+    .home-reveal--title {
+      animation-delay: 0.18s;
+    }
+
+    .home-reveal--copy {
+      animation-delay: 0.32s;
+    }
+
+    .home-reveal--cta {
+      animation-delay: 0.46s;
+    }
+
+    .home-ticket-stage {
+      perspective: 1200px;
+    }
+
+    .home-ticket {
+      opacity: 0;
+      transform: rotate(1deg) translateY(34px) rotateX(7deg);
+      animation:
+        home-ticket-enter 1s cubic-bezier(0.16, 1, 0.3, 1) 0.38s forwards,
+        home-ticket-float 6s ease-in-out 1.5s infinite;
+      transform-origin: center bottom;
+    }
+
+    .home-ticket__body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(110deg, transparent 8%, rgba(255, 255, 255, 0.72) 18%, transparent 32%);
+      transform: translateX(-130%);
+      animation: home-ticket-sheen 3.8s ease-in-out 1.15s infinite;
+    }
+
+    .home-barcode > div {
+      transform-origin: bottom;
+      animation: home-barcode-pulse 2.8s ease-in-out infinite;
+    }
+
+    .home-barcode > div:nth-child(2n) {
+      animation-delay: 0.18s;
+    }
+
+    .home-barcode > div:nth-child(3n) {
+      animation-delay: 0.34s;
+    }
+
+    .home-section-reveal,
+    .home-surface-reveal,
+    .home-card-rise {
+      animation: home-soft-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .home-section-reveal {
+      animation-delay: 0.12s;
+    }
+
+    .home-surface-reveal {
+      animation-delay: 0.22s;
+    }
+
+    .home-card-rise {
+      transition:
+        transform 0.28s ease,
+        filter 0.28s ease;
+    }
+
+    .home-card-rise:hover {
+      filter: saturate(1.05);
+      transform: translateY(-6px);
+    }
+
+    .home-marquee {
+      overflow: hidden;
+    }
+
+    .home-marquee__track {
+      display: flex;
+      width: max-content;
+      gap: 1.25rem;
+      will-change: transform;
+      animation: home-marquee-slide 80s linear infinite;
+    }
+
+    .home-marquee:hover .home-marquee__track {
+      animation-play-state: paused;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .home-reveal,
+      .home-ticket,
+      .home-ticket__body::before,
+      .home-barcode > div,
+      .home-section-reveal,
+      .home-surface-reveal,
+      .home-card-rise,
+      .home-marquee__track {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes home-reveal-up {
+      from {
+        opacity: 0;
+        transform: translateY(28px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes home-ticket-enter {
+      from {
+        opacity: 0;
+        transform: rotate(1deg) translateY(34px) rotateX(7deg);
+      }
+      to {
+        opacity: 1;
+        transform: rotate(1deg) translateY(0) rotateX(0deg);
+      }
+    }
+
+    @keyframes home-ticket-float {
+      0%,
+      100% {
+        transform: rotate(1deg) translateY(0);
+      }
+      50% {
+        transform: rotate(-0.35deg) translateY(-10px);
+      }
+    }
+
+    @keyframes home-ticket-sheen {
+      0%,
+      52% {
+        transform: translateX(-130%);
+      }
+      78%,
+      100% {
+        transform: translateX(130%);
+      }
+    }
+
+    @keyframes home-barcode-pulse {
+      0%,
+      100% {
+        transform: scaleY(1);
+        opacity: 0.9;
+      }
+      50% {
+        transform: scaleY(0.74);
+        opacity: 0.58;
+      }
+    }
+
+    @keyframes home-soft-rise {
+      from {
+        opacity: 0;
+        transform: translateY(22px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes home-marquee-slide {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    /* ── Benefits marquee (mobile infinite loop) ─────────────── */
+    .home-benefits-marquee {
+      overflow: hidden;
+    }
+
+    .home-benefits-marquee__track {
+      width: max-content;
+      gap: 1rem;
+      will-change: transform;
+      animation: home-marquee-slide 45s linear infinite;
+    }
+
+    .home-benefits-marquee:hover .home-benefits-marquee__track {
+      animation-play-state: paused;
+    }
+
+    .home-benefits-card {
+      min-width: 280px;
+      flex-shrink: 0;
+    }
+
+    /* ── Reviews marquee (mobile infinite loop, reverse) ─────── */
+    .home-reviews-marquee {
+      overflow: hidden;
+    }
+
+    .home-reviews-marquee__track {
+      width: max-content;
+      gap: 1rem;
+      will-change: transform;
+      animation: home-reviews-slide 60s linear infinite;
+    }
+
+    .home-reviews-marquee:hover .home-reviews-marquee__track {
+      animation-play-state: paused;
+    }
+
+    .home-reviews-card {
+      min-width: 300px;
+      flex-shrink: 0;
+    }
+
+    @keyframes home-reviews-slide {
+      from {
+        transform: translateX(-50%);
+      }
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    /* ── Disable marquees on desktop (grid takes over) ──────── */
+    @media (min-width: 640px) {
+      .home-benefits-marquee,
+      .home-reviews-marquee {
+        overflow: visible;
+      }
+
+      .home-benefits-marquee__track,
+      .home-reviews-marquee__track {
+        animation: none;
+        width: auto;
+      }
+
+      .home-benefits-card,
+      .home-reviews-card {
+        min-width: 0;
+        flex-shrink: 1;
+      }
+
+      /* Hide duplicated cards for marquee effect */
+      .home-benefits-card[aria-hidden="true"],
+      .home-reviews-card[aria-hidden="true"] {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .home-benefits-marquee__track,
+      .home-reviews-marquee__track {
+        animation: none;
+      }
+    }

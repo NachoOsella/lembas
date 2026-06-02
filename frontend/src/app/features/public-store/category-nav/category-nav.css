@@ -23,7 +23,10 @@
   border-radius: 999px;
   background: transparent;
   color: rgba(0, 0, 0, 0.65);
-  font: 600 0.82rem / 1.8 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.8;
+  font-family: var(--font-sans);
   letter-spacing: -0.01em;
   cursor: pointer;
   transition:
@@ -132,7 +135,10 @@
 .catnav-modal__label {
   margin: 0;
   color: #9a5b19;
-  font: 800 0.65rem / 1.2 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1.2;
+  font-family: var(--font-sans);
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
@@ -140,7 +146,10 @@
 .catnav-modal__title {
   margin: 0.2rem 0 0;
   color: rgba(0, 0, 0, 0.87);
-  font: 700 1.25rem / 1.15 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.15;
+  font-family: var(--font-sans);
   letter-spacing: -0.03em;
 }
 
@@ -193,7 +202,10 @@
   border: 0;
   background: transparent;
   color: rgba(0, 0, 0, 0.87);
-  font: 600 0.88rem / 1.2 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.2;
+  font-family: var(--font-sans);
   padding: 0.75rem 0;
 }
 
@@ -245,7 +257,10 @@
 }
 
 .catnav-modal__card-name {
-  font: 700 0.88rem / 1.2 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-family: var(--font-sans);
   color: rgba(0, 0, 0, 0.85);
 }
 
@@ -254,7 +269,10 @@
 }
 
 .catnav-modal__card-meta {
-  font: 500 0.72rem / 1.2 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.2;
+  font-family: var(--font-sans);
   color: rgba(0, 0, 0, 0.4);
 }
 
@@ -263,7 +281,10 @@
   padding: 2rem;
   text-align: center;
   color: rgba(0, 0, 0, 0.4);
-  font: 500 0.9rem / 1.5 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.5;
+  font-family: var(--font-sans);
 }
 
 /* ── States ─────────────────────────────────────────────────────────────── */
@@ -289,13 +310,19 @@
   border-radius: 999px;
   background: hsl(4 82% 43% / 5%);
   color: #c82014;
-  font: 700 0.8rem / 1 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-sans);
   padding: 0.5rem 0.85rem;
 }
 
 .catnav-empty {
   color: rgba(0, 0, 0, 0.4);
-  font: 500 0.88rem / 1.4 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.4;
+  font-family: var(--font-sans);
 }
 
 /* ── Animations ─────────────────────────────────────────────────────────── */
@@ -345,7 +372,10 @@
   .catnav-mobile__label {
     margin: 0 0 0.4rem;
     color: rgba(0, 0, 0, 0.45);
-    font: 700 0.68rem / 1 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+    font-family: var(--font-sans);
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
@@ -359,7 +389,10 @@
     border-radius: 999px;
     background: #ffffff;
     color: rgba(0, 0, 0, 0.78);
-    font: 600 0.92rem / 1 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1;
+    font-family: var(--font-sans);
     padding: 0.75rem 1.1rem;
     cursor: pointer;
     transition: all 0.15s ease;
