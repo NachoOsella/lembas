@@ -98,6 +98,39 @@
 }
 
 /* ---------------------------------------------------------------------------
+   Shared route/component entrance motion
+   Matches the public home reveal timing, but keeps routed pages fully opaque
+   while moving so the canvas never flashes white between navigations.
+   --------------------------------------------------------------------------- */
+:root {
+  --lembas-motion-duration: 0.8s;
+  --lembas-motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --lembas-motion-distance: 28px;
+}
+
+:where(router-outlet + *:not(app-home)) {
+  display: block;
+  animation: lembas-soft-rise var(--lembas-motion-duration) var(--lembas-motion-ease) both;
+}
+
+@keyframes lembas-soft-rise {
+  from {
+    transform: translateY(var(--lembas-motion-distance));
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(router-outlet + *:not(app-home)) {
+    animation: none !important;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
    Global PrimeNG form-control consistency
    All text inputs, selects and number inputs share the same shape, height and
    color so every admin form looks homogeneous.
