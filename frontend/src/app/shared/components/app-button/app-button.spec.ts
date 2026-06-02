@@ -1,13 +1,22 @@
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { AppButton } from './app-button';
+
+@Component({
+  imports: [AppButton],
+  template: '<app-button routerLink="/auth/login">Ingresar</app-button>',
+})
+class LinkButtonHost {}
 
 describe('AppButton', () => {
   let fixture: ComponentFixture<AppButton>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppButton],
+      imports: [AppButton, LinkButtonHost],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AppButton);
@@ -57,5 +66,14 @@ describe('AppButton', () => {
 
     const span = fixture.nativeElement.querySelector('span[pbuttonlabel]');
     expect(span).not.toBeNull();
+  });
+
+  /** Should project the consumer label when rendering as a router link. */
+  it('Should_showProjectedLabel_when_routerLinkIsUsed', async () => {
+    const hostFixture = TestBed.createComponent(LinkButtonHost);
+    hostFixture.detectChanges();
+
+    const link = hostFixture.nativeElement.querySelector('a') as HTMLAnchorElement;
+    expect(link.textContent?.trim()).toBe('Ingresar');
   });
 });

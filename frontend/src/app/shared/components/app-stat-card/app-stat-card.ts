@@ -4,7 +4,7 @@ import { Component, input } from '@angular/core';
  * Visual tone that controls the card's background wash, border tint,
  * and decorative blob colour. Each maps to a Lembas palette role.
  */
-export type MetricTone = 'forest' | 'amber' | 'ink' | 'sage';
+export type MetricTone = 'forest' | 'amber' | 'sage';
 
 /**
  * Trend direction that determines value colour and arrow badge.

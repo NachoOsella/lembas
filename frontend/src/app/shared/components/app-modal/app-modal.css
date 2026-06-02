@@ -48,7 +48,7 @@
 
 .app-modal__title {
   margin: 0;
-  color: var(--color-primary-dark);
+  color: var(--color-text, rgba(0, 0, 0, 0.87));
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.01em;

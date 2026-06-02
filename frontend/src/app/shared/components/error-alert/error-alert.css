@@ -73,9 +73,9 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.85rem 1rem;
-  color: #8a2f24;
-  background: #fff7f3;
-  border: 1px solid rgba(138, 47, 36, 0.16);
+  color: #c82014;
+  background: #ffffff;
+  border: 1px solid rgba(200, 32, 20, 0.28);
   border-radius: 1rem;
   font-weight: 700;
 }
@@ -97,12 +97,14 @@
   font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.35;
+  color: var(--color-text);
 }
 
 .error-alert-inline__text span {
   font-size: 0.82rem;
   font-weight: 500;
   line-height: 1.4;
+  color: var(--color-text-muted);
 }
 
 .error-alert-inline__dismiss {
@@ -115,11 +117,11 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #8a2f24;
+  color: #c82014;
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
 
 .error-alert-inline__dismiss:hover {
-  background: rgba(138, 47, 36, 0.1);
+  background: rgba(200, 32, 20, 0.08);
 }

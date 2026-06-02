@@ -51,15 +51,18 @@
   --shadow-nav:
     0 1px 3px rgba(0, 0, 0, 0.1), 0 2px 2px rgba(0, 0, 0, 0.06), 0 0 2px rgba(0, 0, 0, 0.07);
 
-  --space-1: 0.4rem;
-  --space-2: 0.8rem;
-  --space-3: 1.6rem;
-  --space-4: 2.4rem;
-  --space-5: 3.2rem;
-  --space-6: 4rem;
-  --space-7: 4.8rem;
-  --space-8: 5.6rem;
-  --space-9: 6.4rem;
+  /* Spacing scale: values computed for default 16px base (1rem = 16px).
+     These match the DESING.md intended px values without needing
+     font-size:62.5% on :root. */
+  --space-1: 0.25rem;  /*  4px */
+  --space-2: 0.5rem;   /*  8px */
+  --space-3: 1rem;     /* 16px */
+  --space-4: 1.5rem;   /* 24px */
+  --space-5: 2rem;     /* 32px */
+  --space-6: 2.5rem;   /* 40px */
+  --space-7: 3rem;     /* 48px */
+  --space-8: 3.5rem;   /* 56px */
+  --space-9: 4rem;     /* 64px */
 
   --spacing-xl: clamp(1.25rem, 4vw, 3rem);
   --spacing-2xl: clamp(2rem, 6vw, 4rem);
@@ -104,7 +107,7 @@
 .p-inputnumber-input {
   min-height: 48px;
   border-color: var(--color-input-border, rgba(0, 0, 0, 0.12)) !important;
-  border-radius: 0.95rem !important;
+  border-radius: 50px !important;
   background: var(--color-surface-warmest, #fffef9) !important;
   font-size: 16px !important;
   letter-spacing: -0.01em;

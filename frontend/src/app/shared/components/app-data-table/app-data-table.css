@@ -36,17 +36,17 @@
 
 /* ── Table base ────────────────────────────────────────────── */
 :host ::ng-deep .app-data-table {
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
   background: transparent;
   border: none;
   border-radius: 0;
   box-shadow: none;
+  table-layout: fixed;
 }
 
 :host ::ng-deep .app-data-table .p-datatable-table {
   width: 100%;
-  min-width: 46rem;
+  table-layout: fixed;
 }
 
 :host ::ng-deep .app-data-table .p-datatable-header,
@@ -105,6 +105,11 @@
   padding: 0.78rem 1rem;
   border: none;
   border-bottom: 1px solid rgba(7, 95, 54, 0.075);
+  /* Truncate long text instead of growing */
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 :host ::ng-deep .app-data-table .p-datatable-tbody > tr:last-child > td {
@@ -157,14 +162,13 @@
   }
 
   :host ::ng-deep .app-data-table {
-    width: max-content;
-    min-width: 100%;
+    width: 100%;
   }
 
   :host ::ng-deep .app-data-table .p-datatable-table {
     width: 100%;
     min-width: 44rem;
-    table-layout: auto;
+    table-layout: fixed;
   }
 
   :host ::ng-deep .app-data-table .p-datatable-thead > tr > th,

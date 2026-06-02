@@ -1,9 +1,10 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-button',
-  imports: [RouterLink],
+  imports: [NgTemplateOutlet, RouterLink],
   templateUrl: './app-button.html',
   styleUrl: './app-button.css',
 })
@@ -11,7 +12,7 @@ export class AppButton {
   readonly type = input<'button' | 'submit' | 'reset'>('button');
   readonly variant = input<
     'primary' | 'secondary' | 'ghost' | 'danger' | 'hero' | 'success' |
-    'green-on-green' | 'outlined-on-dark' | 'consent'
+    'green-on-green' | 'outlined-on-dark' | 'dark-outlined' | 'consent'
   >('primary');
   readonly size = input<'sm' | 'md' | 'lg'>('md');
   readonly disabled = input(false);

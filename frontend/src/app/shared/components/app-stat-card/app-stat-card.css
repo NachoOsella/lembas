@@ -79,14 +79,6 @@
   --metric-blob: rgba(217, 130, 43, 0.07);
 }
 
-.metric-strip__item--ink {
-  --metric-color: #243a31;
-  --metric-ink: rgba(0, 0, 0, 0.87);
-  --metric-wash: #f7f9f5;
-  --metric-border: rgba(36, 58, 49, 0.1);
-  --metric-blob: rgba(36, 58, 49, 0.05);
-}
-
 .metric-strip__item--sage {
   --metric-color: #6f8d67;
   --metric-ink: rgba(0, 0, 0, 0.87);

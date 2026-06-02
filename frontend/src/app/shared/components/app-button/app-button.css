@@ -192,6 +192,19 @@
   border-color: #ffffff;
 }
 
+/* ── Dark Outlined (transparent + Text Black border, for dark-top-bar contexts) ── */
+.app-button--dark-outlined {
+  color: rgba(0, 0, 0, 0.87);
+  background: transparent;
+  border-color: rgba(0, 0, 0, 0.87);
+}
+
+.app-button--dark-outlined:hover:not(:disabled) {
+  color: rgba(0, 0, 0, 0.87);
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.87);
+}
+
 /* ── Consent agree (specific bright green for cookie consent) ── */
 .app-button--consent {
   color: #ffffff;

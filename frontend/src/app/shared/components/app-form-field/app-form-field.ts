@@ -1,10 +1,12 @@
-import { Component, computed, input, model } from '@angular/core';
+import { Component, computed, input, model, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { InputText } from 'primeng/inputtext';
 import { AppInput } from '../app-input/app-input';
 import { AppFieldHint } from '../app-field-hint/app-field-hint';
 
 @Component({
   selector: 'app-form-field',
-  imports: [AppInput, AppFieldHint],
+  imports: [AppInput, AppFieldHint, FormsModule, InputText],
   templateUrl: './app-form-field.html',
   styleUrl: './app-form-field.css',
 })
@@ -21,12 +23,26 @@ export class AppFormField {
   readonly hint = input<string>('');
   readonly error = input<string>('');
   readonly testId = input<string | null>(null);
+  /** Enables floating label mode: label animates inside the input border. */
+  readonly floating = input(false);
+  /** When true, renders a textarea instead of a single-line input. */
+  readonly multiline = input(false);
 
   readonly value = model<string>('');
+
+  protected readonly isFocused = signal(false);
 
   protected readonly hasError = computed(() => !!this.error());
   protected readonly inputId = computed(() => {
     const base = this.testId() ?? 'field';
     return `${base}-input`;
   });
+
+  protected onFocus(): void {
+    this.isFocused.set(true);
+  }
+
+  protected onBlur(): void {
+    this.isFocused.set(false);
+  }
 }

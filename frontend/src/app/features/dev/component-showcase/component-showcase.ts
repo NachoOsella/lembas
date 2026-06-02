@@ -190,7 +190,7 @@ export class ComponentShowcase {
       value: '5',
       detail: 'productos por reponer',
       icon: 'pi pi-exclamation-triangle',
-      tone: 'ink',
+      tone: 'forest',
       trend: 'down',
     },
     {
