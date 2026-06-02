@@ -60,7 +60,7 @@
         {{ product().brandName || 'Lembas' }}
       </p>
       <h3
-        class="mt-1.5 text-base font-semibold leading-snug tracking-tight text-[rgba(0,0,0,0.87)]"
+        class="mt-1.5 text-base font-semibold leading-snug tracking-tight text-text"
         [class.min-h-[44px]]="isCompact()"
       >
         {{ product().name }}
@@ -69,12 +69,12 @@
         <div>
           @if (!isCompact()) {
             <span
-              class="mb-0.5 block text-xs font-bold uppercase tracking-wider text-[#2f8d72]"
+              class="mb-0.5 block text-xs font-bold uppercase tracking-wider text-primary"
             >
               Precio
             </span>
           }
-          <strong class="text-2xl font-semibold tracking-tight text-[rgba(0,0,0,0.87)]">
+          <strong class="text-2xl font-semibold tracking-tight text-text">
             ${{ product().salePrice.toLocaleString('es-AR') }}
           </strong>
         </div>

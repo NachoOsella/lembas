@@ -11,21 +11,25 @@ import {
 } from '@angular/forms/signals';
 import { HttpErrorResponse } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
-import { ButtonDirective, ButtonLabel } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 
-import { ApiErrorResponse, AuthService, RegisterRequest } from '../../../core/services/auth';
+import { AuthService, RegisterRequest } from '../../../core/services/auth';
+import { ErrorMappingService } from '../../../core/services/error-mapping';
+import { getApiError } from '../../../shared/models/api-error';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
+import { AppButton } from '../../../shared/components/app-button/app-button';
+import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
 @Component({
   selector: 'app-register',
-  imports: [ErrorAlert, FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
+  imports: [ErrorAlert, AppToast, FormField, RouterLink, AppButton, InputText],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })
 export class Register {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly errorMapping = inject(ErrorMappingService);
 
   /** Form model -- all field initial values. confirmPassword is client-side only. */
   protected readonly registrationModel = signal({
@@ -140,35 +144,30 @@ export class Register {
       return 'Error al registrar. Intenta nuevamente.';
     }
 
+    // Let the interceptor handle network and server errors
     if (err.status === 0 || err.status >= 500) {
       return null;
     }
 
-    const apiError = err.error as ApiErrorResponse | undefined;
-    switch (apiError?.code) {
-      case 'EMAIL_DUPLICATED':
-        return 'Ya existe una cuenta con este email';
-      case 'VALIDATION_ERROR':
-        return this.formatValidationError(apiError);
-      default:
-        return 'Error al registrar. Intenta nuevamente.';
-    }
-  }
+    const apiError = getApiError(err);
+    const code = apiError?.code;
 
-  /**
-   * Builds a concise message using backend validation details when available.
-   */
-  private formatValidationError(apiError: ApiErrorResponse): string {
-    const fieldErrors = apiError.details?.fieldErrors ?? [];
-    if (fieldErrors.length === 0) {
-      return 'Verifica los datos ingresados.';
+    if (!code || !apiError) {
+      return 'Error al registrar. Intenta nuevamente.';
     }
 
-    const details = fieldErrors
-      .map((fieldError) => `${this.translateFieldName(fieldError.field)}: ${fieldError.message}`)
-      .join('. ');
+    // Special handling for validation errors with field translation
+    if (code === 'VALIDATION_ERROR') {
+      return this.errorMapping.formatValidationErrors(
+        apiError,
+        this.translateFieldName,
+        'Verifica los datos ingresados.',
+        this.translateValidationMessage
+      );
+    }
 
-    return `Verifica los datos ingresados. ${details}`;
+    // Use centralized error mapping with register-specific fallback
+    return this.errorMapping.getMessage(code, 'Error al registrar. Intenta nuevamente.');
   }
 
   /**
@@ -184,5 +183,20 @@ export class Register {
     };
 
     return labels[field] ?? field;
+  }
+
+  /**
+   * Translates backend validation messages to user-friendly Spanish text.
+   */
+  private translateValidationMessage(message: string): string {
+    const messages: Record<string, string> = {
+      'must be well-formed': 'debe tener un formato válido',
+      'size must be between 8 and 128': 'debe tener entre 8 y 128 caracteres',
+      'must not be blank': 'es obligatorio',
+      'must not be empty': 'es obligatorio',
+      'must not be null': 'es obligatorio',
+    };
+
+    return messages[message] ?? message;
   }
 }

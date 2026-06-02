@@ -1,15 +1,11 @@
 <div class="products-page">
-  <section class="products-page__hero" aria-labelledby="products-title">
-    <div class="products-page__hero-copy">
-      <p class="products-page__eyebrow">Catalogo</p>
-      <h1 id="products-title">Productos</h1>
-      <p>Gestion de precios, categorias, imagenes y estado online de la tienda.</p>
-    </div>
-
-    <div class="products-page__hero-actions">
-      <app-button icon="pi pi-plus" routerLink="/admin/products/new"> Nuevo producto </app-button>
-    </div>
-  </section>
+  <app-page-header
+    eyebrow="Catalogo"
+    title="Productos"
+    description="Gestion de precios, categorias, imagenes y estado online de la tienda."
+  >
+    <app-button icon="pi pi-plus" (click)="onCreate()"> Nuevo producto </app-button>
+  </app-page-header>
 
   @if (error()) {
     <app-error-alert variant="inline" [title]="error()" message="">

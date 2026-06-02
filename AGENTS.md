@@ -31,7 +31,7 @@ Do not commit changes unless the user explicitly asks for a commit. Never work d
 - Thin controllers, DTOs for API (no JPA entities exposed). Constructor injection only.
 - Business rules live in services; extract helper classes only when a real complexity appears.
 - Mercado Pago integration lives in the payments module; add an abstraction only if a second provider is required.
-- DomainException base (code+status). Single @ControllerAdvice -> uniform ApiError.
+- Error handling: throw DomainException(code,status,message) from services; single @ControllerAdvice -> ApiError {status,code,message,details,timestamp,path}. Document new codes in docs/05-api/api-guidelines.md.
 - Stock: @Lock(PESSIMISTIC_WRITE), open-in-view:false, ddl-auto:validate + Flyway.
 - Security: CSRF disabled, stateless. Public: /api/auth/**, /api/store/**, /api/webhooks/**, /uploads/**, /actuator/health, /api-docs/**, /swagger-ui/**.
 
@@ -40,6 +40,7 @@ Do not commit changes unless the user explicitly asks for a commit. Never work d
 - Standalone components, signals (no NgRx), PrimeNG+Tailwind v4 (no Material).
 - Prefer PrimeNG components/directives for UI controls whenever available (buttons, inputs, password fields, dialogs, messages, tables, menus, etc.); avoid plain HTML + Tailwind-only controls when a PrimeNG equivalent exists. Use Tailwind/custom CSS mainly for layout, spacing, and brand-specific refinements around PrimeNG components.
 - All-states pattern (loading/error/empty/data). Services hold state.
+- Error handling: map user copy by ApiError.code via ErrorMappingService/shared ApiErrorResponse; do not show raw backend messages except controlled fallbacks. Use interceptor for network/5xx/global auth errors.
 - Functional guards CanActivateFn: admin=[authGuard,adminGuard], customer=[authGuard,customerGuard].
 - Lazy routes (loadChildren/loadComponent): /store, /auth (login/register), /customer (profile|orders|checkout), /admin (dashboard|products|inventory|orders|pos|cash|suppliers|reports|users).
 - Aura theme via providePrimeNG(). tsconfig: strict+module preserve.

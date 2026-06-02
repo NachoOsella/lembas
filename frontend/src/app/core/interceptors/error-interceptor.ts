@@ -18,6 +18,11 @@ function isFormOwnedRequest(url: string): boolean {
   return FORM_OWNED_AUTH_PATHS.some((path) => url.startsWith(path));
 }
 
+/** Returns true when the user is currently in the public store section. */
+function isStoreContext(router: Router): boolean {
+  return router.url.startsWith('/store');
+}
+
 /**
  * Shows a toast unless the same infrastructure error was already emitted recently.
  * This prevents parallel failing requests from rendering duplicate notifications.
@@ -80,24 +85,37 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           break;
 
         case 403:
-          // Authorization failures are global because they are independent of form validation.
-          addToastOnce(messageService, {
-            severity: 'error',
-            summary: 'Acceso denegado',
-            detail: 'No tiene permisos para realizar esta accion.',
-            life: 5000,
-          });
+          // Authorization failures: redirect in store, toast in admin.
+          if (isStoreContext(router)) {
+            router.navigate(['/store/error/403']);
+          } else {
+            addToastOnce(messageService, {
+              severity: 'error',
+              summary: 'Acceso denegado',
+              detail: 'No tiene permisos para realizar esta accion.',
+              life: 5000,
+            });
+          }
+          break;
+
+        case 404:
+          // Not-found errors are propagated to the component for contextual handling.
+          // No global toast or redirect -- the owning page decides how to react.
           break;
 
         default:
           // Only unexpected server failures are global. 4xx business errors stay local.
           if (error.status >= 500) {
-            addToastOnce(messageService, {
-              severity: 'error',
-              summary: 'Error del servidor',
-              detail: 'Ocurrio un error inesperado. Por favor, intente nuevamente mas tarde.',
-              life: 5000,
-            });
+            if (isStoreContext(router)) {
+              router.navigate(['/store/error/500']);
+            } else {
+              addToastOnce(messageService, {
+                severity: 'error',
+                summary: 'Error del servidor',
+                detail: 'Ocurrio un error inesperado. Por favor, intente nuevamente mas tarde.',
+                life: 5000,
+              });
+            }
           }
           break;
       }

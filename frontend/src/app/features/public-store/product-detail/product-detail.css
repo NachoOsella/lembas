@@ -31,3 +31,41 @@
     aspect-ratio: 1 / 1;
   }
 }
+
+/* ── Quantity stepper (DESING spec: 32x32px circular buttons, 1px border) ── */
+.quantity-stepper__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
+  flex-shrink: 0;
+}
+
+.quantity-stepper__btn:hover {
+  background: #f6ead6;
+  color: #075f36;
+}
+
+.quantity-stepper__btn:active {
+  transform: scale(0.95);
+}
+
+.quantity-stepper__btn:focus-visible {
+  outline: 2px solid #2f8d72;
+  outline-offset: 2px;
+}
+
+/* ── Add-to-order button: generous padding per DESING spec ── */
+:host ::ng-deep .pdp-add-btn.app-button--lg {
+  padding: 14px 32px;
+}

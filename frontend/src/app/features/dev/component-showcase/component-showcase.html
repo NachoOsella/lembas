@@ -242,7 +242,7 @@
         >
           <div class="flex items-center gap-4">
             <span
-              class="flex h-12 w-12 items-center justify-center rounded-full bg-[#2f8d72]/10 text-[#2f8d72]"
+              class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary"
             >
               <i class="pi pi-arrow-right text-lg"></i>
             </span>
@@ -629,6 +629,20 @@
         <h3 class="screen-group-title">Admin</h3>
         <div class="screen-list screen-list--dense">
           @for (screen of adminScreens; track screen.path) {
+            <a [routerLink]="screen.path" class="screen-link">
+              <strong class="screen-link-label">{{ screen.label }}</strong>
+              <span class="screen-link-desc">{{ screen.description }}</span>
+              <code class="screen-link-route">{{ screen.path }}</code>
+            </a>
+          }
+        </div>
+      </div>
+
+      <!-- Errores -->
+      <div class="screen-group">
+        <h3 class="screen-group-title">Errores</h3>
+        <div class="screen-list">
+          @for (screen of errorScreens; track screen.path) {
             <a [routerLink]="screen.path" class="screen-link">
               <strong class="screen-link-label">{{ screen.label }}</strong>
               <span class="screen-link-desc">{{ screen.description }}</span>

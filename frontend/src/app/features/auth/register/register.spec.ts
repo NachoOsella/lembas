@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
 
 import { Register } from './register';
 import { AuthResponse, AuthService } from '../../../core/services/auth';
@@ -49,7 +50,7 @@ describe('Register component', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Register],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), MessageService],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Register);
@@ -298,7 +299,7 @@ describe('Register component', () => {
 
     const errEl = fixture.nativeElement.querySelector('[data-testid="general-error"]');
     expect(errEl).toBeTruthy();
-    expect(errEl.textContent).toContain('Ya existe una cuenta con este email');
+    expect(errEl.textContent).toContain('Ya existe un usuario con este email.');
     expect(component.registrationSucceeded()).toBe(false);
     expect(component.submitting()).toBe(false);
     // User should NOT be saved
@@ -342,7 +343,7 @@ describe('Register component', () => {
     const errEl = fixture.nativeElement.querySelector('[data-testid="general-error"]');
     expect(errEl).toBeTruthy();
     expect(errEl.textContent).toContain('Verifica los datos ingresados');
-    expect(errEl.textContent).toContain('Contrasena: size must be between 8 and 128');
+    expect(errEl.textContent).toContain('Contrasena: debe tener entre 8 y 128 caracteres');
     expect(authService.currentUser()).toBeNull();
     expect(navigateSpy).not.toHaveBeenCalled();
   });

@@ -1,12 +1,12 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MenuItem, MessageService } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 import { Select } from 'primeng/select';
 
 import { CategoryService } from '../../../../core/services/category';
+import { ErrorMappingService } from '../../../../core/services/error-mapping';
 import { ProductFilters, ProductService } from '../../../../core/services/product';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import {
@@ -16,6 +16,7 @@ import {
 import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
+import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
 import { CategoryDto } from '../../../../shared/models/category';
 import { ProductOnlineStatus, ProductSummary } from '../../../../shared/models/product';
@@ -24,6 +25,7 @@ import {
   PRODUCT_STATUS_BADGES,
   ProductStatusAction,
 } from '../../../../shared/models/product-status';
+import { getApiError } from '../../../../shared/models/api-error';
 
 interface Option<T> {
   readonly label: string;
@@ -36,6 +38,7 @@ interface Option<T> {
   imports: [
     AppButton,
     AppDataTable,
+    AppPageHeader,
     AppSearchBar,
     ConfirmDialog,
     ErrorAlert,
@@ -49,9 +52,11 @@ interface Option<T> {
   styleUrl: './product-list.css',
 })
 export class ProductList {
+  private readonly router = inject(Router);
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
   private readonly messageService = inject(MessageService);
+  private readonly errorMapping = inject(ErrorMappingService);
 
   protected readonly products = signal<ProductSummary[]>([]);
   protected readonly categories = signal<CategoryDto[]>([]);
@@ -101,6 +106,11 @@ export class ProductList {
     this.refresh();
   }
 
+  /** Navigates to the create-product form. */
+  protected onCreate(): void {
+    this.router.navigate(['/admin/products', 'new']);
+  }
+
   // ---------------------------------------------------------------------------
   // Data loading
   // ---------------------------------------------------------------------------
@@ -109,6 +119,7 @@ export class ProductList {
   protected refresh(): void {
     this.loading.set(true);
     this.error.set('');
+    this.statusActionMenuCache.clear();
     this.productService.listAdminProducts(this.currentFilters()).subscribe({
       next: (page) => {
         this.products.set(page.content);
@@ -217,15 +228,16 @@ export class ProductList {
           life: 3000,
         });
       },
-      error: (error: HttpErrorResponse) => {
+      error: (error: unknown) => {
         this.changingStatus.set(false);
         this.productToChangeStatus.set(null);
         this.pendingStatusAction.set(null);
 
-        const detail =
-          error.error?.code === 'PRODUCT_STATUS_INVALID_TRANSITION'
-            ? 'El producto ya no permite ese cambio de estado. Actualiza la tabla e intenta nuevamente.'
-            : 'No pudimos cambiar el estado del producto.';
+        const apiError = getApiError(error);
+        const detail = this.errorMapping.getMessage(
+          apiError?.code ?? '',
+          'No pudimos cambiar el estado del producto.',
+        );
 
         this.messageService.add({
           severity: 'error',
@@ -276,11 +288,16 @@ export class ProductList {
         });
         this.refresh();
       },
-      error: (error: HttpErrorResponse) => {
+      error: (error: unknown) => {
         this.deleting.set(false);
         this.productToDelete.set(null);
-        const detail =
-          error.error?.message ?? 'No se pudo eliminar el producto. Intenta nuevamente.';
+        
+        const apiError = getApiError(error);
+        const detail = this.errorMapping.getMessage(
+          apiError?.code ?? '',
+          'No se pudo eliminar el producto. Intenta nuevamente.',
+        );
+        
         this.messageService.add({
           severity: 'error',
           summary: 'Error al eliminar',

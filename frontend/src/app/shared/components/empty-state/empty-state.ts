@@ -1,10 +1,11 @@
 import { NgClass } from '@angular/common';
 import { Component, input, output } from '@angular/core';
-import { Button } from 'primeng/button';
+
+import { AppButton } from '../app-button/app-button';
 
 @Component({
   selector: 'app-empty-state',
-  imports: [Button, NgClass],
+  imports: [AppButton, NgClass],
   templateUrl: './empty-state.html',
   styleUrl: './empty-state.css',
 })

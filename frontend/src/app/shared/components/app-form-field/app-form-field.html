@@ -1,28 +1,95 @@
-<div class="form-field" [class.form-field--error]="hasError()">
-  <label [for]="inputId()" class="form-field__label">
-    {{ label() }}
-    @if (required()) {
-      <span class="form-field__required" aria-hidden="true">*</span>
+@if (floating()) {
+  <div
+    class="form-field form-field--float"
+    [class.form-field--error]="hasError()"
+    [class.form-field--focused]="isFocused() || value() !== ''"
+  >
+    <div class="form-field__float-wrap">
+      <input
+        [id]="inputId()"
+        [type]="type()"
+        [placeholder]="placeholder()"
+        [disabled]="disabled()"
+        [readonly]="readonly()"
+        [class.ng-invalid]="hasError()"
+        [value]="value()"
+        (input)="value.set($any($event.target).value)"
+        (focus)="onFocus()"
+        (blur)="onBlur()"
+        class="form-field__float-input"
+        [attr.data-testid]="testId()"/>
+      <label
+        [for]="inputId()"
+        class="form-field__float-label"
+        [class.form-field__float-label--active]="isFocused() || value() !== ''"
+      >
+        {{ label() }}
+        @if (required()) {
+          <span class="form-field__required" aria-hidden="true">*</span>
+        }
+      </label>
+    </div>
+
+    @if (error()) {
+      <app-field-hint tone="error">{{ error() }}</app-field-hint>
+    } @else if (hint()) {
+      <app-field-hint tone="hint">{{ hint() }}</app-field-hint>
     }
-  </label>
+  </div>
+} @else if (multiline()) {
+  <div class="form-field" [class.form-field--error]="hasError()">
+    <label [for]="inputId()" class="form-field__label">
+      {{ label() }}
+      @if (required()) {
+        <span class="form-field__required" aria-hidden="true">*</span>
+      }
+    </label>
 
-  <app-input
-    [id]="inputId()"
-    [type]="type()"
-    [placeholder]="placeholder()"
-    [disabled]="disabled()"
-    [readonly]="readonly()"
-    [invalid]="hasError()"
-    [size]="size()"
-    [prefixIcon]="prefixIcon()"
-    [suffixIcon]="suffixIcon()"
-    [testId]="testId()"
-    [(value)]="value"
-  />
+    <textarea
+      [id]="inputId()"
+      pInputText
+      [value]="value()"
+      (input)="value.set($any($event.target).value)"
+      [placeholder]="placeholder()"
+      [disabled]="disabled()"
+      class="app-form-field__textarea"
+      [class.ng-invalid]="hasError()"
+      rows="4"
+    ></textarea>
 
-  @if (error()) {
-    <app-field-hint tone="error">{{ error() }}</app-field-hint>
-  } @else if (hint()) {
-    <app-field-hint tone="hint">{{ hint() }}</app-field-hint>
-  }
-</div>
+    @if (error()) {
+      <app-field-hint tone="error">{{ error() }}</app-field-hint>
+    } @else if (hint()) {
+      <app-field-hint tone="hint">{{ hint() }}</app-field-hint>
+    }
+  </div>
+} @else {
+  <div class="form-field" [class.form-field--error]="hasError()">
+    <label [for]="inputId()" class="form-field__label">
+      {{ label() }}
+      @if (required()) {
+        <span class="form-field__required" aria-hidden="true">*</span>
+      }
+    </label>
+
+    <app-input
+      [id]="inputId()"
+      [type]="type()"
+      [placeholder]="placeholder()"
+      [disabled]="disabled()"
+      [readonly]="readonly()"
+      [invalid]="hasError()"
+      [size]="size()"
+      [prefixIcon]="prefixIcon()"
+      [suffixIcon]="suffixIcon()"
+      [testId]="testId()"
+      [(value)]="value"
+    />
+
+    @if (error()) {
+      <app-field-hint tone="error">{{ error() }}</app-field-hint>
+    } @else if (hint()) {
+      <app-field-hint tone="hint">{{ hint() }}</app-field-hint>
+    }
+  </div>
+}

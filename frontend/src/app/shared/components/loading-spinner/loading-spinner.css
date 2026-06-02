@@ -33,8 +33,20 @@
   letter-spacing: 0.01em;
 }
 
+:host ::ng-deep .p-progressspinner {
+  color: rgba(0, 0, 0, 0.06);
+}
+
 :host ::ng-deep .p-progressspinner-circle {
-  stroke: var(--color-accent);
+  stroke: #2f8d72;
+}
+
+:host ::ng-deep .p-progressspinner-animation {
+  animation: p-progressspinner-rotate 2s linear infinite;
+}
+
+.loading-spinner--band ::ng-deep .p-progressspinner {
+  color: rgba(255, 255, 255, 0.15);
 }
 
 .loading-spinner--band ::ng-deep .p-progressspinner-circle {

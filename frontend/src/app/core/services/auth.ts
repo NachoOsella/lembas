@@ -52,23 +52,11 @@ interface JwtPayload {
   exp: number;
 }
 
-/** Field-level validation error returned inside ApiError.details.fieldErrors. */
-export interface ApiFieldError {
-  field: string;
-  message: string;
-}
-
-/** Standard backend API error payload. */
-export interface ApiErrorResponse {
-  status: number;
-  code: string;
-  message: string;
-  details?: {
-    fieldErrors?: ApiFieldError[];
-  } | null;
-  timestamp?: string;
-  path?: string;
-}
+/**
+ * Re-export for backward compatibility with existing imports.
+ * @deprecated Import directly from 'shared/models/api-error' instead.
+ */
+export type { ApiErrorResponse, ApiFieldError } from '../../shared/models/api-error';
 
 /** Response from POST /api/auth/register and POST /api/auth/login. */
 export interface AuthResponse {

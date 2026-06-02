@@ -3,15 +3,18 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { form, FormField, submit, required, email, minLength } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
-import { ButtonDirective, ButtonLabel } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 
-import { ApiErrorResponse, AuthService, LoginRequest } from '../../../core/services/auth';
+import { AuthService, LoginRequest } from '../../../core/services/auth';
+import { ErrorMappingService } from '../../../core/services/error-mapping';
+import { ApiErrorResponse } from '../../../shared/models/api-error';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
+import { AppButton } from '../../../shared/components/app-button/app-button';
+import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
 @Component({
   selector: 'app-login',
-  imports: [ErrorAlert, FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
+  imports: [ErrorAlert, AppToast, FormField, RouterLink, AppButton, InputText],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
@@ -19,6 +22,7 @@ export class Login {
   private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly errorMapping = inject(ErrorMappingService);
 
   /** Form model with the credential fields required by the login API. */
   protected readonly loginModel = signal({
@@ -108,21 +112,20 @@ export class Login {
       return 'Error al iniciar sesion. Intenta nuevamente.';
     }
 
+    // Let the interceptor handle network and server errors
     if (err.status === 0 || err.status >= 500) {
       return null;
     }
 
     const apiError = err.error as ApiErrorResponse | undefined;
-    switch (apiError?.code) {
-      case 'INVALID_CREDENTIALS':
-        return 'Email o contrasena incorrectos';
-      case 'ACCOUNT_DISABLED':
-        return 'La cuenta se encuentra deshabilitada';
-      case 'VALIDATION_ERROR':
-        return 'Verifica los datos ingresados.';
-      default:
-        return 'Error al iniciar sesion. Intenta nuevamente.';
+    const code = apiError?.code;
+
+    if (!code) {
+      return 'Error al iniciar sesion. Intenta nuevamente.';
     }
+
+    // Use centralized error mapping with login-specific fallback
+    return this.errorMapping.getMessage(code, 'Error al iniciar sesion. Intenta nuevamente.');
   }
 
   /** Routes customers to the store and staff users to the admin area after login. */

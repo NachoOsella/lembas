@@ -21,7 +21,7 @@
   align-items: center;
   gap: 0.85rem;
   min-height: 5.5rem;
-  padding: 1rem 1.1rem;
+  padding: var(--space-3, 1.6rem);
   overflow: hidden;
   color: var(--metric-ink, rgba(0, 0, 0, 0.87));
   background: var(--metric-wash, #ffffff);
@@ -42,7 +42,6 @@
 }
 
 .metric-strip__item:hover {
-  transform: translateY(-2px);
   box-shadow:
     0 0 0.5px rgba(0, 0, 0, 0.08),
     0 2px 4px rgba(0, 0, 0, 0.14);
@@ -65,9 +64,9 @@
    Tone colour tokens — aligned with Lembas palette
    ──────────────────────────────────────────────────────────── */
 .metric-strip__item--forest {
-  --metric-color: #2f8d72;
+  --metric-color: #243a31;
   --metric-ink: rgba(0, 0, 0, 0.87);
-  --metric-wash: #ffffff;
+  --metric-wash: #f7f9f5;
   --metric-border: rgba(47, 141, 114, 0.12);
   --metric-blob: rgba(47, 141, 114, 0.06);
 }
@@ -78,14 +77,6 @@
   --metric-wash: #fff9f0;
   --metric-border: rgba(217, 130, 43, 0.15);
   --metric-blob: rgba(217, 130, 43, 0.07);
-}
-
-.metric-strip__item--ink {
-  --metric-color: #243a31;
-  --metric-ink: rgba(0, 0, 0, 0.87);
-  --metric-wash: #f9f9f9;
-  --metric-border: rgba(36, 58, 49, 0.1);
-  --metric-blob: rgba(36, 58, 49, 0.05);
 }
 
 .metric-strip__item--sage {

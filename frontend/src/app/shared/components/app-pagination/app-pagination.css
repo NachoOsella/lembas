@@ -33,19 +33,19 @@
 :host ::ng-deep .app-pagination .p-paginator-prev:hover,
 :host ::ng-deep .app-pagination .p-paginator-next:hover,
 :host ::ng-deep .app-pagination .p-paginator-last:hover {
-  background: #f6ead6;
+  background: rgba(47, 141, 114, 0.08);
   color: #2f8d72;
 }
 
 :host ::ng-deep .app-pagination .p-paginator-page.p-highlight {
-  background: #2f8d72;
-  color: #ffffff;
+  background: #dff6ea;
+  color: #2f8d72;
   font-weight: 600;
 }
 
 :host ::ng-deep .app-pagination .p-paginator-page.p-highlight:hover {
-  background: #075f36;
-  color: #ffffff;
+  background: #dff6ea;
+  color: #2f8d72;
 }
 
 :host ::ng-deep .app-pagination .p-paginator-current {

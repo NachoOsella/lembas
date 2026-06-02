@@ -22,87 +22,7 @@
   min-width: 0;
 }
 
-.users-page__hero {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
-  min-width: 0;
-  min-height: clamp(6.1rem, 9vw, 7.7rem);
-  padding: clamp(0.95rem, 1.8vw, 1.35rem);
-  overflow: hidden;
-  background: #ffffff;
-  border: 1px solid rgba(7, 95, 54, 0.1);
-  border-radius: 1.45rem;
-  box-shadow:
-    0 1.25rem 3rem rgba(48, 38, 20, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.users-page__hero::after {
-  content: '';
-  position: absolute;
-  right: clamp(0.8rem, 2.4vw, 1.8rem);
-  bottom: -2.8rem;
-  z-index: -1;
-  width: clamp(5.5rem, 9vw, 7.6rem);
-  aspect-ratio: 1;
-  background: #e9f3ea;
-  border: 1px solid rgba(7, 95, 54, 0.1);
-  border-radius: 37% 63% 45% 55%;
-  transform: rotate(-10deg);
-}
-
-.users-page__hero-copy {
-  max-width: 44rem;
-  min-width: 0;
-}
-
-.users-page__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin: 0 0 0.45rem;
-  color: #9a5b19;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.17em;
-  text-transform: uppercase;
-}
-
-.users-page__eyebrow::before {
-  content: '';
-  width: 1.7rem;
-  height: 1px;
-  background: currentColor;
-}
-
-.users-page__hero h1 {
-  margin: 0;
-  color: var(--color-text);
-  font-size: clamp(1.9rem, 3.8vw, 3.15rem);
-  font-weight: 800;
-  line-height: 0.92;
-  letter-spacing: -0.07em;
-}
-
-.users-page__hero p:not(.users-page__eyebrow) {
-  max-width: 42rem;
-  margin: 0.55rem 0 0;
-  color: rgba(0, 0, 0, 0.58);
-  font-size: clamp(0.9rem, 1.35vw, 1rem);
-  font-weight: 500;
-  line-height: 1.55;
-}
-
-.users-page__hero-actions {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 auto;
-}
+/* Hero section delegated to <app-page-header> component. */
 
 .users-page__directory {
   width: 100%;
@@ -182,18 +102,6 @@
   background: #2f8d72;
 }
 
-@media (max-width: 58rem) {
-  .users-page__hero {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .users-page__hero-actions,
-  .users-page__hero-actions app-button {
-    width: 100%;
-  }
-}
-
 @media (max-width: 48rem) {
   .table-toolbar__actions {
     flex-direction: column;
@@ -218,45 +126,6 @@
     padding-bottom: 1.25rem;
     width: 100%;
     min-width: 0;
-  }
-
-  .users-page__hero {
-    min-height: auto;
-    margin-inline: 0;
-    padding: 1rem;
-    border-radius: 1.1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.8rem;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .users-page__hero-copy {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .users-page__hero h1 {
-    font-size: clamp(1.8rem, 8vw, 2.45rem);
-  }
-
-  .users-page__hero p:not(.users-page__eyebrow) {
-    display: block;
-    margin-top: 0.25rem;
-    width: 100%;
-  }
-
-  .users-page__hero-actions {
-    width: 100%;
-    min-width: 0;
-    margin-top: 0.25rem;
-  }
-
-  .users-page__hero-actions app-button {
-    display: block;
-    width: 100%;
   }
 
   :host ::ng-deep .app-data-table .p-datatable-thead > tr > th,

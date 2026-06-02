@@ -1,14 +1,14 @@
 <!-- frontend/src/app/features/public-store/products/catalog.html -->
-<div class="catalog-page min-h-screen bg-[#f6ead6] pb-20 text-[rgba(0,0,0,0.87)]">
+<div class="catalog-page min-h-screen bg-canvas pb-20 text-text">
   <header
-    class="catalog-page__hero relative overflow-hidden bg-[#075f36] px-4 py-14 text-white sm:px-6 lg:px-8 lg:py-20"
+    class="catalog-page__hero relative overflow-hidden bg-primary-dark px-4 py-14 text-white sm:px-6 lg:px-8 lg:py-20"
   >
     <div
-      class="pointer-events-none absolute -right-16 -top-16 h-[400px] w-[400px] rounded-full bg-[#f29d52]/8 blur-3xl"
+      class="pointer-events-none absolute -right-16 -top-16 h-[400px] w-[400px] rounded-full bg-orange/8 blur-3xl"
       aria-hidden="true"
     ></div>
     <div
-      class="pointer-events-none absolute -bottom-20 -left-20 h-[300px] w-[300px] rounded-full bg-[#2f8d72]/10 blur-3xl"
+      class="pointer-events-none absolute -bottom-20 -left-20 h-[300px] w-[300px] rounded-full bg-primary/10 blur-3xl"
       aria-hidden="true"
     ></div>
 
@@ -51,19 +51,19 @@
       <div>
         <app-eyebrow color="green">Góndola</app-eyebrow>
         <h2
-          class="mt-1 text-2xl font-semibold tracking-[-0.02em] text-[rgba(0,0,0,0.87)] sm:text-3xl"
+          class="mt-1 text-2xl font-semibold tracking-[-0.02em] text-text sm:text-3xl"
         >
           Productos disponibles
         </h2>
       </div>
       @if (searchQuery()) {
         <div
-          class="inline-flex items-center gap-3 rounded-full border border-[#2f8d72]/20 bg-[#2f8d72]/5 px-4 py-2 text-[13px] font-semibold tracking-[-0.01em]"
+          class="inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-[13px] font-semibold tracking-[-0.01em]"
         >
-          <span class="flex items-center gap-2 text-[rgba(0,0,0,0.87)]">
-            <i class="pi pi-search text-[11px] text-[#2f8d72]" aria-hidden="true"></i>
+          <span class="flex items-center gap-2 text-text">
+            <i class="pi pi-search text-[11px] text-primary" aria-hidden="true"></i>
             <span>Resultados para</span>
-            <span class="font-bold text-[#075f36]">"{{ searchQuery() }}"</span>
+            <span class="font-bold text-primary-dark">"{{ searchQuery() }}"</span>
           </span>
           <button
             type="button"
@@ -88,7 +88,7 @@
       >
         <button
           type="button"
-          class="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#c82014] transition-colors hover:bg-[rgba(200,32,20,0.08)] cursor-pointer"
+          class="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red transition-colors hover:bg-red/8 cursor-pointer"
           (click)="loadProducts()"
           aria-label="Reintentar"
         >

@@ -1,28 +1,31 @@
+<ng-template #buttonContent>
+  <!-- Projects the consumer label once so link and button variants render the same visible content. -->
+  @if (loading()) {
+    <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
+    @if (!iconOnly()) {
+      <span pButtonLabel>{{ loadingLabel() }}</span>
+    }
+  } @else {
+    @if (icon()) {
+      <i [class]="icon()" aria-hidden="true"></i>
+    }
+    @if (!iconOnly()) {
+      <span pButtonLabel><ng-content /></span>
+    }
+  }
+</ng-template>
+
 @if (isLink()) {
   <a
-    pButton
     [routerLink]="routerLink()!"
     [class]="buttonClass()"
     [attr.aria-label]="ariaLabel()"
     [attr.data-testid]="testId()"
   >
-    @if (loading()) {
-      <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
-      @if (!iconOnly()) {
-        <span pButtonLabel>{{ loadingLabel() }}</span>
-      }
-    } @else {
-      @if (icon()) {
-        <i [class]="icon()" aria-hidden="true"></i>
-      }
-      @if (!iconOnly()) {
-        <span pButtonLabel><ng-content /></span>
-      }
-    }
+    <ng-container *ngTemplateOutlet="buttonContent" />
   </a>
 } @else {
   <button
-    pButton
     [type]="type()"
     [disabled]="isDisabled()"
     [class]="buttonClass()"
@@ -30,18 +33,6 @@
     [attr.aria-busy]="loading()"
     [attr.data-testid]="testId()"
   >
-    @if (loading()) {
-      <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
-      @if (!iconOnly()) {
-        <span pButtonLabel>{{ loadingLabel() }}</span>
-      }
-    } @else {
-      @if (icon()) {
-        <i [class]="icon()" aria-hidden="true"></i>
-      }
-      @if (!iconOnly()) {
-        <span pButtonLabel><ng-content /></span>
-      }
-    }
+    <ng-container *ngTemplateOutlet="buttonContent" />
   </button>
 }

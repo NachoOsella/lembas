@@ -1,12 +1,14 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 
 import { MessageService } from 'primeng/api';
+import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
 import { CategoryService } from '../../../../core/services/category';
+import { ErrorMappingService } from '../../../../core/services/error-mapping';
 import { CategoryDto, CategoryRequest } from '../../../../shared/models/category';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
+import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
 import { AppModal } from '../../../../shared/components/app-modal/app-modal';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 import { FormSection } from '../../../../shared/components/form-section/form-section';
@@ -19,13 +21,14 @@ interface ParentOption {
 /** Modal form for creating and editing product categories with realtime validation. */
 @Component({
   selector: 'app-category-form',
-  imports: [AppButton, AppModal, ErrorAlert, FormSection, FormsModule, InputText, Select],
+  imports: [AppButton, AppFormField, AppModal, ErrorAlert, FormSection, FormsModule, Select],
   templateUrl: './category-form.html',
   styleUrl: './category-form.css',
 })
 export class CategoryForm {
   private readonly categoryService = inject(CategoryService);
   private readonly messageService = inject(MessageService);
+  private readonly errorMapping = inject(ErrorMappingService);
 
   readonly categories = input.required<CategoryDto[]>();
   readonly saved = output<void>();
@@ -100,7 +103,7 @@ export class CategoryForm {
       },
       error: (error) => {
         this.submitting.set(false);
-        this.dialogError.set(this.messageForError(error?.error?.code));
+        this.dialogError.set(this.messageForError(error));
       },
     });
   }
@@ -121,15 +124,24 @@ export class CategoryForm {
     };
   }
 
-  /** Maps backend error codes to actionable Spanish copy. */
-  private messageForError(code?: string): string {
-    const messages: Record<string, string> = {
-      VALIDATION_ERROR: 'Revisa los campos obligatorios antes de guardar.',
-      NAME_REQUIRED: 'El nombre es obligatorio.',
-      PARENT_NOT_FOUND: 'La categoria padre ya no existe.',
-      PARENT_INVALID: 'Una categoria no puede ser padre de si misma.',
-      CATEGORY_NAME_DUPLICATED: 'Ya existe una categoria con ese nombre en el mismo nivel.',
-    };
-    return messages[code ?? ''] ?? 'No pudimos guardar la categoria. Intenta nuevamente.';
+  /** Maps backend error codes to actionable Spanish copy using centralized service. */
+  private messageForError(error: unknown): string {
+    const apiError = getApiError(error);
+    const code = apiError?.code;
+
+    if (!code) {
+      return 'No pudimos guardar la categoria. Intenta nuevamente.';
+    }
+
+    // Feature-specific validation guidance
+    if (code === 'VALIDATION_ERROR') {
+      return 'Revisa los campos obligatorios antes de guardar.';
+    }
+
+    // Use centralized error mapping with category-specific context fallback
+    return this.errorMapping.getMessage(
+      code,
+      'No pudimos guardar la categoria. Intenta nuevamente.'
+    );
   }
 }

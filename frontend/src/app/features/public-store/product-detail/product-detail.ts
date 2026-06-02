@@ -1,11 +1,13 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ViewportScroller } from '@angular/common';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { MenuItem } from 'primeng/api';
 
 import { Cart } from '../../../core/services/cart';
 import { CatalogService } from '../../../core/services/catalog';
 import { ProductSummary } from '../../../shared/models/product';
 import { AppBadge } from '../../../shared/components/app-badge/app-badge';
+import { AppBreadcrumb } from '../../../shared/components/app-breadcrumb/app-breadcrumb';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
@@ -14,7 +16,7 @@ import { ProductGrid } from '../../../shared/components/product-grid/product-gri
 
 @Component({
   selector: 'app-product-detail',
-  imports: [RouterLink, AppBadge, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid],
+  imports: [RouterLink, AppBadge, AppBreadcrumb, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css',
 })
@@ -22,12 +24,16 @@ export class ProductDetail implements OnInit {
   private readonly catalogService = inject(CatalogService);
   private readonly cartService = inject(Cart);
   private readonly route = inject(ActivatedRoute);
-  private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly viewportScroller = inject(ViewportScroller);
 
   protected readonly product = signal<ProductSummary | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal(false);
   protected readonly quantity = signal(1);
+
+  /** Temporary feedback state after adding to cart. */
+  protected readonly justAdded = signal(false);
 
   /** Related products from the same category (excludes current product). */
   protected readonly relatedProducts = signal<ProductSummary[]>([]);
@@ -39,13 +45,20 @@ export class ProductDetail implements OnInit {
   protected readonly relatedLink = signal<{ categoryId: number } | null>(null);
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!id || isNaN(id)) {
-      this.error.set(true);
-      this.loading.set(false);
-      return;
-    }
-    this.loadProduct(id);
+    // Subscribe to paramMap so the component reacts when navigating between
+    // different products (same route pattern, different :id param).
+    const sub = this.route.paramMap.subscribe((params) => {
+      const id = Number(params.get('id'));
+      if (!id || isNaN(id)) {
+        this.error.set(true);
+        this.loading.set(false);
+        return;
+      }
+      this.quantity.set(1);
+      this.loadProduct(id);
+      this.viewportScroller.scrollToPosition([0, 0]);
+    });
+    this.destroyRef.onDestroy(() => sub.unsubscribe());
   }
 
   private loadProduct(id: number): void {
@@ -61,11 +74,6 @@ export class ProductDetail implements OnInit {
       error: () => {
         this.error.set(true);
         this.loading.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo cargar el producto.',
-        });
       },
     });
   }
@@ -115,11 +123,13 @@ export class ProductDetail implements OnInit {
   protected addToCart(): void {
     const p = this.product();
     if (!p) return;
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Agregado',
-      detail: `${this.quantity()}x ${p.name} agregado al pedido.`,
-    });
+
+    // Add to cart service
+    this.cartService.addItem(p, this.quantity());
+
+    // Show temporary feedback
+    this.justAdded.set(true);
+    setTimeout(() => this.justAdded.set(false), 2000);
   }
 
   /** Whether the product is out of stock. */
@@ -130,4 +140,19 @@ export class ProductDetail implements OnInit {
     const stock = this.product()?.availableStock;
     return stock != null && stock > 0 && stock <= 5;
   });
+
+  /** Breadcrumb items for navigation trail: Catalogo / {Product name}. */
+  protected readonly breadcrumbItems = computed<MenuItem[]>(() => {
+    const p = this.product();
+    return [
+      { label: 'Catalogo', routerLink: '/store/products' },
+      { label: p?.name ?? 'Producto' },
+    ];
+  });
+
+  /** Home item for the breadcrumb. */
+  protected readonly breadcrumbHome: MenuItem = {
+    icon: 'pi pi-home',
+    routerLink: '/store',
+  };
 }

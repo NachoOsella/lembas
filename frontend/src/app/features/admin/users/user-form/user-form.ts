@@ -2,13 +2,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, input, output, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Select } from 'primeng/select';
-import { InputText } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
 
-import { ApiErrorResponse } from '../../../../core/services/auth';
+import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
+import { ErrorMappingService } from '../../../../core/services/error-mapping';
 import { UserService } from '../../../../core/services/user';
 import { Branch, InternalRole, UserResponse } from '../../../../shared/models/user';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
+import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
 import { AppModal } from '../../../../shared/components/app-modal/app-modal';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 import { FormSection } from '../../../../shared/components/form-section/form-section';
@@ -36,7 +37,7 @@ const ROLE_ICON: Record<InternalRole, string> = {
 
 @Component({
   selector: 'app-user-form',
-  imports: [FormsModule, Select, InputText, AppButton, AppModal, ErrorAlert, FormSection],
+  imports: [FormsModule, Select, AppButton, AppFormField, AppModal, ErrorAlert, FormSection],
   templateUrl: './user-form.html',
   styleUrl: './user-form.css',
 })
@@ -44,6 +45,7 @@ const ROLE_ICON: Record<InternalRole, string> = {
 export class UserForm {
   private readonly userService = inject(UserService);
   private readonly messageService = inject(MessageService);
+  private readonly errorMapping = inject(ErrorMappingService);
 
   // ---------------------------------------------------------------------------
   // Inputs
@@ -67,6 +69,36 @@ export class UserForm {
 
   /** True after the first submit attempt, used to reveal inline errors. */
   protected readonly formSubmitted = signal(false);
+
+  /** Returns the validation error message for the email field, or empty if valid. */
+  protected readonly emailErrorMessage = computed(() => {
+    if (!this.formSubmitted()) return '';
+    const email = this.formEmail().trim();
+    if (!email) return 'El email es obligatorio.';
+    if (!UserForm.EMAIL_REGEX.test(email)) return 'Ingrese un email valido (ej: correo@ejemplo.com).';
+    return '';
+  });
+
+  /** Returns the validation error message for the password field, or empty if valid. */
+  protected readonly passwordErrorMessage = computed(() => {
+    if (!this.formSubmitted()) return '';
+    const pwd = this.formPassword();
+    if (this.isEditMode() && !pwd) return '';
+    if (!pwd || pwd.length < 8) return 'La contrasena debe tener al menos 8 caracteres.';
+    return '';
+  });
+
+  /** Returns the validation error message for the first name field, or empty if valid. */
+  protected readonly firstNameErrorMessage = computed(() => {
+    if (!this.formSubmitted()) return '';
+    return this.formFirstName().trim() ? '' : 'El nombre es obligatorio.';
+  });
+
+  /** Returns the validation error message for the last name field, or empty if valid. */
+  protected readonly lastNameErrorMessage = computed(() => {
+    if (!this.formSubmitted()) return '';
+    return this.formLastName().trim() ? '' : 'El apellido es obligatorio.';
+  });
 
   protected readonly formEmailValid = computed(
     () => this.formEmail().trim().length > 0 && UserForm.EMAIL_REGEX.test(this.formEmail().trim()),
@@ -299,27 +331,31 @@ export class UserForm {
     }
     if (err.status === 0 || err.status >= 500) return null;
 
-    const apiError = err.error as ApiErrorResponse | undefined;
-    switch (apiError?.code) {
-      case 'EMAIL_DUPLICATED':
-        return 'Ya existe un usuario con este email.';
-      case 'INVALID_USER_BRANCH':
-        this.showBranchPolicyToast(apiError);
-        return null;
-      case 'VALIDATION_ERROR':
-        return this.formatValidationError(apiError);
-      default:
-        return apiError?.message || this.defaultMessage(err.status);
-    }
-  }
+    const apiError = getApiError(err);
+    const code = apiError?.code;
 
-  private formatValidationError(apiError: ApiErrorResponse): string {
-    const fieldErrors = apiError.details?.fieldErrors ?? [];
-    if (fieldErrors.length === 0) return 'Revise los datos ingresados.';
-    const details = fieldErrors
-      .map((fe) => `${this.translateField(fe.field)}: ${fe.message}`)
-      .join('. ');
-    return `Revise los datos ingresados. ${details}`;
+    if (!code || !apiError) {
+      return this.defaultMessage(err.status);
+    }
+
+    // Special handling for branch policy violations (show toast instead of inline error)
+    if (code === 'INVALID_USER_BRANCH') {
+      this.showBranchPolicyToast(apiError);
+      return null;
+    }
+
+    // Special handling for validation errors with field translation
+    if (code === 'VALIDATION_ERROR') {
+      return this.errorMapping.formatValidationErrors(
+        apiError,
+        this.translateField,
+        'Revise los datos ingresados.',
+        this.translateValidationMessage
+      );
+    }
+
+    // Use centralized error mapping with frontend-controlled fallback only
+    return this.errorMapping.getMessage(code, this.defaultMessage(err.status));
   }
 
   private showBranchPolicyToast(apiError: ApiErrorResponse): void {
@@ -346,6 +382,17 @@ export class UserForm {
       enabled: 'Estado',
     };
     return labels[field] ?? field;
+  }
+
+  private translateValidationMessage(message: string): string {
+    const messages: Record<string, string> = {
+      'must be well-formed': 'debe tener un formato válido',
+      'size must be between 8 and 128': 'debe tener entre 8 y 128 caracteres',
+      'must not be blank': 'es obligatorio',
+      'must not be empty': 'es obligatorio',
+      'must not be null': 'es obligatorio',
+    };
+    return messages[message] ?? message;
   }
 
   private defaultMessage(status: number): string {

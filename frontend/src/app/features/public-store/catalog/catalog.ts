@@ -1,6 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
 
 import { CatalogService } from '../../../core/services/catalog';
 import { Category, ProductSummary } from '../../../shared/models/product';
@@ -26,7 +25,6 @@ export class Catalog implements OnInit {
   private readonly catalogService = inject(CatalogService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly messageService = inject(MessageService);
 
   // ---------------------------------------------------------------------------
   // Categories state
@@ -137,11 +135,6 @@ export class Catalog implements OnInit {
         this.categoriesLoading.set(false);
         this.categoriesError.set(true);
         this.categoriesReady.set(true);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar las categorias.',
-        });
       },
     });
   }
@@ -182,11 +175,6 @@ export class Catalog implements OnInit {
           this.productsLoading.set(false);
           this.productsError.set(true);
           this.initialLoadDone.set(true);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudieron cargar los productos.',
-          });
         },
       });
   }
@@ -246,11 +234,7 @@ export class Catalog implements OnInit {
   // Cart integration
   // ---------------------------------------------------------------------------
   protected onAddToCart(event: ProductGridAddToCartEvent): void {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Agregado',
-      detail: `${event.quantity}x ${event.product.name} agregado al pedido.`,
-    });
+    // Toast removed - public store does not use toasts
   }
 
   // ---------------------------------------------------------------------------

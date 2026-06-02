@@ -20,8 +20,8 @@
 }
 
 .store-product-card a:focus-visible {
-  outline: 3px solid rgba(4, 120, 87, 0.35);
-  outline-offset: 3px;
+  outline: 2px solid #2f8d72;
+  outline-offset: 2px;
 }
 
 /* Compact cards are used in moving recommendation rails. */
@@ -194,7 +194,7 @@
 }
 
 .store-product-card__stock--low {
-  background: rgba(242, 157, 82, 0.88);
+  background: rgba(217, 130, 43, 0.88);
   color: #fff;
 }
 

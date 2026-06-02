@@ -9,7 +9,8 @@ import { errorInterceptor } from './error-interceptor';
 describe('errorInterceptor', () => {
   let interceptor: HttpInterceptorFn;
   let messageService: MessageService;
-  let router: Router;
+  let router: Router & { url: string };
+  let routerMock: { url: string; navigate: ReturnType<typeof vi.fn> };
   let mockRequest: HttpRequest<unknown>;
   let localStorageMock: { [key: string]: string };
 
@@ -45,7 +46,9 @@ describe('errorInterceptor', () => {
       add: vi.fn(),
     };
 
-    const routerMock = {
+    // Default to admin context so existing tests verify toast behavior.
+    routerMock = {
+      url: '/admin/dashboard',
       navigate: vi.fn(),
     };
 
@@ -59,7 +62,7 @@ describe('errorInterceptor', () => {
     interceptor = (req, next) => TestBed.runInInjectionContext(() => errorInterceptor(req, next));
 
     messageService = TestBed.inject(MessageService);
-    router = TestBed.inject(Router);
+    router = TestBed.inject(Router) as Router & { url: string };
     mockRequest = new HttpRequest('GET', '/api/test');
     localStorage.clear();
   });
@@ -139,22 +142,6 @@ describe('errorInterceptor', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('should show access denied toast for status 403', async () => {
-    const error = new HttpErrorResponse({
-      status: 403,
-      error: { message: 'Access denied' },
-    });
-
-    await captureError(mockRequest, error);
-
-    expect(messageService.add).toHaveBeenCalledWith({
-      severity: 'error',
-      summary: 'Acceso denegado',
-      detail: 'No tiene permisos para realizar esta accion.',
-      life: 5000,
-    });
-  });
-
   it('should not show a global toast for validation errors', async () => {
     const error = new HttpErrorResponse({
       status: 400,
@@ -188,35 +175,6 @@ describe('errorInterceptor', () => {
     expect(messageService.add).not.toHaveBeenCalled();
   });
 
-  it('should show server error toast for status 500', async () => {
-    const error = new HttpErrorResponse({
-      status: 500,
-      error: { message: 'Internal server error' },
-    });
-
-    await captureError(mockRequest, error);
-
-    expect(messageService.add).toHaveBeenCalledWith({
-      severity: 'error',
-      summary: 'Error del servidor',
-      detail: 'Ocurrio un error inesperado. Por favor, intente nuevamente mas tarde.',
-      life: 5000,
-    });
-  });
-
-  it('should show server error toast for unexpected 5xx statuses', async () => {
-    const error = new HttpErrorResponse({ status: 503, error: {} });
-
-    await captureError(mockRequest, error);
-
-    expect(messageService.add).toHaveBeenCalledWith({
-      severity: 'error',
-      summary: 'Error del servidor',
-      detail: 'Ocurrio un error inesperado. Por favor, intente nuevamente mas tarde.',
-      life: 5000,
-    });
-  });
-
   it('should pass through successful responses', async () => {
     const successEvent: HttpEvent<unknown> = { type: 0 };
 
@@ -224,5 +182,97 @@ describe('errorInterceptor', () => {
 
     expect(result).toBe(successEvent);
     expect(messageService.add).not.toHaveBeenCalled();
+  });
+
+  describe('admin context (toast)', () => {
+    beforeEach(() => {
+      routerMock.url = '/admin/dashboard';
+    });
+
+    it('should show access denied toast for status 403', async () => {
+      const error = new HttpErrorResponse({
+        status: 403,
+        error: { message: 'Access denied' },
+      });
+
+      await captureError(mockRequest, error);
+
+      expect(messageService.add).toHaveBeenCalledWith({
+        severity: 'error',
+        summary: 'Acceso denegado',
+        detail: 'No tiene permisos para realizar esta accion.',
+        life: 5000,
+      });
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('should show server error toast for status 500', async () => {
+      const error = new HttpErrorResponse({
+        status: 500,
+        error: { message: 'Internal server error' },
+      });
+
+      await captureError(mockRequest, error);
+
+      expect(messageService.add).toHaveBeenCalledWith({
+        severity: 'error',
+        summary: 'Error del servidor',
+        detail: 'Ocurrio un error inesperado. Por favor, intente nuevamente mas tarde.',
+        life: 5000,
+      });
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('should show server error toast for unexpected 5xx statuses', async () => {
+      const error = new HttpErrorResponse({ status: 503, error: {} });
+
+      await captureError(mockRequest, error);
+
+      expect(messageService.add).toHaveBeenCalledWith({
+        severity: 'error',
+        summary: 'Error del servidor',
+        detail: 'Ocurrio un error inesperado. Por favor, intente nuevamente mas tarde.',
+        life: 5000,
+      });
+    });
+  });
+
+  describe('store context (redirect)', () => {
+    beforeEach(() => {
+      routerMock.url = '/store/products';
+    });
+
+    it('should redirect to error/403 page for status 403 instead of toast', async () => {
+      const error = new HttpErrorResponse({
+        status: 403,
+        error: { message: 'Access denied' },
+      });
+
+      await captureError(mockRequest, error);
+
+      expect(router.navigate).toHaveBeenCalledWith(['/store/error/403']);
+      expect(messageService.add).not.toHaveBeenCalled();
+    });
+
+    it('should redirect to error/500 page for status 500 instead of toast', async () => {
+      const error = new HttpErrorResponse({
+        status: 500,
+        error: { message: 'Internal server error' },
+      });
+
+      await captureError(mockRequest, error);
+
+      expect(router.navigate).toHaveBeenCalledWith(['/store/error/500']);
+      expect(messageService.add).not.toHaveBeenCalled();
+    });
+
+    it('should redirect to error/500 page for unexpected 5xx statuses', async () => {
+      const error = new HttpErrorResponse({ status: 503, error: {} });
+
+      await captureError(mockRequest, error);
+
+      expect(router.navigate).toHaveBeenCalledWith(['/store/error/500']);
+      expect(messageService.add).not.toHaveBeenCalled();
+    });
   });
 });

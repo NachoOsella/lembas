@@ -41,7 +41,11 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'error/500',
+    redirectTo: '/store/error/500',
+  },
+  {
     path: '**',
-    redirectTo: '/store',
+    redirectTo: '/store/error/404',
   },
 ];

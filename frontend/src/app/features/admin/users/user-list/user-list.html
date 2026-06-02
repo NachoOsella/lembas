@@ -1,15 +1,11 @@
 <div class="users-page">
-  <section class="users-page__hero" aria-labelledby="users-title">
-    <div class="users-page__hero-copy">
-      <p class="users-page__eyebrow">Panel interno</p>
-      <h1 id="users-title">Usuarios</h1>
-      <p>Gestion de accesos internos, roles operativos y alcance por sucursal.</p>
-    </div>
-
-    <div class="users-page__hero-actions">
-      <app-button icon="pi pi-plus" (click)="createUser.emit()"> Nuevo usuario </app-button>
-    </div>
-  </section>
+  <app-page-header
+    eyebrow="Panel interno"
+    title="Usuarios"
+    description="Gestion de accesos internos, roles operativos y alcance por sucursal."
+  >
+    <app-button icon="pi pi-plus" (click)="createUser.emit()"> Nuevo usuario </app-button>
+  </app-page-header>
 
   <section class="users-page__directory" aria-label="Directorio de usuarios internos">
     <app-data-table
