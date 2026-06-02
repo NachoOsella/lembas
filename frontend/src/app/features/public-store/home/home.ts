@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { CatalogService } from '../../../core/services/catalog';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
+import { CardBanner } from '../../../shared/components/app-card-banner/app-card-banner';
 import { ProductGridSkeleton } from '../../../shared/components/product-grid-skeleton/product-grid-skeleton';
 import { StoreProductCard } from '../../../shared/components/store-product-card/store-product-card';
 import { HeroFlowers } from '../../../shared/components/hero-flowers/hero-flowers';
@@ -11,16 +12,16 @@ import { ProductSummary } from '../../../shared/models/product';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, AppButton, AppEyebrow, ProductGridSkeleton, StoreProductCard, HeroFlowers],
+  imports: [RouterLink, AppButton, AppEyebrow, CardBanner, ProductGridSkeleton, StoreProductCard, HeroFlowers],
   template: `
-    <div class="home-page min-h-screen overflow-hidden bg-[#f6ead6] text-stone-950">
+    <div class="home-page min-h-screen overflow-hidden bg-[#f6ead6]">
       <!-- Editorial hero with organic depth -->
       <header
         class="home-hero relative isolate overflow-hidden px-4 py-16 sm:px-6 md:py-24 lg:px-8"
       >
         <!-- Decorative organic shapes -->
         <div
-          class="pointer-events-none absolute -right-20 -top-20 h-[500px] w-[500px] rounded-full bg-[#f29d52]/10 blur-3xl"
+          class="pointer-events-none absolute -right-20 -top-20 h-[500px] w-[500px] rounded-full bg-white/5 blur-3xl"
           aria-hidden="true"
         ></div>
         <div
@@ -38,7 +39,7 @@ import { ProductSummary } from '../../../shared/models/product';
             <app-eyebrow color="light">Dietetica Lembas</app-eyebrow>
 
             <h1
-              class="mt-8 max-w-[760px] text-5xl font-semibold leading-[1.05] tracking-[-0.01em] text-white sm:text-6xl lg:text-[5rem]"
+              class="mt-8 max-w-[760px] text-5xl font-semibold leading-[1.2] tracking-[-0.01em] text-white sm:text-6xl lg:text-[5rem]"
             >
               Tu despensa natural, lista para retirar
             </h1>
@@ -62,53 +63,100 @@ import { ProductSummary } from '../../../shared/models/product';
           </section>
 
           <aside class="hidden lg:block" aria-label="Resumen de compra">
-            <div
-              class="home-ticket relative ml-auto max-w-sm rounded-[2rem] border border-white/10 bg-white/95 p-7 shadow-2xl shadow-black/30 backdrop-blur-sm"
-            >
-              <div
-                class="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#075f36]"
-                aria-hidden="true"
-              ></div>
-              <div
-                class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#075f36]"
-                aria-hidden="true"
-              ></div>
+            <div class="home-ticket relative ml-auto max-w-sm">
+              <!-- Notches (perforaciones laterales) -->
+              <div class="absolute -left-3 top-20 h-6 w-6 rounded-full bg-[#075f36]"></div>
+              <div class="absolute -right-3 top-20 h-6 w-6 rounded-full bg-[#075f36]"></div>
 
-              <div
-                class="flex items-center justify-between border-b-2 border-dashed border-stone-300 pb-5"
-              >
-                <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-black/58">
-                  Pedido simple
-                </span>
-                <span
-                  class="rounded-full bg-[#075f36] px-3 py-1 text-[11px] font-bold text-white tracking-wide"
-                >
-                  Pickup
-                </span>
+              <!-- Ticket body -->
+              <div class="relative overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+                <!-- Header -->
+                <div class="border-b-2 border-dashed border-[rgba(7,95,54,0.12)] bg-gradient-to-br from-[#f6fbf7] to-white px-6 py-5">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                      <div class="flex h-9 w-9 items-center justify-center rounded-full bg-[#2f8d72] text-white">
+                        <i class="pi pi-ticket text-base" aria-hidden="true"></i>
+                      </div>
+                      <div>
+                        <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#2f8d72]">
+                          Dietética Lembas
+                        </p>
+                        <p class="text-xs font-bold text-[rgba(0,0,0,0.87)]">Pedido Simple</p>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-[10px] text-[rgba(0,0,0,0.45)]">N°</p>
+                      <p class="font-mono text-sm font-bold text-[#2f8d72]">#001</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Pickup badge -->
+                <div class="flex justify-center border-b border-dashed border-[rgba(7,95,54,0.08)] py-3">
+                  <span class="inline-flex items-center gap-1.5 rounded-full bg-[#075f36] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white">
+                    <i class="pi pi-map-marker text-[10px]" aria-hidden="true"></i>
+                    Retiro en sucursal
+                  </span>
+                </div>
+
+                <!-- Steps -->
+                <div class="px-6 py-5">
+                  <p class="mb-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-[rgba(0,0,0,0.45)]">
+                    Cómo funciona
+                  </p>
+                  <ul class="space-y-4">
+                    <li class="flex items-start gap-3">
+                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72]">
+                        <i class="pi pi-search text-xs" aria-hidden="true"></i>
+                      </div>
+                      <div class="flex-1 pt-0.5">
+                        <p class="text-sm font-semibold text-[rgba(0,0,0,0.87)]">Explorá</p>
+                        <p class="text-xs text-[rgba(0,0,0,0.58)]">Navegá el catálogo y filtrá por categoría</p>
+                      </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72]">
+                        <i class="pi pi-shopping-cart text-xs" aria-hidden="true"></i>
+                      </div>
+                      <div class="flex-1 pt-0.5">
+                        <p class="text-sm font-semibold text-[rgba(0,0,0,0.87)]">Armá tu pedido</p>
+                        <p class="text-xs text-[rgba(0,0,0,0.58)]">Agregá productos y confirmá el pago</p>
+                      </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72]">
+                        <i class="pi pi-box text-xs" aria-hidden="true"></i>
+                      </div>
+                      <div class="flex-1 pt-0.5">
+                        <p class="text-sm font-semibold text-[rgba(0,0,0,0.87)]">Retirá</p>
+                        <p class="text-xs text-[rgba(0,0,0,0.58)]">Pasá a buscar sin filas ni esperas</p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Footer (barcode decorativo) -->
+                <div class="border-t-2 border-dashed border-[rgba(7,95,54,0.12)] bg-gradient-to-br from-white to-[#f6fbf7] px-6 py-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex gap-0.5">
+                      <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
+                      <div class="h-8 w-1 bg-[rgba(0,0,0,0.87)]"></div>
+                      <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
+                      <div class="h-8 w-1.5 bg-[rgba(0,0,0,0.87)]"></div>
+                      <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
+                      <div class="h-8 w-1 bg-[rgba(0,0,0,0.87)]"></div>
+                      <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
+                      <div class="h-8 w-1.5 bg-[rgba(0,0,0,0.87)]"></div>
+                      <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
+                      <div class="h-8 w-1 bg-[rgba(0,0,0,0.87)]"></div>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-[9px] font-mono text-[rgba(0,0,0,0.45)]">LEMBAS-2026</p>
+                      <p class="text-[9px] text-[rgba(0,0,0,0.35)]">dietetica.lembas</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <ul class="mt-6 space-y-5 text-sm font-semibold text-stone-700">
-                <li class="flex items-center gap-4">
-                  <span
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72] font-bold text-sm"
-                    >1</span
-                  >
-                  Explorá el catálogo y filtrá por categoría
-                </li>
-                <li class="flex items-center gap-4">
-                  <span
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72] font-bold text-sm"
-                    >2</span
-                  >
-                  Armá tu pedido y confirmá el pago
-                </li>
-                <li class="flex items-center gap-4">
-                  <span
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72] font-bold text-sm"
-                    >3</span
-                  >
-                  Retirá en sucursal sin filas
-                </li>
-              </ul>
             </div>
           </aside>
         </div>
@@ -125,7 +173,7 @@ import { ProductSummary } from '../../../shared/models/product';
               <app-eyebrow color="green">Seleccion curada</app-eyebrow>
               <h2
                 id="home-products-title"
-                class="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl"
+                class="mt-3 text-3xl font-semibold tracking-[-0.01em] sm:text-4xl"
               >
                 Recomendados de la semana
               </h2>
@@ -139,12 +187,12 @@ import { ProductSummary } from '../../../shared/models/product';
           </div>
 
           @if (featuredLoading()) {
-            <div class="rounded-[2rem] border border-black/8 bg-white p-5 shadow-sm">
+            <div class="rounded-xl border border-[rgba(7,95,54,0.08)] bg-white p-5 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.24)]">
               <app-product-grid-skeleton [count]="6" />
             </div>
           } @else if (featuredProducts().length > 0) {
             <div
-              class="home-marquee rounded-[2rem] border border-black/8 bg-white p-5 shadow-sm"
+              class="home-marquee rounded-xl border border-[rgba(7,95,54,0.08)] bg-white p-5 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.24)]"
               aria-label="Productos recomendados en movimiento"
             >
               <div class="home-marquee__track">
@@ -176,34 +224,63 @@ import { ProductSummary } from '../../../shared/models/product';
             <app-eyebrow color="green">Comprá con confianza</app-eyebrow>
             <h2
               id="home-benefits-title"
-              class="mt-4 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl lg:text-5xl"
+              class="mt-4 text-3xl font-semibold tracking-[-0.01em] sm:text-4xl lg:text-5xl"
             >
               La experiencia Lembas, pensada para vos
             </h2>
           </div>
 
-          <div class="grid grid-cols-1 gap-8 sm:grid-cols-3">
-            @for (benefit of benefits; track benefit.title) {
-              <div
-                class="group relative rounded-2xl border border-[rgba(7,95,54,0.08)] bg-white p-10 text-center shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_2px_8px_0_rgba(0,0,0,0.08)] transition-all duration-300 hover:shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_8px_24px_0_rgba(47,141,114,0.12)] hover:-translate-y-1"
-              >
-                <!-- Decorative accent line -->
-                <div
-                  class="absolute left-0 top-1/2 h-16 w-1 -translate-y-1/2 rounded-r-full bg-[#2f8d72] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  aria-hidden="true"
-                ></div>
-                
-                <span
-                  class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#d7eadf] to-[#e9f3ea] text-[#2f8d72] shadow-[0_4px_12px_rgba(47,141,114,0.15)]"
+          <!-- Mobile: infinite marquee / Desktop: grid -->
+          <div class="home-benefits-marquee -mx-4 sm:mx-0">
+            <div class="home-benefits-marquee__track flex sm:grid sm:grid-cols-3 sm:gap-8">
+              @for (benefit of benefits; track 'a-' + benefit.title) {
+                <app-card-banner
+                  borderRadius="12px"
+                  padding="2rem"
+                  [showBlob]="false"
+                  [clickable]="true"
+                  class="home-benefits-card"
                 >
-                  <i [class]="benefit.icon + ' text-3xl'" aria-hidden="true"></i>
-                </span>
-                <h3 class="mt-6 text-xl font-bold tracking-[-0.01em] text-[rgba(0,0,0,0.87)]">{{ benefit.title }}</h3>
-                <p class="mt-3 text-base leading-relaxed text-[rgba(0,0,0,0.58)]">
-                  {{ benefit.description }}
-                </p>
-              </div>
-            }
+                  <div class="text-center">
+                    <span
+                      class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72] shadow-[0_0_0.5px_rgba(47,141,114,0.12),0_1px_2px_rgba(47,141,114,0.14)]"
+                    >
+                      <i [class]="benefit.icon + ' text-3xl'" aria-hidden="true"></i>
+                    </span>
+                    <h3 class="mt-6 text-xl font-bold tracking-[-0.01em] text-[rgba(0,0,0,0.87)]">
+                      {{ benefit.title }}
+                    </h3>
+                    <p class="mt-3 text-base leading-relaxed text-[rgba(0,0,0,0.58)]">
+                      {{ benefit.description }}
+                    </p>
+                  </div>
+                </app-card-banner>
+              }
+              @for (benefit of benefits; track 'b-' + benefit.title) {
+                <app-card-banner
+                  borderRadius="12px"
+                  padding="2rem"
+                  [showBlob]="false"
+                  [clickable]="true"
+                  class="home-benefits-card sm:hidden"
+                  aria-hidden="true"
+                >
+                  <div class="text-center">
+                    <span
+                      class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72] shadow-[0_0_0.5px_rgba(47,141,114,0.12),0_1px_2px_rgba(47,141,114,0.14)]"
+                    >
+                      <i [class]="benefit.icon + ' text-3xl'" aria-hidden="true"></i>
+                    </span>
+                    <h3 class="mt-6 text-xl font-bold tracking-[-0.01em] text-[rgba(0,0,0,0.87)]">
+                      {{ benefit.title }}
+                    </h3>
+                    <p class="mt-3 text-base leading-relaxed text-[rgba(0,0,0,0.58)]">
+                      {{ benefit.description }}
+                    </p>
+                  </div>
+                </app-card-banner>
+              }
+            </div>
           </div>
         </section>
 
@@ -216,7 +293,7 @@ import { ProductSummary } from '../../../shared/models/product';
             <app-eyebrow color="green">Lo que dicen nuestros clientes</app-eyebrow>
             <h2
               id="home-reviews-title"
-              class="mt-4 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl lg:text-5xl"
+              class="mt-4 text-3xl font-semibold tracking-[-0.01em] sm:text-4xl lg:text-5xl"
             >
               Opiniones de la comunidad
             </h2>
@@ -224,7 +301,7 @@ import { ProductSummary } from '../../../shared/models/product';
             <div class="mt-6 flex items-center justify-center gap-3">
               <div class="flex gap-1">
                 @for (star of [1, 2, 3, 4, 5]; track star) {
-                  <i class="pi pi-star-fill text-[#f29d52] text-lg" aria-hidden="true"></i>
+                  <i class="pi pi-star-fill text-[#2f8d72] text-lg" aria-hidden="true"></i>
                 }
               </div>
               <span class="text-base font-bold text-[rgba(0,0,0,0.87)]">4.8</span>
@@ -232,47 +309,83 @@ import { ProductSummary } from '../../../shared/models/product';
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            @for (review of reviews; track review.name) {
-              <div
-                class="group relative overflow-hidden rounded-2xl border border-[rgba(7,95,54,0.08)] bg-white p-7 shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_2px_8px_0_rgba(0,0,0,0.08)] transition-all duration-300 hover:shadow-[0_0_0.5px_0_rgba(0,0,0,0.14),0_8px_24px_0_rgba(47,141,114,0.12)] hover:-translate-y-1"
-              >
-                <!-- Decorative quote mark -->
-                <div
-                  class="pointer-events-none absolute -right-4 -top-4 text-[8rem] font-serif leading-none text-[#d7eadf]/30"
+          <!-- Mobile: infinite marquee / Desktop: grid -->
+          <div class="home-reviews-marquee -mx-4 sm:mx-0">
+            <div class="home-reviews-marquee__track flex sm:grid sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+              @for (review of reviews; track 'a-' + review.name) {
+                <app-card-banner
+                  borderRadius="12px"
+                  padding="1.5rem"
+                  [showBlob]="false"
+                  [clickable]="true"
+                  class="home-reviews-card"
+                >
+                  <div class="flex items-center gap-4">
+                    <span
+                      class="flex h-12 w-12 items-center justify-center rounded-full bg-[#075f36] text-base font-bold text-white shadow-[0_0_0.5px_rgba(7,95,54,0.12),0_1px_2px_rgba(7,95,54,0.14)]"
+                    >
+                      {{ review.name.charAt(0) }}
+                    </span>
+                    <div>
+                      <p class="text-base font-bold text-[rgba(0,0,0,0.87)]">{{ review.name }}</p>
+                      <p class="text-xs text-[rgba(0,0,0,0.45)]">{{ review.date }}</p>
+                    </div>
+                  </div>
+                  <div class="mt-4 flex gap-1">
+                    @for (star of [1, 2, 3, 4, 5]; track star) {
+                      <i
+                        class="pi text-sm"
+                        [class.pi-star-fill]="star <= review.rating"
+                        [class.pi-star]="star > review.rating"
+                        [class.text-[#2f8d72]]="star <= review.rating"
+                        [class.text-[rgba(0,0,0,0.15)]]="star > review.rating"
+                        aria-hidden="true"
+                      ></i>
+                    }
+                  </div>
+                  <p class="mt-4 text-base leading-relaxed text-[rgba(0,0,0,0.58)]">
+                    "{{ review.text }}"
+                  </p>
+                </app-card-banner>
+              }
+              @for (review of reviews; track 'b-' + review.name) {
+                <app-card-banner
+                  borderRadius="12px"
+                  padding="1.5rem"
+                  [showBlob]="false"
+                  [clickable]="true"
+                  class="home-reviews-card sm:hidden"
                   aria-hidden="true"
                 >
-                  "
-                </div>
-                
-                <div class="relative flex items-center gap-4">
-                  <span
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#075f36] to-[#2f8d72] text-base font-bold text-white shadow-[0_4px_12px_rgba(7,95,54,0.2)]"
-                  >
-                    {{ review.name.charAt(0) }}
-                  </span>
-                  <div>
-                    <p class="text-base font-bold text-[rgba(0,0,0,0.87)]">{{ review.name }}</p>
-                    <p class="text-xs text-[rgba(0,0,0,0.45)]">{{ review.date }}</p>
+                  <div class="flex items-center gap-4">
+                    <span
+                      class="flex h-12 w-12 items-center justify-center rounded-full bg-[#075f36] text-base font-bold text-white shadow-[0_0_0.5px_rgba(7,95,54,0.12),0_1px_2px_rgba(7,95,54,0.14)]"
+                    >
+                      {{ review.name.charAt(0) }}
+                    </span>
+                    <div>
+                      <p class="text-base font-bold text-[rgba(0,0,0,0.87)]">{{ review.name }}</p>
+                      <p class="text-xs text-[rgba(0,0,0,0.45)]">{{ review.date }}</p>
+                    </div>
                   </div>
-                </div>
-                <div class="relative mt-4 flex gap-1">
-                  @for (star of [1, 2, 3, 4, 5]; track star) {
-                    <i
-                      class="pi text-sm"
-                      [class.pi-star-fill]="star <= review.rating"
-                      [class.pi-star]="star > review.rating"
-                      [class.text-[#f29d52]]="star <= review.rating"
-                      [class.text-[rgba(0,0,0,0.15)]]="star > review.rating"
-                      aria-hidden="true"
-                    ></i>
-                  }
-                </div>
-                <p class="relative mt-4 text-base leading-relaxed text-[rgba(0,0,0,0.7)]">
-                  "{{ review.text }}"
-                </p>
-              </div>
-            }
+                  <div class="mt-4 flex gap-1">
+                    @for (star of [1, 2, 3, 4, 5]; track star) {
+                      <i
+                        class="pi text-sm"
+                        [class.pi-star-fill]="star <= review.rating"
+                        [class.pi-star]="star > review.rating"
+                        [class.text-[#2f8d72]]="star <= review.rating"
+                        [class.text-[rgba(0,0,0,0.15)]]="star > review.rating"
+                        aria-hidden="true"
+                      ></i>
+                    }
+                  </div>
+                  <p class="mt-4 text-base leading-relaxed text-[rgba(0,0,0,0.58)]">
+                    "{{ review.text }}"
+                  </p>
+                </app-card-banner>
+              }
+            </div>
           </div>
         </section>
       </main>
@@ -319,6 +432,90 @@ import { ProductSummary } from '../../../shared/models/product';
       }
       to {
         transform: translateX(-50%);
+      }
+    }
+
+    /* ── Benefits marquee (mobile infinite loop) ─────────────── */
+    .home-benefits-marquee {
+      overflow: hidden;
+    }
+
+    .home-benefits-marquee__track {
+      width: max-content;
+      gap: 1rem;
+      will-change: transform;
+      animation: home-marquee-slide 45s linear infinite;
+    }
+
+    .home-benefits-marquee:hover .home-benefits-marquee__track {
+      animation-play-state: paused;
+    }
+
+    .home-benefits-card {
+      min-width: 280px;
+      flex-shrink: 0;
+    }
+
+    /* ── Reviews marquee (mobile infinite loop, reverse) ─────── */
+    .home-reviews-marquee {
+      overflow: hidden;
+    }
+
+    .home-reviews-marquee__track {
+      width: max-content;
+      gap: 1rem;
+      will-change: transform;
+      animation: home-reviews-slide 60s linear infinite;
+    }
+
+    .home-reviews-marquee:hover .home-reviews-marquee__track {
+      animation-play-state: paused;
+    }
+
+    .home-reviews-card {
+      min-width: 300px;
+      flex-shrink: 0;
+    }
+
+    @keyframes home-reviews-slide {
+      from {
+        transform: translateX(-50%);
+      }
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    /* ── Disable marquees on desktop (grid takes over) ──────── */
+    @media (min-width: 640px) {
+      .home-benefits-marquee,
+      .home-reviews-marquee {
+        overflow: visible;
+      }
+
+      .home-benefits-marquee__track,
+      .home-reviews-marquee__track {
+        animation: none;
+        width: auto;
+      }
+
+      .home-benefits-card,
+      .home-reviews-card {
+        min-width: 0;
+        flex-shrink: 1;
+      }
+
+      /* Hide duplicated cards for marquee effect */
+      .home-benefits-card[aria-hidden="true"],
+      .home-reviews-card[aria-hidden="true"] {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .home-benefits-marquee__track,
+      .home-reviews-marquee__track {
+        animation: none;
       }
     }
   `,

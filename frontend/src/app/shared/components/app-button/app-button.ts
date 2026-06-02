@@ -1,10 +1,9 @@
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ButtonDirective, ButtonLabel } from 'primeng/button';
 
 @Component({
   selector: 'app-button',
-  imports: [RouterLink, ButtonDirective, ButtonLabel],
+  imports: [RouterLink],
   templateUrl: './app-button.html',
   styleUrl: './app-button.css',
 })

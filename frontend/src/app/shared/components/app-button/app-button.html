@@ -1,6 +1,5 @@
 @if (isLink()) {
   <a
-    pButton
     [routerLink]="routerLink()!"
     [class]="buttonClass()"
     [attr.aria-label]="ariaLabel()"
@@ -9,20 +8,19 @@
     @if (loading()) {
       <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
       @if (!iconOnly()) {
-        <span pButtonLabel>{{ loadingLabel() }}</span>
+        <span>{{ loadingLabel() }}</span>
       }
     } @else {
       @if (icon()) {
         <i [class]="icon()" aria-hidden="true"></i>
       }
       @if (!iconOnly()) {
-        <span pButtonLabel><ng-content /></span>
+        <ng-content />
       }
     }
   </a>
 } @else {
   <button
-    pButton
     [type]="type()"
     [disabled]="isDisabled()"
     [class]="buttonClass()"
@@ -33,14 +31,14 @@
     @if (loading()) {
       <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
       @if (!iconOnly()) {
-        <span pButtonLabel>{{ loadingLabel() }}</span>
+        <span>{{ loadingLabel() }}</span>
       }
     } @else {
       @if (icon()) {
         <i [class]="icon()" aria-hidden="true"></i>
       }
       @if (!iconOnly()) {
-        <span pButtonLabel><ng-content /></span>
+        <ng-content />
       }
     }
   </button>
