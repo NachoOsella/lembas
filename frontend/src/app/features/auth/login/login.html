@@ -112,11 +112,7 @@
                 type="email"
                 autocomplete="email"
                 placeholder="tucorreo@ejemplo.com"
-                class="login-input login-input--with-icon"
-                [class.login-input--error]="
-                  (form.email().touched() && form.email().errors().length) ||
-                  showEmailRealtimeError()
-                "
+                class="w-full pr-11"
               />
               <i class="pi pi-at login-field-icon" aria-hidden="true"></i>
             </div>
@@ -141,11 +137,7 @@
                 [type]="passwordVisible() ? 'text' : 'password'"
                 autocomplete="current-password"
                 placeholder="Tu contrasena"
-                class="login-input pr-11"
-                [class.login-input--error]="
-                  (form.password().touched() && form.password().errors().length) ||
-                  showPasswordRealtimeError()
-                "
+                class="w-full pr-11"
               />
               <button
                 pButton
@@ -177,18 +169,16 @@
           </div>
 
           <!-- Submit -->
-          <button
-            pButton
+          <app-button
             type="submit"
             icon="pi pi-sign-in"
-            size="large"
-            class="auth-submit-btn mt-2"
-            [disabled]="submitting()"
-            [attr.aria-busy]="submitting()"
-            data-testid="submit-btn"
+            size="lg"
+            [loading]="submitting()"
+            loadingLabel="Ingresando..."
+            testId="submit-btn"
           >
-            <span pButtonLabel>{{ submitting() ? 'Ingresando...' : 'Iniciar sesion' }}</span>
-          </button>
+            Iniciar sesion
+          </app-button>
         </form>
 
         <p class="mt-6 text-center text-sm text-text-muted">

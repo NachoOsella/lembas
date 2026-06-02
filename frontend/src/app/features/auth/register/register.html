@@ -101,10 +101,7 @@
                 type="text"
                 autocomplete="given-name"
                 placeholder="Tu nombre"
-                class="register-input"
-                [class.register-input--error]="
-                  form.firstName().touched() && form.firstName().errors().length
-                "
+                class="w-full"
               />
               @if (form.firstName().touched() && form.firstName().errors().length) {
                 <p class="register-error" data-testid="firstName-error">
@@ -122,10 +119,7 @@
                 type="text"
                 autocomplete="family-name"
                 placeholder="Tu apellido"
-                class="register-input"
-                [class.register-input--error]="
-                  form.lastName().touched() && form.lastName().errors().length
-                "
+                class="w-full"
               />
               @if (form.lastName().touched() && form.lastName().errors().length) {
                 <p class="register-error" data-testid="lastName-error">
@@ -147,11 +141,7 @@
                 type="email"
                 autocomplete="email"
                 placeholder="tucorreo@ejemplo.com"
-                class="register-input register-input--with-icon"
-                [class.register-input--error]="
-                  (form.email().touched() && form.email().errors().length) ||
-                  showEmailRealtimeError()
-                "
+                class="w-full pr-11"
               />
               <i class="pi pi-at register-field-icon" aria-hidden="true"></i>
             </div>
@@ -177,11 +167,7 @@
                   [type]="passwordVisible() ? 'text' : 'password'"
                   autocomplete="new-password"
                   placeholder="Min. 8 caracteres"
-                  class="register-input pr-11"
-                  [class.register-input--error]="
-                    (form.password().touched() && form.password().errors().length) ||
-                    showPasswordRealtimeError()
-                  "
+                  class="w-full pr-11"
                 />
                 <button
                   pButton
@@ -223,11 +209,7 @@
                   [type]="confirmPasswordVisible() ? 'text' : 'password'"
                   autocomplete="new-password"
                   placeholder="Repetir"
-                  class="register-input pr-11"
-                  [class.register-input--error]="
-                    (form.confirmPassword().touched() && form.confirmPassword().errors().length) ||
-                    showConfirmPasswordRealtimeError()
-                  "
+                  class="w-full pr-11"
                 />
                 <button
                   pButton
@@ -274,28 +256,23 @@
                 type="tel"
                 autocomplete="tel"
                 placeholder="+54 351 123 4567"
-                class="register-input register-input--with-icon"
-                [class.register-input--error]="
-                  form.phone().touched() && form.phone().errors().length
-                "
+                class="w-full pr-11"
               />
               <i class="pi pi-phone register-field-icon" aria-hidden="true"></i>
             </div>
           </div>
 
           <!-- Submit -->
-          <button
-            pButton
+          <app-button
             type="submit"
             icon="pi pi-user-plus"
-            size="large"
-            class="auth-submit-btn mt-1"
-            [disabled]="submitting() || registrationSucceeded()"
-            [attr.aria-busy]="submitting()"
-            data-testid="submit-btn"
+            size="lg"
+            [loading]="submitting()"
+            loadingLabel="Creando cuenta..."
+            testId="submit-btn"
           >
-            <span pButtonLabel>{{ submitting() ? 'Creando cuenta...' : 'Crear cuenta' }}</span>
-          </button>
+            Crear cuenta
+          </app-button>
         </form>
 
         <p class="mt-6 text-center text-sm text-text-muted">

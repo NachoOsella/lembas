@@ -29,11 +29,20 @@
   --color-mint-wash-light: #e9f3ea;
   --color-mint-wash-subtle: #eef6f1;
   --color-mint-wash-pale: #f6fbf7;
+  --color-mint-wash-lighter: #eaf4f1;
+  --color-mint-wash-minimal: #dff6ea;
   --color-border-neutral: #e7e7e7;
   --color-border-warm: #f0e6d3;
   --color-surface-warm: #faf6ef;
   --color-surface-warmest: #fffef9;
   --color-neutral-cool: #f9f9f9;
+  --color-muted-herb-green: #33433d;
+  --color-red-darker: #9a3328;
+  --color-red-soft: #8a2f24;
+  --color-red-surface: #fff7f3;
+  --color-red-tint: hsla(4, 82%, 43%, 0.05);
+  --color-orange-light: #ffe1ba;
+  --color-input-border: rgba(0, 0, 0, 0.12);
 
   --radius-card: 12px;
   --radius-pill: 50px;
@@ -54,6 +63,10 @@
 
   --spacing-xl: clamp(1.25rem, 4vw, 3rem);
   --spacing-2xl: clamp(2rem, 6vw, 4rem);
+
+  --outer-gutter: 1.6rem;
+  --outer-gutter-medium: 2.4rem;
+  --outer-gutter-large: 4rem;
 
   --shadow-button-primary:
     0 0 0.5px rgba(47, 141, 114, 0.12),
@@ -90,12 +103,11 @@
 .p-inputnumber,
 .p-inputnumber-input {
   min-height: 48px;
-  border-color: rgba(47, 141, 114, 0.2) !important;
+  border-color: var(--color-input-border, rgba(0, 0, 0, 0.12)) !important;
   border-radius: 0.95rem !important;
-  background: #fffef9 !important;
+  background: var(--color-surface-warmest, #fffef9) !important;
   font-size: 16px !important;
   letter-spacing: -0.01em;
-  box-shadow: 0 0.55rem 1.1rem rgba(23, 63, 53, 0.06);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;

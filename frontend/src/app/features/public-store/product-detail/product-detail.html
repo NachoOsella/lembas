@@ -1,9 +1,9 @@
-<div class="product-detail-page min-h-screen bg-[#f6ead6] text-[rgba(0,0,0,0.87)]">
+<div class="product-detail-page min-h-screen bg-canvas text-text">
   <!-- Breadcrumb -->
   <nav class="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8" aria-label="Migas de pan">
     <a
       routerLink="/store/products"
-      class="inline-flex items-center gap-2 text-[13px] font-semibold text-[rgba(0,0,0,0.5)] transition hover:text-[#2f8d72]"
+      class="inline-flex items-center gap-2 text-[13px] font-semibold text-[rgba(0,0,0,0.5)] transition hover:text-primary"
     >
       <i class="pi pi-arrow-left text-xs" aria-hidden="true"></i>
       Volver al catalogo
@@ -33,7 +33,7 @@
         <div class="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12 xl:gap-16">
           <!-- ── Image ──────────────────────────────────────────────── -->
           <div class="product-detail-hero__image-wrap">
-            <div class="product-detail-hero__image rounded-xl overflow-hidden bg-[#faf6ef]">
+            <div class="product-detail-hero__image rounded-xl overflow-hidden bg-surface-warm">
               <div
                 class="pointer-events-none absolute inset-0 opacity-40"
                 style="
@@ -65,14 +65,14 @@
             <a
               [routerLink]="['/store/products']"
               [queryParams]="{ categoryId: p.categoryId }"
-              class="self-start rounded-full bg-[#d7eadf]/50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#2f8d72] transition hover:bg-[#d7eadf]"
+              class="self-start rounded-full bg-mint-wash/50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary transition hover:bg-mint-wash"
             >
               {{ p.categoryName }}
             </a>
 
             <!-- Product name -->
             <h1
-              class="mt-4 text-3xl font-semibold leading-tight tracking-tight text-[rgba(0,0,0,0.87)] sm:text-4xl lg:text-[2.75rem]"
+              class="mt-4 text-3xl font-semibold leading-tight tracking-tight text-text sm:text-4xl lg:text-[2.75rem]"
             >
               {{ p.name }}
             </h1>
@@ -86,20 +86,20 @@
 
             <!-- Price -->
             <div class="mt-6 flex items-baseline gap-3">
-              <strong class="text-4xl font-semibold tracking-tight text-[rgba(0,0,0,0.87)] sm:text-5xl">
+              <strong class="text-4xl font-semibold tracking-tight text-text sm:text-5xl">
                 ${{ p.salePrice.toLocaleString('es-AR') }}
               </strong>
             </div>
 
             <!-- Description -->
             @if (p.description) {
-              <p class="mt-5 max-w-lg text-[15px] leading-relaxed text-[rgba(0,0,0,0.58)]">
+              <p class="mt-5 max-w-lg text-[15px] leading-relaxed text-text-muted">
                 {{ p.description }}
               </p>
             }
 
             <!-- Divider -->
-            <div class="my-6 h-px bg-[#f0e6d3]"></div>
+            <div class="my-6 h-px bg-border-warm"></div>
 
             <!-- Stock status -->
             <div class="mb-6">
@@ -133,7 +133,7 @@
                     <i class="pi pi-minus text-xs" aria-hidden="true"></i>
                   </button>
                   <span
-                    class="flex h-8 w-8 items-center justify-center text-base font-bold text-[rgba(0,0,0,0.87)]"
+                    class="flex h-8 w-8 items-center justify-center text-base font-bold text-text"
                   >
                     {{ quantity() }}
                   </span>
@@ -149,6 +149,7 @@
               }
 
               <app-button
+                class="pdp-add-btn"
                 [variant]="isOutOfStock() ? 'secondary' : justAdded() ? 'success' : 'primary'"
                 [disabled]="isOutOfStock() || justAdded()"
                 [icon]="justAdded() ? 'pi pi-check' : 'pi pi-shopping-bag'"
@@ -162,19 +163,19 @@
             <!-- Trust signals -->
             <div class="mt-8 flex flex-col gap-3">
               <div class="flex items-center gap-3 text-sm text-[rgba(0,0,0,0.5)]">
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf]/50 text-[#2f8d72]">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash/50 text-primary">
                   <i class="pi pi-map-marker text-xs" aria-hidden="true"></i>
                 </span>
                 Retiro sin filas en sucursal
               </div>
               <div class="flex items-center gap-3 text-sm text-[rgba(0,0,0,0.5)]">
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf]/50 text-[#2f8d72]">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash/50 text-primary">
                   <i class="pi pi-verified text-xs" aria-hidden="true"></i>
                 </span>
                 Productos curados por expertos
               </div>
               <div class="flex items-center gap-3 text-sm text-[rgba(0,0,0,0.5)]">
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf]/50 text-[#2f8d72]">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash/50 text-primary">
                   <i class="pi pi-shield text-xs" aria-hidden="true"></i>
                 </span>
                 Pago seguro con Mercado Pago
@@ -188,7 +189,7 @@
     <!-- ═══════════════════════════════════════════════════════════════
          PICKUP INFO BAND (dark-green)
          ═══════════════════════════════════════════════════════════════ -->
-    <section class="mt-10 w-full bg-[#075f36]">
+    <section class="mt-10 w-full bg-primary-dark">
       <div class="mx-auto flex max-w-[1440px] flex-col items-center gap-6 px-4 py-10 text-center sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-12 sm:text-left lg:px-8">
         <div>
           <app-eyebrow color="light">Como funciona</app-eyebrow>
@@ -227,7 +228,7 @@
             <a
               [routerLink]="['/store/products']"
               [queryParams]="{ categoryId: link.categoryId }"
-              class="text-sm font-bold text-[#2f8d72] transition hover:text-[#075f36]"
+              class="text-sm font-bold text-primary transition hover:text-primary-dark"
             >
               Ver todo <i class="pi pi-arrow-right ml-1" aria-hidden="true"></i>
             </a>

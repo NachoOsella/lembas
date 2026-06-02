@@ -37,7 +37,7 @@
 
 :host ::ng-deep .app-badge--info {
   color: #075f36;
-  background: #eaf4f1;
+  background: var(--color-mint-wash-lighter, #eaf4f1);
   border-color: rgba(7, 95, 54, 0.14);
 }
 

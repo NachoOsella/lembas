@@ -21,8 +21,8 @@
   padding: 0.4rem 0.9rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 999px;
-  background: #ffffff;
-  color: rgba(0, 0, 0, 0.6);
+  background: transparent;
+  color: rgba(0, 0, 0, 0.65);
   font: 600 0.82rem / 1.8 'Plus Jakarta Sans', system-ui, sans-serif;
   letter-spacing: -0.01em;
   cursor: pointer;
@@ -35,7 +35,7 @@
 
 .catnav-pills__item:hover:not(.catnav-pills__item--active):not(.catnav-pills__item--more) {
   border-color: rgba(47, 141, 114, 0.22);
-  background: rgba(47, 141, 114, 0.04);
+  background: rgba(47, 141, 114, 0.06);
   color: rgba(0, 0, 0, 0.82);
 }
 
@@ -43,7 +43,6 @@
   background: #075f36;
   border-color: #075f36;
   color: #ffffff;
-  box-shadow: 0 1px 3px rgba(7, 95, 54, 0.2);
 }
 
 .catnav-pills__item--more {

@@ -45,7 +45,8 @@
 
 .category-form .ng-invalid {
   border-color: #c82014 !important;
-  box-shadow: 0 0 0 1px #c82014;
+  background: var(--color-red-tint, hsla(4, 82%, 43%, 0.05)) !important;
+  box-shadow: none;
 }
 
 .category-form__alert {
@@ -54,7 +55,7 @@
   gap: 0.5rem;
   padding: 0.75rem 0.875rem;
   border: 1px solid rgba(200, 32, 20, 0.22);
-  border-radius: 0.875rem;
+  border-radius: var(--radius-card, 12px);
   background: rgba(200, 32, 20, 0.06);
   color: #c82014;
   font-size: 0.82rem;

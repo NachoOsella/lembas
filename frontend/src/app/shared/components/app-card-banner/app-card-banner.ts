@@ -49,8 +49,8 @@ export class CardBanner {
   /** Whether the card should be clickable (adds hover effect). @default false */
   readonly clickable = input(false);
 
-  /** Border radius of the card. @default '2rem' */
-  readonly borderRadius = input('2rem');
+  /** Border radius of the card. @default '12px' */
+  readonly borderRadius = input('12px');
 
   /** Padding of the card. @default '2rem' */
   readonly padding = input('2rem');

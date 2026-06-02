@@ -224,7 +224,7 @@
     min-height: auto;
     margin-inline: 0;
     padding: 1rem;
-    border-radius: 1.1rem;
+    border-radius: var(--radius-card, 12px);
     display: flex;
     flex-direction: column;
     align-items: stretch;

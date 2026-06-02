@@ -27,6 +27,7 @@
 :host ::ng-deep .section-card--muted {
   color: rgba(0, 0, 0, 0.87);
   background: #e7dbc0;
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 :host ::ng-deep .section-card--dark {
@@ -51,7 +52,7 @@
 .section-card__title {
   margin: 0;
   color: inherit;
-  font-size: 1.15rem;
+  font-size: 24px;
   font-weight: 700;
   line-height: 1.2;
 }

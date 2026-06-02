@@ -210,7 +210,7 @@
   height: 2.8rem;
   object-fit: cover;
   border: 1px solid rgba(47, 141, 114, 0.14);
-  border-radius: 0.9rem;
+  border-radius: var(--radius-card, 12px);
   background: #f6ead6;
 }
 

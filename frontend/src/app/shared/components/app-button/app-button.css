@@ -134,16 +134,22 @@
 /* ── Success (temporary feedback after successful action) ──────── */
 .app-button--success {
   color: #ffffff;
-  background: #2f8d72;
-  border-color: #2f8d72;
+  background: var(--color-primary-dark, #075f36);
+  border-color: var(--color-primary-dark, #075f36);
   box-shadow:
-    0 0 0.5px rgba(47, 141, 114, 0.12),
-    0 1px 2px rgba(47, 141, 114, 0.14);
+    0 0 0.5px rgba(7, 95, 54, 0.12),
+    0 1px 2px rgba(7, 95, 54, 0.14);
+}
+
+.app-button--success:hover:not(:disabled) {
+  color: #ffffff;
+  background: #05452a;
+  border-color: #05452a;
 }
 
 /* ── Hero (white-on-green CTA for dark feature bands) ────────── */
 .app-button--hero {
-  color: #075f36;
+  color: #2f8d72;
   background: #ffffff;
   border-color: #ffffff;
   box-shadow:
@@ -152,7 +158,7 @@
 }
 
 .app-button--hero:hover:not(:disabled) {
-  color: #075f36;
+  color: #2f8d72;
   background: #f0f9f4;
   border-color: #f0f9f4;
   box-shadow:
@@ -221,9 +227,6 @@
   /* Allow text to display fully */
 }
 
-@media (max-width: 34rem) {
-  :host {
-    display: block;
-    width: 100%;
-  }
-}
+/* Mobile full-width is opt-in via .w-full on the host element.
+   Scoped full-width behavior (e.g. auth forms) should add the
+   utility class at the usage site instead of forcing every button. */

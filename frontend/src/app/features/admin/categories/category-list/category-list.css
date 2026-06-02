@@ -79,7 +79,7 @@
   font-size: clamp(1.9rem, 3.8vw, 3.15rem);
   font-weight: 600;
   line-height: 0.92;
-  letter-spacing: -0.07em;
+  letter-spacing: -0.02em;
 }
 
 .categories-page__hero p:not(.categories-page__eyebrow) {

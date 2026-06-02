@@ -264,7 +264,7 @@
 }
 
 :host ::ng-deep .p-menu .p-menuitem-link:hover {
-  background-color: #f6ead6;
+  background-color: rgba(0, 0, 0, 0.06);
   color: #2f8d72;
 }
 
@@ -296,6 +296,14 @@
     0 0 6px rgba(0, 0, 0, 0.24),
     0 8px 12px rgba(0, 0, 0, 0.14);
   transition: all 0.3s ease;
+}
+
+/* Touch offset: extends the tap target 8px beyond the visual button */
+.app-store-nav__cart::after {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * 0.8rem);
+  border-radius: inherit;
 }
 
 .app-store-nav__cart:active {

@@ -3,18 +3,18 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { form, FormField, submit, required, email, minLength } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
-import { ButtonDirective, ButtonLabel } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 
 import { AuthService, LoginRequest } from '../../../core/services/auth';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { ApiErrorResponse } from '../../../shared/models/api-error';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
+import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
 @Component({
   selector: 'app-login',
-  imports: [ErrorAlert, AppToast, FormField, RouterLink, ButtonDirective, ButtonLabel, InputText],
+  imports: [ErrorAlert, AppToast, FormField, RouterLink, AppButton, InputText],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })

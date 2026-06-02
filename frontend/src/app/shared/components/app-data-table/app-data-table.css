@@ -130,7 +130,7 @@
 :host ::ng-deep .app-data-table .p-paginator-page.p-highlight,
 :host ::ng-deep .app-data-table .p-paginator-page.p-paginator-page-selected {
   color: #2f8d72;
-  background: #dff6ea;
+  background: var(--color-mint-wash-minimal, #dff6ea);
   box-shadow: inset 0 0 0 1px rgba(47, 141, 114, 0.12);
 }
 

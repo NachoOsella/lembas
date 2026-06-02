@@ -14,7 +14,7 @@ import { ProductSummary } from '../../../shared/models/product';
   selector: 'app-home',
   imports: [RouterLink, AppButton, AppEyebrow, CardBanner, ProductGridSkeleton, StoreProductCard, HeroFlowers],
   template: `
-    <div class="home-page min-h-screen overflow-hidden bg-[#f6ead6]">
+    <div class="home-page min-h-screen overflow-hidden bg-canvas">
       <!-- Editorial hero with organic depth -->
       <header
         class="home-hero relative isolate overflow-hidden px-4 py-16 sm:px-6 md:py-24 lg:px-8"
@@ -25,7 +25,7 @@ import { ProductSummary } from '../../../shared/models/product';
           aria-hidden="true"
         ></div>
         <div
-          class="pointer-events-none absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-[#2f8d72]/10 blur-3xl"
+          class="pointer-events-none absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-primary/10 blur-3xl"
           aria-hidden="true"
         ></div>
 
@@ -65,35 +65,35 @@ import { ProductSummary } from '../../../shared/models/product';
           <aside class="hidden lg:block" aria-label="Resumen de compra">
             <div class="home-ticket relative ml-auto max-w-sm">
               <!-- Notches (perforaciones laterales) -->
-              <div class="absolute -left-3 top-20 h-6 w-6 rounded-full bg-[#075f36]"></div>
-              <div class="absolute -right-3 top-20 h-6 w-6 rounded-full bg-[#075f36]"></div>
+              <div class="absolute -left-3 top-20 h-6 w-6 rounded-full bg-primary-dark"></div>
+              <div class="absolute -right-3 top-20 h-6 w-6 rounded-full bg-primary-dark"></div>
 
               <!-- Ticket body -->
               <div class="relative overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
                 <!-- Header -->
-                <div class="border-b-2 border-dashed border-[rgba(7,95,54,0.12)] bg-[#f6fbf7] px-6 py-5">
+                <div class="border-b-2 border-dashed border-[rgba(7,95,54,0.12)] bg-mint-wash-pale px-6 py-5">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
-                      <div class="flex h-9 w-9 items-center justify-center rounded-full bg-[#2f8d72] text-white">
+                      <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
                         <i class="pi pi-ticket text-base" aria-hidden="true"></i>
                       </div>
                       <div>
-                        <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#2f8d72]">
+                        <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
                           Dietética Lembas
                         </p>
-                        <p class="text-xs font-bold text-[rgba(0,0,0,0.87)]">Pedido Simple</p>
+                        <p class="text-xs font-bold text-text">Pedido Simple</p>
                       </div>
                     </div>
                     <div class="text-right">
                       <p class="text-[10px] text-[rgba(0,0,0,0.45)]">N°</p>
-                      <p class="font-mono text-sm font-bold text-[#2f8d72]">#001</p>
+                      <p class="font-mono text-sm font-bold text-primary">#001</p>
                     </div>
                   </div>
                 </div>
 
                 <!-- Pickup badge -->
                 <div class="flex justify-center border-b border-dashed border-[rgba(7,95,54,0.08)] py-3">
-                  <span class="inline-flex items-center gap-1.5 rounded-full bg-[#075f36] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white">
+                  <span class="inline-flex items-center gap-1.5 rounded-full bg-primary-dark px-4 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white">
                     <i class="pi pi-map-marker text-[10px]" aria-hidden="true"></i>
                     Retiro en sucursal
                   </span>
@@ -106,37 +106,37 @@ import { ProductSummary } from '../../../shared/models/product';
                   </p>
                   <ul class="space-y-4">
                     <li class="flex items-start gap-3">
-                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72]">
+                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary">
                         <i class="pi pi-search text-xs" aria-hidden="true"></i>
                       </div>
                       <div class="flex-1 pt-0.5">
-                        <p class="text-sm font-semibold text-[rgba(0,0,0,0.87)]">Explorá</p>
-                        <p class="text-xs text-[rgba(0,0,0,0.58)]">Navegá el catálogo y filtrá por categoría</p>
+                        <p class="text-sm font-semibold text-text">Explorá</p>
+                        <p class="text-xs text-text-muted">Navegá el catálogo y filtrá por categoría</p>
                       </div>
                     </li>
                     <li class="flex items-start gap-3">
-                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72]">
+                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary">
                         <i class="pi pi-shopping-cart text-xs" aria-hidden="true"></i>
                       </div>
                       <div class="flex-1 pt-0.5">
-                        <p class="text-sm font-semibold text-[rgba(0,0,0,0.87)]">Armá tu pedido</p>
-                        <p class="text-xs text-[rgba(0,0,0,0.58)]">Agregá productos y confirmá el pago</p>
+                        <p class="text-sm font-semibold text-text">Armá tu pedido</p>
+                        <p class="text-xs text-text-muted">Agregá productos y confirmá el pago</p>
                       </div>
                     </li>
                     <li class="flex items-start gap-3">
-                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72]">
+                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary">
                         <i class="pi pi-box text-xs" aria-hidden="true"></i>
                       </div>
                       <div class="flex-1 pt-0.5">
-                        <p class="text-sm font-semibold text-[rgba(0,0,0,0.87)]">Retirá</p>
-                        <p class="text-xs text-[rgba(0,0,0,0.58)]">Pasá a buscar sin filas ni esperas</p>
+                        <p class="text-sm font-semibold text-text">Retirá</p>
+                        <p class="text-xs text-text-muted">Pasá a buscar sin filas ni esperas</p>
                       </div>
                     </li>
                   </ul>
                 </div>
 
                 <!-- Footer (barcode decorativo) -->
-                <div class="border-t-2 border-dashed border-[rgba(7,95,54,0.12)] bg-[#f6fbf7] px-6 py-4">
+                <div class="border-t-2 border-dashed border-[rgba(7,95,54,0.12)] bg-mint-wash-pale px-6 py-4">
                   <div class="flex items-center justify-between">
                     <div class="flex gap-0.5">
                       <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
@@ -180,7 +180,7 @@ import { ProductSummary } from '../../../shared/models/product';
             </div>
             <a
               routerLink="/store/products"
-              class="inline-flex items-center gap-2 text-sm font-bold text-[#2f8d72] transition hover:text-[#075f36]"
+              class="inline-flex items-center gap-2 text-sm font-bold text-primary transition hover:text-primary-dark"
             >
               Ver catálogo completo <i class="pi pi-arrow-right" aria-hidden="true"></i>
             </a>
@@ -243,14 +243,14 @@ import { ProductSummary } from '../../../shared/models/product';
                 >
                   <div class="text-center">
                     <span
-                      class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72] shadow-[0_0_0.5px_rgba(47,141,114,0.12),0_1px_2px_rgba(47,141,114,0.14)]"
+                      class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-mint-wash text-primary shadow-[0_0_0.5px_rgba(47,141,114,0.12),0_1px_2px_rgba(47,141,114,0.14)]"
                     >
                       <i [class]="benefit.icon + ' text-3xl'" aria-hidden="true"></i>
                     </span>
-                    <h3 class="mt-6 text-xl font-bold tracking-[-0.01em] text-[rgba(0,0,0,0.87)]">
+                    <h3 class="mt-6 text-xl font-bold tracking-[-0.01em] text-text">
                       {{ benefit.title }}
                     </h3>
-                    <p class="mt-3 text-base leading-relaxed text-[rgba(0,0,0,0.58)]">
+                    <p class="mt-3 text-base leading-relaxed text-text-muted">
                       {{ benefit.description }}
                     </p>
                   </div>
@@ -267,14 +267,14 @@ import { ProductSummary } from '../../../shared/models/product';
                 >
                   <div class="text-center">
                     <span
-                      class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#d7eadf] text-[#2f8d72] shadow-[0_0_0.5px_rgba(47,141,114,0.12),0_1px_2px_rgba(47,141,114,0.14)]"
+                      class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-mint-wash text-primary shadow-[0_0_0.5px_rgba(47,141,114,0.12),0_1px_2px_rgba(47,141,114,0.14)]"
                     >
                       <i [class]="benefit.icon + ' text-3xl'" aria-hidden="true"></i>
                     </span>
-                    <h3 class="mt-6 text-xl font-bold tracking-[-0.01em] text-[rgba(0,0,0,0.87)]">
+                    <h3 class="mt-6 text-xl font-bold tracking-[-0.01em] text-text">
                       {{ benefit.title }}
                     </h3>
-                    <p class="mt-3 text-base leading-relaxed text-[rgba(0,0,0,0.58)]">
+                    <p class="mt-3 text-base leading-relaxed text-text-muted">
                       {{ benefit.description }}
                     </p>
                   </div>
@@ -301,10 +301,10 @@ import { ProductSummary } from '../../../shared/models/product';
             <div class="mt-6 flex items-center justify-center gap-3">
               <div class="flex gap-1">
                 @for (star of [1, 2, 3, 4, 5]; track star) {
-                  <i class="pi pi-star-fill text-[#2f8d72] text-lg" aria-hidden="true"></i>
+                  <i class="pi pi-star-fill text-primary text-lg" aria-hidden="true"></i>
                 }
               </div>
-              <span class="text-base font-bold text-[rgba(0,0,0,0.87)]">4.8</span>
+              <span class="text-base font-bold text-text">4.8</span>
               <span class="text-sm text-[rgba(0,0,0,0.45)]">· 127 reseñas en Google</span>
             </div>
           </div>
@@ -322,12 +322,12 @@ import { ProductSummary } from '../../../shared/models/product';
                 >
                   <div class="flex items-center gap-4">
                     <span
-                      class="flex h-12 w-12 items-center justify-center rounded-full bg-[#075f36] text-base font-bold text-white shadow-[0_0_0.5px_rgba(7,95,54,0.12),0_1px_2px_rgba(7,95,54,0.14)]"
+                      class="flex h-12 w-12 items-center justify-center rounded-full bg-primary-dark text-base font-bold text-white shadow-[0_0_0.5px_rgba(7,95,54,0.12),0_1px_2px_rgba(7,95,54,0.14)]"
                     >
                       {{ review.name.charAt(0) }}
                     </span>
                     <div>
-                      <p class="text-base font-bold text-[rgba(0,0,0,0.87)]">{{ review.name }}</p>
+                      <p class="text-base font-bold text-text">{{ review.name }}</p>
                       <p class="text-xs text-[rgba(0,0,0,0.45)]">{{ review.date }}</p>
                     </div>
                   </div>
@@ -337,13 +337,13 @@ import { ProductSummary } from '../../../shared/models/product';
                         class="pi text-sm"
                         [class.pi-star-fill]="star <= review.rating"
                         [class.pi-star]="star > review.rating"
-                        [class.text-[#2f8d72]]="star <= review.rating"
+                        [class.text-primary]="star <= review.rating"
                         [class.text-[rgba(0,0,0,0.15)]]="star > review.rating"
                         aria-hidden="true"
                       ></i>
                     }
                   </div>
-                  <p class="mt-4 text-base leading-relaxed text-[rgba(0,0,0,0.58)]">
+                  <p class="mt-4 text-base leading-relaxed text-text-muted">
                     "{{ review.text }}"
                   </p>
                 </app-card-banner>
@@ -359,12 +359,12 @@ import { ProductSummary } from '../../../shared/models/product';
                 >
                   <div class="flex items-center gap-4">
                     <span
-                      class="flex h-12 w-12 items-center justify-center rounded-full bg-[#075f36] text-base font-bold text-white shadow-[0_0_0.5px_rgba(7,95,54,0.12),0_1px_2px_rgba(7,95,54,0.14)]"
+                      class="flex h-12 w-12 items-center justify-center rounded-full bg-primary-dark text-base font-bold text-white shadow-[0_0_0.5px_rgba(7,95,54,0.12),0_1px_2px_rgba(7,95,54,0.14)]"
                     >
                       {{ review.name.charAt(0) }}
                     </span>
                     <div>
-                      <p class="text-base font-bold text-[rgba(0,0,0,0.87)]">{{ review.name }}</p>
+                      <p class="text-base font-bold text-text">{{ review.name }}</p>
                       <p class="text-xs text-[rgba(0,0,0,0.45)]">{{ review.date }}</p>
                     </div>
                   </div>
@@ -374,13 +374,13 @@ import { ProductSummary } from '../../../shared/models/product';
                         class="pi text-sm"
                         [class.pi-star-fill]="star <= review.rating"
                         [class.pi-star]="star > review.rating"
-                        [class.text-[#2f8d72]]="star <= review.rating"
+                        [class.text-primary]="star <= review.rating"
                         [class.text-[rgba(0,0,0,0.15)]]="star > review.rating"
                         aria-hidden="true"
                       ></i>
                     }
                   </div>
-                  <p class="mt-4 text-base leading-relaxed text-[rgba(0,0,0,0.58)]">
+                  <p class="mt-4 text-base leading-relaxed text-text-muted">
                     "{{ review.text }}"
                   </p>
                 </app-card-banner>
