@@ -3,6 +3,7 @@
 
 @theme {
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-script: 'Caveat', 'Plus Jakarta Sans', cursive;
   --tracking-tight: -0.01em;
 
   --color-primary: #2f8d72;
