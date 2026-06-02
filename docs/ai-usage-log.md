@@ -166,3 +166,4 @@
 ## 2026-06-02
 
 - `frontend/src/app/shared/components/{app-modal,confirm-dialog}/` -- corregidos dialogos PrimeNG para renderizarse con `appendTo='body'`, evitando que el overlay quede limitado por contenedores transformados por animaciones de ruta; los estilos se hicieron globales para conservar el aspecto al portalizar.
+- `frontend/src/styles.css` -- ajustada la animacion global de rutas para no conservar `transform` al finalizar, evitando que modales custom fixed queden centrados respecto al alto del catalogo en vez del viewport visible.

@@ -101,6 +101,8 @@
    Shared route/component entrance motion
    Matches the public home reveal timing, but keeps routed pages fully opaque
    while moving so the canvas never flashes white between navigations.
+   The animation must not keep its final transform; otherwise fixed overlays
+   inside routed pages are positioned relative to the transformed page.
    --------------------------------------------------------------------------- */
 :root {
   --lembas-motion-duration: 0.8s;
@@ -110,7 +112,7 @@
 
 :where(router-outlet + *:not(app-home)) {
   display: block;
-  animation: lembas-soft-rise var(--lembas-motion-duration) var(--lembas-motion-ease) both;
+  animation: lembas-soft-rise var(--lembas-motion-duration) var(--lembas-motion-ease);
 }
 
 @keyframes lembas-soft-rise {
