@@ -1,13 +1,15 @@
-import { Component, input, model, output } from '@angular/core';
+import { Component, ViewEncapsulation, input, model, output } from '@angular/core';
 import { Dialog } from 'primeng/dialog';
-import { Button } from 'primeng/button';
 
 @Component({
   selector: 'app-modal',
+  host: { class: 'app-modal-host' },
   imports: [Dialog],
   templateUrl: './app-modal.html',
   styleUrl: './app-modal.css',
+  encapsulation: ViewEncapsulation.None,
 })
+/** Shared PrimeNG dialog wrapper used by feature forms and admin modals. */
 export class AppModal {
   readonly visible = model(false);
   readonly title = input<string>('');
