@@ -75,7 +75,8 @@ export class UserForm {
     if (!this.formSubmitted()) return '';
     const email = this.formEmail().trim();
     if (!email) return 'El email es obligatorio.';
-    if (!UserForm.EMAIL_REGEX.test(email)) return 'Ingrese un email valido (ej: correo@ejemplo.com).';
+    if (!UserForm.EMAIL_REGEX.test(email))
+      return 'Ingrese un email valido (ej: correo@ejemplo.com).';
     return '';
   });
 
@@ -350,7 +351,7 @@ export class UserForm {
         apiError,
         this.translateField,
         'Revise los datos ingresados.',
-        this.translateValidationMessage
+        this.translateValidationMessage,
       );
     }
 

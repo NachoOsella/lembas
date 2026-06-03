@@ -1,5 +1,10 @@
 # Registro de uso de IA
 
+## 2026-06-03
+
+- `backend/src/main/resources/db/migration/V16__seed_demo_users.sql`, `backend/src/test/java/com/dietetica/lembas/AbstractIntegrationTest.java`, `frontend/proxy.conf.json`, `frontend/package.json` -- completadas subtasks de S1-US12: usuarios demo empleado/customer, proxy dev unificado, base reusable de integration tests y scripts npm de testing/lint.
+- `backend/src/test/java/com/dietetica/lembas/catalog/repository/ProductRepositoryTest.java`, `frontend/src/app/shared/components/app-store-{footer,nav}/`, `frontend/src/app/features/admin/users/user-form/` -- corregidos tests afectados por seeds demo, plantillas actuales y miembros protegidos; suites backend/frontend quedan verdes.
+
 ## 2026-05-21
 
 - `backend/src/main/resources/db/migration/V1__core.sql`, `V2__catalog.sql` -- migraciones iniciales Flyway para S1-US03 (LEMBAS-73, LEMBAS-74, LEMBAS-75): sucursales, usuarios con CHECK de rol, categorias, productos con CHECK de online_status y sale_price.

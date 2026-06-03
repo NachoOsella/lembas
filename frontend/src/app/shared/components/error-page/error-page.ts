@@ -37,9 +37,7 @@ import { map } from 'rxjs';
             <a [routerLink]="primaryRoute()" class="btn-primary">
               {{ primaryLabel() }}
             </a>
-            <a routerLink="/store" class="btn-secondary">
-              Ir al inicio
-            </a>
+            <a routerLink="/store" class="btn-secondary"> Ir al inicio </a>
           </div>
         </div>
 
@@ -170,7 +168,9 @@ import { map } from 'rxjs';
     .btn-primary {
       background: #2f8d72;
       color: white;
-      box-shadow: 0 0 0.5px rgba(47, 141, 114, 0.12), 0 1px 2px rgba(47, 141, 114, 0.14);
+      box-shadow:
+        0 0 0.5px rgba(47, 141, 114, 0.12),
+        0 1px 2px rgba(47, 141, 114, 0.14);
     }
 
     .btn-primary:hover {
@@ -227,7 +227,9 @@ import { map } from 'rxjs';
       text-decoration: none;
       transition: all 0.2s ease;
       border: 1px solid rgba(47, 141, 114, 0.08);
-      box-shadow: 0 0 0.5px rgba(0, 0, 0, 0.14), 0 1px 1px rgba(0, 0, 0, 0.24);
+      box-shadow:
+        0 0 0.5px rgba(0, 0, 0, 0.14),
+        0 1px 1px rgba(0, 0, 0, 0.24);
     }
 
     .suggestion-card:hover {

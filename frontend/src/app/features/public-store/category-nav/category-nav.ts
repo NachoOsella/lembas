@@ -25,8 +25,8 @@ export class CategoryNav {
   protected readonly panelOpen = signal(false);
   protected readonly searchTerm = signal('');
 
-  protected readonly selectedCategory = computed(() =>
-    this.categories().find((c) => c.id === this.selectedCategoryId()) ?? null,
+  protected readonly selectedCategory = computed(
+    () => this.categories().find((c) => c.id === this.selectedCategoryId()) ?? null,
   );
 
   protected readonly totalProductCount = computed(() =>
@@ -79,6 +79,10 @@ export class CategoryNav {
   }
 
   private normalize(v: string): string {
-    return v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    return v
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 }

@@ -1,8 +1,4 @@
-<div
-  class="product-grid-skeleton"
-  role="status"
-  aria-label="Cargando productos"
->
+<div class="product-grid-skeleton" role="status" aria-label="Cargando productos">
   @for (_ of skeletonItems(); track $index) {
     <div class="product-grid-skeleton__item">
       <app-catalog-skeleton-card />

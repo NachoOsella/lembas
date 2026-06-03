@@ -52,9 +52,10 @@ describe('AppStoreNav', () => {
     fixture.componentRef.setInput('isLoggedIn', false);
     fixture.detectChanges();
 
-    const cta = fixture.nativeElement.querySelector('.app-store-nav__cta');
-    expect(cta).toBeTruthy();
-    expect(cta.textContent.trim()).toBe('Crear cuenta');
+    const authActions = fixture.nativeElement.querySelector('.app-store-nav__auth');
+    expect(authActions).toBeTruthy();
+    expect(authActions.textContent).toContain('Ingresar');
+    expect(authActions.textContent).toContain('Crear cuenta');
   });
 
   it('should show user name when logged in', () => {

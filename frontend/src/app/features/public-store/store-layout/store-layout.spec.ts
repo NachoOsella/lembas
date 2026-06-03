@@ -36,7 +36,11 @@ describe('StoreLayout', () => {
 
     TestBed.configureTestingModule({
       imports: [StoreLayout],
-      providers: [provideRouter([]), MessageService, { provide: AuthService, useValue: mockAuthService }],
+      providers: [
+        provideRouter([]),
+        MessageService,
+        { provide: AuthService, useValue: mockAuthService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(StoreLayout);
@@ -95,7 +99,9 @@ describe('StoreLayout', () => {
     component.onSearch('granola');
     await fixture.whenStable();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/store/products'], { queryParams: { q: 'granola' } });
+    expect(navigateSpy).toHaveBeenCalledWith(['/store/products'], {
+      queryParams: { q: 'granola' },
+    });
   });
 
   it('should not navigate on empty search query', async () => {

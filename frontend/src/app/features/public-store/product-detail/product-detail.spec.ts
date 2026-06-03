@@ -246,7 +246,9 @@ describe('ProductDetail', () => {
     const before = (component as any).quantity() as number;
 
     // Find and click the increment button in the quantity stepper
-    const incrementBtn = fixture.nativeElement.querySelector('app-quantity-stepper .quantity-stepper__btn:last-child');
+    const incrementBtn = fixture.nativeElement.querySelector(
+      'app-quantity-stepper .quantity-stepper__btn:last-child',
+    );
     incrementBtn?.click();
     fixture.detectChanges();
 
@@ -259,7 +261,9 @@ describe('ProductDetail', () => {
     (component as any).quantity.set(3);
     fixture.detectChanges();
 
-    const decrementBtn = fixture.nativeElement.querySelector('app-quantity-stepper .quantity-stepper__btn:first-child');
+    const decrementBtn = fixture.nativeElement.querySelector(
+      'app-quantity-stepper .quantity-stepper__btn:first-child',
+    );
     decrementBtn?.click();
     fixture.detectChanges();
     expect((component as any).quantity()).toBe(2);

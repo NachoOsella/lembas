@@ -7,6 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:watch": "ng test --watch",
+    "lint": "prettier --write \"src/**/*.{ts,html,css}\"",
     "docker:up": "docker compose -f ../docker/compose.yml --env-file ../docker/.env up -d db",
     "docker:down": "docker compose -f ../docker/compose.yml --env-file ../docker/.env down"
   },

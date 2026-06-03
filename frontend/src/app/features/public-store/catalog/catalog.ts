@@ -8,7 +8,10 @@ import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { AppPagination } from '../../../shared/components/app-pagination/app-pagination';
-import { ProductGrid, ProductGridAddToCartEvent } from '../../../shared/components/product-grid/product-grid';
+import {
+  ProductGrid,
+  ProductGridAddToCartEvent,
+} from '../../../shared/components/product-grid/product-grid';
 import { HeroFlowers } from '../../../shared/components/hero-flowers/hero-flowers';
 import { CategoryNav } from '../category-nav/category-nav';
 
@@ -17,7 +20,16 @@ const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-catalog',
-  imports: [EmptyState, ErrorAlert, AppEyebrow, AppPagination, ProductGrid, ProductGridSkeleton, HeroFlowers, CategoryNav],
+  imports: [
+    EmptyState,
+    ErrorAlert,
+    AppEyebrow,
+    AppPagination,
+    ProductGrid,
+    ProductGridSkeleton,
+    HeroFlowers,
+    CategoryNav,
+  ],
   templateUrl: './catalog.html',
   styleUrl: './catalog.css',
 })

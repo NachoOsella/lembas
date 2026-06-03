@@ -1,6 +1,6 @@
 package com.dietetica.lembas.auth.integration;
 
-import com.dietetica.lembas.LembasBackendApplication;
+import com.dietetica.lembas.AbstractIntegrationTest;
 import com.dietetica.lembas.auth.dto.AuthResponse;
 import com.dietetica.lembas.auth.dto.RegisterRequest;
 import com.dietetica.lembas.auth.service.AuthService;
@@ -12,14 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import java.util.Optional;
 
@@ -35,17 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *
  * <p>Naming convention: {@code Should_expected_when_condition}.</p>
  */
-@SpringBootTest(classes = LembasBackendApplication.class)
-@Testcontainers
-@ActiveProfiles("test")
-class AuthRegistrationIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    @SuppressWarnings("rawtypes")
-    private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer(
-            DockerImageName.parse("postgres:16-alpine")
-    );
+class AuthRegistrationIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private AuthService authService;

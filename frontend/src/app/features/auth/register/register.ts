@@ -163,7 +163,7 @@ export class Register {
         apiError,
         this.translateFieldName,
         'Verifica los datos ingresados.',
-        this.translateValidationMessage
+        this.translateValidationMessage,
       );
     }
 

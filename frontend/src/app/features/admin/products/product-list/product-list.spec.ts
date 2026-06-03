@@ -234,7 +234,9 @@ describe('ProductList', () => {
     } as unknown as import('../../../../shared/models/product').ProductSummary;
     const actions = (
       component as unknown as {
-        statusActions: (p: import('../../../../shared/models/product').ProductSummary) => { label: string }[];
+        statusActions: (
+          p: import('../../../../shared/models/product').ProductSummary,
+        ) => { label: string }[];
       }
     ).statusActions(product);
 
@@ -363,11 +365,14 @@ describe('ProductList', () => {
     const addSpy = vi.spyOn(messageService, 'add');
 
     productService.deleteProduct.mockReturnValueOnce(
-      throwError(() => new HttpErrorResponse({
-        error: { code: 'PRODUCT_HAS_ORDERS' },
-        status: 409,
-        statusText: 'Conflict',
-      })),
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            error: { code: 'PRODUCT_HAS_ORDERS' },
+            status: 409,
+            statusText: 'Conflict',
+          }),
+      ),
     );
 
     (
@@ -389,11 +394,14 @@ describe('ProductList', () => {
     const addSpy = vi.spyOn(messageService, 'add');
 
     productService.deleteProduct.mockReturnValueOnce(
-      throwError(() => new HttpErrorResponse({
-        error: { code: 'UNKNOWN_ERROR' },
-        status: 500,
-        statusText: 'Internal Server Error',
-      })),
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            error: { code: 'UNKNOWN_ERROR' },
+            status: 500,
+            statusText: 'Internal Server Error',
+          }),
+      ),
     );
 
     (
@@ -417,11 +425,14 @@ describe('ProductList', () => {
     const addSpy = vi.spyOn(messageService, 'add');
 
     productService.updateProductStatus.mockReturnValueOnce(
-      throwError(() => new HttpErrorResponse({
-        error: { code: 'PRODUCT_STATUS_INVALID_TRANSITION' },
-        status: 409,
-        statusText: 'Conflict',
-      })),
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            error: { code: 'PRODUCT_STATUS_INVALID_TRANSITION' },
+            status: 409,
+            statusText: 'Conflict',
+          }),
+      ),
     );
 
     const product = {
@@ -448,7 +459,8 @@ describe('ProductList', () => {
     expect(addSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         severity: 'error',
-        detail: 'El producto ya no permite ese cambio de estado. Actualiza la tabla e intenta nuevamente.',
+        detail:
+          'El producto ya no permite ese cambio de estado. Actualiza la tabla e intenta nuevamente.',
       }),
     );
   });
@@ -458,11 +470,14 @@ describe('ProductList', () => {
     const addSpy = vi.spyOn(messageService, 'add');
 
     productService.updateProductStatus.mockReturnValueOnce(
-      throwError(() => new HttpErrorResponse({
-        error: { code: 'UNKNOWN_ERROR' },
-        status: 500,
-        statusText: 'Internal Server Error',
-      })),
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            error: { code: 'UNKNOWN_ERROR' },
+            status: 500,
+            statusText: 'Internal Server Error',
+          }),
+      ),
     );
 
     const product = {

@@ -17,7 +17,17 @@ import { QuantityStepper } from '../../../shared/components/quantity-stepper/qua
 
 @Component({
   selector: 'app-product-detail',
-  imports: [RouterLink, AppBadge, AppBreadcrumb, AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ProductGrid, QuantityStepper],
+  imports: [
+    RouterLink,
+    AppBadge,
+    AppBreadcrumb,
+    AppButton,
+    AppEyebrow,
+    ErrorAlert,
+    LoadingSpinner,
+    ProductGrid,
+    QuantityStepper,
+  ],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.css',
 })
@@ -145,10 +155,7 @@ export class ProductDetail implements OnInit {
   /** Breadcrumb items for navigation trail: Catalogo / {Product name}. */
   protected readonly breadcrumbItems = computed<MenuItem[]>(() => {
     const p = this.product();
-    return [
-      { label: 'Catalogo', routerLink: '/store/products' },
-      { label: p?.name ?? 'Producto' },
-    ];
+    return [{ label: 'Catalogo', routerLink: '/store/products' }, { label: p?.name ?? 'Producto' }];
   });
 
   /** Home item for the breadcrumb. */

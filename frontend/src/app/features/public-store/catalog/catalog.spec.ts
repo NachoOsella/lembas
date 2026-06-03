@@ -155,7 +155,8 @@ describe('Catalog', () => {
 
   it('should render quick category pills plus the full selector action', () => {
     configure();
-    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav-pills__item');
+    const pills: NodeListOf<HTMLElement> =
+      fixture.nativeElement.querySelectorAll('.catnav-pills__item');
 
     expect(pills.length).toBe(5); // Todas + 3 quick + Todas las categorías
     expect(pills[0].textContent?.trim()).toContain('Todas');
@@ -166,14 +167,16 @@ describe('Catalog', () => {
 
   it('should mark "Todas" as active by default', () => {
     configure();
-    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav-pills__item');
+    const pills: NodeListOf<HTMLElement> =
+      fixture.nativeElement.querySelectorAll('.catnav-pills__item');
     expect(pills[0].classList.contains('catnav-pills__item--active')).toBe(true);
   });
 
   it('should select a category on pill click', () => {
     configure();
 
-    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav-pills__item');
+    const pills: NodeListOf<HTMLElement> =
+      fixture.nativeElement.querySelectorAll('.catnav-pills__item');
     const supplements = Array.from(pills).find((pill) => pill.textContent?.includes('Suplementos'));
     supplements?.click();
     fixture.detectChanges();
@@ -189,7 +192,8 @@ describe('Catalog', () => {
     (c['selectedCategoryId'] as { set: (v: number | null) => void }).set(1);
     fixture.detectChanges();
 
-    const pills: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.catnav-pills__item');
+    const pills: NodeListOf<HTMLElement> =
+      fixture.nativeElement.querySelectorAll('.catnav-pills__item');
     pills[0].click();
     fixture.detectChanges();
 
@@ -252,7 +256,9 @@ describe('Catalog', () => {
     // Since getProducts returns a Subject that never emits, loading stays true.
     fixture.detectChanges();
 
-    const skeleton: HTMLElement | null = fixture.nativeElement.querySelector('app-product-grid-skeleton');
+    const skeleton: HTMLElement | null = fixture.nativeElement.querySelector(
+      'app-product-grid-skeleton',
+    );
     expect(skeleton).toBeTruthy();
   });
 

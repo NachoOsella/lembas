@@ -9,11 +9,7 @@
   </div>
 
   @if (actionLabel()) {
-    <app-button
-      [variant]="'primary'"
-      [size]="'md'"
-      (click)="onAction()"
-    >
+    <app-button [variant]="'primary'" [size]="'md'" (click)="onAction()">
       {{ actionLabel() }}
     </app-button>
   }

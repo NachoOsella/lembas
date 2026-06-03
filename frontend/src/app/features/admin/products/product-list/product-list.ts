@@ -291,13 +291,13 @@ export class ProductList {
       error: (error: unknown) => {
         this.deleting.set(false);
         this.productToDelete.set(null);
-        
+
         const apiError = getApiError(error);
         const detail = this.errorMapping.getMessage(
           apiError?.code ?? '',
           'No se pudo eliminar el producto. Intenta nuevamente.',
         );
-        
+
         this.messageService.add({
           severity: 'error',
           summary: 'Error al eliminar',

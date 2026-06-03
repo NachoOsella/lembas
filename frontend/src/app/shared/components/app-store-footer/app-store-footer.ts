@@ -35,14 +35,10 @@ export class AppStoreFooter {
   readonly logoUrl = input<string>('/brand/lembas-icon.svg?v=4');
 
   /** Internal (router) links rendered in the "Tienda" column. */
-  protected readonly internalLinks = computed(() =>
-    this.links().filter((l) => !l.external),
-  );
+  protected readonly internalLinks = computed(() => this.links().filter((l) => !l.external));
 
   /** External links rendered as social icon buttons on the right. */
-  protected readonly externalLinks = computed(() =>
-    this.links().filter((l) => l.external),
-  );
+  protected readonly externalLinks = computed(() => this.links().filter((l) => l.external));
 
   /** PrimeIcons class for a given social URL. Falls back to a generic external icon. */
   protected iconForPath(path: string): string {

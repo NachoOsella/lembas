@@ -12,7 +12,15 @@ import { ProductSummary } from '../../../shared/models/product';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, AppButton, AppEyebrow, CardBanner, ProductGridSkeleton, StoreProductCard, HeroFlowers],
+  imports: [
+    RouterLink,
+    AppButton,
+    AppEyebrow,
+    CardBanner,
+    ProductGridSkeleton,
+    StoreProductCard,
+    HeroFlowers,
+  ],
   template: `
     <div class="home-page min-h-screen overflow-hidden bg-canvas">
       <!-- Editorial hero with organic depth -->
@@ -67,16 +75,24 @@ import { ProductSummary } from '../../../shared/models/product';
           <aside class="home-ticket-stage hidden lg:block" aria-label="Resumen de compra">
             <div class="home-ticket relative ml-auto max-w-sm">
               <!-- Ticket body -->
-              <div class="home-ticket__body relative overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+              <div
+                class="home-ticket__body relative overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
+              >
                 <!-- Header -->
-                <div class="border-b-2 border-dashed border-[rgba(7,95,54,0.12)] bg-mint-wash-pale px-6 py-5">
+                <div
+                  class="border-b-2 border-dashed border-[rgba(7,95,54,0.12)] bg-mint-wash-pale px-6 py-5"
+                >
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
-                      <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
+                      <div
+                        class="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white"
+                      >
                         <i class="pi pi-ticket text-base" aria-hidden="true"></i>
                       </div>
                       <div>
-                        <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                        <p
+                          class="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary"
+                        >
                           Dietética Lembas
                         </p>
                         <p class="text-xs font-bold text-text">Pedido Simple</p>
@@ -90,8 +106,12 @@ import { ProductSummary } from '../../../shared/models/product';
                 </div>
 
                 <!-- Pickup badge -->
-                <div class="flex justify-center border-b border-dashed border-[rgba(7,95,54,0.08)] py-3">
-                  <span class="inline-flex items-center gap-1.5 rounded-full bg-primary-dark px-4 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white">
+                <div
+                  class="flex justify-center border-b border-dashed border-[rgba(7,95,54,0.08)] py-3"
+                >
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-full bg-primary-dark px-4 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white"
+                  >
                     <i class="pi pi-map-marker text-[10px]" aria-hidden="true"></i>
                     Retiro en sucursal
                   </span>
@@ -99,21 +119,29 @@ import { ProductSummary } from '../../../shared/models/product';
 
                 <!-- Steps -->
                 <div class="px-6 py-5">
-                  <p class="mb-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-[rgba(0,0,0,0.45)]">
+                  <p
+                    class="mb-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-[rgba(0,0,0,0.45)]"
+                  >
                     Cómo funciona
                   </p>
                   <ul class="space-y-4">
                     <li class="flex items-start gap-3">
-                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary">
+                      <div
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
+                      >
                         <i class="pi pi-search text-xs" aria-hidden="true"></i>
                       </div>
                       <div class="flex-1 pt-0.5">
                         <p class="text-sm font-semibold text-text">Explorá</p>
-                        <p class="text-xs text-text-muted">Navegá el catálogo y filtrá por categoría</p>
+                        <p class="text-xs text-text-muted">
+                          Navegá el catálogo y filtrá por categoría
+                        </p>
                       </div>
                     </li>
                     <li class="flex items-start gap-3">
-                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary">
+                      <div
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
+                      >
                         <i class="pi pi-shopping-cart text-xs" aria-hidden="true"></i>
                       </div>
                       <div class="flex-1 pt-0.5">
@@ -122,7 +150,9 @@ import { ProductSummary } from '../../../shared/models/product';
                       </div>
                     </li>
                     <li class="flex items-start gap-3">
-                      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary">
+                      <div
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
+                      >
                         <i class="pi pi-box text-xs" aria-hidden="true"></i>
                       </div>
                       <div class="flex-1 pt-0.5">
@@ -134,7 +164,9 @@ import { ProductSummary } from '../../../shared/models/product';
                 </div>
 
                 <!-- Footer (barcode decorativo) -->
-                <div class="border-t-2 border-dashed border-[rgba(7,95,54,0.12)] bg-mint-wash-pale px-6 py-4">
+                <div
+                  class="border-t-2 border-dashed border-[rgba(7,95,54,0.12)] bg-mint-wash-pale px-6 py-4"
+                >
                   <div class="flex items-center justify-between">
                     <div class="home-barcode flex gap-0.5">
                       <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
@@ -166,7 +198,9 @@ import { ProductSummary } from '../../../shared/models/product';
           class="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10"
           aria-labelledby="home-products-title"
         >
-          <div class="home-section-reveal mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div
+            class="home-section-reveal mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+          >
             <div>
               <app-eyebrow color="green">Seleccion curada</app-eyebrow>
               <h2
@@ -185,7 +219,9 @@ import { ProductSummary } from '../../../shared/models/product';
           </div>
 
           @if (featuredLoading()) {
-            <div class="rounded-xl border border-[rgba(7,95,54,0.08)] bg-white p-5 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.24)]">
+            <div
+              class="rounded-xl border border-[rgba(7,95,54,0.08)] bg-white p-5 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.24)]"
+            >
               <app-product-grid-skeleton [count]="6" />
             </div>
           } @else if (featuredProducts().length > 0) {
@@ -309,7 +345,9 @@ import { ProductSummary } from '../../../shared/models/product';
 
           <!-- Mobile: infinite marquee / Desktop: grid -->
           <div class="home-reviews-marquee -mx-4 sm:mx-0">
-            <div class="home-reviews-marquee__track flex sm:grid sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+            <div
+              class="home-reviews-marquee__track flex sm:grid sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
+            >
               @for (review of reviews; track 'a-' + review.name) {
                 <app-card-banner
                   borderRadius="12px"
@@ -341,9 +379,7 @@ import { ProductSummary } from '../../../shared/models/product';
                       ></i>
                     }
                   </div>
-                  <p class="mt-4 text-base leading-relaxed text-text-muted">
-                    "{{ review.text }}"
-                  </p>
+                  <p class="mt-4 text-base leading-relaxed text-text-muted">"{{ review.text }}"</p>
                 </app-card-banner>
               }
               @for (review of reviews; track 'b-' + review.name) {
@@ -378,9 +414,7 @@ import { ProductSummary } from '../../../shared/models/product';
                       ></i>
                     }
                   </div>
-                  <p class="mt-4 text-base leading-relaxed text-text-muted">
-                    "{{ review.text }}"
-                  </p>
+                  <p class="mt-4 text-base leading-relaxed text-text-muted">"{{ review.text }}"</p>
                 </app-card-banner>
               }
             </div>
@@ -404,20 +438,17 @@ export class Home implements OnInit {
     {
       icon: 'pi pi-inbox',
       title: 'Retiro sin filas',
-      description:
-        'Armá tu pedido online y passá a buscar por sucursal cuando te quede cómodo.',
+      description: 'Armá tu pedido online y passá a buscar por sucursal cuando te quede cómodo.',
     },
     {
       icon: 'pi pi-verified',
       title: 'Productos curados',
-      description:
-        'Seleccionados por expertos en alimentación saludable y bienestar natural.',
+      description: 'Seleccionados por expertos en alimentación saludable y bienestar natural.',
     },
     {
       icon: 'pi pi-shield',
       title: 'Pago seguro',
-      description:
-        'Mercado Pago con todos los medios de pago. Tu información está protegida.',
+      description: 'Mercado Pago con todos los medios de pago. Tu información está protegida.',
     },
   ];
 
@@ -430,43 +461,37 @@ export class Home implements OnInit {
       name: 'María González',
       date: this.formatReviewDate(-5),
       rating: 5,
-      text:
-        'Excelente variedad de productos naturales. El retiro en sucursal es super rápido y el personal siempre es amable.',
+      text: 'Excelente variedad de productos naturales. El retiro en sucursal es super rápido y el personal siempre es amable.',
     },
     {
       name: 'Carlos Rodríguez',
       date: this.formatReviewDate(-12),
       rating: 5,
-      text:
-        'Me encanta poder armar el pedido desde casa y pasar a buscarlo. La granola artesanal es mi favorita.',
+      text: 'Me encanta poder armar el pedido desde casa y pasar a buscarlo. La granola artesanal es mi favorita.',
     },
     {
       name: 'Laura Martínez',
       date: this.formatReviewDate(-20),
       rating: 4,
-      text:
-        'Muy buena experiencia. Solo le pondría más opciones de bebidas, pero la calidad es incomparable.',
+      text: 'Muy buena experiencia. Solo le pondría más opciones de bebidas, pero la calidad es incomparable.',
     },
     {
       name: 'Diego López',
       date: this.formatReviewDate(-3),
       rating: 5,
-      text:
-        'Compro todos los meses acá. Los suplementos son de primera y los precios son justos.',
+      text: 'Compro todos los meses acá. Los suplementos son de primera y los precios son justos.',
     },
     {
       name: 'Ana Fernández',
       date: this.formatReviewDate(-30),
       rating: 5,
-      text:
-        'La mejor dietética de la zona. Productos que no conseguís en otro lado y un servicio impecable.',
+      text: 'La mejor dietética de la zona. Productos que no conseguís en otro lado y un servicio impecable.',
     },
     {
       name: 'Martín Sánchez',
       date: this.formatReviewDate(-1),
       rating: 4,
-      text:
-        'Muy práctico el pedido online. El sitio es fácil de usar y los productos llegan en perfecto estado.',
+      text: 'Muy práctico el pedido online. El sitio es fácil de usar y los productos llegan en perfecto estado.',
     },
   ];
 

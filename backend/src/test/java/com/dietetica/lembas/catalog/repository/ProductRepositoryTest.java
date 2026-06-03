@@ -45,7 +45,7 @@ class ProductRepositoryTest {
         Product product = product("Granola repo", "779999000001", category, ProductOnlineStatus.PUBLISHED);
         productRepository.saveAndFlush(product);
 
-        var result = productRepository.searchAdminProducts(null, null, null, PageRequest.of(0, 100));
+        var result = productRepository.searchAdminProducts(null, category.getId(), null, PageRequest.of(0, 10));
 
         assertThat(result.getContent())
                 .extracting(Product::getName)
@@ -79,11 +79,11 @@ class ProductRepositoryTest {
         productRepository.save(product("Paused item", "779999000012", category, ProductOnlineStatus.PAUSED));
         productRepository.flush();
 
-        var result = productRepository.searchStoreProducts(null, null, PageRequest.of(0, 100));
+        var result = productRepository.searchStoreProducts(null, category.getId(), PageRequest.of(0, 10));
 
         assertThat(result.getContent())
                 .extracting(Product::getName)
-                .contains("Published item");
+                .containsExactly("Published item");
 
         assertThat(result.getContent())
                 .extracting(Product::getName)

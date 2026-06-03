@@ -50,7 +50,12 @@ describe('Register component', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Register],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), MessageService],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        MessageService,
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Register);

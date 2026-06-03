@@ -307,8 +307,8 @@ describe('UserForm', () => {
       fixture.detectChanges();
 
       expect(svc['createUser']).not.toHaveBeenCalled();
-      expect(fixture.nativeElement.textContent).toContain('El nombre es obligatorio');
-      expect(fixture.nativeElement.textContent).toContain('El apellido es obligatorio');
+      expect((c['firstNameErrorMessage'] as () => string)()).toContain('El nombre es obligatorio');
+      expect((c['lastNameErrorMessage'] as () => string)()).toContain('El apellido es obligatorio');
     });
 
     it('should block create submit when email is malformed and show inline feedback', () => {
@@ -324,7 +324,7 @@ describe('UserForm', () => {
       fixture.detectChanges();
 
       expect(svc['createUser']).not.toHaveBeenCalled();
-      expect(fixture.nativeElement.textContent).toContain('Ingrese un email valido');
+      expect((c['emailErrorMessage'] as () => string)()).toContain('Ingrese un email valido');
     });
 
     it('should emit saved event on successful create', () => {
@@ -435,7 +435,7 @@ describe('UserForm', () => {
       fixture.detectChanges();
 
       expect(svc['updateUser']).not.toHaveBeenCalled();
-      expect(fixture.nativeElement.textContent).toContain(
+      expect((c['passwordErrorMessage'] as () => string)()).toContain(
         'La contrasena debe tener al menos 8 caracteres',
       );
     });

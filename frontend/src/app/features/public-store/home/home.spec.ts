@@ -48,10 +48,7 @@ describe('Home', () => {
 
     await TestBed.configureTestingModule({
       imports: [Home],
-      providers: [
-        provideRouter([]),
-        { provide: CatalogService, useValue: catalogService },
-      ],
+      providers: [provideRouter([]), { provide: CatalogService, useValue: catalogService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Home);
@@ -84,10 +81,7 @@ describe('Home', () => {
 
     await TestBed.configureTestingModule({
       imports: [Home],
-      providers: [
-        provideRouter([]),
-        { provide: CatalogService, useValue: catalogService },
-      ],
+      providers: [provideRouter([]), { provide: CatalogService, useValue: catalogService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Home);

@@ -28,7 +28,6 @@
   }
 }
 
-
 /* ── Add-to-order button: generous padding per DESING spec ── */
 :host ::ng-deep .pdp-add-btn.app-button--lg {
   padding: 14px 32px;

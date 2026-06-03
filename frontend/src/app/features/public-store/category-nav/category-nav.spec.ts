@@ -87,7 +87,9 @@ describe('CategoryNav', () => {
     await fixture.whenStable();
     const spy = vi.fn();
     component.categorySelected.subscribe(spy);
-    const pills: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.catnav-pills__item'));
+    const pills: HTMLElement[] = Array.from(
+      fixture.nativeElement.querySelectorAll('.catnav-pills__item'),
+    );
     // Hierbas has highest product count (8), should be among quick pills
     const hierbas = pills.find((p) => p.textContent?.includes('Hierbas'));
     hierbas?.click();
@@ -97,7 +99,9 @@ describe('CategoryNav', () => {
   it('should open the full category modal', async () => {
     configure();
     await fixture.whenStable();
-    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.catnav-pills__item--more');
+    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '.catnav-pills__item--more',
+    );
     moreBtn.click();
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('.catnav-modal')).toBeTruthy();
@@ -107,7 +111,9 @@ describe('CategoryNav', () => {
   it('should filter categories in the modal', async () => {
     configure();
     await fixture.whenStable();
-    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.catnav-pills__item--more');
+    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '.catnav-pills__item--more',
+    );
     moreBtn.click();
     await fixture.whenStable();
     const input: HTMLInputElement = fixture.nativeElement.querySelector('#cat-search');
@@ -124,10 +130,13 @@ describe('CategoryNav', () => {
     await fixture.whenStable();
     const spy = vi.fn();
     component.categorySelected.subscribe(spy);
-    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.catnav-pills__item--more');
+    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '.catnav-pills__item--more',
+    );
     moreBtn.click();
     await fixture.whenStable();
-    const cards: NodeListOf<HTMLButtonElement> = fixture.nativeElement.querySelectorAll('.catnav-modal__card');
+    const cards: NodeListOf<HTMLButtonElement> =
+      fixture.nativeElement.querySelectorAll('.catnav-modal__card');
     const bebidas = Array.from(cards).find((c) => c.textContent?.includes('Bebidas'));
     bebidas?.click();
     await fixture.whenStable();
@@ -138,7 +147,9 @@ describe('CategoryNav', () => {
   it('should close modal when clicking the overlay', async () => {
     configure();
     await fixture.whenStable();
-    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.catnav-pills__item--more');
+    const moreBtn: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '.catnav-pills__item--more',
+    );
     moreBtn.click();
     await fixture.whenStable();
     const overlay: HTMLElement = fixture.nativeElement.querySelector('.catnav-overlay');
@@ -194,9 +205,14 @@ describe('CategoryNav', () => {
     expect(displayIds).toContain(8);
 
     // Now verify DOM
-    const pills: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.catnav-pills__item'));
+    const pills: HTMLElement[] = Array.from(
+      fixture.nativeElement.querySelectorAll('.catnav-pills__item'),
+    );
     expect(pills.length).toBe(display.length + 2); // +2 for Todas + Todas las categorías
-    const activePill = pills.find((p) => p.classList.contains('catnav-pills__item--active') && p.textContent?.includes('Panaderia'));
+    const activePill = pills.find(
+      (p) =>
+        p.classList.contains('catnav-pills__item--active') && p.textContent?.includes('Panaderia'),
+    );
     expect(activePill).toBeTruthy();
   });
 

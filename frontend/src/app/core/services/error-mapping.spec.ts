@@ -18,15 +18,11 @@ describe('ErrorMappingService', () => {
   describe('getMessage', () => {
     // Authentication errors
     it('should return Spanish message for INVALID_CREDENTIALS', () => {
-      expect(service.getMessage('INVALID_CREDENTIALS')).toBe(
-        'Email o contraseña incorrectos.',
-      );
+      expect(service.getMessage('INVALID_CREDENTIALS')).toBe('Email o contraseña incorrectos.');
     });
 
     it('should return Spanish message for ACCOUNT_DISABLED', () => {
-      expect(service.getMessage('ACCOUNT_DISABLED')).toBe(
-        'La cuenta se encuentra deshabilitada.',
-      );
+      expect(service.getMessage('ACCOUNT_DISABLED')).toBe('La cuenta se encuentra deshabilitada.');
     });
 
     it('should return Spanish message for INVALID_USER_BRANCH', () => {
@@ -37,9 +33,7 @@ describe('ErrorMappingService', () => {
 
     // User errors
     it('should return Spanish message for EMAIL_DUPLICATED', () => {
-      expect(service.getMessage('EMAIL_DUPLICATED')).toBe(
-        'Ya existe un usuario con este email.',
-      );
+      expect(service.getMessage('EMAIL_DUPLICATED')).toBe('Ya existe un usuario con este email.');
     });
 
     // Category errors
@@ -48,9 +42,7 @@ describe('ErrorMappingService', () => {
     });
 
     it('should return Spanish message for PARENT_NOT_FOUND', () => {
-      expect(service.getMessage('PARENT_NOT_FOUND')).toBe(
-        'La categoría padre ya no existe.',
-      );
+      expect(service.getMessage('PARENT_NOT_FOUND')).toBe('La categoría padre ya no existe.');
     });
 
     it('should return Spanish message for PARENT_INVALID', () => {
@@ -259,11 +251,7 @@ describe('ErrorMappingService', () => {
       };
 
       const translator = (field: string) => (field === 'password' ? 'Contraseña' : field);
-      const result = service.formatValidationErrors(
-        apiError,
-        translator,
-        'Revisa los campos.',
-      );
+      const result = service.formatValidationErrors(apiError, translator, 'Revisa los campos.');
 
       expect(result).toContain('Revisa los campos.');
       expect(result).toContain('Contraseña: too short');
@@ -279,11 +267,7 @@ describe('ErrorMappingService', () => {
         path: '/api/auth/register',
       };
 
-      const result = service.formatValidationErrors(
-        apiError,
-        undefined,
-        'Verifica los datos.',
-      );
+      const result = service.formatValidationErrors(apiError, undefined, 'Verifica los datos.');
 
       expect(result).toBe('Verifica los datos.');
     });

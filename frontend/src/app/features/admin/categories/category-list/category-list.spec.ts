@@ -96,11 +96,14 @@ describe('CategoryList', () => {
     fixture.componentRef.setInput('categories', [{ id: 1, name: 'Almacen' }]);
 
     categoryService.deleteCategory.mockReturnValueOnce(
-      throwError(() => new HttpErrorResponse({
-        error: { code: 'CATEGORY_HAS_CHILDREN' },
-        status: 409,
-        statusText: 'Conflict',
-      })),
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            error: { code: 'CATEGORY_HAS_CHILDREN' },
+            status: 409,
+            statusText: 'Conflict',
+          }),
+      ),
     );
 
     (
@@ -112,7 +115,8 @@ describe('CategoryList', () => {
     expect(addSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         severity: 'error',
-        detail: 'No se puede eliminar una categoria que tiene subcategorias. Elimina primero las subcategorias.',
+        detail:
+          'No se puede eliminar una categoria que tiene subcategorias. Elimina primero las subcategorias.',
       }),
     );
   });
@@ -123,11 +127,14 @@ describe('CategoryList', () => {
     fixture.componentRef.setInput('categories', [{ id: 1, name: 'Almacen' }]);
 
     categoryService.deleteCategory.mockReturnValueOnce(
-      throwError(() => new HttpErrorResponse({
-        error: { code: 'CATEGORY_HAS_PRODUCTS' },
-        status: 409,
-        statusText: 'Conflict',
-      })),
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            error: { code: 'CATEGORY_HAS_PRODUCTS' },
+            status: 409,
+            statusText: 'Conflict',
+          }),
+      ),
     );
 
     (
@@ -139,7 +146,8 @@ describe('CategoryList', () => {
     expect(addSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         severity: 'error',
-        detail: 'No se puede eliminar una categoria que tiene productos asociados. Reasigna los productos a otra categoria primero.',
+        detail:
+          'No se puede eliminar una categoria que tiene productos asociados. Reasigna los productos a otra categoria primero.',
       }),
     );
   });
@@ -150,11 +158,14 @@ describe('CategoryList', () => {
     fixture.componentRef.setInput('categories', [{ id: 1, name: 'Almacen' }]);
 
     categoryService.deleteCategory.mockReturnValueOnce(
-      throwError(() => new HttpErrorResponse({
-        error: { code: 'UNKNOWN_ERROR' },
-        status: 500,
-        statusText: 'Internal Server Error',
-      })),
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            error: { code: 'UNKNOWN_ERROR' },
+            status: 500,
+            statusText: 'Internal Server Error',
+          }),
+      ),
     );
 
     (

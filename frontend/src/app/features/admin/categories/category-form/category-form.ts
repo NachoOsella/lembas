@@ -141,7 +141,7 @@ export class CategoryForm {
     // Use centralized error mapping with category-specific context fallback
     return this.errorMapping.getMessage(
       code,
-      'No pudimos guardar la categoria. Intenta nuevamente.'
+      'No pudimos guardar la categoria. Intenta nuevamente.',
     );
   }
 }

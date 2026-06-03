@@ -1,9 +1,4 @@
-<div
-  class="product-grid"
-  [class]="gridClass()"
-  role="list"
-  aria-label="Productos"
->
+<div class="product-grid" [class]="gridClass()" role="list" aria-label="Productos">
   @for (product of products(); track product.id) {
     <div class="product-grid__item" role="listitem">
       <app-store-product-card

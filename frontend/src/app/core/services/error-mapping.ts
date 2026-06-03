@@ -113,7 +113,7 @@ export class ErrorMappingService {
     apiError: ApiErrorResponse,
     fieldTranslator?: (field: string) => string,
     prefix?: string,
-    messageTranslator?: (message: string) => string
+    messageTranslator?: (message: string) => string,
   ): string {
     const fieldErrors = apiError.details?.fieldErrors ?? [];
 
@@ -132,5 +132,4 @@ export class ErrorMappingService {
     const messagePrefix = prefix ?? this.getMessage('VALIDATION_ERROR');
     return `${messagePrefix} ${details}`;
   }
-
 }

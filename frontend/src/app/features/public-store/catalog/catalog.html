@@ -50,9 +50,7 @@
     >
       <div>
         <app-eyebrow color="green">Góndola</app-eyebrow>
-        <h2
-          class="mt-1 text-2xl font-semibold tracking-[-0.02em] text-text sm:text-3xl"
-        >
+        <h2 class="mt-1 text-2xl font-semibold tracking-[-0.02em] text-text sm:text-3xl">
           Productos disponibles
         </h2>
       </div>
@@ -108,10 +106,7 @@
         />
       </div>
     } @else {
-      <app-product-grid
-        [products]="products()"
-        (addToCart)="onAddToCart($event)"
-      />
+      <app-product-grid [products]="products()" (addToCart)="onAddToCart($event)" />
 
       @if (totalRecords() > 0) {
         <div

@@ -248,7 +248,7 @@ export class ProductForm {
     // Use centralized error mapping with product-specific context fallback
     return this.errorMapping.getMessage(
       code,
-      'No pudimos guardar el producto. Intenta nuevamente.'
+      'No pudimos guardar el producto. Intenta nuevamente.',
     );
   }
 }
