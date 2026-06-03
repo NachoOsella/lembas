@@ -12,6 +12,17 @@ export interface ColumnDef {
   readonly width?: string;
 }
 
+export type DataTableRowTrackBy<T> = (index: number, item: T) => unknown;
+
+/** Provides stable row identity so PrimeNG can reuse existing DOM rows. */
+function defaultRowTrackBy<T>(index: number, item: T): unknown {
+  if (typeof item === 'object' && item !== null && 'id' in item) {
+    return (item as { readonly id: unknown }).id;
+  }
+
+  return item ?? index;
+}
+
 @Component({
   selector: 'app-data-table',
   imports: [NgTemplateOutlet, TableModule, EmptyState, LoadingSpinner],
@@ -34,6 +45,7 @@ export class AppDataTable<T = unknown> {
   readonly emptyActionLabel = input<string | null>(null);
   readonly sortField = input<string | undefined>(undefined);
   readonly sortOrder = input<number | undefined>(undefined);
+  readonly rowTrackBy = input<DataTableRowTrackBy<T>>(defaultRowTrackBy);
 
   readonly rowClick = output<T>();
   readonly pageChange = output<{

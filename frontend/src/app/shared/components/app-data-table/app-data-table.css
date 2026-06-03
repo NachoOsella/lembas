@@ -5,6 +5,7 @@
 /* ── Shell wrapper ─────────────────────────────────────────── */
 .app-data-table-shell {
   max-width: 100%;
+  overflow-anchor: none;
   background: #ffffff;
   border: 1px solid rgba(7, 95, 54, 0.11);
   border-radius: var(--radius-card, 12px);

@@ -30,8 +30,17 @@ export class AppToggleSwitch {
   /** Optional compact table variant. */
   readonly size = input<'sm' | 'md'>('md');
 
+  /** Visual treatment for toggles that are disabled for business-rule reasons. */
+  readonly disabledAppearance = input<'default' | 'subtleActive'>('default');
+
   /** Classes applied to the host PrimeNG switch. */
-  protected readonly switchClass = computed(() => `app-toggle-switch app-toggle-switch--${this.size()}`);
+  protected readonly switchClass = computed(() => {
+    const disabledClass = `app-toggle-switch--disabled-${this.disabledAppearance()}`;
+    return `app-toggle-switch app-toggle-switch--${this.size()} ${disabledClass}`;
+  });
+
+  /** Maps the app compact option to PrimeNG's native small toggle size. */
+  protected readonly primeSize = computed(() => (this.size() === 'sm' ? 'small' : undefined));
 
   /** Updates the model from PrimeNG's ngModel change event. */
   protected onCheckedChange(value: boolean): void {

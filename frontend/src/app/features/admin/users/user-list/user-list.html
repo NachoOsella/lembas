@@ -63,6 +63,7 @@
               [checked]="user.enabled"
               (checkedChange)="toggleStatus(user)"
               [disabled]="user.id === 1"
+              [disabledAppearance]="user.id === 1 ? 'subtleActive' : 'default'"
               [ariaLabel]="'Cambiar estado de ' + user.email"
             />
           </td>

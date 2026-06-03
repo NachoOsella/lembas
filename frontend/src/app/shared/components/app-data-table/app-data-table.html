@@ -25,6 +25,7 @@
         currentPageReportTemplate="{first}-{last} de {totalRecords}"
         styleClass="app-data-table"
         [paginatorDropdownAppendTo]="'body'"
+        [rowTrackBy]="rowTrackBy()"
         (onPage)="onPageChange($event)"
         (onSort)="onSortChange($event)"
       >
