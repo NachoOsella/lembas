@@ -9,6 +9,7 @@ import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
+import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -53,11 +54,14 @@ class UserAdminServiceTest {
     @Mock
     private BranchRepository branchRepository;
 
+    @Mock
+    private SecurityContextHelper securityContextHelper;
+
     private UserAdminService userAdminService;
 
     @BeforeEach
     void setUp() {
-        userAdminService = new UserAdminService(userRepository, branchRepository, new UserBranchPolicy(), passwordEncoder);
+        userAdminService = new UserAdminService(userRepository, branchRepository, new UserBranchPolicy(), passwordEncoder, securityContextHelper);
     }
 
     @Nested
@@ -331,6 +335,7 @@ class UserAdminServiceTest {
             when(branchRepository.existsByIdAndActiveTrue(1L)).thenReturn(true);
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(securityContextHelper.getCurrentUser()).thenReturn(aDifferentAdmin());
 
             var request = new UpdateUserRequest(
                     "updated@lembas.com",
@@ -415,6 +420,7 @@ class UserAdminServiceTest {
             when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
             when(branchRepository.existsById(3L)).thenReturn(true);
             when(branchRepository.existsByIdAndActiveTrue(3L)).thenReturn(false);
+            when(securityContextHelper.getCurrentUser()).thenReturn(aDifferentAdmin());
 
             assertThatThrownBy(() -> userAdminService.updateUser(
                     1L,
@@ -430,6 +436,7 @@ class UserAdminServiceTest {
             User existingUser = aManager();
             when(userRepository.findById(2L)).thenReturn(Optional.of(existingUser));
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(securityContextHelper.getCurrentUser()).thenReturn(aDifferentAdmin());
 
             UserResponse response = userAdminService.updateUser(
                     2L,
@@ -470,6 +477,23 @@ class UserAdminServiceTest {
             ))
                     .isInstanceOf(DomainException.class)
                     .hasFieldOrPropertyWithValue("code", "USER_NOT_FOUND");
+        }
+
+        @Test
+        void Should_rejectSelfRoleChange_when_adminTriesToChangeOwnRole() {
+            User admin = existingAdmin();
+            when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+            when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+
+            assertThatThrownBy(() -> userAdminService.updateUser(
+                    1L,
+                    new UpdateUserRequest(null, null, null, null, null, Role.MANAGER, 1L)
+            ))
+                    .isInstanceOf(DomainException.class)
+                    .hasFieldOrPropertyWithValue("code", "SELF_ROLE_CHANGE_FORBIDDEN")
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.FORBIDDEN);
+
+            verify(userRepository, never()).save(any());
         }
     }
 
@@ -536,6 +560,15 @@ class UserAdminServiceTest {
         return new User(
                 2L, 1L, "manager@lembas.com", "hash",
                 "Manager", "User", null, Role.MANAGER, true,
+                Instant.now(), Instant.now()
+        );
+    }
+
+    /** A different admin user used as the "current" user in security context mocks. */
+    private static User aDifferentAdmin() {
+        return new User(
+                10L, null, "other@lembas.com", "hash",
+                "Other", "Admin", null, Role.ADMIN, true,
                 Instant.now(), Instant.now()
         );
     }

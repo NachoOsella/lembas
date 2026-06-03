@@ -179,3 +179,7 @@
 
 - `frontend/src/app/shared/components/{app-modal,confirm-dialog}/` -- corregidos dialogos PrimeNG para renderizarse con `appendTo='body'`, evitando que el overlay quede limitado por contenedores transformados por animaciones de ruta; los estilos se hicieron globales para conservar el aspecto al portalizar.
 - `frontend/src/styles.css` -- ajustada la animacion global de rutas para no conservar `transform` al finalizar, evitando que modales custom fixed queden centrados respecto al alto del catalogo en vez del viewport visible.
+
+## 2026-06-03
+
+- `backend/src/main/java/com/dietetica/lembas/users/service/UserAdminService.java`, `frontend/src/app/features/admin/users/user-form/`, `frontend/src/app/core/services/error-mapping.ts`, `docs/05-api/error-handling.md` -- prevencion de auto-degradacion de rol: backend bloquea con `SELF_ROLE_CHANGE_FORBIDDEN` (403) cuando un admin intenta cambiar su propio rol via `PUT/PATCH /api/admin/users/{id}`; frontend desactiva el selector de rol y muestra hint "No puede cambiar su propio rol" cuando se edita el propio usuario, y como red de seguridad extra no envia el cambio de rol en el request. Agregado test unitario `Should_rejectSelfRoleChange_when_adminTriesToChangeOwnRole` y mocks de `SecurityContextHelper` en los tests existentes de `updateUser`.

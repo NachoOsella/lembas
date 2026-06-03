@@ -63,6 +63,7 @@ Services may throw `DomainException` directly when a dedicated exception subclas
 | CATEGORY_NAME_DUPLICATED | Catalog | 409 | Same-level category name already exists |
 | CATEGORY_HAS_CHILDREN | Catalog | 409 | Category cannot be deleted while subcategories exist |
 | CATEGORY_HAS_PRODUCTS | Catalog | 409 | Category cannot be deleted while products reference it |
+| SELF_ROLE_CHANGE_FORBIDDEN | Users | 403 | User attempted to change their own role |
 
 ### Global exception handler
 

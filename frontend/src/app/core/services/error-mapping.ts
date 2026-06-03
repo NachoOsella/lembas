@@ -50,6 +50,7 @@ export class ErrorMappingService {
     // User management errors
     EMAIL_DUPLICATED: 'Ya existe un usuario con este email.',
     INVALID_USER_BRANCH: 'Los usuarios Gerente y Empleado deben tener una sucursal asignada.',
+    SELF_ROLE_CHANGE_FORBIDDEN: 'No puede cambiar su propio rol.',
 
     // Validation errors
     VALIDATION_ERROR: 'Revise los datos ingresados.',

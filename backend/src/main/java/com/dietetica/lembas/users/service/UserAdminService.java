@@ -9,6 +9,7 @@ import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
+import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -35,15 +36,18 @@ public class UserAdminService {
     private final BranchRepository branchRepository;
     private final UserBranchPolicy userBranchPolicy;
     private final PasswordEncoder passwordEncoder;
+    private final SecurityContextHelper securityContextHelper;
 
     public UserAdminService(UserRepository userRepository,
                             BranchRepository branchRepository,
                             UserBranchPolicy userBranchPolicy,
-                            PasswordEncoder passwordEncoder) {
+                            PasswordEncoder passwordEncoder,
+                            SecurityContextHelper securityContextHelper) {
         this.userRepository = userRepository;
         this.branchRepository = branchRepository;
         this.userBranchPolicy = userBranchPolicy;
         this.passwordEncoder = passwordEncoder;
+        this.securityContextHelper = securityContextHelper;
     }
 
     /**
@@ -163,6 +167,15 @@ public class UserAdminService {
         }
 
         if (request.role() != null) {
+            // Prevent an admin from changing their own role (would lock themselves out)
+            User currentUser = securityContextHelper.getCurrentUser();
+            if (user.getId().equals(currentUser.getId())) {
+                throw new DomainException(
+                        "SELF_ROLE_CHANGE_FORBIDDEN",
+                        HttpStatus.FORBIDDEN,
+                        "You cannot change your own role"
+                );
+            }
             user.setRole(request.role());
             if (request.role() == Role.ADMIN) {
                 user.setBranchId(null);

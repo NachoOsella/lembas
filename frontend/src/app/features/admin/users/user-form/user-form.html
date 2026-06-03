@@ -83,10 +83,19 @@
     >
       <div class="user-form__access-grid">
         <!-- Role (always shown) -->
-        <div class="user-form__field user-form__access-field">
+        <div
+          class="user-form__field user-form__access-field"
+          [class.user-form__access-field--self]="isEditingSelf()"
+        >
           <label for="user-role" class="user-form__label">
             Rol <span class="user-form__required" aria-hidden="true">*</span>
           </label>
+          @if (isEditingSelf()) {
+            <span class="user-form__self-badge">
+              <i class="pi pi-lock" aria-hidden="true"></i>
+              Tu rol actual
+            </span>
+          }
           <p-select
             inputId="user-role"
             [options]="roleOptions"
@@ -97,6 +106,7 @@
             placeholder="Seleccionar rol"
             class="w-full"
             [style]="{ width: '100%' }"
+            [disabled]="isEditingSelf()"
             [appendTo]="'body'"
           >
             <ng-template #selectedItem let-option>
@@ -115,7 +125,14 @@
               </div>
             </ng-template>
           </p-select>
-          <small class="user-form__hint">{{ roleDescription(formRole()) }}</small>
+          @if (isEditingSelf()) {
+            <small class="user-form__hint user-form__hint--self">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              No puede cambiar su propio rol desde esta cuenta.
+            </small>
+          } @else {
+            <small class="user-form__hint">{{ roleDescription(formRole()) }}</small>
+          }
         </div>
 
         <!-- Branch (conditional: shown only for MANAGER and EMPLOYEE) -->

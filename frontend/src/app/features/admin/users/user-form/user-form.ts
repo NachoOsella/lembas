@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 
 import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
 import { ErrorMappingService } from '../../../../core/services/error-mapping';
+import { AuthService } from '../../../../core/services/auth';
 import { UserService } from '../../../../core/services/user';
 import { Branch, InternalRole, UserResponse } from '../../../../shared/models/user';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
@@ -44,6 +45,7 @@ const ROLE_ICON: Record<InternalRole, string> = {
 /** Create / Edit dialog for internal users with role-aware branch selection and inline validation. */
 export class UserForm {
   private readonly userService = inject(UserService);
+  private readonly authService = inject(AuthService);
   private readonly messageService = inject(MessageService);
   private readonly errorMapping = inject(ErrorMappingService);
 
@@ -140,6 +142,11 @@ export class UserForm {
   protected readonly dialogTitle = computed(() =>
     this.isEditMode() ? 'Editar usuario' : 'Crear usuario',
   );
+  protected readonly isEditingSelf = computed(() => {
+    const editing = this.editingUser();
+    const current = this.authService.currentUser();
+    return editing !== null && current !== null && editing.id === current.id;
+  });
   protected readonly showBranchField = computed(
     () => this.formRole() === 'MANAGER' || this.formRole() === 'EMPLOYEE',
   );
@@ -270,7 +277,9 @@ export class UserForm {
       request['lastName'] = this.formLastName().trim();
     if ((this.formPhone().trim() || null) !== user.phone)
       request['phone'] = this.formPhone().trim();
-    if (this.formRole() !== user.role) request['role'] = this.formRole();
+    // Never send a role change for the current user (backend also blocks it)
+    if (!this.isEditingSelf() && this.formRole() !== user.role)
+      request['role'] = this.formRole();
     if (branchId !== user.branchId) request['branchId'] = branchId;
 
     if (Object.keys(request).length === 0) {
