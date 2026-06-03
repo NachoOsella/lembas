@@ -68,160 +68,156 @@
   font-size: 16px;
 }
 
-/* ── Primary ────────────────────────────────────────────────── */
+/* -- Primary ------------------------------------------------------- */
 .app-button--primary {
-  color: #ffffff;
-  background: #2f8d72;
-  border-color: #2f8d72;
-  box-shadow:
-    0 0 0.5px rgba(47, 141, 114, 0.12),
-    0 1px 2px rgba(47, 141, 114, 0.14);
+  color: var(--color-text-on-dark);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-button-primary);
 }
 
 .app-button--primary:hover:not(:disabled) {
-  color: #ffffff;
-  background: #075f36;
-  border-color: #075f36;
+  color: var(--color-text-on-dark);
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
   box-shadow:
     0 0 0.5px rgba(47, 141, 114, 0.16),
     0 2px 4px rgba(47, 141, 114, 0.18);
 }
 
-/* ── Secondary ──────────────────────────────────────────────── */
+/* -- Secondary ----------------------------------------------------- */
 .app-button--secondary {
-  color: #2f8d72;
-  background: #ffffff;
+  color: var(--color-primary);
+  background: var(--color-surface);
   border-color: rgba(47, 141, 114, 0.32);
 }
 
 .app-button--secondary:hover:not(:disabled) {
-  color: #075f36;
+  color: var(--color-primary-dark);
   background: rgba(47, 141, 114, 0.08);
-  border-color: #2f8d72;
+  border-color: var(--color-primary);
 }
 
-/* ── Ghost ──────────────────────────────────────────────────── */
+/* -- Ghost --------------------------------------------------------- */
 .app-button--ghost {
-  color: #2f8d72;
+  color: var(--color-primary);
   background: transparent;
   border-color: transparent;
 }
 
 .app-button--ghost:hover:not(:disabled) {
-  color: #075f36;
+  color: var(--color-primary-dark);
   background: rgba(47, 141, 114, 0.1);
 }
 
-/* ── Danger ─────────────────────────────────────────────────── */
+/* -- Danger -------------------------------------------------------- */
 .app-button--danger {
-  color: #ffffff;
-  background: #c82014;
-  border-color: #c82014;
-  box-shadow:
-    0 0 0.5px rgba(200, 32, 20, 0.12),
-    0 1px 2px rgba(200, 32, 20, 0.14);
+  color: var(--color-text-on-dark);
+  background: var(--color-red);
+  border-color: var(--color-red);
+  box-shadow: var(--shadow-button-danger);
 }
 
 .app-button--danger:hover:not(:disabled) {
-  color: #ffffff;
-  background: #a41810;
-  border-color: #a41810;
+  color: var(--color-text-on-dark);
+  background: var(--color-red-dark);
+  border-color: var(--color-red-dark);
   box-shadow:
     0 0 0.5px rgba(200, 32, 20, 0.16),
     0 2px 4px rgba(200, 32, 20, 0.18);
 }
 
-/* ── Success (temporary feedback after successful action) ──────── */
+/* -- Success (temporary feedback after successful action) ---------- */
 .app-button--success {
-  color: #ffffff;
-  background: var(--color-primary-dark, #075f36);
-  border-color: var(--color-primary-dark, #075f36);
+  color: var(--color-text-on-dark);
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
   box-shadow:
     0 0 0.5px rgba(7, 95, 54, 0.12),
     0 1px 2px rgba(7, 95, 54, 0.14);
 }
 
 .app-button--success:hover:not(:disabled) {
-  color: #ffffff;
-  background: #05452a;
-  border-color: #05452a;
+  color: var(--color-text-on-dark);
+  background: var(--color-primary-darker);
+  border-color: var(--color-primary-darker);
 }
 
-/* ── Hero (white-on-green CTA for dark feature bands) ────────── */
+/* -- Hero (white-on-green CTA for dark feature bands) ------------- */
 .app-button--hero {
-  color: #2f8d72;
-  background: #ffffff;
-  border-color: #ffffff;
+  color: var(--color-primary);
+  background: var(--color-surface);
+  border-color: var(--color-surface);
   box-shadow:
     0 0 0.5px rgba(255, 255, 255, 0.12),
     0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .app-button--hero:hover:not(:disabled) {
-  color: #2f8d72;
-  background: #f0f9f4;
-  border-color: #f0f9f4;
+  color: var(--color-primary);
+  background: var(--color-surface-faint);
+  border-color: var(--color-surface-faint);
   box-shadow:
     0 0 0.5px rgba(255, 255, 255, 0.16),
     0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
-/* ── Green-on-green inverted (white button on dark-green surfaces) ── */
+/* -- Green-on-green inverted (white button on dark-green surfaces) - */
 .app-button--green-on-green {
-  color: #2f8d72;
-  background: #ffffff;
-  border-color: #ffffff;
+  color: var(--color-primary);
+  background: var(--color-surface);
+  border-color: var(--color-surface);
 }
 
 .app-button--green-on-green:hover:not(:disabled) {
-  color: #075f36;
-  background: #f0f9f4;
-  border-color: #f0f9f4;
+  color: var(--color-primary-dark);
+  background: var(--color-surface-faint);
+  border-color: var(--color-surface-faint);
 }
 
-/* ── Outlined on dark (transparent + white border on dark surfaces) ── */
+/* -- Outlined on dark (transparent + white border on dark surfaces) - */
 .app-button--outlined-on-dark {
-  color: #ffffff;
+  color: var(--color-text-on-dark);
   background: transparent;
-  border-color: #ffffff;
+  border-color: var(--color-text-on-dark);
 }
 
 .app-button--outlined-on-dark:hover:not(:disabled) {
-  color: #ffffff;
+  color: var(--color-text-on-dark);
   background: rgba(255, 255, 255, 0.1);
-  border-color: #ffffff;
+  border-color: var(--color-text-on-dark);
 }
 
-/* ── Dark Outlined (transparent + Text Black border, for dark-top-bar contexts) ── */
+/* -- Dark Outlined (transparent + Text border, for dark-top-bar) --- */
 .app-button--dark-outlined {
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--color-text);
   background: transparent;
-  border-color: rgba(0, 0, 0, 0.87);
+  border-color: var(--color-text);
 }
 
 .app-button--dark-outlined:hover:not(:disabled) {
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--color-text);
   background: rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 0, 0, 0.87);
+  border-color: var(--color-text);
 }
 
-/* ── Consent agree (specific bright green for cookie consent) ── */
+/* -- Consent agree (specific bright green for cookie consent) ------ */
 .app-button--consent {
-  color: #ffffff;
-  background: rgb(50, 142, 104);
+  color: var(--color-text-on-dark);
+  background: var(--color-primary);
   border-color: transparent;
 }
 
 .app-button--consent:hover:not(:disabled) {
-  background: #075f36;
+  background: var(--color-primary-dark);
 }
 
-/* ── Hover: no transform ────────────────────────────────────── */
+/* -- Hover: no transform ------------------------------------------ */
 .app-button:hover:not(:disabled) {
-  /* Intentionally no transform — only active gets scale */
+  /* Intentionally no transform -- only active gets scale */
 }
 
-/* ── Active: signature scale(0.95) ──────────────────────────── */
+/* -- Active: signature scale(0.95) -------------------------------- */
 .app-button:active:not(:disabled) {
   transform: scale(0.95);
 }

@@ -38,7 +38,7 @@
 }
 
 .user-form__required {
-  color: #c82014;
+  color: var(--color-red);
   margin-left: 0.125rem;
 }
 
@@ -50,13 +50,13 @@
 
 .user-form__error {
   font-size: 0.75rem;
-  color: #c82014;
+  color: var(--color-red);
   line-height: 1.4;
 }
 
 .user-form .ng-invalid {
-  border-color: #c82014 !important;
-  background: var(--color-red-tint, hsla(4, 82%, 43%, 0.05)) !important;
+  border-color: var(--color-red) !important;
+  background: var(--color-red-tint) !important;
   box-shadow: none;
 }
 

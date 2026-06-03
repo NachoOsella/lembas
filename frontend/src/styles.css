@@ -9,8 +9,10 @@
   --color-primary: #2f8d72;
   --color-accent: #2f8d72;
   --color-primary-dark: #075f36;
+  --color-primary-darker: #05452a;
   --color-canvas: #f6ead6;
   --color-surface: #ffffff;
+  --color-surface-faint: #f0f9f4;
   --color-surface-muted: #e7dbc0;
   --color-orange-wash: #fff2df;
   --color-text: rgba(0, 0, 0, 0.87);
@@ -38,12 +40,22 @@
   --color-surface-warmest: #fffef9;
   --color-neutral-cool: #f9f9f9;
   --color-muted-herb-green: #33433d;
+  --color-primary-darkest: #243a31;
+  --color-sage: #6f8d67;
+  --color-sage-wash: #f7f9f5;
+  --color-neutral-dark: #4a5b55;
+  --color-mint: #6cc6a8;
+  --color-cream: #efe5d0;
+  --color-amber-wash: #fff9f0;
+  --color-text-header: rgba(18, 55, 42, 0.86);
   --color-red-darker: #9a3328;
   --color-red-soft: #8a2f24;
   --color-red-surface: #fff7f3;
   --color-red-tint: hsla(4, 82%, 43%, 0.05);
   --color-orange-light: #ffe1ba;
   --color-input-border: rgba(0, 0, 0, 0.12);
+  --color-overlay-black: rgba(0, 0, 0, 0.4);
+  --color-overlay-black-light: rgba(0, 0, 0, 0.05);
 
   --radius-card: 12px;
   --radius-pill: 50px;
@@ -150,8 +162,8 @@
 .p-inputtext:focus,
 .p-select:not(.p-disabled):focus,
 .p-inputnumber-input:focus {
-  border-color: #2f8d72 !important;
-  box-shadow: 0 0 0 1px #2f8d72 !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 1px var(--color-primary) !important;
 }
 
 .p-select .p-select-label {

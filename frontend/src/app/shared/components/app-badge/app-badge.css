@@ -18,31 +18,31 @@
 }
 
 :host ::ng-deep .app-badge--success {
-  color: #2f8d72;
+  color: var(--color-primary);
   background: rgba(212, 233, 226, 0.72);
   border-color: rgba(47, 141, 114, 0.18);
 }
 
 :host ::ng-deep .app-badge--warning {
-  color: #7a4f00;
-  background: #fff4d8;
+  color: var(--color-amber-text);
+  background: var(--color-amber-tint);
   border-color: rgba(203, 162, 88, 0.42);
 }
 
 :host ::ng-deep .app-badge--danger {
-  color: #c82014;
-  background: hsla(4, 82%, 43%, 0.08);
-  border-color: hsla(4, 82%, 43%, 0.18);
+  color: var(--color-red);
+  background: var(--color-red-tint);
+  border-color: rgba(200, 32, 20, 0.18);
 }
 
 :host ::ng-deep .app-badge--info {
-  color: #075f36;
-  background: var(--color-mint-wash-lighter, #eaf4f1);
+  color: var(--color-primary-dark);
+  background: var(--color-mint-wash-lighter);
   border-color: rgba(7, 95, 54, 0.14);
 }
 
 :host ::ng-deep .app-badge--neutral {
-  color: rgba(0, 0, 0, 0.58);
-  background: #e7dbc0;
+  color: var(--color-text-muted);
+  background: var(--color-surface-muted);
   border-color: rgba(0, 0, 0, 0.06);
 }

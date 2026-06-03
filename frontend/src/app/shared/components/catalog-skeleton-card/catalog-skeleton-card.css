@@ -4,9 +4,7 @@
 
 /* Design-system card shadow token */
 .catalog-skeleton-card {
-  box-shadow:
-    0 0 0.5px rgba(0, 0, 0, 0.14),
-    0 1px 1px rgba(0, 0, 0, 0.24);
+  box-shadow: var(--shadow-card);
 }
 
 .catalog-skeleton-card__image {
@@ -14,7 +12,7 @@
   align-items: center;
   justify-content: center;
   aspect-ratio: 1 / 1;
-  background: #faf6ef;
+  background: var(--color-surface-warm);
 }
 
 .catalog-skeleton-card__body {

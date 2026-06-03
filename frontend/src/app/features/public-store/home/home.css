@@ -4,7 +4,7 @@
 
 .home-hero {
   background:
-    radial-gradient(circle at 12% 92%, rgba(47, 141, 114, 0.24), transparent 24rem), #075f36;
+    radial-gradient(circle at 12% 92%, rgba(47, 141, 114, 0.24), transparent 24rem), var(--color-primary-dark);
 }
 
 .home-reveal {
@@ -201,7 +201,7 @@
   }
 }
 
-/* ── Benefits marquee (mobile infinite loop) ─────────────── */
+/* -- Benefits marquee (mobile infinite loop) ---------------------- */
 .home-benefits-marquee {
   overflow: hidden;
 }
@@ -222,7 +222,7 @@
   flex-shrink: 0;
 }
 
-/* ── Reviews marquee (mobile infinite loop, reverse) ─────── */
+/* -- Reviews marquee (mobile infinite loop, reverse) -------------- */
 .home-reviews-marquee {
   overflow: hidden;
 }
@@ -252,7 +252,7 @@
   }
 }
 
-/* ── Disable marquees on desktop (grid takes over) ──────── */
+/* -- Disable marquees on desktop (grid takes over) ---------------- */
 @media (min-width: 640px) {
   .home-benefits-marquee,
   .home-reviews-marquee {

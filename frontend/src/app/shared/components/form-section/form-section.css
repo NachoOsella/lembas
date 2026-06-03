@@ -8,7 +8,7 @@
   padding: 1.25rem;
   border: 1px solid rgba(7, 95, 54, 0.08);
   border-radius: 1.15rem;
-  background: #fffef9;
+  background: var(--color-surface-warmest);
 }
 
 .form-section__heading {
@@ -24,15 +24,15 @@
   width: 2rem;
   height: 2rem;
   border-radius: 0.8rem;
-  background: #075f36;
-  color: #ffffff;
+  background: var(--color-primary-dark);
+  color: var(--color-text-on-dark);
   font-size: 0.72rem;
   font-weight: 800;
 }
 
 .form-section__title {
   margin: 0;
-  color: var(--color-primary-dark, #075f36);
+  color: var(--color-primary-dark);
   font-size: 0.98rem;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -41,7 +41,7 @@
 
 .form-section__description {
   margin: 0.16rem 0 0;
-  color: var(--color-text-muted, rgba(0, 0, 0, 0.58));
+  color: var(--color-text-muted);
   font-size: 0.76rem;
   line-height: 1.45;
 }

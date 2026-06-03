@@ -2,15 +2,12 @@
   display: block;
 }
 
-/* ── Nav shadow ────────────────────────────────────────────── */
+/* -- Nav shadow ---------------------------------------------------- */
 .app-store-nav {
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.1),
-    0 2px 2px rgba(0, 0, 0, 0.06),
-    0 0 2px rgba(0, 0, 0, 0.07);
+  box-shadow: var(--shadow-nav);
 }
 
-/* ── Brand ─────────────────────────────────────────────────── */
+/* -- Brand --------------------------------------------------------- */
 .app-store-nav__brand {
   display: flex;
   align-items: center;
@@ -20,7 +17,7 @@
 }
 
 .app-store-nav__brand:focus-visible {
-  outline: 2px solid #2f8d72;
+  outline: 2px solid var(--color-primary);
   outline-offset: 4px;
 }
 
@@ -43,7 +40,7 @@
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.01em;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--color-text);
 }
 
 .app-store-nav__brand-text span {
@@ -51,7 +48,7 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.13em;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-muted);
 }
 
 @media (min-width: 640px) {
@@ -64,7 +61,7 @@
   }
 }
 
-/* ── Center navigation ─────────────────────────────────────── */
+/* -- Center navigation --------------------------------------------- */
 .app-store-nav__center {
   display: none;
   flex: 1;
@@ -98,12 +95,12 @@
 
 .nav-link:hover {
   background: rgba(47, 141, 114, 0.08);
-  color: #2f8d72;
+  color: var(--color-primary);
 }
 
 .nav-link--active {
   background: rgba(47, 141, 114, 0.1);
-  color: #2f8d72;
+  color: var(--color-primary);
   font-weight: 700;
 }
 
@@ -111,7 +108,7 @@
   width: 14rem;
 }
 
-/* ── Actions ───────────────────────────────────────────────── */
+/* -- Actions ------------------------------------------------------- */
 .app-store-nav__actions {
   display: flex;
   align-items: center;
@@ -138,8 +135,8 @@
   width: 2.375rem;
   height: 2.375rem;
   border-radius: 9999px;
-  border: 1px solid #e7e7e7;
-  background: #ffffff;
+  border: 1px solid var(--color-border-neutral);
+  background: var(--color-surface);
   color: rgba(0, 0, 0, 0.6);
   font-size: 0.875rem;
   cursor: pointer;
@@ -147,8 +144,8 @@
 }
 
 .app-store-nav__menu-btn:hover {
-  border-color: #2f8d72;
-  color: #2f8d72;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .app-store-nav__menu-btn:active {
@@ -167,10 +164,10 @@
   }
 }
 
-/* ── Mobile search ─────────────────────────────────────────── */
+/* -- Mobile search ------------------------------------------------- */
 .app-store-nav__search-mobile {
   display: block;
-  border-top: 1px solid #e7e7e7;
+  border-top: 1px solid var(--color-border-neutral);
   background: rgba(255, 255, 255, 0.8);
   padding: 0.75rem;
 }
@@ -181,11 +178,11 @@
   }
 }
 
-/* ── Dropdown menu ─────────────────────────────────────────── */
+/* -- Dropdown menu ------------------------------------------------- */
 :host ::ng-deep .app-store-nav__dropdown {
   width: 200px;
   border: none;
-  background: #f9f9f9;
+  background: var(--color-neutral-cool);
   box-shadow:
     0 0 0.5px rgba(0, 0, 0, 0.14),
     0 2px 4px rgba(0, 0, 0, 0.12);
@@ -204,7 +201,7 @@
   font-family: inherit;
   font-size: 16px;
   font-weight: 400;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--color-text);
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
@@ -212,19 +209,19 @@
 
 :host ::ng-deep .p-menu .p-menuitem-link:hover {
   background-color: rgba(0, 0, 0, 0.06);
-  color: #2f8d72;
+  color: var(--color-primary);
 }
 
 :host ::ng-deep .p-menu .p-menuitem-icon {
   margin-right: 12px;
-  color: rgba(0, 0, 0, 0.58);
+  color: var(--color-text-muted);
 }
 
 :host ::ng-deep .p-menu .p-menuitem-link:hover .p-menuitem-icon {
-  color: #2f8d72;
+  color: var(--color-primary);
 }
 
-/* ── Floating cart CTA ─────────────────────────────────────── */
+/* -- Floating cart CTA --------------------------------------------- */
 .app-store-nav__cart {
   position: fixed;
   bottom: calc(1rem + 16px);
@@ -236,12 +233,10 @@
   width: 56px;
   height: 56px;
   border-radius: 9999px;
-  background: #2f8d72;
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-text-on-dark);
   text-decoration: none;
-  box-shadow:
-    0 0 6px rgba(0, 0, 0, 0.24),
-    0 8px 12px rgba(0, 0, 0, 0.14);
+  box-shadow: var(--shadow-leaf-cta-base), var(--shadow-leaf-cta-ambient);
   transition: all 0.3s ease;
 }
 
@@ -258,7 +253,7 @@
 }
 
 .app-store-nav__cart:focus-visible {
-  outline: 2px solid #2f8d72;
+  outline: 2px solid var(--color-primary);
   outline-offset: 4px;
 }
 
@@ -287,11 +282,11 @@
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 9999px;
-  border: 2px solid #2f8d72;
-  background: #c82014;
+  border: 2px solid var(--color-primary);
+  background: var(--color-red);
   font-size: 0.6875rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-text-on-dark);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   animation: cart-bounce 0.4s ease;
 }

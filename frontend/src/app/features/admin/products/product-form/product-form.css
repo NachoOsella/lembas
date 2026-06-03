@@ -43,7 +43,7 @@
 
 .product-form__label span,
 .product-form__error {
-  color: #c82014;
+  color: var(--color-red);
 }
 
 .product-form__hint,
@@ -57,8 +57,8 @@
 }
 
 .product-form .ng-invalid {
-  border-color: #c82014 !important;
-  background: var(--color-red-tint, hsla(4, 82%, 43%, 0.05)) !important;
+  border-color: var(--color-red) !important;
+  background: var(--color-red-tint) !important;
   box-shadow: none;
 }
 
@@ -84,7 +84,7 @@
   display: grid;
   border-radius: var(--radius-card, 12px);
   border: 1px solid rgba(47, 141, 114, 0.12);
-  background: #f6ead6;
+  background: var(--color-canvas);
   overflow: hidden;
 }
 
@@ -97,8 +97,8 @@
 
 .product-form__preview-label {
   padding: 0.5rem;
-  background: #f6ead6;
-  color: #075f36;
+  background: var(--color-canvas);
+  color: var(--color-primary-dark);
   font-size: 0.78rem;
   font-weight: 700;
   text-align: center;
@@ -107,7 +107,7 @@
 
 .product-form__file {
   padding: 0.7rem;
-  background: #fffef9;
+  background: var(--color-surface-warmest);
   border: 1px solid rgba(47, 141, 114, 0.2);
   border-radius: 0.95rem;
 }

@@ -3,13 +3,11 @@
 }
 
 .app-modal {
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-card);
-  /* Whisper-soft layered shadow — two low-alpha layers */
-  box-shadow:
-    0 0 0.5px rgba(0, 0, 0, 0.14),
-    0 1px 3px rgba(0, 0, 0, 0.12);
+  /* Whisper-soft layered shadow -- two low-alpha layers */
+  box-shadow: var(--shadow-modal);
   color: var(--color-text);
   overflow: hidden;
 }
@@ -17,7 +15,7 @@
 .app-modal .p-dialog-header,
 .app-modal .p-dialog-content,
 .app-modal .p-dialog-footer {
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-text);
 }
 
@@ -48,7 +46,7 @@
 
 .app-modal__title {
   margin: 0;
-  color: var(--color-text, rgba(0, 0, 0, 0.87));
+  color: var(--color-text);
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.01em;

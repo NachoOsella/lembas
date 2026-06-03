@@ -16,13 +16,13 @@
 }
 
 :host ::ng-deep .field-hint--hint {
-  color: rgba(0, 0, 0, 0.58);
+  color: var(--color-text-muted);
 }
 
 :host ::ng-deep .field-hint--success {
-  color: #2f8d72;
+  color: var(--color-primary);
 }
 
 :host ::ng-deep .field-hint--error {
-  color: #c82014;
+  color: var(--color-red);
 }

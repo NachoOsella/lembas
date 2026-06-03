@@ -17,14 +17,14 @@
 }
 
 .loading-spinner--card {
-  background: #ffffff;
+  background: var(--color-surface);
   border-color: rgba(0, 0, 0, 0.06);
   box-shadow: var(--shadow-card);
 }
 
 .loading-spinner--band {
   background: var(--color-primary-dark);
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--color-text-on-dark-muted);
 }
 
 .loading-spinner__label {
@@ -38,7 +38,7 @@
 }
 
 :host ::ng-deep .p-progressspinner-circle {
-  stroke: #2f8d72;
+  stroke: var(--color-primary);
 }
 
 :host ::ng-deep .p-progressspinner-animation {
@@ -50,5 +50,5 @@
 }
 
 .loading-spinner--band ::ng-deep .p-progressspinner-circle {
-  stroke: #ffffff;
+  stroke: var(--color-text-on-dark);
 }

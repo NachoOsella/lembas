@@ -9,41 +9,39 @@
 
 :host ::ng-deep .app-toast .p-toast-message {
   border-radius: var(--radius-card);
-  box-shadow:
-    0 0 0.5px rgba(0, 0, 0, 0.14),
-    0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-toast);
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-/* ── Success ───────────────────────────────────────────────── */
+/* -- Success ------------------------------------------------------- */
 :host ::ng-deep .app-toast .p-toast-message-success {
-  background: #ffffff;
-  border-left: 4px solid #2f8d72;
+  background: var(--color-surface);
+  border-left: 4px solid var(--color-primary);
   color: var(--color-text);
 }
 
-/* ── Error ─────────────────────────────────────────────────── */
+/* -- Error --------------------------------------------------------- */
 :host ::ng-deep .app-toast .p-toast-message-error {
-  background: #ffffff;
-  border-left: 4px solid #c82014;
+  background: var(--color-surface);
+  border-left: 4px solid var(--color-red);
   color: var(--color-text);
 }
 
-/* ── Warning ───────────────────────────────────────────────── */
+/* -- Warning ------------------------------------------------------- */
 :host ::ng-deep .app-toast .p-toast-message-warn {
-  background: #ffffff;
-  border-left: 4px solid #d9822b;
+  background: var(--color-surface);
+  border-left: 4px solid var(--color-amber);
   color: var(--color-text);
 }
 
-/* ── Info ──────────────────────────────────────────────────── */
+/* -- Info ---------------------------------------------------------- */
 :host ::ng-deep .app-toast .p-toast-message-info {
-  background: #ffffff;
-  border-left: 4px solid #2f8d72;
+  background: var(--color-surface);
+  border-left: 4px solid var(--color-primary);
   color: var(--color-text);
 }
 
-/* ── Content layout ────────────────────────────────────────── */
+/* -- Content layout ------------------------------------------------ */
 :host ::ng-deep .app-toast .p-toast-message-content {
   display: flex;
   align-items: flex-start;
@@ -51,7 +49,7 @@
   gap: 0.75rem;
 }
 
-/* ── PrimeNG icon — no circle, just colored icon ─ */
+/* -- PrimeNG icon -------------------------------------------------- */
 :host ::ng-deep .app-toast .p-toast-message-icon {
   margin: 0;
   flex: 0 0 auto;
@@ -68,22 +66,22 @@
 }
 
 :host ::ng-deep .app-toast .p-toast-message-success .p-toast-message-icon {
-  color: #2f8d72;
+  color: var(--color-primary);
 }
 
 :host ::ng-deep .app-toast .p-toast-message-error .p-toast-message-icon {
-  color: #c82014;
+  color: var(--color-red);
 }
 
 :host ::ng-deep .app-toast .p-toast-message-warn .p-toast-message-icon {
-  color: #d9822b;
+  color: var(--color-amber);
 }
 
 :host ::ng-deep .app-toast .p-toast-message-info .p-toast-message-icon {
-  color: #2f8d72;
+  color: var(--color-primary);
 }
 
-/* ── Text content ──────────────────────────────────────────── */
+/* -- Text content -------------------------------------------------- */
 :host ::ng-deep .app-toast .p-toast-summary {
   font-weight: 700;
   font-size: 0.95rem;
@@ -99,7 +97,7 @@
   line-height: 1.5;
 }
 
-/* ── Close button ──────────────────────────────────────────── */
+/* -- Close button -------------------------------------------------- */
 :host ::ng-deep .app-toast .p-toast-icon-close {
   position: absolute;
   top: 0.75rem;
@@ -127,6 +125,6 @@
 }
 
 :host ::ng-deep .app-toast .p-toast-icon-close:focus-visible {
-  outline: 2px solid #2f8d72;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }

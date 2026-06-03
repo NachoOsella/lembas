@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Login page -- warm editorial card aligned with the register form    */
+/*  Login page -- warm editorial card aligned with the register form   */
 /* ------------------------------------------------------------------ */
 
 :host {
@@ -7,7 +7,7 @@
 }
 
 .login-page {
-  background: #f6ead6;
+  background: var(--color-canvas);
 }
 
 .login-shell {
@@ -23,7 +23,7 @@
   overflow: hidden;
   clip-path: inset(0);
   contain: paint;
-  background: #075f36;
+  background: var(--color-primary-dark);
   isolation: isolate;
 }
 
@@ -31,8 +31,8 @@
    Only keep overrides for hover, focus, invalid and placeholder that differ. */
 .login-page .p-inputtext {
   min-height: 2.95rem;
-  border-color: rgba(0, 0, 0, 0.12) !important;
-  background: #ffffff !important;
+  border-color: var(--color-input-border) !important;
+  background: var(--color-surface) !important;
   font-size: 0.92rem !important;
 }
 
@@ -41,13 +41,13 @@
 }
 
 .login-page .p-inputtext:focus {
-  border-color: #2f8d72 !important;
-  box-shadow: 0 0 0 1px #2f8d72 !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 1px var(--color-primary) !important;
 }
 
 .login-page .p-inputtext.p-invalid {
-  border-color: #c82014 !important;
-  background: var(--color-red-tint, hsla(4, 82%, 43%, 0.05)) !important;
+  border-color: var(--color-red) !important;
+  background: var(--color-red-tint) !important;
   box-shadow: none !important;
 }
 
@@ -87,7 +87,7 @@
   align-items: center;
   gap: 0.35rem;
   margin-top: 0.4rem;
-  color: #c82014;
+  color: var(--color-red);
   font-size: 0.72rem;
   line-height: 1.2;
 }

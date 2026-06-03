@@ -1,4 +1,4 @@
-/* Lembas toggle switch — keeps PrimeNG's default geometry and only brands the active color. */
+/* Lembas toggle switch -- keeps PrimeNG's default geometry and only brands the active color. */
 :host {
   display: inline-flex;
   align-items: center;
@@ -6,16 +6,16 @@
 }
 
 :host ::ng-deep .app-toggle-switch.p-toggleswitch-checked .p-toggleswitch-slider {
-  border-color: var(--color-primary, #2f8d72);
-  background: var(--color-primary, #2f8d72);
+  border-color: var(--color-primary);
+  background: var(--color-primary);
 }
 
 :host
   ::ng-deep
   .app-toggle-switch.p-toggleswitch-checked:not(.p-disabled):has(.p-toggleswitch-input:hover)
   .p-toggleswitch-slider {
-  border-color: var(--color-primary-dark, #075f36);
-  background: var(--color-primary-dark, #075f36);
+  border-color: var(--color-primary-dark);
+  background: var(--color-primary-dark);
 }
 
 :host

@@ -16,7 +16,7 @@
   min-width: 40px;
   height: 40px;
   border-radius: 50%;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--color-text);
   font-size: 14px;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -34,22 +34,22 @@
 :host ::ng-deep .app-pagination .p-paginator-next:hover,
 :host ::ng-deep .app-pagination .p-paginator-last:hover {
   background: rgba(47, 141, 114, 0.08);
-  color: #2f8d72;
+  color: var(--color-primary);
 }
 
 :host ::ng-deep .app-pagination .p-paginator-page.p-highlight {
-  background: #dff6ea;
-  color: #2f8d72;
+  background: var(--color-mint-wash-minimal);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
 :host ::ng-deep .app-pagination .p-paginator-page.p-highlight:hover {
-  background: #dff6ea;
-  color: #2f8d72;
+  background: var(--color-mint-wash-minimal);
+  color: var(--color-primary);
 }
 
 :host ::ng-deep .app-pagination .p-paginator-current {
-  color: rgba(0, 0, 0, 0.58);
+  color: var(--color-text-muted);
   font-size: 14px;
   letter-spacing: -0.01em;
   padding: 0 16px;
@@ -57,17 +57,17 @@
 
 :host ::ng-deep .app-pagination .p-dropdown {
   border-radius: 50px;
-  border-color: #e7e7e7;
+  border-color: var(--color-border-neutral);
   height: 40px;
 }
 
 :host ::ng-deep .app-pagination .p-dropdown:hover {
-  border-color: #2f8d72;
+  border-color: var(--color-primary);
 }
 
 :host ::ng-deep .app-pagination .p-dropdown-label {
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--color-text);
 }
 
 /* Mobile: larger touch targets (WCAG 44px minimum) + 2-row wrap */

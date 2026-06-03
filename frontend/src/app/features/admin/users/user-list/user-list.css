@@ -32,13 +32,13 @@
 }
 
 :host ::ng-deep .users-page .p-datatable-tbody .app-button--ghost {
-  color: #2f8d72;
+  color: var(--color-primary);
   background: rgba(47, 141, 114, 0.08);
 }
 
 :host ::ng-deep .users-page .p-datatable-tbody .app-button--ghost:hover:not(:disabled) {
-  color: #ffffff;
-  background: #2f8d72;
+  color: var(--color-text-on-dark);
+  background: var(--color-primary);
 }
 
 @media (max-width: 34rem) {

@@ -3,9 +3,9 @@
 }
 
 /* ====================================================================
-   Admin Shell — Forest Green sidebar + white topbar + cream content
+   Admin Shell -- Forest Green sidebar + white topbar + cream content
    Follows Lembas DESING.md: color-block rhythm, 12px radius, pill buttons,
-   tight tracking, Forest Green (#075f36) for dark surfaces, cream canvas.
+   tight tracking, Forest Green for dark surfaces, cream canvas.
    ==================================================================== */
 
 .admin {
@@ -17,12 +17,12 @@
 }
 
 /* ------------------------------------------------------------------ */
-/*  Sidebar (Forest Green - #075f36)                                   */
+/*  Sidebar (Forest Green)                                             */
 /* ------------------------------------------------------------------ */
 
 .admin__sidebar {
   background: var(--color-primary-dark);
-  color: #ffffff;
+  color: var(--color-text-on-dark);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -82,7 +82,7 @@
   min-height: 2.8rem;
   padding: 0.55rem 0.9rem;
   border-radius: 0.6rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-on-dark-muted);
   font-size: 0.95rem;
   font-weight: 500;
   text-decoration: none;
@@ -95,12 +95,12 @@
 
 .admin__nav-link:hover {
   background: rgba(255, 255, 255, 0.07);
-  color: #ffffff;
+  color: var(--color-text-on-dark);
 }
 
 .admin__nav-link--active {
   background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  color: var(--color-text-on-dark);
   font-weight: 600;
 }
 
@@ -145,7 +145,7 @@
 
 .admin__collapse-btn:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  color: var(--color-text-on-dark);
 }
 
 /* ------------------------------------------------------------------ */
@@ -250,7 +250,7 @@
   height: 2.1rem;
   border-radius: 50%;
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-text-on-dark);
   font-size: 0.95rem;
 }
 
@@ -307,7 +307,7 @@
 
 .admin__mobile-toggle:hover {
   color: var(--color-text);
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--color-overlay-black-light);
 }
 
 /* Mobile Sidebar Backdrop */
@@ -315,7 +315,7 @@
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--color-overlay-black);
   backdrop-filter: blur(2px);
   z-index: 40;
 }

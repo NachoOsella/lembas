@@ -4,9 +4,7 @@
 
 /* Design-system shadow tokens */
 :host ::ng-deep .shadow-card {
-  box-shadow:
-    0 0 0.5px rgba(0, 0, 0, 0.14),
-    0 1px 1px rgba(0, 0, 0, 0.24);
+  box-shadow: var(--shadow-card);
 }
 
 :host ::ng-deep .shadow-card-hover {
@@ -20,7 +18,7 @@
 }
 
 .store-product-card a:focus-visible {
-  outline: 2px solid #2f8d72;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -37,14 +35,14 @@
   }
 }
 
-/* ── Image section ─────────────────────────────────────────── */
+/* -- Image section -------------------------------------------------- */
 .store-product-card__image {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: #faf6ef;
+  background: var(--color-surface-warm);
 }
 
 .store-product-card__image--regular {
@@ -102,18 +100,23 @@
 
 .store-product-card__category {
   position: absolute;
-  left: 1rem;
-  top: 1rem;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 2;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 0.25rem 0.75rem;
-  font-size: 0.6875rem;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: rgba(0, 0, 0, 0.6);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.1em;
+  color: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  max-width: calc(100% - 1.5rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .store-product-card__hover {
@@ -138,7 +141,7 @@
   height: 2.5rem;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.9);
-  color: #2f8d72;
+  color: var(--color-primary);
   opacity: 0;
   transform: translateY(1rem);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -152,29 +155,7 @@
   transform: translateY(0);
 }
 
-/* ── Category pill (subtle overlay on image) ────────────── */
-.store-product-card__category {
-  position: absolute;
-  left: 0.75rem;
-  top: 0.75rem;
-  z-index: 2;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.88);
-  padding: 0.2rem 0.6rem;
-  font-size: 0.625rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-  max-width: calc(100% - 1.5rem);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ── Stock badge (subtle overlay on image, top-right) ──── */
+/* -- Stock badge (subtle overlay on image, top-right) --------------- */
 .store-product-card__stock {
   position: absolute;
   right: 0.75rem;
@@ -192,15 +173,15 @@
 
 .store-product-card__stock--out {
   background: rgba(200, 32, 20, 0.88);
-  color: #fff;
+  color: var(--color-text-on-dark);
 }
 
 .store-product-card__stock--low {
   background: rgba(217, 130, 43, 0.88);
-  color: #fff;
+  color: var(--color-text-on-dark);
 }
 
-/* ── Add-to-cart button (inline card action, not a standard pill) ── */
+/* -- Add-to-cart button (inline card action) ------------------------ */
 .store-product-card__add-btn {
   display: flex;
   align-items: center;
@@ -208,9 +189,9 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1.5px solid #2f8d72;
+  border: 1.5px solid var(--color-primary);
   background: transparent;
-  color: #2f8d72;
+  color: var(--color-primary);
   cursor: pointer;
   flex-shrink: 0;
   transition:
@@ -221,19 +202,17 @@
 }
 
 .store-product-card__add-btn:hover {
-  background: #2f8d72;
-  color: #fff;
-  box-shadow:
-    0 0 0.5px rgba(47, 141, 114, 0.12),
-    0 1px 2px rgba(47, 141, 114, 0.14);
+  background: var(--color-primary);
+  color: var(--color-text-on-dark);
+  box-shadow: var(--shadow-button-primary);
 }
 
-/* Signature active scale — matches design system button pattern */
+/* Signature active scale -- matches design system button pattern */
 .store-product-card__add-btn:active {
   transform: scale(0.95);
 }
 
 .store-product-card__add-btn:focus-visible {
-  outline: 2px solid #2f8d72;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }

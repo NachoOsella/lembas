@@ -2,9 +2,9 @@
   display: block;
 }
 
-/* ── Card variant (PrimeNG Message wrapper) ───────────────── */
+/* -- Card variant (PrimeNG Message wrapper) ----------------------- */
 :host ::ng-deep .error-alert {
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid rgba(200, 32, 20, 0.28);
   border-radius: var(--radius-card, 12px);
   color: var(--color-text);
@@ -25,10 +25,10 @@
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid rgba(200, 32, 20, 0.12);
   border-radius: 999px;
-  color: #c82014;
+  color: var(--color-red);
   font-size: 0.85rem;
   line-height: 1;
 }
@@ -61,20 +61,20 @@
 }
 
 :host ::ng-deep .error-alert .p-button {
-  color: #c82014;
+  color: var(--color-red);
   height: 2rem;
   margin-top: -0.25rem;
   width: 2rem;
 }
 
-/* ── Inline variant (lightweight flex row for lists/forms) ── */
+/* -- Inline variant (lightweight flex row for lists/forms) -------- */
 .error-alert-inline {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.85rem 1rem;
-  color: #c82014;
-  background: #ffffff;
+  color: var(--color-red);
+  background: var(--color-surface);
   border: 1px solid rgba(200, 32, 20, 0.28);
   border-radius: 1rem;
   font-weight: 700;
@@ -117,7 +117,7 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #c82014;
+  color: var(--color-red);
   cursor: pointer;
   transition: background-color 0.15s ease;
 }

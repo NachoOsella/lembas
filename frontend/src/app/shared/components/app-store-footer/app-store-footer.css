@@ -4,15 +4,14 @@
 
 .app-store-footer {
   position: relative;
-  background: var(--color-primary-dark, #075f36);
-  color: #ffffff;
+  background: var(--color-primary-dark);
+  color: var(--color-text-on-dark);
   font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, sans-serif);
   letter-spacing: var(--tracking-tight, -0.01em);
   overflow: hidden;
 }
 
-/* Dashed perforation hairline — subtle receipt motif echoing the home ticket theme.
-   A 1px band of repeating mint-wash dots across the top of the band. */
+/* Dashed perforation hairline -- subtle receipt motif echoing the home ticket theme. */
 .app-store-footer__perforation {
   position: absolute;
   top: 0;
@@ -73,7 +72,7 @@
   }
 }
 
-/* ── Brand block ────────────────────────────────────────────── */
+/* -- Brand block ---------------------------------------------------- */
 .app-store-footer__brand-link {
   display: inline-flex;
   align-items: center;
@@ -89,7 +88,7 @@
 }
 
 .app-store-footer__brand-link:focus-visible {
-  outline: 2px solid #2f8d72;
+  outline: 2px solid var(--color-primary);
   outline-offset: 4px;
 }
 
@@ -134,7 +133,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: #ffffff;
+  color: var(--color-text-on-dark);
 }
 
 .app-store-footer__tagline {
@@ -165,22 +164,22 @@
   width: 6px;
   height: 6px;
   border-radius: 9999px;
-  background: #f29d52;
+  background: var(--color-orange);
   box-shadow: 0 0 0 3px rgba(242, 157, 82, 0.16);
   flex-shrink: 0;
 }
 
-/* ── Column titles ──────────────────────────────────────────── */
+/* -- Column titles -------------------------------------------------- */
 .app-store-footer__col-title {
   margin: 0 0 0.9rem;
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: #6cc6a8;
+  color: var(--color-mint);
 }
 
-/* ── Link column ────────────────────────────────────────────── */
+/* -- Link column ---------------------------------------------------- */
 .app-store-footer__col-list {
   list-style: none;
   margin: 0;
@@ -210,14 +209,14 @@
   bottom: 0;
   height: 1px;
   width: 100%;
-  background: #2f8d72;
+  background: var(--color-primary);
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .app-store-footer__link:hover {
-  color: #ffffff;
+  color: var(--color-text-on-dark);
 }
 
 .app-store-footer__link:hover::after {
@@ -225,11 +224,11 @@
 }
 
 .app-store-footer__link:focus-visible {
-  outline: 2px solid #2f8d72;
+  outline: 2px solid var(--color-primary);
   outline-offset: 4px;
 }
 
-/* ── Social cluster ─────────────────────────────────────────── */
+/* -- Social cluster ------------------------------------------------- */
 .app-store-footer__social-list {
   list-style: none;
   margin: 0;
@@ -261,11 +260,11 @@
 .app-store-footer__social-btn:hover {
   background: rgba(47, 141, 114, 0.18);
   border-color: rgba(47, 141, 114, 0.5);
-  color: #ffffff;
+  color: var(--color-text-on-dark);
 }
 
 .app-store-footer__social-btn:focus-visible {
-  outline: 2px solid #2f8d72;
+  outline: 2px solid var(--color-primary);
   outline-offset: 4px;
 }
 
@@ -273,7 +272,7 @@
   transform: scale(0.95);
 }
 
-/* ── Bottom strip ───────────────────────────────────────────── */
+/* -- Bottom strip --------------------------------------------------- */
 .app-store-footer__strip {
   position: relative;
   background: rgba(0, 0, 0, 0.2);
@@ -309,11 +308,11 @@
   width: 5px;
   height: 5px;
   border-radius: 9999px;
-  background: #f29d52;
+  background: var(--color-orange);
   flex-shrink: 0;
 }
 
-/* ── Reduced motion ─────────────────────────────────────────── */
+/* -- Reduced motion ------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .app-store-footer__brand-link:hover .app-store-footer__mark,
   .app-store-footer__social-btn,

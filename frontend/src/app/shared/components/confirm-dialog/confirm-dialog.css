@@ -3,10 +3,10 @@
 }
 
 .confirm-dialog {
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-card);
-  /* Whisper-soft layered shadow — two low-alpha layers */
+  /* Whisper-soft layered shadow -- two low-alpha layers */
   box-shadow:
     0 0 0.5px rgba(0, 0, 0, 0.14),
     0 1px 3px rgba(0, 0, 0, 0.12);
@@ -17,7 +17,7 @@
 .confirm-dialog .p-dialog-header,
 .confirm-dialog .p-dialog-content,
 .confirm-dialog .p-dialog-footer {
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-text);
 }
 
@@ -38,11 +38,11 @@
 
 .confirm-dialog .p-dialog-header-icon:hover {
   background: rgba(47, 141, 114, 0.1);
-  color: #2f8d72;
+  color: var(--color-primary);
 }
 
 .confirm-dialog .p-dialog-header-icon:focus-visible {
-  outline: 2px solid #2f8d72;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -79,7 +79,7 @@
   justify-content: center;
   width: 4rem;
   height: 4rem;
-  background: #fff2df;
+  background: var(--color-orange-lightest);
   border: 1px solid rgba(47, 141, 114, 0.08);
   border-radius: 999px;
   color: var(--color-primary);
@@ -88,9 +88,9 @@
 }
 
 .confirm-dialog__icon--danger {
-  background: hsl(4 82% 43% / 8%);
+  background: rgba(200, 32, 20, 0.08);
   border-color: rgba(200, 32, 20, 0.12);
-  color: #c82014;
+  color: var(--color-red);
 }
 
 /* Ensure PrimeIcon inside is perfectly centered */
@@ -103,7 +103,7 @@
 }
 
 .confirm-dialog__copy h2 {
-  color: var(--color-text, rgba(0, 0, 0, 0.87));
+  color: var(--color-text);
   font-size: 1.45rem;
   font-weight: 700;
   letter-spacing: -0.01em;

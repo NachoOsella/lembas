@@ -5,7 +5,7 @@
 .empty-state {
   align-items: center;
   background: transparent;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--color-text);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -21,9 +21,9 @@
   justify-content: center;
   width: 5rem;
   height: 5rem;
-  background: #f6ead6;
+  background: var(--color-canvas);
   border-radius: 999px;
-  color: #2f8d72;
+  color: var(--color-primary);
   font-size: 1.75rem;
   line-height: 1;
 }
@@ -42,7 +42,7 @@
 }
 
 .empty-state__content h2 {
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--color-text);
   font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -51,7 +51,7 @@
 }
 
 .empty-state__content p {
-  color: rgba(0, 0, 0, 0.58);
+  color: var(--color-text-muted);
   font-size: 1rem;
   line-height: 1.5;
   margin: 0.75rem 0 0;

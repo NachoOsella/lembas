@@ -9,6 +9,6 @@
 
 .catnav__pill:focus-visible,
 .catalog-page__card a:focus-visible {
-  outline: 2px solid #2f8d72;
+  outline: 2px solid var(--color-primary);
   outline-offset: 4px;
 }

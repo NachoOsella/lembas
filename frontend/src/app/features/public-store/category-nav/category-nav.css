@@ -1,12 +1,12 @@
 /* =========================================================================
-   Category Nav — responsive pill row + centered overlay modal
+   Category Nav -- responsive pill row + centered overlay modal
    ========================================================================= */
 
 :host {
   display: block;
 }
 
-/* ── Pill row (desktop) ─────────────────────────────────────────────────── */
+/* -- Pill row (desktop) --------------------------------------------- */
 
 .catnav-pills {
   display: flex;
@@ -43,15 +43,15 @@
 }
 
 .catnav-pills__item--active {
-  background: #075f36;
-  border-color: #075f36;
-  color: #ffffff;
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  color: var(--color-text-on-dark);
 }
 
 .catnav-pills__item--more {
   border-style: dashed;
   border-color: rgba(47, 141, 114, 0.2);
-  color: #2f8d72;
+  color: var(--color-primary);
   background: rgba(47, 141, 114, 0.03);
 }
 
@@ -84,18 +84,18 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
-/* ── Focus ──────────────────────────────────────────────────────────────── */
+/* -- Focus ---------------------------------------------------------- */
 
 .catnav-pills__item:focus-visible,
 .catnav-modal__card:focus-visible,
 .catnav-modal__close:focus-visible,
 .catnav-modal__search input:focus-visible,
 .catnav-mobile__btn:focus-visible {
-  outline: 2px solid #2f8d72;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* ── Overlay + Modal ────────────────────────────────────────────────────── */
+/* -- Overlay + Modal ------------------------------------------------ */
 
 .catnav-overlay {
   position: fixed;
@@ -118,7 +118,7 @@
   flex-direction: column;
   border: 1px solid rgba(7, 95, 54, 0.1);
   border-radius: 1.25rem;
-  background: #fffef9;
+  background: var(--color-surface-warmest);
   box-shadow: 0 24px 80px rgba(7, 40, 26, 0.22);
   animation: catnav-scale-in 0.22s cubic-bezier(0.2, 0.8, 0.24, 1.02);
   overflow: hidden;
@@ -134,7 +134,7 @@
 
 .catnav-modal__label {
   margin: 0;
-  color: #9a5b19;
+  color: var(--color-bark);
   font-size: 0.65rem;
   font-weight: 800;
   line-height: 1.2;
@@ -145,7 +145,7 @@
 
 .catnav-modal__title {
   margin: 0.2rem 0 0;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--color-text);
   font-size: 1.25rem;
   font-weight: 700;
   line-height: 1.15;
@@ -171,14 +171,14 @@
 
 .catnav-modal__close:hover {
   background: rgba(200, 32, 20, 0.06);
-  color: #c82014;
+  color: var(--color-red);
 }
 
 .catnav-modal__close:active {
   transform: scale(0.92);
 }
 
-/* ── Search ─────────────────────────────────────────────────────────────── */
+/* -- Search --------------------------------------------------------- */
 
 .catnav-modal__search {
   display: flex;
@@ -187,8 +187,8 @@
   margin: 0.85rem 1.5rem 0;
   border: 1px solid rgba(47, 141, 114, 0.14);
   border-radius: 999px;
-  background: #ffffff;
-  color: #2f8d72;
+  background: var(--color-surface);
+  color: var(--color-primary);
   padding: 0 1rem;
   transition: border-color 0.15s ease;
 }
@@ -201,7 +201,7 @@
   width: 100%;
   border: 0;
   background: transparent;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--color-text);
   font-size: 0.88rem;
   font-weight: 600;
   line-height: 1.2;
@@ -217,7 +217,7 @@
   outline: 0;
 }
 
-/* ── Category grid ──────────────────────────────────────────────────────── */
+/* -- Category grid -------------------------------------------------- */
 
 .catnav-modal__grid {
   display: grid;
@@ -234,7 +234,7 @@
   gap: 0.2rem;
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 0.85rem;
-  background: #ffffff;
+  background: var(--color-surface);
   padding: 0.85rem 1rem;
   text-align: left;
   cursor: pointer;
@@ -243,13 +243,13 @@
 
 .catnav-modal__card:hover {
   border-color: rgba(47, 141, 114, 0.18);
-  background: #f6fbf7;
+  background: var(--color-mint-wash-pale);
 }
 
 .catnav-modal__card--active {
-  border-color: #2f8d72;
-  background: #f0f9f4;
-  box-shadow: 0 0 0 1px #2f8d72;
+  border-color: var(--color-primary);
+  background: var(--color-surface-faint);
+  box-shadow: 0 0 0 1px var(--color-primary);
 }
 
 .catnav-modal__card:active {
@@ -265,7 +265,7 @@
 }
 
 .catnav-modal__card--active .catnav-modal__card-name {
-  color: #075f36;
+  color: var(--color-primary-dark);
 }
 
 .catnav-modal__card-meta {
@@ -287,7 +287,7 @@
   font-family: var(--font-sans);
 }
 
-/* ── States ─────────────────────────────────────────────────────────────── */
+/* -- States --------------------------------------------------------- */
 
 .catnav-skeleton {
   display: flex;
@@ -299,7 +299,7 @@
   width: 5.5rem;
   height: 2.1rem;
   border-radius: 999px;
-  background: #efe5d0;
+  background: var(--color-cream);
 }
 
 .catnav-error {
@@ -308,8 +308,8 @@
   gap: 0.45rem;
   border: 1px solid rgba(200, 32, 20, 0.15);
   border-radius: 999px;
-  background: hsl(4 82% 43% / 5%);
-  color: #c82014;
+  background: var(--color-red-tint);
+  color: var(--color-red);
   font-size: 0.8rem;
   font-weight: 700;
   line-height: 1;
@@ -325,7 +325,7 @@
   font-family: var(--font-sans);
 }
 
-/* ── Animations ─────────────────────────────────────────────────────────── */
+/* -- Animations ----------------------------------------------------- */
 
 @keyframes catnav-fade-in {
   from {
@@ -358,7 +358,7 @@
   }
 }
 
-/* ── Mobile ─────────────────────────────────────────────────────────────── */
+/* -- Mobile --------------------------------------------------------- */
 
 .catnav-mobile {
   display: none;
@@ -391,7 +391,7 @@
     width: 100%;
     border: 1.5px solid rgba(47, 141, 114, 0.18);
     border-radius: 999px;
-    background: #ffffff;
+    background: var(--color-surface);
     color: rgba(0, 0, 0, 0.78);
     font-size: 0.92rem;
     font-weight: 600;
@@ -412,7 +412,7 @@
   }
 
   .catnav-mobile__btn i {
-    color: #2f8d72;
+    color: var(--color-primary);
     font-size: 1rem;
   }
 

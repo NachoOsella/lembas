@@ -12,17 +12,17 @@
   line-height: 1;
 }
 
-/* Leaf Green — for light / white backgrounds */
+/* Leaf Green -- for light / white backgrounds */
 .app-eyebrow--green {
-  color: #2f8d72;
+  color: var(--color-primary);
 }
 
-/* White at 70% opacity — for dark green backgrounds */
+/* White at 70% opacity -- for dark green backgrounds */
 .app-eyebrow--light {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-on-dark-muted);
 }
 
-/* Brown Bark — for editorial / category modal surfaces */
+/* Brown Bark -- for editorial / category modal surfaces */
 .app-eyebrow--bark {
-  color: #9a5b19;
+  color: var(--color-bark);
 }

@@ -10,7 +10,7 @@
   letter-spacing: var(--tracking-tight);
 }
 
-/* ── Table cell alignment ───────────────────────────────── */
+/* -- Table cell alignment ----------------------------------------- */
 :host ::ng-deep .app-data-table .p-datatable-tbody > tr > td,
 :host ::ng-deep .app-data-table .p-datatable-thead > tr > th {
   text-align: left;
@@ -32,7 +32,7 @@
 .product-name-cell small {
   display: block;
   margin-top: 0.2rem;
-  color: rgba(0, 0, 0, 0.58);
+  color: var(--color-text-muted);
   font-size: 0.76rem;
   font-weight: 600;
 }
@@ -43,7 +43,7 @@
   object-fit: cover;
   border: 1px solid rgba(47, 141, 114, 0.14);
   border-radius: var(--radius-card, 12px);
-  background: #f6ead6;
+  background: var(--color-canvas);
 }
 
 :host ::ng-deep .products-filters__select.p-select {
