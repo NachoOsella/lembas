@@ -1,6 +1,4 @@
 import { Component, OnInit, inject, input, output, signal, computed } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { ToggleSwitch } from 'primeng/toggleswitch';
 import { MessageService } from 'primeng/api';
 
 import { UserService } from '../../../../core/services/user';
@@ -12,6 +10,7 @@ import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
 import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
 import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
+import { AppToggleSwitch } from '../../../../shared/components/app-toggle-switch/app-toggle-switch';
 
 /** Maps a role to an AppBadge tone. */
 const ROLE_TONE: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
@@ -45,13 +44,12 @@ const USER_SORT_FIELDS = new Set(['firstName', 'email', 'role', 'enabled']);
 @Component({
   selector: 'app-user-list',
   imports: [
-    FormsModule,
-    ToggleSwitch,
     AppDataTable,
     AppButton,
     AppBadge,
     AppPageHeader,
     AppSearchBar,
+    AppToggleSwitch,
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',

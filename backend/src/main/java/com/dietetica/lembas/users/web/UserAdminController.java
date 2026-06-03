@@ -1,5 +1,6 @@
 package com.dietetica.lembas.users.web;
 
+import com.dietetica.lembas.shared.dto.PageResponse;
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
 import com.dietetica.lembas.users.dto.UpdateUserRequest;
 import com.dietetica.lembas.users.dto.UserResponse;
@@ -8,7 +9,6 @@ import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.service.UserAdminService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -54,12 +54,12 @@ public class UserAdminController {
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Page<UserResponse> listUsers(
+    public PageResponse<UserResponse> listUsers(
             @RequestParam(required = false) Role role,
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) String search,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return userAdminService.listUsers(role, branchId, search, pageable);
+        return PageResponse.from(userAdminService.listUsers(role, branchId, search, pageable));
     }
 
     /**

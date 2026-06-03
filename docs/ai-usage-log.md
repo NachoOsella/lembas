@@ -8,6 +8,9 @@
 - `backend/src/test/java/com/dietetica/lembas/shared/branch/service/BranchServiceTest.java` -- nuevo unit test para BranchService.listActiveBranches con mocks de repositorio.
 - `backend/src/test/java/com/dietetica/lembas/auth/service/LembasUserDetailsServiceTest.java` -- nuevo unit test para loadUserByUsername/loadUserById con normalizacion de email y not-found.
 - `backend/src/test/java/com/dietetica/lembas/auth/service/SecurityContextHelperTest.java` -- nuevo unit test para getCurrentUser con autenticacion valida, ausente, no autenticada y principal inesperado.
+- `backend/src/test/java/com/dietetica/lembas/catalog/integration/CatalogAdminStoreIntegrationTest.java` -- agregados tests de integracion full-stack para catalogo: JWT admin real, creacion de categoria/producto, publicacion, visibilidad en tienda publica, rechazo sin token y contrato paginado actual.
+- `backend/src/main/java/com/dietetica/lembas/shared/dto/PageResponse.java`, controllers paginados y modelos FE -- reemplazada serializacion directa de `PageImpl` por contrato paginado estable sin campos internos `pageable/sort`, manteniendo campos usados por frontend.
+- `frontend/src/app/shared/components/app-toggle-switch/`, `frontend/src/app/features/admin/users/user-list/` -- creado toggle switch generico basado en PrimeNG con colores Lembas de `DESING.md` y reemplazado el toggle especifico de estado de usuarios.
 
 ## 2026-05-21
 

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { PageResponse } from '../../shared/models/page';
 import { Category, ProductSummary } from '../../shared/models/product';
 
 /**
@@ -44,16 +45,7 @@ export class CatalogService {
     categoryId?: number,
     page = 0,
     size = 20,
-  ): Observable<{
-    content: ProductSummary[];
-    totalElements: number;
-    totalPages: number;
-    number: number;
-    size: number;
-    first: boolean;
-    last: boolean;
-    empty: boolean;
-  }> {
+  ): Observable<PageResponse<ProductSummary>> {
     let params = new HttpParams().set('page', page).set('size', size);
     const normalizedQuery = query?.trim();
     if (normalizedQuery) {
@@ -62,16 +54,7 @@ export class CatalogService {
     if (categoryId != null) {
       params = params.set('categoryId', categoryId);
     }
-    return this.http.get<{
-      content: ProductSummary[];
-      totalElements: number;
-      totalPages: number;
-      number: number;
-      size: number;
-      first: boolean;
-      last: boolean;
-      empty: boolean;
-    }>(this.productsUrl, { params });
+    return this.http.get<PageResponse<ProductSummary>>(this.productsUrl, { params });
   }
 
   /**
@@ -82,26 +65,8 @@ export class CatalogService {
    *
    * @returns an observable emitting the paginated response
    */
-  getFeaturedProducts(): Observable<{
-    content: ProductSummary[];
-    totalElements: number;
-    totalPages: number;
-    number: number;
-    size: number;
-    first: boolean;
-    last: boolean;
-    empty: boolean;
-  }> {
-    return this.http.get<{
-      content: ProductSummary[];
-      totalElements: number;
-      totalPages: number;
-      number: number;
-      size: number;
-      first: boolean;
-      last: boolean;
-      empty: boolean;
-    }>(this.featuredUrl);
+  getFeaturedProducts(): Observable<PageResponse<ProductSummary>> {
+    return this.http.get<PageResponse<ProductSummary>>(this.featuredUrl);
   }
 
   /**
@@ -123,25 +88,7 @@ export class CatalogService {
    * @param productId the current product ID (backend resolves category and excludes it)
    * @returns an observable emitting the paginated response
    */
-  getRelatedProducts(productId: number): Observable<{
-    content: ProductSummary[];
-    totalElements: number;
-    totalPages: number;
-    number: number;
-    size: number;
-    first: boolean;
-    last: boolean;
-    empty: boolean;
-  }> {
-    return this.http.get<{
-      content: ProductSummary[];
-      totalElements: number;
-      totalPages: number;
-      number: number;
-      size: number;
-      first: boolean;
-      last: boolean;
-      empty: boolean;
-    }>(`${this.productsUrl}/${productId}/related`);
+  getRelatedProducts(productId: number): Observable<PageResponse<ProductSummary>> {
+    return this.http.get<PageResponse<ProductSummary>>(`${this.productsUrl}/${productId}/related`);
   }
 }

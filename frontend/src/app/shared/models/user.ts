@@ -1,3 +1,5 @@
+import { PageResponse } from './page';
+
 /** System roles matching the backend {@code Role} enum. */
 export type Role = 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'CUSTOMER';
 
@@ -65,16 +67,5 @@ export interface Branch {
   active?: boolean;
 }
 
-/**
- * Standard Spring Data paginated response.
- */
-export interface Page<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-  first: boolean;
-  last: boolean;
-  empty: boolean;
-}
+/** Stable backend paginated response. */
+export type Page<T> = PageResponse<T>;

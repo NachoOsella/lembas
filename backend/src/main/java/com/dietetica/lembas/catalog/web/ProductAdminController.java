@@ -6,9 +6,9 @@ import com.dietetica.lembas.catalog.dto.ProductStatusUpdateRequest;
 import com.dietetica.lembas.catalog.dto.ProductSummaryDto;
 import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
 import com.dietetica.lembas.catalog.service.ProductService;
+import com.dietetica.lembas.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -40,13 +40,13 @@ public class ProductAdminController {
 
     /** Returns paginated products matching admin filters. */
     @GetMapping
-    public Page<ProductSummaryDto> list(
+    public PageResponse<ProductSummaryDto> list(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) ProductOnlineStatus onlineStatus,
             @PageableDefault(size = 10, sort = "name") Pageable pageable
     ) {
-        return productService.listAdminProducts(search, categoryId, onlineStatus, pageable);
+        return PageResponse.from(productService.listAdminProducts(search, categoryId, onlineStatus, pageable));
     }
 
     /** Returns one product for the edit form. */

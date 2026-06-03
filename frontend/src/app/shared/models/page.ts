@@ -1,4 +1,4 @@
-/** Generic Spring Data page response used by paginated admin APIs. */
+/** Stable backend page response used by paginated APIs. */
 export interface PageResponse<T> {
   content: T[];
   totalElements: number;

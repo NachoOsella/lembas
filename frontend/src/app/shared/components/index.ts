@@ -17,6 +17,7 @@ export * from './app-search-bar/app-search-bar';
 export * from './app-section-card/app-section-card';
 export * from './app-tabs/app-tabs';
 export * from './app-toast/app-toast';
+export * from './app-toggle-switch/app-toggle-switch';
 export * from './confirm-dialog/confirm-dialog';
 export * from './empty-state/empty-state';
 export * from './error-alert/error-alert';

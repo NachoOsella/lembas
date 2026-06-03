@@ -3,7 +3,7 @@ package com.dietetica.lembas.catalog.web;
 import com.dietetica.lembas.catalog.dto.ProductDetailDto;
 import com.dietetica.lembas.catalog.dto.ProductSummaryDto;
 import com.dietetica.lembas.catalog.service.ProductService;
-import org.springframework.data.domain.Page;
+import com.dietetica.lembas.shared.dto.PageResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,12 +31,12 @@ public class ProductStoreController {
      * accepting a branchId parameter to prevent a misleading stock contract.
      */
     @GetMapping
-    public Page<ProductSummaryDto> list(
+    public PageResponse<ProductSummaryDto> list(
             @RequestParam(name = "q", required = false) String search,
             @RequestParam(required = false) Long categoryId,
             @PageableDefault(size = 20, sort = "name") Pageable pageable
     ) {
-        return productService.listStoreProducts(search, categoryId, pageable);
+        return PageResponse.from(productService.listStoreProducts(search, categoryId, pageable));
     }
 
     /**
@@ -51,13 +51,13 @@ public class ProductStoreController {
 
     /** Returns 15 random published products for the home page featured section. */
     @GetMapping("/featured")
-    public Page<ProductSummaryDto> featured() {
-        return productService.listRandomPublishedProducts();
+    public PageResponse<ProductSummaryDto> featured() {
+        return PageResponse.from(productService.listRandomPublishedProducts());
     }
 
     /** Returns random published products from the same category, excluding the current product. */
     @GetMapping("/{id}/related")
-    public Page<ProductSummaryDto> related(@PathVariable Long id) {
-        return productService.listRandomRelatedProducts(id);
+    public PageResponse<ProductSummaryDto> related(@PathVariable Long id) {
+        return PageResponse.from(productService.listRandomRelatedProducts(id));
     }
 }

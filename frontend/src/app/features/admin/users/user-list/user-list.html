@@ -58,11 +58,12 @@
             <span>{{ branchName()?.(user.branchId) ?? '—' }}</span>
           </td>
           <td>
-            <p-toggleswitch
-              [ngModel]="user.enabled"
-              (ngModelChange)="toggleStatus(user)"
+            <app-toggle-switch
+              size="sm"
+              [checked]="user.enabled"
+              (checkedChange)="toggleStatus(user)"
               [disabled]="user.id === 1"
-              [attr.aria-label]="'Cambiar estado de ' + user.email"
+              [ariaLabel]="'Cambiar estado de ' + user.email"
             />
           </td>
           <td>

@@ -1,0 +1,8 @@
+<p-toggleswitch
+  [class]="switchClass()"
+  [ngModel]="checked()"
+  (ngModelChange)="onCheckedChange($event)"
+  [disabled]="disabled()"
+  [inputId]="inputId() ?? undefined"
+  [attr.aria-label]="ariaLabel()"
+/>
