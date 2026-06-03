@@ -290,12 +290,26 @@ class CategoryAdminControllerTest {
         org.mockito.Mockito.doThrow(new DomainException(
                 "CATEGORY_HAS_CHILDREN",
                 HttpStatus.CONFLICT,
-                "Cannot delete category: it has child categories"
+                "Cannot delete category: it has active child categories"
         )).when(categoryService).delete(1L);
 
         mockMvc.perform(delete("/api/admin/categories/1"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("CATEGORY_HAS_CHILDREN"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void Should_return409_when_adminDeletesCategoryWithProducts() throws Exception {
+        org.mockito.Mockito.doThrow(new DomainException(
+                "CATEGORY_HAS_PRODUCTS",
+                HttpStatus.CONFLICT,
+                "Cannot delete category: it has active product(s)"
+        )).when(categoryService).delete(1L);
+
+        mockMvc.perform(delete("/api/admin/categories/1"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CATEGORY_HAS_PRODUCTS"));
     }
 
     @Test

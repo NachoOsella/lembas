@@ -36,7 +36,7 @@ class CategoryServiceTest {
     @Test
     void createShouldPersistRootCategory() {
         Category saved = new Category(1L, null, "Cereales", "Integrales");
-        when(categoryRepository.findByParentIsNullAndNameIgnoreCase("Cereales")).thenReturn(Optional.empty());
+        when(categoryRepository.existsByParentIsNullAndNameIgnoreCaseAndActiveTrue("Cereales")).thenReturn(false);
         when(categoryRepository.save(any(Category.class))).thenReturn(saved);
 
         var result = categoryService.create(new CategoryRequest(" Cereales ", null, " Integrales "));
@@ -49,7 +49,7 @@ class CategoryServiceTest {
     @Test
     void updateShouldRejectSelfParent() {
         Category category = new Category(7L, null, "Yerbas", null);
-        when(categoryRepository.findById(7L)).thenReturn(Optional.of(category));
+        when(categoryRepository.findByIdAndActiveTrue(7L)).thenReturn(Optional.of(category));
 
         assertThatThrownBy(() -> categoryService.update(7L, new CategoryRequest("Yerbas", 7L, null)))
                 .isInstanceOf(DomainException.class)
@@ -58,8 +58,7 @@ class CategoryServiceTest {
 
     @Test
     void createShouldRejectDuplicatedNameAtSameLevel() {
-        Category existing = new Category(3L, null, "Suplementos", null);
-        when(categoryRepository.findByParentIsNullAndNameIgnoreCase("Suplementos")).thenReturn(Optional.of(existing));
+        when(categoryRepository.existsByParentIsNullAndNameIgnoreCaseAndActiveTrue("Suplementos")).thenReturn(true);
 
         assertThatThrownBy(() -> categoryService.create(new CategoryRequest("Suplementos", null, null)))
                 .isInstanceOf(DomainException.class)
@@ -67,30 +66,31 @@ class CategoryServiceTest {
     }
 
     @Test
-    void deleteShouldThrowWhenCategoryHasChildren() {
+    void deleteShouldThrowWhenCategoryHasActiveChildren() {
         Category category = new Category(5L, null, "Cereales", null);
-        when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
-        when(categoryRepository.existsByParentId(5L)).thenReturn(true);
+        when(categoryRepository.findByIdAndActiveTrue(5L)).thenReturn(Optional.of(category));
+        when(categoryRepository.existsByParentIdAndActiveTrue(5L)).thenReturn(true);
 
         assertThatThrownBy(() -> categoryService.delete(5L))
                 .isInstanceOf(DomainException.class)
-                .hasMessageContaining("has child categories");
+                .hasMessageContaining("has active child categories");
     }
 
     @Test
-    void deleteShouldSucceedWhenNoChildrenOrProducts() {
+    void deleteShouldSoftDeleteWhenNoActiveChildrenOrProducts() {
         Category category = new Category(6L, null, "Snacks", null);
-        when(categoryRepository.findById(6L)).thenReturn(Optional.of(category));
-        when(categoryRepository.existsByParentId(6L)).thenReturn(false);
-        when(categoryRepository.countProductsByCategoryId(6L)).thenReturn(0L);
+        when(categoryRepository.findByIdAndActiveTrue(6L)).thenReturn(Optional.of(category));
+        when(categoryRepository.existsByParentIdAndActiveTrue(6L)).thenReturn(false);
+        when(categoryRepository.countActiveProductsByCategoryId(6L)).thenReturn(0L);
 
         categoryService.delete(6L);
 
-        verify(categoryRepository).delete(category);
+        assertThat(category.isActive()).isFalse();
+        verify(categoryRepository, org.mockito.Mockito.never()).delete(any());
     }
 
     @Test
-    void searchCategoriesShouldReturnMatchingByName() {
+    void searchCategoriesShouldReturnMatchingActiveByName() {
         Category c1 = new Category(1L, null, "Granola integral", "Con almendras");
         Category c2 = new Category(2L, null, "Granola tropical", "Con frutas");
         when(categoryRepository.searchCategories(eq("granola"), any(PageRequest.class)))

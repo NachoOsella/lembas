@@ -32,10 +32,10 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    /** Lists all categories for admin management. */
+    /** Lists all active categories for admin management. */
     @Transactional(readOnly = true)
     public List<CategoryDto> listAdminCategories() {
-        return categoryRepository.findAllByOrderByNameAsc(
+        return categoryRepository.findByActiveTrueOrderByNameAsc(
                         PageRequest.of(0, MAX_LIST_SIZE, Sort.by(Sort.Direction.ASC, "name")))
                 .getContent()
                 .stream()
@@ -44,10 +44,10 @@ public class CategoryService {
     }
 
     /**
-     * Lists categories matching the search term for admin management.
+     * Lists active categories matching the search term for admin management.
      *
-     * @param search optional search term (trimmed and lowercased); when null or blank, returns all categories
-     * @return categories matching the search term
+     * @param search optional search term (trimmed and lowercased); when null or blank, returns all active categories
+     * @return active categories matching the search term
      */
     @Transactional(readOnly = true)
     public List<CategoryDto> searchCategories(String search) {
@@ -63,10 +63,10 @@ public class CategoryService {
                 .toList();
     }
 
-    /** Creates a category after validating parent and duplicated names. */
+    /** Creates a category after validating parent and duplicated names among active categories. */
     @Transactional
     public CategoryDto create(CategoryRequest request) {
-        Category parent = resolveParent(request.parentId());
+        Category parent = resolveActiveParent(request.parentId());
         validateUniqueNameAtLevel(request.name(), parent, null);
         Category category = new Category(parent, request.name().trim(), normalizeBlank(request.description()));
         return toDto(categoryRepository.save(category));
@@ -75,8 +75,8 @@ public class CategoryService {
     /** Updates a category and its optional parent relation. */
     @Transactional
     public CategoryDto update(Long id, CategoryRequest request) {
-        Category category = findById(id);
-        Category parent = resolveParent(request.parentId());
+        Category category = findActiveById(id);
+        Category parent = resolveActiveParent(request.parentId());
         if (parent != null && parent.getId().equals(id)) {
             throw new DomainException("PARENT_INVALID", "A category cannot be its own parent");
         }
@@ -89,32 +89,32 @@ public class CategoryService {
     }
 
     /**
-     * Deletes a category after verifying it has no child categories or product
-     * references. Throws a {@link DomainException} with a clear message when
-     * the category cannot be deleted.
+     * Soft-deletes a category after verifying it has no active child categories
+     * or active product references. Throws a {@link DomainException} with a clear
+     * message when the category cannot be deleted.
      */
     @Transactional
     public void delete(Long id) {
-        Category category = findById(id);
+        Category category = findActiveById(id);
 
-        if (categoryRepository.existsByParentId(id)) {
+        if (categoryRepository.existsByParentIdAndActiveTrue(id)) {
             throw new DomainException(
                     "CATEGORY_HAS_CHILDREN",
                     HttpStatus.CONFLICT,
-                    "Cannot delete category \"" + category.getName() + "\": it has child categories"
+                    "Cannot delete category \"" + category.getName() + "\": it has active child categories"
             );
         }
 
-        long productCount = categoryRepository.countProductsByCategoryId(id);
+        long productCount = categoryRepository.countActiveProductsByCategoryId(id);
         if (productCount > 0) {
             throw new DomainException(
                     "CATEGORY_HAS_PRODUCTS",
                     HttpStatus.CONFLICT,
-                    "Cannot delete category \"" + category.getName() + "\": " + productCount + " product(s) reference it"
+                    "Cannot delete category \"" + category.getName() + "\": " + productCount + " active product(s) reference it"
             );
         }
 
-        categoryRepository.delete(category);
+        category.setActive(false);
     }
 
     /**
@@ -164,29 +164,37 @@ public class CategoryService {
         }
     }
 
-    /** Resolves a nullable parent id to an entity. */
-    private Category resolveParent(Long parentId) {
+
+    /** Resolves a nullable parent id to an active entity. */
+    private Category resolveActiveParent(Long parentId) {
         if (parentId == null) {
             return null;
         }
-        return categoryRepository.findById(parentId)
+        return categoryRepository.findByIdAndActiveTrue(parentId)
                 .orElseThrow(() -> new DomainException("PARENT_NOT_FOUND", HttpStatus.NOT_FOUND, "Parent category not found"));
     }
 
-    /** Ensures category names are unique among siblings or root categories. */
+    /** Ensures category names are unique among active siblings or root categories. */
     private void validateUniqueNameAtLevel(String rawName, Category parent, Long currentId) {
         String name = rawName.trim();
-        Optional<Category> duplicated = parent == null
-                ? categoryRepository.findByParentIsNullAndNameIgnoreCase(name)
-                : categoryRepository.findByParentIdAndNameIgnoreCase(parent.getId(), name);
-        if (duplicated.isPresent() && !duplicated.get().getId().equals(currentId)) {
+        boolean duplicated = parent == null
+                ? categoryRepository.existsByParentIsNullAndNameIgnoreCaseAndActiveTrue(name)
+                : categoryRepository.existsByParentIdAndNameIgnoreCaseAndActiveTrue(parent.getId(), name);
+        // When updating, exclude the current category from the duplicate check
+        if (duplicated && currentId != null) {
+            Optional<Category> existing = parent == null
+                    ? categoryRepository.findByParentIsNullAndNameIgnoreCase(name)
+                    : categoryRepository.findByParentIdAndNameIgnoreCase(parent.getId(), name);
+            duplicated = existing.isPresent() && !existing.get().getId().equals(currentId);
+        }
+        if (duplicated) {
             throw new DomainException("CATEGORY_NAME_DUPLICATED", HttpStatus.CONFLICT, "Category name already exists at this level");
         }
     }
 
-    /** Finds a category by id or throws the uniform not-found error. */
-    private Category findById(Long id) {
-        return categoryRepository.findById(id)
+    /** Finds an active category by id or throws the uniform not-found error. */
+    private Category findActiveById(Long id) {
+        return categoryRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new DomainException("CATEGORY_NOT_FOUND", HttpStatus.NOT_FOUND, "Category not found"));
     }
 

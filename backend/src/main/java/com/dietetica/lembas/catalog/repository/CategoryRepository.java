@@ -16,31 +16,40 @@ import java.util.Optional;
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     /**
-     * Returns all categories ordered alphabetically for deterministic display.
+     * Returns active categories ordered alphabetically for deterministic display.
      *
-     * @return categories sorted by name ascending
+     * @return active categories sorted by name ascending
      */
-    List<Category> findAllByOrderByNameAsc();
+    List<Category> findByActiveTrueOrderByNameAsc();
 
     /**
-     * Returns categories ordered alphabetically with an explicit page-size cap.
+     * Returns active categories ordered alphabetically with an explicit page-size cap.
      *
      * @param pageable page request used to cap result size
-     * @return page of categories ordered by name
+     * @return page of active categories ordered by name
      */
-    Page<Category> findAllByOrderByNameAsc(Pageable pageable);
+    Page<Category> findByActiveTrueOrderByNameAsc(Pageable pageable);
 
     /**
-     * Returns categories matching the search term, ordered alphabetically.
+     * Finds an active category by id.
+     *
+     * @param id category id
+     * @return optional with the active category, empty if not found or inactive
+     */
+    Optional<Category> findByIdAndActiveTrue(Long id);
+
+    /**
+     * Returns active categories matching the search term, ordered alphabetically.
      * Searches across name and description fields.
      *
      * @param search the search term (trimmed, lowercased in the service layer;
      *               the query applies {@code lower()} on column values)
-     * @return categories matching the search term, sorted by name ascending
+     * @return active categories matching the search term, sorted by name ascending
      */
     @Query("""
             select c from Category c
-            where (:search is null or (
+            where c.active = true
+              and (:search is null or (
                 lower(c.name) like concat('%', cast(:search as string), '%')
                 or lower(c.description) like concat('%', cast(:search as string), '%')
             ))
@@ -49,15 +58,16 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> searchCategories(@Param("search") String search);
 
     /**
-     * Returns categories matching search with an explicit page-size cap.
+     * Returns active categories matching search with an explicit page-size cap.
      *
      * @param search optional search term
      * @param pageable page request used to cap result size
-     * @return page of matching categories ordered by name
+     * @return page of matching active categories ordered by name
      */
     @Query("""
             select c from Category c
-            where (:search is null or (
+            where c.active = true
+              and (:search is null or (
                 lower(c.name) like concat('%', cast(:search as string), '%')
                 or lower(c.description) like concat('%', cast(:search as string), '%')
             ))
@@ -65,11 +75,16 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
             """)
     Page<Category> searchCategories(@Param("search") String search, Pageable pageable);
 
-    /** Checks duplicated root category names, ignoring case. */
-    boolean existsByParentIsNullAndNameIgnoreCase(String name);
+    /** Checks duplicated root category names among active categories, ignoring case. */
+    boolean existsByParentIsNullAndNameIgnoreCaseAndActiveTrue(String name);
 
-    /** Checks duplicated child category names at the same parent level, ignoring case. */
-    boolean existsByParentIdAndNameIgnoreCase(Long parentId, String name);
+    /** Checks duplicated child category names at the same parent level among active categories, ignoring case. */
+    boolean existsByParentIdAndNameIgnoreCaseAndActiveTrue(Long parentId, String name);
+
+
+
+    /** Returns true when the category has at least one active child category. */
+    boolean existsByParentIdAndActiveTrue(Long parentId);
 
     /** Finds a root category by name, ignoring case. */
     Optional<Category> findByParentIsNullAndNameIgnoreCase(String name);
@@ -77,15 +92,11 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     /** Finds a child category by parent and name, ignoring case. */
     Optional<Category> findByParentIdAndNameIgnoreCase(Long parentId, String name);
 
-    /** Returns true when the category has at least one child category. */
-    boolean existsByParentId(Long parentId);
-
     /**
-     * Counts products assigned to the given category (native query because the
-     * Product entity is not yet mapped in JPA).
+     * Counts active products assigned to the given category.
      */
-    @Query(value = "SELECT COUNT(*) FROM products WHERE category_id = :categoryId", nativeQuery = true)
-    long countProductsByCategoryId(Long categoryId);
+    @Query(value = "SELECT COUNT(*) FROM products WHERE category_id = :categoryId AND active = true", nativeQuery = true)
+    long countActiveProductsByCategoryId(Long categoryId);
 
     /**
      * Lightweight projection for store-facing category listings.
@@ -99,7 +110,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     }
 
     /**
-     * Returns categories with counts of active and published products.
+     * Returns active categories with counts of active and published products.
      */
     @Query(value = """
             select
@@ -111,6 +122,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
                 on p.category_id = c.id
                and p.active = true
                and p.online_status = 'PUBLISHED'
+            where c.active = true
             group by c.id, c.name
             order by c.name asc
             """, nativeQuery = true)

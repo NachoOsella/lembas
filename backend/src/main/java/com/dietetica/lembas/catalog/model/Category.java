@@ -9,6 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -17,6 +19,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.time.OffsetDateTime;
 
 /**
  * Product category entity mapped to the {@code categories} table.
@@ -30,9 +34,10 @@ import lombok.ToString;
  *   <li>A category may have zero or one parent (root category = parent is {@code null}).</li>
  *   <li>A category may have zero or many child categories.</li>
  *   <li>A product belongs to exactly one category (optional — category_id may be null).</li>
- *   <li>Deleting a category is not allowed while products or child categories reference it
- *       (enforced by DB FK constraints).</li>
- *   <li>The name must be unique at the same tree level (application-enforced).</li>
+ *   <li>Soft-deleting a category requires all child categories and associated products
+ *       to be soft-deleted first (active = false).</li>
+ *   <li>The name must be unique at the same tree level among active categories
+ *       (application-enforced).</li>
  * </ul>
  *
  * @see com.dietetica.lembas.catalog.model.Category
@@ -46,7 +51,6 @@ import lombok.ToString;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
 public class Category {
@@ -74,6 +78,31 @@ public class Category {
     @Setter
     private String description;
 
+    /** Soft-delete flag. Inactive categories are excluded from active listings. */
+    @Column(nullable = false)
+    @Setter
+    private boolean active = true;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private OffsetDateTime updatedAt;
+
+    /** Initializes audit timestamps before first persistence. */
+    @PrePersist
+    void onCreate() {
+        OffsetDateTime now = OffsetDateTime.now();
+        createdAt = now;
+        updatedAt = now;
+    }
+
+    /** Refreshes the update timestamp on each mutation. */
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = OffsetDateTime.now();
+    }
+
     /**
      * Constructs a root category (no parent).
      *
@@ -93,6 +122,16 @@ public class Category {
      * @param description optional description
      */
     public Category(Category parent, String name, String description) {
+        this.parent = parent;
+        this.name = name;
+        this.description = description;
+    }
+
+    /**
+     * Test-friendly constructor for building category instances with an explicit id.
+     */
+    public Category(Long id, Category parent, String name, String description) {
+        this.id = id;
         this.parent = parent;
         this.name = name;
         this.description = description;
