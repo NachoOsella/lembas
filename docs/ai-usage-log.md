@@ -4,6 +4,10 @@
 
 - `backend/src/main/resources/db/migration/V16__seed_demo_users.sql`, `backend/src/test/java/com/dietetica/lembas/AbstractIntegrationTest.java`, `frontend/proxy.conf.json`, `frontend/package.json` -- completadas subtasks de S1-US12: usuarios demo empleado/customer, proxy dev unificado, base reusable de integration tests y scripts npm de testing/lint.
 - `backend/src/test/java/com/dietetica/lembas/catalog/repository/ProductRepositoryTest.java`, `frontend/src/app/shared/components/app-store-{footer,nav}/`, `frontend/src/app/features/admin/users/user-form/` -- corregidos tests afectados por seeds demo, plantillas actuales y miembros protegidos; suites backend/frontend quedan verdes.
+- `backend/src/test/java/com/dietetica/lembas/catalog/web/ProductAdminControllerTest.java` -- nuevo WebMvcTest con matriz completa ADMIN/MANAGER/EMPLOYEE/UNAUTHENTICATED para CRUD + changeStatus (2xx/4xx DomainException).
+- `backend/src/test/java/com/dietetica/lembas/shared/branch/service/BranchServiceTest.java` -- nuevo unit test para BranchService.listActiveBranches con mocks de repositorio.
+- `backend/src/test/java/com/dietetica/lembas/auth/service/LembasUserDetailsServiceTest.java` -- nuevo unit test para loadUserByUsername/loadUserById con normalizacion de email y not-found.
+- `backend/src/test/java/com/dietetica/lembas/auth/service/SecurityContextHelperTest.java` -- nuevo unit test para getCurrentUser con autenticacion valida, ausente, no autenticada y principal inesperado.
 
 ## 2026-05-21
 
