@@ -1,0 +1,28 @@
+import { PageResponse } from './page';
+
+/** Request sent by admins to register a new stock lot. */
+export interface CreateStockLotRequest {
+  readonly productId: number;
+  readonly branchId: number;
+  readonly quantity: number;
+  readonly lotCode?: string | null;
+  readonly expirationDate?: string | null;
+  readonly costPrice?: number | null;
+}
+
+/** Stock lot returned by the inventory API. */
+export interface StockLotDto {
+  readonly id: number;
+  readonly productId: number;
+  readonly productName: string;
+  readonly branchId: number;
+  readonly branchName: string;
+  readonly quantityAvailable: number;
+  readonly lotCode?: string | null;
+  readonly expirationDate?: string | null;
+  readonly costPrice?: number | null;
+  readonly totalAvailableForProductBranch?: number | null;
+}
+
+/** Paginated response for stock lot listings. */
+export type StockLotPage = PageResponse<StockLotDto>;

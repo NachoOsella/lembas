@@ -3,10 +3,12 @@ package com.dietetica.lembas.inventory.web;
 import com.dietetica.lembas.auth.service.JwtAuthenticationFilter;
 import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.auth.service.LembasUserDetailsService;
-import com.dietetica.lembas.inventory.dto.StockLotResponse;
-import com.dietetica.lembas.inventory.service.StockLotService;
+import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
+import com.dietetica.lembas.inventory.dto.StockLotDto;
+import com.dietetica.lembas.inventory.service.InventoryService;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
 import com.dietetica.lembas.users.web.SecurityConfigForTest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -15,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,6 +31,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,8 +44,11 @@ class StockLotAdminControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockitoBean
-    private StockLotService stockLotService;
+    private InventoryService inventoryService;
 
     // Required by the WebMvcTest slice even though filters are disabled.
     @MockitoBean
@@ -56,7 +63,7 @@ class StockLotAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void Should_return200_when_adminListsLots() throws Exception {
-        when(stockLotService.listLots(isNull(), isNull(), eq(false), any(Pageable.class)))
+        when(inventoryService.listLots(isNull(), isNull(), eq(false), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(aLot()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/admin/stock/lots"))
@@ -71,7 +78,7 @@ class StockLotAdminControllerTest {
     @Test
     @WithMockUser(roles = "MANAGER")
     void Should_forwardFilters_when_managerListsLots() throws Exception {
-        when(stockLotService.listLots(eq(10L), eq(20L), eq(true), any(Pageable.class)))
+        when(inventoryService.listLots(eq(10L), eq(20L), eq(true), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
 
         mockMvc.perform(get("/api/admin/stock/lots")
@@ -82,9 +89,62 @@ class StockLotAdminControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
+    void Should_return201_when_adminCreatesLot() throws Exception {
+        CreateStockLotRequest request = new CreateStockLotRequest(
+                10L, 20L, BigDecimal.valueOf(3.5), "L-001", LocalDate.now().plusDays(30), BigDecimal.valueOf(500));
+        when(inventoryService.createStockLot(any(CreateStockLotRequest.class))).thenReturn(aLot());
+
+        mockMvc.perform(post("/api/admin/stock/lots")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.totalAvailableForProductBranch").value(8.5));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void Should_return400_when_createLotHasInvalidQuantity() throws Exception {
+        String invalidJson = """
+                {
+                    "productId": 10,
+                    "branchId": 20,
+                    "quantity": 0,
+                    "expirationDate": "2099-01-01"
+                }
+                """;
+
+        mockMvc.perform(post("/api/admin/stock/lots")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void Should_return400_when_createLotHasPastExpirationDate() throws Exception {
+        String invalidJson = """
+                {
+                    "productId": 10,
+                    "branchId": 20,
+                    "quantity": 1,
+                    "expirationDate": "2000-01-01"
+                }
+                """;
+
+        mockMvc.perform(post("/api/admin/stock/lots")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
     @WithMockUser(roles = "EMPLOYEE")
     void Should_return200_when_employeeListsLots() throws Exception {
-        when(stockLotService.listLots(isNull(), isNull(), eq(false), any(Pageable.class)))
+        when(inventoryService.listLots(isNull(), isNull(), eq(false), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
 
         mockMvc.perform(get("/api/admin/stock/lots"))
@@ -98,8 +158,8 @@ class StockLotAdminControllerTest {
     }
 
     /** Creates a stock lot response used by controller tests. */
-    private StockLotResponse aLot() {
-        return new StockLotResponse(
+    private StockLotDto aLot() {
+        return new StockLotDto(
                 1L,
                 10L,
                 "Granola",
@@ -107,8 +167,9 @@ class StockLotAdminControllerTest {
                 "Centro",
                 BigDecimal.valueOf(3.5),
                 "L-001",
-                LocalDate.of(2026, 12, 31),
-                BigDecimal.valueOf(500)
+                LocalDate.of(2099, 12, 31),
+                BigDecimal.valueOf(500),
+                BigDecimal.valueOf(8.5)
         );
     }
 }

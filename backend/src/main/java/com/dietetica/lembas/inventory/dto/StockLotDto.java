@@ -3,8 +3,8 @@ package com.dietetica.lembas.inventory.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/** API response for an inventory lot listed in the admin stock module. */
-public record StockLotResponse(
+/** Stock lot DTO returned after creating or listing inventory lots. */
+public record StockLotDto(
         Long id,
         Long productId,
         String productName,
@@ -13,6 +13,7 @@ public record StockLotResponse(
         BigDecimal quantityAvailable,
         String lotCode,
         LocalDate expirationDate,
-        BigDecimal costPrice
+        BigDecimal costPrice,
+        BigDecimal totalAvailableForProductBranch
 ) {
 }
