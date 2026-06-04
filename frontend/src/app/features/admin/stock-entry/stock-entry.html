@@ -2,7 +2,7 @@
   <app-page-header
     title="Ingreso de stock"
     eyebrow="Inventario"
-    description="Carga nuevos lotes por producto, sucursal y vencimiento. Cada ingreso genera un movimiento PURCHASE_ENTRY."
+    description="Carga nuevos lotes por producto, sucursal y vencimiento."
   />
 
   @if (error()) {
@@ -18,34 +18,19 @@
       >
         <div class="stock-entry__fields">
           <div class="stock-entry__field stock-entry__field--wide">
-            <label for="stock-product" class="stock-entry__label">
-              Producto <span aria-hidden="true">*</span>
-            </label>
-            <p-autocomplete
+            <app-product-selector
               inputId="stock-product"
-              [ngModel]="selectedProduct() ?? productSearch()"
-              (ngModelChange)="onProductSelected($event)"
-              name="product"
-              [suggestions]="productSuggestions()"
-              (completeMethod)="searchProducts($event)"
-              [optionLabel]="'name'"
-              [forceSelection]="true"
-              [dropdown]="true"
+              label="Producto"
               placeholder="Buscar por nombre o codigo de barras"
-              appendTo="body"
-              styleClass="stock-entry__control"
-              [class.ng-invalid]="productInvalid()"
-            >
-              <ng-template #item let-product>
-                <div class="stock-entry__product-option">
-                  <strong>{{ product.name }}</strong>
-                  <span>{{ product.brandName || product.categoryName }}</span>
-                  @if (product.barcode) {
-                    <small>Codigo: {{ product.barcode }}</small>
-                  }
-                </div>
-              </ng-template>
-            </p-autocomplete>
+              [required]="true"
+              [invalid]="productInvalid()"
+              [suggestions]="productSuggestions()"
+              [loading]="searchingProducts()"
+              [(selected)]="selectedProduct"
+              [(query)]="productSearch"
+              (selectedChange)="createdLot.set(null)"
+              (search)="searchProducts($event)"
+            />
             @if (productInvalid()) {
               <small class="stock-entry__error">Selecciona un producto.</small>
             }

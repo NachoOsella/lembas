@@ -1,0 +1,55 @@
+<div class="product-selector" [class.product-selector--invalid]="invalid()">
+  <label [for]="inputId()" class="product-selector__label">
+    {{ label() }}
+    @if (required()) {
+      <span aria-hidden="true">*</span>
+    }
+  </label>
+
+  <div class="product-selector__shell">
+    <span class="product-selector__icon pi pi-search" aria-hidden="true"></span>
+    <p-autocomplete
+      [inputId]="inputId()"
+      [ngModel]="displayValue()"
+      (ngModelChange)="select($event)"
+      [suggestions]="suggestions()"
+      (completeMethod)="complete($event)"
+      [optionLabel]="'name'"
+      [forceSelection]="true"
+      [dropdown]="false"
+      [disabled]="disabled()"
+      [placeholder]="placeholder()"
+      appendTo="body"
+      panelStyleClass="app-product-selector-panel"
+      styleClass="product-selector__auto"
+      inputStyleClass="product-selector__input"
+    >
+      <ng-template #item let-product>
+        <div class="product-selector__option">
+          <div class="product-selector__option-mark" aria-hidden="true">
+            {{ product.name.charAt(0) }}
+          </div>
+          <div class="product-selector__option-body">
+            <strong>{{ product.name }}</strong>
+            <span>{{ product.brandName || product.categoryName }}</span>
+            @if (product.barcode) {
+              <small>Codigo {{ product.barcode }}</small>
+            }
+          </div>
+          <div class="product-selector__option-price">
+            {{ product.salePrice | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+          </div>
+        </div>
+      </ng-template>
+      <ng-template #empty>
+        <div class="product-selector__empty">
+          @if (loading()) {
+            Buscando productos...
+          } @else {
+            Escribe al menos 2 caracteres para buscar.
+          }
+        </div>
+      </ng-template>
+    </p-autocomplete>
+  </div>
+</div>

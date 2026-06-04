@@ -1,6 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AutoComplete } from 'primeng/autocomplete';
 import { DatePicker } from 'primeng/datepicker';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
@@ -17,6 +16,7 @@ import { Branch } from '../../../shared/models/user';
 import { StockLotDto } from '../../../shared/models/inventory';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
+import { AppProductSelector } from '../../../shared/components/app-product-selector/app-product-selector';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { FormSection } from '../../../shared/components/form-section/form-section';
 
@@ -31,7 +31,7 @@ interface Option<T> {
   imports: [
     AppButton,
     AppPageHeader,
-    AutoComplete,
+    AppProductSelector,
     DatePicker,
     ErrorAlert,
     FormSection,
@@ -98,8 +98,7 @@ export class StockEntry {
   }
 
   /** Searches admin products by name or barcode for the product selector. */
-  protected searchProducts(event: { query: string }): void {
-    const query = event.query.trim();
+  protected searchProducts(query: string): void {
     this.productSearch.set(query);
     if (query.length < 2) {
       this.productSuggestions.set([]);
@@ -119,17 +118,6 @@ export class StockEntry {
           this.searchingProducts.set(false);
         },
       });
-  }
-
-  /** Stores the selected product object from the autocomplete. */
-  protected onProductSelected(value: ProductSummary | string | null): void {
-    if (value && typeof value === 'object') {
-      this.selectedProduct.set(value);
-      this.productSearch.set(this.productLabel(value));
-      this.createdLot.set(null);
-      return;
-    }
-    this.selectedProduct.set(null);
   }
 
   /** Submits a valid stock entry to the backend. */
@@ -175,12 +163,6 @@ export class StockEntry {
           this.error.set(this.messageForError(error));
         },
       });
-  }
-
-  /** Formats product options with barcode context when available. */
-  protected productLabel(product: ProductSummary): string {
-    const barcode = product.barcode ? ` · ${product.barcode}` : '';
-    return `${product.name}${barcode}`;
   }
 
   /** Loads active branches for the branch selector. */

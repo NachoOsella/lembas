@@ -1,0 +1,157 @@
+:host {
+  display: block;
+}
+
+.product-selector {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.product-selector__label {
+  color: var(--color-forest, #214f3b);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.product-selector__label span {
+  color: #b42318;
+}
+
+.product-selector__shell {
+  align-items: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 251, 242, 0.92)),
+    radial-gradient(circle at 14% 50%, rgba(108, 143, 114, 0.12), transparent 42%);
+  border: 1px solid rgba(33, 79, 59, 0.18);
+  border-radius: 1.25rem;
+  box-shadow: 0 14px 32px rgba(33, 79, 59, 0.08);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 3.35rem;
+  padding: 0 0.95rem;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.product-selector__shell:focus-within {
+  border-color: var(--color-primary, #2f9277);
+  box-shadow:
+    0 0 0 4px rgba(47, 146, 119, 0.12),
+    0 18px 38px rgba(33, 79, 59, 0.12);
+  transform: translateY(-1px);
+}
+
+.product-selector--invalid .product-selector__shell {
+  border-color: #b42318;
+  box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.1);
+}
+
+.product-selector__icon {
+  color: var(--color-primary, #2f9277);
+  font-size: 1rem;
+  margin-right: 0.75rem;
+}
+
+.product-selector__auto {
+  width: 100%;
+}
+
+:host ::ng-deep .product-selector__auto .p-autocomplete-input,
+:host ::ng-deep .product-selector__input {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--color-forest, #214f3b);
+  font-weight: 650;
+  min-height: 3.2rem;
+  outline: 0;
+  padding-left: 0;
+  width: 100%;
+}
+
+:host ::ng-deep .product-selector__auto .p-autocomplete-input::placeholder,
+:host ::ng-deep .product-selector__input::placeholder {
+  color: #6b7d93;
+  font-weight: 500;
+}
+
+.product-selector__option {
+  align-items: center;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-width: min(34rem, 86vw);
+  padding: 0.35rem 0.15rem;
+}
+
+.product-selector__option-mark {
+  align-items: center;
+  background: linear-gradient(145deg, #0f6b45, #2f9277);
+  border-radius: 1rem;
+  color: #fffaf1;
+  display: inline-grid;
+  font-size: 0.95rem;
+  font-weight: 900;
+  height: 2.65rem;
+  justify-content: center;
+  text-transform: uppercase;
+  width: 2.65rem;
+}
+
+.product-selector__option-body {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.product-selector__option-body strong {
+  color: var(--color-forest, #214f3b);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-selector__option-body span,
+.product-selector__option-body small {
+  color: #6b7280;
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-selector__option-price {
+  background: rgba(47, 146, 119, 0.1);
+  border-radius: 999px;
+  color: var(--color-forest, #214f3b);
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 0.35rem 0.6rem;
+}
+
+.product-selector__empty {
+  color: #6b7280;
+  font-weight: 650;
+  padding: 0.85rem 1rem;
+}
+
+:host ::ng-deep .app-product-selector-panel {
+  border: 1px solid rgba(33, 79, 59, 0.12);
+  border-radius: 1.2rem;
+  box-shadow: 0 22px 60px rgba(33, 79, 59, 0.18);
+  margin-top: 0.45rem;
+  overflow: hidden;
+  padding: 0.35rem;
+}
+
+:host ::ng-deep .app-product-selector-panel .p-autocomplete-option {
+  border-radius: 0.95rem;
+  margin: 0.15rem 0;
+}
+
+:host ::ng-deep .app-product-selector-panel .p-autocomplete-option:hover,
+:host ::ng-deep .app-product-selector-panel .p-autocomplete-option.p-focus {
+  background: rgba(47, 146, 119, 0.1);
+}
