@@ -23,7 +23,7 @@ PostgreSQL 16
 | V1__core.sql | branches, users |
 | V2__catalog.sql | categories, products |
 | V3__suppliers.sql | suppliers, supplier_products |
-| V4__inventory.sql | stock_lots, stock_movements |
+| V18__inventory.sql | stock_lots, stock_movements |
 | V5__orders.sql | orders, order_items |
 | V6__payments.sql | payments |
 | V7__cash.sql | cash_sessions, cash_movements |

@@ -1,10 +1,10 @@
 --
--- V4__inventory.sql
+-- V18__inventory.sql
 --
 -- Inventory tables: stock lots and stock movements (Sprint 2, S2-US01).
 --
 -- Subtasks:
---    LEMBAS-214: Crear V4__inventory.sql con stock_lots y stock_movements
+--    LEMBAS-214: Crear migracion de inventario con stock_lots y stock_movements
 --    LEMBAS-216: Crear indices por product_id, branch_id y expiration_date
 --
 

@@ -2,7 +2,7 @@
 
 ## 2026-06-04
 
-- `backend/src/main/resources/db/migration/V4__inventory.sql`, `backend/src/main/java/com/dietetica/lembas/inventory/` -- implementada S2-US01 (LEMBAS-40): modelo de stock por lotes, movimientos de inventario, consultas de disponibilidad/FEFO y endpoint paginado `GET /api/admin/stock/lots` con cobertura MVC/JPA.
+- `backend/src/main/resources/db/migration/V18__inventory.sql`, `backend/src/main/java/com/dietetica/lembas/inventory/` -- implementada S2-US01 (LEMBAS-40): modelo de stock por lotes, movimientos de inventario, consultas de disponibilidad/FEFO y endpoint paginado `GET /api/admin/stock/lots` con cobertura MVC/JPA.
 - `backend/src/main/java/com/dietetica/lembas/inventory/`, `frontend/src/app/features/admin/stock-entry/` -- implementada S2-US02 (LEMBAS-41): ingreso de lotes con movimiento `PURCHASE_ENTRY`, validaciones backend/frontend, selector de producto, ruta `/admin/stock/entry` y resumen de stock total.
 
 ## 2026-06-03
