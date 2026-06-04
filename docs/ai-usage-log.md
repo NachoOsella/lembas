@@ -1,5 +1,9 @@
 # Registro de uso de IA
 
+## 2026-06-04
+
+- `backend/src/main/resources/db/migration/V4__inventory.sql`, `backend/src/main/java/com/dietetica/lembas/inventory/` -- implementada S2-US01 (LEMBAS-40): modelo de stock por lotes, movimientos de inventario, consultas de disponibilidad/FEFO y endpoint paginado `GET /api/admin/stock/lots` con cobertura MVC/JPA.
+
 ## 2026-06-03
 
 - `backend/src/main/resources/db/migration/V16__seed_demo_users.sql`, `backend/src/test/java/com/dietetica/lembas/AbstractIntegrationTest.java`, `frontend/proxy.conf.json`, `frontend/package.json` -- completadas subtasks de S1-US12: usuarios demo empleado/customer, proxy dev unificado, base reusable de integration tests y scripts npm de testing/lint.
