@@ -62,10 +62,12 @@ public class InventoryService {
         StockLot lot = new StockLot();
         lot.setProduct(product);
         lot.setBranch(branch);
+        lot.setInitialQuantity(request.quantity());
         lot.setQuantityAvailable(request.quantity());
         lot.setLotCode(normalizeBlank(request.lotCode()));
         lot.setExpirationDate(request.expirationDate());
         lot.setCostPrice(request.costPrice());
+        lot.setUnitCost(request.costPrice() == null ? BigDecimal.ZERO : request.costPrice());
 
         StockLot savedLot = stockLotRepository.save(lot);
         stockMovementRepository.save(purchaseEntryMovement(savedLot, product, branch, request.quantity()));
@@ -95,6 +97,9 @@ public class InventoryService {
         movement.setBranch(branch);
         movement.setType(StockMovementType.PURCHASE_ENTRY);
         movement.setQuantity(quantity);
+        movement.setUnitCostSnapshot(lot.getUnitCost());
+        movement.setReferenceType("STOCK_LOT");
+        movement.setReferenceId(lot.getId());
         movement.setReason("Stock lot entry");
         return movement;
     }
@@ -124,10 +129,17 @@ public class InventoryService {
                 lot.getProduct().getName(),
                 lot.getBranch().getId(),
                 lot.getBranch().getName(),
+                lot.getInitialQuantity(),
                 lot.getQuantityAvailable(),
                 lot.getLotCode(),
                 lot.getExpirationDate(),
                 lot.getCostPrice(),
+                lot.getUnitCost(),
+                lot.getStatus().name(),
+                lot.getSupplierId(),
+                lot.getSupplierProductId(),
+                lot.getPurchaseReceiptId(),
+                lot.getPurchaseReceiptItemId(),
                 totalAvailable
         );
     }

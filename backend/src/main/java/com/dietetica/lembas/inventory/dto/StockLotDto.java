@@ -10,10 +10,17 @@ public record StockLotDto(
         String productName,
         Long branchId,
         String branchName,
+        BigDecimal initialQuantity,
         BigDecimal quantityAvailable,
         String lotCode,
         LocalDate expirationDate,
         BigDecimal costPrice,
+        BigDecimal unitCost,
+        String status,
+        Long supplierId,
+        Long supplierProductId,
+        Long purchaseReceiptId,
+        Long purchaseReceiptItemId,
         BigDecimal totalAvailableForProductBranch
 ) {
 }

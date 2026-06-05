@@ -76,6 +76,22 @@ public class StockMovement {
     @Column(name = "order_id")
     private Long orderId;
 
+    /** Unit cost snapshot at movement time for reports and traceability. */
+    @Column(name = "unit_cost_snapshot", precision = 12, scale = 2)
+    private BigDecimal unitCostSnapshot;
+
+    /** Generic source entity type that caused the movement. */
+    @Column(name = "reference_type", length = 50)
+    private String referenceType;
+
+    /** Generic source entity id that caused the movement. */
+    @Column(name = "reference_id")
+    private Long referenceId;
+
+    /** User id that registered the movement when available. */
+    @Column(name = "created_by_user_id")
+    private Long createdByUserId;
+
     /** Optional human-readable reason for adjustments and waste. */
     @Column(length = 500)
     private String reason;

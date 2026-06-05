@@ -166,9 +166,16 @@ class StockLotAdminControllerTest {
                 20L,
                 "Centro",
                 BigDecimal.valueOf(3.5),
+                BigDecimal.valueOf(3.5),
                 "L-001",
                 LocalDate.of(2099, 12, 31),
                 BigDecimal.valueOf(500),
+                BigDecimal.valueOf(500),
+                "ACTIVE",
+                null,
+                null,
+                null,
+                null,
                 BigDecimal.valueOf(8.5)
         );
     }

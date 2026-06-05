@@ -82,7 +82,10 @@ describe('StockEntry', () => {
         productName: 'Granola',
         branchId: 20,
         branchName: 'Centro',
+        initialQuantity: 2,
         quantityAvailable: 2,
+        unitCost: 0,
+        status: 'ACTIVE',
         totalAvailableForProductBranch: 7,
       }),
     );

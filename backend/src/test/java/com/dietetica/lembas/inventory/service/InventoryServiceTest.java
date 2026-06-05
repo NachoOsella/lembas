@@ -83,7 +83,9 @@ class InventoryServiceTest {
         StockLot savedLot = lotCaptor.getValue();
         assertThat(savedLot.getProduct()).isSameAs(product);
         assertThat(savedLot.getBranch()).isSameAs(branch);
+        assertThat(savedLot.getInitialQuantity()).isEqualByComparingTo("3.5");
         assertThat(savedLot.getQuantityAvailable()).isEqualByComparingTo("3.5");
+        assertThat(savedLot.getUnitCost()).isEqualByComparingTo("500");
         assertThat(savedLot.getLotCode()).isEqualTo("L-001");
 
         ArgumentCaptor<StockMovement> movementCaptor = ArgumentCaptor.forClass(StockMovement.class);
@@ -91,6 +93,8 @@ class InventoryServiceTest {
         StockMovement movement = movementCaptor.getValue();
         assertThat(movement.getType()).isEqualTo(StockMovementType.PURCHASE_ENTRY);
         assertThat(movement.getQuantity()).isEqualByComparingTo("3.5");
+        assertThat(movement.getUnitCostSnapshot()).isEqualByComparingTo("500");
+        assertThat(movement.getReferenceType()).isEqualTo("STOCK_LOT");
         assertThat(movement.getProduct()).isSameAs(product);
         assertThat(movement.getBranch()).isSameAs(branch);
         assertThat(movement.getStockLot()).isSameAs(savedLot);

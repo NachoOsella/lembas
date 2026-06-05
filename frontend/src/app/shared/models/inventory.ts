@@ -17,10 +17,17 @@ export interface StockLotDto {
   readonly productName: string;
   readonly branchId: number;
   readonly branchName: string;
+  readonly initialQuantity: number;
   readonly quantityAvailable: number;
   readonly lotCode?: string | null;
   readonly expirationDate?: string | null;
   readonly costPrice?: number | null;
+  readonly unitCost: number;
+  readonly status: string;
+  readonly supplierId?: number | null;
+  readonly supplierProductId?: number | null;
+  readonly purchaseReceiptId?: number | null;
+  readonly purchaseReceiptItemId?: number | null;
   readonly totalAvailableForProductBranch?: number | null;
 }
 

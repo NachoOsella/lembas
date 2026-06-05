@@ -4,6 +4,8 @@ import com.dietetica.lembas.catalog.model.Product;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -57,9 +59,29 @@ public class StockLot {
     @JoinColumn(name = "branch_id", nullable = false)
     private Branch branch;
 
+    /** Quantity originally received in the lot. */
+    @Column(name = "initial_quantity", nullable = false, precision = 12, scale = 3)
+    private BigDecimal initialQuantity = BigDecimal.ZERO;
+
     /** Current available quantity. This value is the source of truth for stock. */
     @Column(name = "quantity_available", nullable = false, precision = 12, scale = 3)
     private BigDecimal quantityAvailable = BigDecimal.ZERO;
+
+    /** Optional supplier id kept as a scalar until the suppliers module is implemented. */
+    @Column(name = "supplier_id")
+    private Long supplierId;
+
+    /** Optional supplier-product id kept as a scalar until the suppliers module is implemented. */
+    @Column(name = "supplier_product_id")
+    private Long supplierProductId;
+
+    /** Optional purchase receipt id kept as a scalar until the purchasing model is implemented. */
+    @Column(name = "purchase_receipt_id")
+    private Long purchaseReceiptId;
+
+    /** Optional purchase receipt item id kept as a scalar until the purchasing model is implemented. */
+    @Column(name = "purchase_receipt_item_id")
+    private Long purchaseReceiptItemId;
 
     /** Optional supplier lot code used for traceability. */
     @Column(name = "lot_code", length = 100)
@@ -69,9 +91,18 @@ public class StockLot {
     @Column(name = "expiration_date")
     private LocalDate expirationDate;
 
-    /** Optional acquisition cost for reporting and COGS calculations. */
+    /** Legacy acquisition cost kept for compatibility while older stock entries are migrated. */
     @Column(name = "cost_price", precision = 12, scale = 2)
     private BigDecimal costPrice;
+
+    /** Real received unit cost frozen at lot creation time. */
+    @Column(name = "unit_cost", nullable = false, precision = 12, scale = 2)
+    private BigDecimal unitCost = BigDecimal.ZERO;
+
+    /** Current lifecycle status used by availability and FEFO queries. */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private StockLotStatus status = StockLotStatus.ACTIVE;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
