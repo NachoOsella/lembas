@@ -58,6 +58,10 @@ Services may throw `DomainException` directly when a dedicated exception subclas
 | PRODUCT_BARCODE_DUPLICATED | Catalog | 409 | Active product already uses the barcode |
 | PRODUCT_STATUS_INVALID_TRANSITION | Catalog | 409 | Online status transition is not allowed |
 | BRANCH_NOT_FOUND | Inventory | 404 | Branch does not exist or is inactive for stock entry |
+| SUPPLIER_NOT_FOUND | Suppliers | 404 | Supplier does not exist or is inactive |
+| SUPPLIER_CUIT_DUPLICATED | Suppliers | 409 | Active supplier already uses the CUIT |
+| SUPPLIER_PRODUCT_NOT_FOUND | Suppliers | 404 | Product-supplier association does not exist or is inactive |
+| SUPPLIER_PRODUCT_DUPLICATED | Suppliers | 409 | Product is already associated with that supplier |
 | CATEGORY_NOT_FOUND | Catalog | 404 | Category does not exist |
 | PARENT_NOT_FOUND | Catalog | 404 | Parent category does not exist |
 | PARENT_INVALID | Catalog | 409 | Category parent assignment is invalid |
