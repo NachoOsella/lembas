@@ -23,6 +23,7 @@ public interface StockLotRepository extends JpaRepository<StockLot, Long> {
             from StockLot l
             where l.product.id = :productId
               and l.branch.id = :branchId
+              and l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
             """)
     BigDecimal calculateAvailableQuantity(
             @Param("productId") Long productId,
@@ -36,6 +37,7 @@ public interface StockLotRepository extends JpaRepository<StockLot, Long> {
             where l.product.id = :productId
               and l.branch.id = :branchId
               and l.quantityAvailable > 0
+              and l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
             order by case when l.expirationDate is null then 1 else 0 end,
                      l.expirationDate asc,
                      l.id asc
@@ -57,7 +59,8 @@ public interface StockLotRepository extends JpaRepository<StockLot, Long> {
                     :expiringSoon = false
                     or (l.expirationDate is not null
                         and l.expirationDate <= :expiringSoonLimit
-                        and l.quantityAvailable > 0)
+                        and l.quantityAvailable > 0
+                        and l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE)
               )
             """)
     Page<StockLot> searchLots(

@@ -9,7 +9,7 @@ This document details what is explicitly excluded from the MVP and why. Each ite
 | Fiscal invoicing (AFIP/ARCA) | Exceeds academic scope. Tax knowledge, homologation, fiscal keys | ADR-005 |
 | Mobile native app (Android/iOS) | Duplicates effort. Web frontend is responsive | -- |
 | Multi-company / multi-tenant | Single business (Dietetica Lembas). Branches are supported | ADR-024 |
-| Automatic supplier price import | Each supplier has different format. Manual entry in MVP | ADR-018 |
+| Fully automatic supplier price import without human approval | Supplier price updates require preview and approval before applying | ADR-009 |
 | AI / LLM chatbot | Rule-based recommendations only. Avoids hallucination and infrastructure | ADR-008 |
 | Coupons and complex promotions | Per-product discounts only in MVP | ADR-017 |
 | Guest checkout | Online purchase requires registered customer | ADR-039 |

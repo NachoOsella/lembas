@@ -10,16 +10,16 @@
 | ADR-006 | No external logistics in MVP | Manual internal delivery only. Pickup is the MVP fulfillment method |
 | ADR-007 | Barcode reader as keyboard input | Simple, realistic, sufficient for MVP |
 | ADR-008 | Rule-based recommendations (no AI) | Avoids hallucination and incorrect responses. Deterministic and predictable |
-| ADR-009 | Human approval for mass price changes (post-MVP) | When auto-import is implemented, changes require approval |
+| ADR-009 | Human approval for mass price changes | Supplier price updates use reviewed batches; no file or percentage update is applied automatically |
 | ADR-010 | Stock by branch from domain base | Enables future growth without redesign |
 | ADR-011 | Online order associated with a single branch | Avoids split-order complexity between locations |
 | ADR-012 | E-commerce without its own stock | Online stock is calculated from the branch's available stock |
 | ADR-013 | Stock deducted at payment confirmation, not before | Simplifies flow: no reservation table. Reversal via cancellation movements |
 | ADR-014 | Flyway for database migrations | Simple, versionable, sufficient for MVP |
 | ADR-015 | Fixed roles as direct field in users | Simplifies initial security; eliminates roles and user_roles tables |
-| ADR-016 | Sale price directly on the product | Eliminates product_prices table. History in audit_logs |
+| ADR-016 | Current sale price directly on the product | `products.sale_price` is the operational price for POS and online store; history lives in `product_sale_price_history` |
 | ADR-017 | Per-product promotions only (in MVP) | Reduces complexity. No category or lot promotions |
-| ADR-018 | Manual supplier cost per product in MVP | Avoids import and parsing of price lists |
+| ADR-018 | Current replacement cost per supplier product | `supplier_products.current_cost` stores the latest known replacement cost per product-supplier pair |
 | ADR-019 | Product images on local file system | Simple, no external dependencies. Nginx serves static files |
 | ADR-020 | Uniform API error format | All error responses use ApiError. Implemented with @ControllerAdvice |
 | ADR-021 | Global HTTP interceptor in frontend for errors | Centralizes error handling |
@@ -36,7 +36,7 @@
 | ADR-032 | CHECK constraints on key tables | Prevents invalid data at database level |
 | ADR-033 | [REJECTED] branch_product_stock as stock cache | stock_lots is sufficient |
 | ADR-034 | cash_sessions for in-store cash management | Covers opening, movements, closing, and cash count |
-| ADR-035 | Current cost by supplier in supplier_products, historical cost per lot in stock_lots.cost_price | Current supplier cost lives in supplier_products.current_cost. The cost applied at purchase time is stored in stock_lots.cost_price for per-lot traceability |
+| ADR-035 | Current replacement cost, cost history, and frozen lot unit cost are separate | `supplier_products.current_cost` is current replacement cost, `supplier_product_cost_history` stores changes, and `stock_lots.unit_cost` stores the immutable real received cost |
 | ADR-036 | quantity as numeric(12,3) instead of integer | Supports fractional products |
 | ADR-037 | products.current_cost removed | Cost is obtained from supplier_products |
 | ADR-038 | Roles: ADMIN/MANAGER/EMPLOYEE/CUSTOMER | CUSTOMER included from MVP. No guest checkout |
@@ -49,6 +49,8 @@
 | ADR-045 | STOCK_CONFLICT status for stock exceptions | If payment is approved but stock is insufficient, order goes to manual review |
 | ADR-046 | order_type = POS for in-store sales | Identifies counter sales clearly |
 | ADR-047 | Simple reports with direct queries | No aggregated tables or scheduled jobs |
+| ADR-048 | Purchase orders do not affect stock; purchase receipts do | Orders represent expected purchases. Confirmed receipts create lots and `PURCHASE_ENTRY` movements |
+| ADR-049 | Dedicated commercial price history | `product_sale_price_history` and `supplier_product_cost_history` are used for price history; `audit_logs` records actors and critical actions |
 
 ## ADR format
 

@@ -1,0 +1,175 @@
+<section class="stock-entry">
+  <app-page-header
+    title="Ingreso de stock"
+    eyebrow="Inventario"
+    description="Carga nuevos lotes por producto, sucursal y vencimiento."
+  />
+
+  @if (error()) {
+    <app-error-alert [message]="error()" />
+  }
+
+  <div class="stock-entry__grid">
+    <form class="stock-entry__form" (ngSubmit)="save()" novalidate>
+      <app-form-section
+        [index]="1"
+        title="Datos del lote"
+        description="Selecciona el producto y registra la cantidad recibida."
+      >
+        <div class="stock-entry__fields">
+          <div class="stock-entry__field stock-entry__field--wide">
+            <app-product-selector
+              inputId="stock-product"
+              label="Producto"
+              placeholder="Buscar por nombre o codigo de barras"
+              [required]="true"
+              [invalid]="productInvalid()"
+              [suggestions]="productSuggestions()"
+              [loading]="searchingProducts()"
+              [(selected)]="selectedProduct"
+              [(query)]="productSearch"
+              (selectedChange)="createdLot.set(null)"
+              (search)="searchProducts($event)"
+            />
+            @if (productInvalid()) {
+              <small class="stock-entry__error">Selecciona un producto.</small>
+            }
+          </div>
+
+          <div class="stock-entry__field">
+            <label for="stock-branch" class="stock-entry__label">
+              Sucursal <span aria-hidden="true">*</span>
+            </label>
+            <p-select
+              inputId="stock-branch"
+              [ngModel]="branchId()"
+              (ngModelChange)="branchId.set($event); createdLot.set(null)"
+              name="branch"
+              [options]="branchOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [loading]="loadingBranches()"
+              placeholder="Seleccionar sucursal"
+              appendTo="body"
+              styleClass="stock-entry__control"
+              [class.ng-invalid]="branchInvalid()"
+            />
+            @if (branchInvalid()) {
+              <small class="stock-entry__error">Selecciona una sucursal.</small>
+            }
+          </div>
+
+          <div class="stock-entry__field">
+            <label for="stock-quantity" class="stock-entry__label">
+              Cantidad <span aria-hidden="true">*</span>
+            </label>
+            <p-inputnumber
+              inputId="stock-quantity"
+              [ngModel]="quantity()"
+              (ngModelChange)="quantity.set($event); createdLot.set(null)"
+              name="quantity"
+              mode="decimal"
+              [min]="0"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="3"
+              placeholder="0,000"
+              styleClass="stock-entry__control"
+              [class.ng-invalid]="quantityInvalid()"
+            />
+            @if (quantityInvalid()) {
+              <small class="stock-entry__error">La cantidad debe ser mayor a cero.</small>
+            }
+          </div>
+
+          <div class="stock-entry__field">
+            <label for="stock-lot-code" class="stock-entry__label">Codigo de lote</label>
+            <input
+              id="stock-lot-code"
+              pInputText
+              type="text"
+              [ngModel]="lotCode()"
+              (ngModelChange)="lotCode.set($event); createdLot.set(null)"
+              name="lotCode"
+              maxlength="100"
+              placeholder="Ej. L-2026-001"
+              class="stock-entry__text-input"
+            />
+          </div>
+
+          <div class="stock-entry__field">
+            <label for="stock-expiration" class="stock-entry__label">Vencimiento</label>
+            <p-datepicker
+              inputId="stock-expiration"
+              [ngModel]="expirationDate()"
+              (ngModelChange)="expirationDate.set($event); createdLot.set(null)"
+              name="expirationDate"
+              [minDate]="minExpirationDate()"
+              dateFormat="yy-mm-dd"
+              placeholder="Sin vencimiento"
+              appendTo="body"
+              styleClass="stock-entry__control"
+              [class.ng-invalid]="expirationInvalid()"
+            />
+            @if (expirationInvalid()) {
+              <small class="stock-entry__error">El vencimiento debe ser futuro.</small>
+            }
+          </div>
+
+          <div class="stock-entry__field">
+            <label for="stock-cost" class="stock-entry__label">Costo unitario</label>
+            <p-inputnumber
+              inputId="stock-cost"
+              [ngModel]="costPrice()"
+              (ngModelChange)="costPrice.set($event); createdLot.set(null)"
+              name="costPrice"
+              mode="currency"
+              currency="ARS"
+              locale="es-AR"
+              [min]="0"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="2"
+              placeholder="$ 0"
+              styleClass="stock-entry__control"
+            />
+          </div>
+        </div>
+
+        <div class="stock-entry__actions">
+          <app-button type="submit" [loading]="submitting()">Registrar ingreso</app-button>
+        </div>
+      </app-form-section>
+    </form>
+
+    <aside class="stock-entry__summary" aria-live="polite">
+      <div class="stock-entry__summary-card">
+        <span class="stock-entry__summary-kicker">Resumen</span>
+        @if (createdLot()) {
+          <h2>Stock actualizado</h2>
+          <dl>
+            <div>
+              <dt>Producto</dt>
+              <dd>{{ createdLot()?.productName }}</dd>
+            </div>
+            <div>
+              <dt>Sucursal</dt>
+              <dd>{{ createdLot()?.branchName }}</dd>
+            </div>
+            <div>
+              <dt>Lote ingresado</dt>
+              <dd>{{ createdLot()?.quantityAvailable }}</dd>
+            </div>
+            <div>
+              <dt>Disponible actual</dt>
+              <dd>{{ createdLot()?.totalAvailableForProductBranch }}</dd>
+            </div>
+          </dl>
+        } @else {
+          <h2>Sin ingreso reciente</h2>
+          <p>
+            Al registrar un lote, veras el resumen y el stock total actual del producto en la sucursal seleccionada.
+          </p>
+        }
+      </div>
+    </aside>
+  </div>
+</section>

@@ -1,0 +1,188 @@
+:host {
+  display: block;
+}
+
+.stock-entry {
+  display: grid;
+  gap: var(--space-5);
+}
+
+/* --- Form + summary grid --- */
+
+.stock-entry__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.stock-entry__form,
+.stock-entry__summary {
+  min-width: 0;
+}
+
+/* --- Form fields --- */
+
+.stock-entry__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.stock-entry__field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.stock-entry__field--wide {
+  grid-column: 1 / -1;
+}
+
+.stock-entry__label {
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.stock-entry__label span,
+.stock-entry__error {
+  color: var(--color-red);
+}
+
+.stock-entry__error {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.stock-entry__control,
+.stock-entry__text-input {
+  width: 100%;
+}
+
+/* Plain text input for fields not using a PrimeNG component */
+
+.stock-entry__text-input {
+  background: var(--color-surface-warmest, #fffef9);
+  border: 1px solid var(--color-input-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--radius-card, 12px);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  min-height: 2.75rem;
+  padding: 0 var(--space-2);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.stock-entry__text-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+  outline: 0;
+}
+
+.stock-entry__text-input::placeholder {
+  color: var(--color-overlay-black, rgba(0, 0, 0, 0.4));
+  font-weight: 400;
+}
+
+/* --- Submit row --- */
+
+.stock-entry__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+}
+
+/* --- Summary sidebar --- */
+
+.stock-entry__summary-card {
+  background: var(--color-surface);
+  border: 1px solid rgba(7, 95, 54, 0.11);
+  border-radius: var(--radius-card, 12px);
+  box-shadow: var(--shadow-card);
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+.stock-entry__summary-kicker {
+  color: var(--color-bark);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.stock-entry__summary-card h2 {
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.stock-entry__summary-card p {
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.stock-entry__summary-card dl {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.stock-entry__summary-card dl div {
+  border-top: 1px solid var(--color-overlay-black-light, rgba(0, 0, 0, 0.05));
+  display: grid;
+  gap: 0.2rem;
+  padding-top: var(--space-2);
+}
+
+.stock-entry__summary-card dt {
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stock-entry__summary-card dd {
+  color: var(--color-primary-dark);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  margin: 0;
+}
+
+/* --- Invalid form states --- */
+
+:host ::ng-deep .p-inputtext.ng-invalid,
+:host ::ng-deep .p-select.ng-invalid,
+:host ::ng-deep .p-inputnumber.ng-invalid .p-inputtext {
+  border-color: var(--color-red);
+  background: var(--color-red-tint, hsla(4, 82%, 43%, 0.05));
+}
+
+/* --- Responsive --- */
+
+@media (max-width: 1024px) {
+  .stock-entry__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .stock-entry__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .stock-entry__actions {
+    justify-content: stretch;
+  }
+}

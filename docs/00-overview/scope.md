@@ -77,7 +77,7 @@
 | Fiscal invoicing (AFIP/ARCA) | Exceeds academic scope. Requires tax knowledge, system homologation, and fiscal keys. |
 | Mobile native app | Duplicates effort. Web frontend is responsive. |
 | Multi-company / multi-tenant | Single business. Branch support is built in. |
-| Automatic supplier price import | Requires variable format parsing and approval workflow. Manual entry in MVP. |
+| Fully automatic supplier price import without human approval | Supplier price updates must be reviewed before applying to costs or sale prices. |
 | Persistent server-side cart | localStorage is sufficient for the MVP use case. |
 | Notifications (email, WhatsApp, push) | Order tracking is pull-based (customer checks status). |
 | AI / LLM chatbot | Recommendations are rule-based. Avoids hallucination and infrastructure complexity. |
@@ -93,5 +93,5 @@
 | Horizon | Features |
 |---|---|
 | Short-term | Home delivery (manual), persistent cart, coupons, email notifications, multiple product images, branch transfers |
-| Medium-term | Rappi/PedidosYa integration, fiscal invoicing, automatic price import, PWA/mobile app, guest checkout |
+| Medium-term | Rappi/PedidosYa integration, fiscal invoicing, reviewed supplier price update batches, PWA/mobile app, guest checkout |
 | Long-term | Multi-company, multi-currency, AI chatbot, loyalty programs, accounting system integration |

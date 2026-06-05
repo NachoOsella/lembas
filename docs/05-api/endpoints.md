@@ -90,10 +90,11 @@ DELETE /api/admin/categories/{id}
 
 ```
 GET    /api/admin/stock/lots?productId=&branchId=&expiringSoon=
-POST   /api/admin/stock/lots
 POST   /api/admin/stock/adjustments  Request: { productId, branchId, quantity, reason, stockLotId? }
 GET    /api/admin/stock/movements?productId=&branchId=&type=&from=&to=&page=&size=
 ```
+
+Notes: supplier merchandise entry should use purchase receipts. Confirmed receipt items create lots and PURCHASE_ENTRY movements transactionally.
 
 ### Orders
 
@@ -136,7 +137,49 @@ PUT    /api/admin/suppliers/{id}
 GET    /api/admin/supplier-products?productId=&supplierId=
 POST   /api/admin/supplier-products
 PUT    /api/admin/supplier-products/{id}
+GET    /api/admin/supplier-products/{id}/cost-history
 ```
+
+### Purchasing
+
+```
+GET    /api/admin/purchase-orders?supplierId=&branchId=&status=&page=&size=
+POST   /api/admin/purchase-orders
+GET    /api/admin/purchase-orders/{id}
+PATCH  /api/admin/purchase-orders/{id}/confirm
+PATCH  /api/admin/purchase-orders/{id}/send
+PATCH  /api/admin/purchase-orders/{id}/cancel  Request: { reason }
+
+GET    /api/admin/purchase-receipts?purchaseOrderId=&supplierId=&branchId=&status=&page=&size=
+POST   /api/admin/purchase-receipts
+GET    /api/admin/purchase-receipts/{id}
+PATCH  /api/admin/purchase-receipts/{id}/confirm
+PATCH  /api/admin/purchase-receipts/{id}/cancel  Request: { reason }
+```
+
+Notes: purchase orders do not affect stock. Confirming a purchase receipt creates stock lots, PURCHASE_ENTRY movements, and can update supplier replacement cost history if the user approves.
+
+### Pricing
+
+```
+GET    /api/admin/products/{id}/sale-price-history
+GET    /api/admin/pricing-rules
+POST   /api/admin/pricing-rules
+PUT    /api/admin/pricing-rules/{id}
+
+GET    /api/admin/price-update-batches?supplierId=&status=&page=&size=
+POST   /api/admin/price-update-batches/manual
+POST   /api/admin/price-update-batches/import
+GET    /api/admin/price-update-batches/{id}
+PATCH  /api/admin/price-update-batches/{id}/defaults
+PATCH  /api/admin/price-update-batches/{id}/items/{itemId}
+PATCH  /api/admin/price-update-batches/{id}/apply-defaults-to-all
+PATCH  /api/admin/price-update-batches/{id}/validate
+PATCH  /api/admin/price-update-batches/{id}/apply
+PATCH  /api/admin/price-update-batches/{id}/cancel
+```
+
+Notes: price update batches require human review before applying. They can update existing products or create new products from supplier rows. The preview supports global defaults, an apply-defaults-to-all action, and per-product overrides. They do not modify stock lots or existing lot unit costs.
 
 ### Reports
 

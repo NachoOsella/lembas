@@ -47,6 +47,10 @@ export default [
         loadComponent: () => import('./inventory/inventory').then((m) => m.Inventory),
       },
       {
+        path: 'stock/entry',
+        loadComponent: () => import('./stock-entry/stock-entry').then((m) => m.StockEntry),
+      },
+      {
         path: 'orders',
         loadComponent: () => import('./orders/orders').then((m) => m.Orders),
       },

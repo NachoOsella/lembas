@@ -73,6 +73,9 @@ export class ErrorMappingService {
     PRODUCT_STATUS_INVALID_TRANSITION:
       'El producto ya no permite ese cambio de estado. Actualiza la tabla e intenta nuevamente.',
 
+    // Inventory errors
+    BRANCH_NOT_FOUND: 'La sucursal seleccionada no fue encontrada o esta inactiva.',
+
     // Database errors
     DATA_INTEGRITY_VIOLATION: 'Los datos ingresados conflictan con información existente.',
 

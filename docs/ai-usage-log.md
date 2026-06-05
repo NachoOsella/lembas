@@ -1,8 +1,15 @@
 # Registro de uso de IA
 
+## 2026-06-05
+
+- `docs/02-domain/`, `docs/03-architecture/`, `docs/04-processes/`, `docs/05-api/endpoints.md` -- actualizada la documentacion conceptual de stock, compras y precios: separacion de costo de reposicion, historial de costos/precios, ordenes de compra, recepciones, lotes con costo real congelado y batches de actualizacion de precios.
+- `docs/04-processes/supplier-price-update-flow.md`, `docs/03-architecture/database-design.md`, `docs/05-api/endpoints.md` -- ampliado el flujo de importacion de lista de proveedor para soportar pantalla unificada manual/Excel, creacion de productos nuevos, actualizacion de existentes, defaults globales, aplicar a todos y overrides por producto.
+- `backend/src/main/resources/db/migration/V19__inventory_purchasing_links.sql`, `backend/src/main/java/com/dietetica/lembas/inventory/`, `frontend/src/app/shared/models/inventory.ts` -- implementada S2-US15: extension del modelo de lotes/movimientos para compras con `initial_quantity`, `unit_cost`, estado, referencias de origen y snapshot de costo en movimientos.
+
 ## 2026-06-04
 
-- `backend/src/main/resources/db/migration/V4__inventory.sql`, `backend/src/main/java/com/dietetica/lembas/inventory/` -- implementada S2-US01 (LEMBAS-40): modelo de stock por lotes, movimientos de inventario, consultas de disponibilidad/FEFO y endpoint paginado `GET /api/admin/stock/lots` con cobertura MVC/JPA.
+- `backend/src/main/resources/db/migration/V18__inventory.sql`, `backend/src/main/java/com/dietetica/lembas/inventory/` -- implementada S2-US01 (LEMBAS-40): modelo de stock por lotes, movimientos de inventario, consultas de disponibilidad/FEFO y endpoint paginado `GET /api/admin/stock/lots` con cobertura MVC/JPA.
+- `backend/src/main/java/com/dietetica/lembas/inventory/`, `frontend/src/app/features/admin/stock-entry/` -- implementada S2-US02 (LEMBAS-41): ingreso de lotes con movimiento `PURCHASE_ENTRY`, validaciones backend/frontend, selector de producto, ruta `/admin/stock/entry` y resumen de stock total.
 
 ## 2026-06-03
 

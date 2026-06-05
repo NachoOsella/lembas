@@ -135,9 +135,11 @@ class StockLotRepositoryTest {
         lot.setProduct(product);
         lot.setBranch(branch);
         lot.setLotCode(code);
+        lot.setInitialQuantity(new BigDecimal(quantity));
         lot.setQuantityAvailable(new BigDecimal(quantity));
         lot.setExpirationDate(expirationDate);
         lot.setCostPrice(BigDecimal.valueOf(500));
+        lot.setUnitCost(BigDecimal.valueOf(500));
         return lot;
     }
 }

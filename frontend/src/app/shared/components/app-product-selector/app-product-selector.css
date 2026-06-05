@@ -1,0 +1,192 @@
+:host {
+  display: block;
+}
+
+.product-selector {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.product-selector__label {
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.product-selector__label span {
+  color: var(--color-red);
+}
+
+.product-selector__shell {
+  align-items: center;
+  background: var(--color-surface-warmest, #fffef9);
+  border: 1px solid var(--color-input-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--radius-pill, 50px);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 48px;
+  padding: 0 var(--space-3);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.product-selector__shell:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.product-selector--invalid .product-selector__shell {
+  border-color: var(--color-red);
+  background: var(--color-red-tint, hsla(4, 82%, 43%, 0.05));
+}
+
+.product-selector__icon {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  margin-right: 0.5rem;
+  pointer-events: none;
+}
+
+/* Inner PrimeNG autocomplete takes no visual decoration — shell owns the only border. */
+
+:host ::ng-deep .product-selector__auto {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  display: block;
+  width: 100%;
+}
+
+:host ::ng-deep .product-selector__auto .p-autocomplete-input,
+:host ::ng-deep .product-selector__input {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  min-height: 46px !important;
+  outline: 0;
+  padding: 0 !important;
+  width: 100%;
+}
+
+:host ::ng-deep .product-selector__auto .p-autocomplete-input:focus,
+:host ::ng-deep .product-selector__input:focus {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0;
+}
+
+:host ::ng-deep .product-selector__auto .p-autocomplete-input::placeholder,
+:host ::ng-deep .product-selector__input::placeholder {
+  color: var(--color-overlay-black, rgba(0, 0, 0, 0.4));
+  font-weight: 400;
+}
+
+/* --- Dropdown panel --- */
+
+:host ::ng-deep .app-product-selector-panel {
+  background: var(--color-surface);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-card, 12px);
+  box-shadow: var(--shadow-modal);
+  margin-top: 0.35rem;
+  overflow: hidden;
+  padding: var(--space-1);
+}
+
+:host ::ng-deep .app-product-selector-panel .p-autocomplete-list {
+  padding: 0;
+}
+
+:host ::ng-deep .app-product-selector-panel .p-autocomplete-option {
+  border-radius: 8px;
+  margin: 2px 0;
+  padding: 0;
+}
+
+:host ::ng-deep .app-product-selector-panel .p-autocomplete-option:hover,
+:host ::ng-deep .app-product-selector-panel .p-autocomplete-option.p-focus {
+  background: rgba(47, 141, 114, 0.08);
+}
+
+/* --- Option rows --- */
+
+.product-selector__option {
+  align-items: center;
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  min-width: min(34rem, 86vw);
+  padding: 0.55rem 0.5rem;
+}
+
+.product-selector__option-mark {
+  align-items: center;
+  background: var(--color-primary-dark);
+  border-radius: 50%;
+  color: var(--color-text-on-dark);
+  display: inline-grid;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  height: 2.5rem;
+  justify-content: center;
+  text-transform: uppercase;
+  width: 2.5rem;
+}
+
+.product-selector__option-body {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.product-selector__option-body strong {
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.product-selector__option-body span {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-selector__option-body small {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.product-selector__option-price {
+  background: var(--color-mint-wash-pale);
+  border: 1px solid rgba(47, 141, 114, 0.18);
+  border-radius: var(--radius-pill);
+  color: var(--color-primary-dark);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+  white-space: nowrap;
+}
+
+.product-selector__empty {
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 400;
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+}

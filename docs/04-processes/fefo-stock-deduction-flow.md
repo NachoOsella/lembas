@@ -1,4 +1,4 @@
-# Process: Stock Reservation (FEFO Deduction)
+# Process: FEFO Stock Deduction
 
 > There is no stock reservation in the MVP. Stock is deducted only when payment is confirmed.
 
