@@ -6,15 +6,17 @@ PostgreSQL 16
 
 ## Principles
 
-1. **Global catalog, stock per branch**: products and categories are global. Stock is in lots per branch.
-2. **stock_lots as single source of truth**: available = SUM(quantity_available) from active lots. No stock_reservations table.
-3. **Unified order**: `orders` handles both POS and ONLINE sales.
-4. **Unified payments**: `payments` serves both online (MP) and in-store (cash register).
-5. **Operational cash register**: cash_sessions represents a shift. In-store sales require an open session.
-6. **Price on the product**: `products.sale_price` is direct. History in audit_logs.
-7. **Role as direct field**: `users.role`. No roles or user_roles tables.
-8. **Stock deducted on payment approval**: no reservations. Reversed with CANCELLATION_RETURN movement.
-9. **Snapshots in order items**: order_items stores product data at time of sale.
+1. **Global catalog, stock per branch**: products and categories are global. Stock is tracked in lots per branch.
+2. **`stock_lots` as single source of truth**: available stock is `SUM(quantity_available)` from active lots. No `stock_reservations` table.
+3. **Purchase orders do not touch stock**: they represent expected purchases.
+4. **Purchase receipts touch stock**: confirming a receipt creates stock lots and `PURCHASE_ENTRY` movements.
+5. **Unified order**: `orders` handles both POS and ONLINE sales.
+6. **Unified payments**: `payments` serves both online and in-store payments.
+7. **Operational cash register**: `cash_sessions` represents a shift. In-store sales require an open session.
+8. **Current prices are operational fields**: `products.sale_price` and `supplier_products.current_cost` are direct fields for fast queries.
+9. **Price history uses dedicated tables**: `product_sale_price_history` and `supplier_product_cost_history` are the source for price reports.
+10. **Stock deducted on payment approval**: no reservations. Reversal uses `CANCELLATION_RETURN` movements.
+11. **Snapshots in order items**: `order_items` stores product data at time of sale.
 
 ## Migration plan (Flyway)
 
@@ -23,13 +25,19 @@ PostgreSQL 16
 | V1__core.sql | branches, users |
 | V2__catalog.sql | categories, products |
 | V3__suppliers.sql | suppliers, supplier_products |
-| V18__inventory.sql | stock_lots, stock_movements |
 | V5__orders.sql | orders, order_items |
 | V6__payments.sql | payments |
 | V7__cash.sql | cash_sessions, cash_movements |
 | V8__optional_promotions.sql | product_promotions |
 | V9__audit.sql | audit_logs |
 | V10__seed_data.sql | Demo data |
+| V18__inventory.sql | stock_lots, stock_movements |
+| V19__price_history.sql | product_sale_price_history, supplier_product_cost_history |
+| V20__purchasing.sql | purchase_orders, purchase_order_items, purchase_receipts, purchase_receipt_items |
+| V21__inventory_purchasing_links.sql | add supplier and receipt references to stock_lots, add movement reference fields |
+| V22__pricing_batches.sql | pricing_rules, price_update_batches, price_update_batch_items |
+
+Migration numbers after V18 can be adjusted to the current database history when implementing. Existing deployed migration numbers must never be reused.
 
 ## Key tables
 
@@ -42,7 +50,7 @@ CREATE TABLE branches (
     address VARCHAR(255),
     phone VARCHAR(50),
     active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE users (
@@ -55,12 +63,12 @@ CREATE TABLE users (
     phone VARCHAR(50),
     role VARCHAR(20) NOT NULL CHECK (role IN ('ADMIN','MANAGER','EMPLOYEE','CUSTOMER')),
     enabled BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
-### Catalog
+### Catalog and pricing
 
 ```sql
 CREATE TABLE categories (
@@ -82,12 +90,41 @@ CREATE TABLE products (
     sale_price DECIMAL(12,2) NOT NULL CHECK (sale_price >= 0),
     minimum_stock INT,
     active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE product_sale_price_history (
+    id BIGSERIAL PRIMARY KEY,
+    product_id BIGINT NOT NULL REFERENCES products(id),
+    old_price DECIMAL(12,2),
+    new_price DECIMAL(12,2) NOT NULL CHECK (new_price >= 0),
+    valid_from TIMESTAMPTZ NOT NULL DEFAULT now(),
+    valid_to TIMESTAMPTZ,
+    reason VARCHAR(100),
+    source VARCHAR(50),
+    reference_type VARCHAR(50),
+    reference_id BIGINT,
+    created_by_user_id BIGINT REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE pricing_rules (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    category_id BIGINT REFERENCES categories(id),
+    product_id BIGINT REFERENCES products(id),
+    target_margin_percentage DECIMAL(5,2) NOT NULL CHECK (target_margin_percentage >= 0 AND target_margin_percentage < 100),
+    rounding_multiple DECIMAL(12,2) NOT NULL DEFAULT 100 CHECK (rounding_multiple > 0),
+    active BOOLEAN DEFAULT true,
+    priority INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    CHECK (category_id IS NULL OR product_id IS NULL)
 );
 ```
 
-### Suppliers
+### Suppliers and cost history
 
 ```sql
 CREATE TABLE suppliers (
@@ -97,19 +134,92 @@ CREATE TABLE suppliers (
     phone VARCHAR(50),
     email VARCHAR(255),
     cuit VARCHAR(20) UNIQUE,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE supplier_products (
     id BIGSERIAL PRIMARY KEY,
-    product_id BIGINT REFERENCES products(id),
-    supplier_id BIGINT REFERENCES suppliers(id),
+    product_id BIGINT NOT NULL REFERENCES products(id),
+    supplier_id BIGINT NOT NULL REFERENCES suppliers(id),
     supplier_sku VARCHAR(100),
     current_cost DECIMAL(12,2) NOT NULL CHECK (current_cost >= 0),
     is_preferred BOOLEAN DEFAULT false,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
+    active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
     UNIQUE(product_id, supplier_id)
+);
+
+CREATE TABLE supplier_product_cost_history (
+    id BIGSERIAL PRIMARY KEY,
+    supplier_product_id BIGINT NOT NULL REFERENCES supplier_products(id),
+    old_cost DECIMAL(12,2),
+    new_cost DECIMAL(12,2) NOT NULL CHECK (new_cost >= 0),
+    valid_from TIMESTAMPTZ NOT NULL DEFAULT now(),
+    valid_to TIMESTAMPTZ,
+    source VARCHAR(50),
+    reference_type VARCHAR(50),
+    reference_id BIGINT,
+    created_by_user_id BIGINT REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+### Purchasing
+
+```sql
+CREATE TABLE purchase_orders (
+    id BIGSERIAL PRIMARY KEY,
+    supplier_id BIGINT NOT NULL REFERENCES suppliers(id),
+    branch_id BIGINT NOT NULL REFERENCES branches(id),
+    status VARCHAR(30) NOT NULL CHECK (status IN ('DRAFT','CONFIRMED','SENT','PARTIALLY_RECEIVED','RECEIVED','CANCELLED')),
+    order_date TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expected_delivery_date DATE,
+    notes TEXT,
+    created_by_user_id BIGINT REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    confirmed_at TIMESTAMPTZ,
+    sent_at TIMESTAMPTZ,
+    cancelled_at TIMESTAMPTZ
+);
+
+CREATE TABLE purchase_order_items (
+    id BIGSERIAL PRIMARY KEY,
+    purchase_order_id BIGINT NOT NULL REFERENCES purchase_orders(id),
+    product_id BIGINT NOT NULL REFERENCES products(id),
+    supplier_product_id BIGINT REFERENCES supplier_products(id),
+    quantity_ordered DECIMAL(12,3) NOT NULL CHECK (quantity_ordered > 0),
+    unit_cost DECIMAL(12,2) NOT NULL CHECK (unit_cost >= 0),
+    subtotal DECIMAL(12,2) NOT NULL CHECK (subtotal >= 0),
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE purchase_receipts (
+    id BIGSERIAL PRIMARY KEY,
+    purchase_order_id BIGINT REFERENCES purchase_orders(id),
+    supplier_id BIGINT NOT NULL REFERENCES suppliers(id),
+    branch_id BIGINT NOT NULL REFERENCES branches(id),
+    status VARCHAR(30) NOT NULL CHECK (status IN ('DRAFT','CONFIRMED','CANCELLED')),
+    invoice_number VARCHAR(100),
+    received_at TIMESTAMPTZ,
+    received_by_user_id BIGINT REFERENCES users(id),
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    confirmed_at TIMESTAMPTZ
+);
+
+CREATE TABLE purchase_receipt_items (
+    id BIGSERIAL PRIMARY KEY,
+    purchase_receipt_id BIGINT NOT NULL REFERENCES purchase_receipts(id),
+    purchase_order_item_id BIGINT REFERENCES purchase_order_items(id),
+    product_id BIGINT NOT NULL REFERENCES products(id),
+    supplier_product_id BIGINT REFERENCES supplier_products(id),
+    quantity_received DECIMAL(12,3) NOT NULL CHECK (quantity_received > 0),
+    unit_cost DECIMAL(12,2) NOT NULL CHECK (unit_cost >= 0),
+    expiration_date DATE,
+    lot_code VARCHAR(100),
+    created_stock_lot_id BIGINT,
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
@@ -118,26 +228,81 @@ CREATE TABLE supplier_products (
 ```sql
 CREATE TABLE stock_lots (
     id BIGSERIAL PRIMARY KEY,
-    product_id BIGINT REFERENCES products(id),
-    branch_id BIGINT REFERENCES branches(id),
+    product_id BIGINT NOT NULL REFERENCES products(id),
+    branch_id BIGINT NOT NULL REFERENCES branches(id),
+    supplier_id BIGINT REFERENCES suppliers(id),
+    supplier_product_id BIGINT REFERENCES supplier_products(id),
+    purchase_receipt_id BIGINT REFERENCES purchase_receipts(id),
+    purchase_receipt_item_id BIGINT REFERENCES purchase_receipt_items(id),
     lot_code VARCHAR(100),
     expiration_date DATE,
+    initial_quantity DECIMAL(12,3) NOT NULL CHECK (initial_quantity > 0),
     quantity_available DECIMAL(12,3) NOT NULL CHECK (quantity_available >= 0),
-    cost_price DECIMAL(12,2) CHECK (cost_price >= 0),
-    created_at TIMESTAMP DEFAULT NOW()
+    unit_cost DECIMAL(12,2) NOT NULL CHECK (unit_cost >= 0),
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','DEPLETED','CANCELLED')),
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE stock_movements (
     id BIGSERIAL PRIMARY KEY,
-    product_id BIGINT REFERENCES products(id),
-    branch_id BIGINT REFERENCES branches(id),
+    product_id BIGINT NOT NULL REFERENCES products(id),
+    branch_id BIGINT NOT NULL REFERENCES branches(id),
     stock_lot_id BIGINT REFERENCES stock_lots(id),
-    type VARCHAR(50) NOT NULL CHECK (type IN ('PURCHASE_ENTRY','POS_SALE','ONLINE_SALE','CANCELLATION_RETURN','MANUAL_ADJUSTMENT','WASTE','INTERNAL_CONSUMPTION')),
+    type VARCHAR(50) NOT NULL CHECK (type IN ('PURCHASE_ENTRY','POS_SALE','ONLINE_SALE','CANCELLATION_RETURN','MANUAL_ADJUSTMENT','WASTE','INTERNAL_CONSUMPTION','TRANSFER_OUT','TRANSFER_IN')),
     quantity DECIMAL(12,3) NOT NULL,
+    unit_cost_snapshot DECIMAL(12,2),
     reason TEXT,
+    reference_type VARCHAR(50),
+    reference_id BIGINT,
     order_id BIGINT REFERENCES orders(id),
     created_by_user_id BIGINT REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+### Price update batches
+
+```sql
+CREATE TABLE price_update_batches (
+    id BIGSERIAL PRIMARY KEY,
+    supplier_id BIGINT REFERENCES suppliers(id),
+    type VARCHAR(30) NOT NULL CHECK (type IN ('SUPPLIER_FILE','PERCENTAGE_INCREASE','MANUAL_GRID','SINGLE_PRODUCT_MANUAL')),
+    status VARCHAR(30) NOT NULL CHECK (status IN ('DRAFT','VALIDATED','APPLIED','CANCELLED')),
+    source_file_name VARCHAR(255),
+    default_new_product_margin_percentage DECIMAL(5,2),
+    default_transfer_percentage DECIMAL(8,3),
+    default_rounding_multiple DECIMAL(12,2),
+    apply_cost_updates_by_default BOOLEAN DEFAULT true,
+    apply_sale_price_updates_by_default BOOLEAN DEFAULT true,
+    pricing_rule_id BIGINT REFERENCES pricing_rules(id),
+    created_by_user_id BIGINT REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    applied_at TIMESTAMPTZ,
+    cancelled_at TIMESTAMPTZ,
+    notes TEXT
+);
+
+CREATE TABLE price_update_batch_items (
+    id BIGSERIAL PRIMARY KEY,
+    batch_id BIGINT NOT NULL REFERENCES price_update_batches(id),
+    supplier_product_id BIGINT REFERENCES supplier_products(id),
+    product_id BIGINT REFERENCES products(id),
+    supplier_sku VARCHAR(100),
+    supplier_product_name VARCHAR(255),
+    barcode VARCHAR(100),
+    old_cost DECIMAL(12,2),
+    new_cost DECIMAL(12,2),
+    supplier_variation_percentage DECIMAL(8,3),
+    transfer_percentage DECIMAL(8,3),
+    new_product_margin_percentage DECIMAL(5,2),
+    old_sale_price DECIMAL(12,2),
+    suggested_sale_price DECIMAL(12,2),
+    final_sale_price DECIMAL(12,2),
+    apply_cost_update BOOLEAN DEFAULT true,
+    apply_sale_price_update BOOLEAN DEFAULT true,
+    create_product BOOLEAN DEFAULT false,
+    status VARCHAR(30) NOT NULL CHECK (status IN ('CREATE','UPDATE','UNCHANGED','REVIEW','EXCLUDED','ERROR')),
+    error_message TEXT
 );
 ```
 
@@ -162,13 +327,13 @@ CREATE TABLE orders (
     discount_total DECIMAL(12,2) DEFAULT 0 CHECK (discount_total >= 0),
     total DECIMAL(12,2) NOT NULL CHECK (total >= 0),
     notes TEXT,
-    paid_at TIMESTAMP,
-    prepared_at TIMESTAMP,
-    delivered_at TIMESTAMP,
-    cancelled_at TIMESTAMP,
+    paid_at TIMESTAMPTZ,
+    prepared_at TIMESTAMPTZ,
+    delivered_at TIMESTAMPTZ,
+    cancelled_at TIMESTAMPTZ,
     cancellation_reason TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE order_items (
@@ -182,7 +347,7 @@ CREATE TABLE order_items (
     product_name_snapshot VARCHAR(255) NOT NULL,
     product_barcode_snapshot VARCHAR(100),
     cost_price_snapshot DECIMAL(12,2),
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
@@ -201,10 +366,10 @@ CREATE TABLE payments (
     provider_payment_id VARCHAR(255),
     provider_preference_id VARCHAR(255),
     external_reference VARCHAR(255),
-    approved_at TIMESTAMP,
+    approved_at TIMESTAMPTZ,
     metadata JSONB,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
@@ -216,8 +381,8 @@ CREATE TABLE cash_sessions (
     branch_id BIGINT REFERENCES branches(id) NOT NULL,
     opened_by_user_id BIGINT REFERENCES users(id) NOT NULL,
     closed_by_user_id BIGINT REFERENCES users(id),
-    opened_at TIMESTAMP DEFAULT NOW(),
-    closed_at TIMESTAMP,
+    opened_at TIMESTAMPTZ DEFAULT now(),
+    closed_at TIMESTAMPTZ,
     opening_cash_amount DECIMAL(12,2) NOT NULL CHECK (opening_cash_amount >= 0),
     expected_cash_amount DECIMAL(12,2),
     counted_cash_amount DECIMAL(12,2),
@@ -226,8 +391,8 @@ CREATE TABLE cash_sessions (
     status VARCHAR(10) NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN','CLOSED')),
     opening_notes TEXT,
     closing_notes TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE cash_movements (
@@ -238,7 +403,7 @@ CREATE TABLE cash_movements (
     method VARCHAR(20) NOT NULL CHECK (method IN ('CASH','TRANSFER','OTHER')),
     amount DECIMAL(12,2) NOT NULL,
     reason TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
@@ -252,41 +417,56 @@ CREATE TABLE audit_logs (
     entity_type VARCHAR(100) NOT NULL,
     entity_id BIGINT,
     description TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 ```
+
+`audit_logs` records critical actors and actions, while dedicated price history tables are used for commercial price history queries.
 
 ## Key constraints
 
 | Table | Constraint | Reason |
 |---|---|---|
 | products | barcode UNIQUE | Unique barcode |
-| products | sale_price >= 0 | Non-negative price |
-| stock_lots | quantity_available >= 0 | Never negative stock |
+| products | sale_price >= 0 | Non-negative sale price |
+| product_sale_price_history | new_price >= 0 | Valid sale price history |
+| supplier_products | UNIQUE(product_id, supplier_id) | Avoid duplicate supplier associations |
+| supplier_products | current_cost >= 0 | Non-negative replacement cost |
+| supplier_product_cost_history | new_cost >= 0 | Valid replacement cost history |
+| purchase_order_items | quantity_ordered > 0 | Valid expected purchase quantity |
+| purchase_receipt_items | quantity_received > 0 | Valid received quantity |
+| stock_lots | initial_quantity > 0, quantity_available >= 0 | Valid physical stock |
+| stock_lots | unit_cost >= 0 | Valid frozen lot cost |
 | order_items | quantity > 0, unit_price >= 0, subtotal_amount >= 0 | Consistency |
 | orders | total >= 0, order_number UNIQUE | Consistency |
 | payments | amount > 0 | Positive amount |
-| cash_sessions | Only one OPEN per branch (application logic) | Register integrity |
+| cash_sessions | Only one OPEN per branch | Register integrity, enforced by application logic or partial index |
 | suppliers | cuit UNIQUE | Unique CUIT |
-| supplier_products | (product_id, supplier_id) | Avoid duplicate associations |
 
 ## Key indexes
 
 | Table | Index | Purpose |
 |---|---|---|
-| stock_lots | (product_id, branch_id, expiration_date) | FEFO queries |
+| stock_lots | (product_id, branch_id, status, expiration_date) | FEFO queries |
 | stock_lots | (expiration_date) | Expiry alerts |
-| stock_movements | (product_id, created_at) | Product history |
+| stock_lots | (purchase_receipt_id) | Trace stock from receipt |
+| stock_movements | (product_id, created_at) | Product movement history |
 | stock_movements | (order_id) | Movements by order |
+| stock_movements | (reference_type, reference_id) | Generic source traceability |
 | products | (barcode) | Barcode search |
 | products | (category_id) | Category filter |
 | products | (online_status) | Public catalog |
+| product_sale_price_history | (product_id, valid_from) | Price history lookup |
+| supplier_product_cost_history | (supplier_product_id, valid_from) | Cost history lookup |
+| purchase_orders | (supplier_id, status) | Supplier order management |
+| purchase_receipts | (purchase_order_id) | Receipts by order |
+| price_update_batches | (supplier_id, status) | Batch management |
 | orders | (branch_id, created_at) | Branch orders |
 | orders | (status) | Status filter |
 | orders | (type) | POS/ONLINE filter |
 | payments | (order_id) | Payments by order |
 | payments | (cash_session_id) | Payments by cash session |
-| payments | (provider_payment_id) | MP lookup |
+| payments | (provider_payment_id) | Mercado Pago lookup |
 | cash_sessions | (branch_id, status) | Active session |
 | suppliers | (name) | Supplier search |
 | supplier_products | (product_id) | Products by supplier |
@@ -301,6 +481,8 @@ erDiagram
     branches ||--o{ stock_movements : registers
     branches ||--o{ orders : belongs_to
     branches ||--o{ cash_sessions : opens
+    branches ||--o{ purchase_orders : receives_for
+    branches ||--o{ purchase_receipts : receives_for
 
     users ||--o{ stock_movements : creates
     users ||--o{ orders : as_customer
@@ -308,15 +490,37 @@ erDiagram
     users ||--o{ cash_sessions : opens
     users ||--o{ cash_sessions : closes
     users ||--o{ cash_movements : creates
+    users ||--o{ product_sale_price_history : changes
+    users ||--o{ supplier_product_cost_history : changes
 
     categories ||--o{ products : contains
+    categories ||--o{ pricing_rules : prices_with
 
     products ||--o{ stock_lots : has_lots
     products ||--o{ stock_movements : tracks
     products ||--o{ order_items : sold_in
     products ||--o{ supplier_products : supplied_by
+    products ||--o{ product_sale_price_history : has_sale_history
+    products ||--o{ pricing_rules : prices_with
 
     suppliers ||--o{ supplier_products : offers
+    suppliers ||--o{ purchase_orders : receives_order
+    suppliers ||--o{ purchase_receipts : delivers
+    suppliers ||--o{ price_update_batches : has_batches
+
+    supplier_products ||--o{ supplier_product_cost_history : has_cost_history
+    supplier_products ||--o{ purchase_order_items : quoted_in
+    supplier_products ||--o{ purchase_receipt_items : received_as
+    supplier_products ||--o{ price_update_batch_items : updated_in
+
+    purchase_orders ||--o{ purchase_order_items : contains
+    purchase_orders ||--o{ purchase_receipts : fulfilled_by
+    purchase_order_items ||--o{ purchase_receipt_items : received_by
+    purchase_receipts ||--o{ purchase_receipt_items : contains
+    purchase_receipt_items ||--|| stock_lots : creates
+
+    price_update_batches ||--o{ price_update_batch_items : contains
+    pricing_rules ||--o{ price_update_batches : suggests_prices
 
     stock_lots ||--o{ stock_movements : referenced_in
 

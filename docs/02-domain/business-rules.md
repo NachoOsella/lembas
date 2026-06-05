@@ -6,7 +6,9 @@
 - Only active products with online_status = PUBLISHED appear in the online store
 - A product belongs to exactly one category (optional)
 - barcode is unique when provided
-- sale_price must be >= 0
+- `sale_price` is the current operational sale price used by POS and online store
+- `sale_price` must be >= 0
+- Sale price history is stored in `product_sale_price_history`; `audit_logs` records who performed the change
 - online_status transitions: DRAFT -> PUBLISHED -> PAUSED -> HIDDEN (and back)
 - A product can exist without any stock (zero stock = not available online)
 - Minimum stock alerts are based on `minimum_stock` field
@@ -42,7 +44,12 @@
 
 ## Stock
 
-- Available stock = SUM(quantity_available) from stock_lots
+- Available stock = SUM(quantity_available) from active stock_lots
+- Stock increases only when a purchase receipt is confirmed
+- Purchase orders do not affect stock
+- Each confirmed purchase receipt item creates one stock lot and one PURCHASE_ENTRY movement
+- `stock_lots.unit_cost` stores the real received unit cost and is immutable
+- Future supplier price changes never update existing lot costs
 - Stock is deducted using FEFO (First Expired, First Out) when expiration dates exist
 - Lots without expiration dates are consumed after all dated lots
 - Negative stock is never allowed (constraint enforced at database level)
@@ -80,5 +87,6 @@
 ## Audit
 
 - Critical actions are logged in audit_logs with user, timestamp, and description
-- Logged events: price changes, stock adjustments, order cancellations, cash operations
+- Logged events: price changes, stock adjustments, purchase receipt confirmations, order cancellations, cash operations
+- Audit logs are not the source for sale price or supplier cost history queries; dedicated history tables are used
 - Audit logs are append-only (no deletion or modification)

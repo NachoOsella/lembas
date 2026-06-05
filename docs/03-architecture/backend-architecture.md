@@ -21,11 +21,11 @@ backend/
   auth/             -- Authentication JWT, registration, login
   users/            -- Internal user management (ADMIN/MANAGER/EMPLOYEE)
   catalog/          -- Products, categories
-  inventory/        -- StockLot, StockMovement, FEFO
+  inventory/        -- StockLot, StockMovement, FEFO deduction, manual adjustments
   orders/           -- Unified orders (POS and ONLINE)
   payments/         -- Payment, Mercado Pago integration and webhook endpoint
   cash/             -- CashSession, CashMovement
-  suppliers/        -- Suppliers, supplier_products
+  suppliers/        -- Suppliers, supplier_products, purchasing, price update batches
   reports/          -- Dashboard, cash report, recommendations
   audit/            -- AuditLog
   shared/           -- Common DTOs, exceptions, utilities
@@ -116,7 +116,8 @@ Admin routes: /api/admin/** (ADMIN, MANAGER, EMPLOYEE)
 | POS sale | orders, order_items, stock_lots, stock_movements, payments, cash_sessions | FOR UPDATE |
 | MP webhook (approve) | payments, orders, stock_lots, stock_movements | FOR UPDATE |
 | Cancel order | orders, stock_lots, stock_movements, payments | FOR UPDATE |
-| Stock entry | stock_lots, stock_movements | READ COMMITTED |
+| Purchase receipt confirmation | purchase_receipts, purchase_receipt_items, stock_lots, stock_movements, supplier_products, supplier_product_cost_history | READ COMMITTED |
+| Manual stock adjustment | stock_lots, stock_movements | READ COMMITTED |
 
 ## Error handling
 
