@@ -24,7 +24,6 @@ PostgreSQL 16
 |---|---|
 | V1__core.sql | branches, users |
 | V2__catalog.sql | categories, products |
-| V3__suppliers.sql | suppliers, supplier_products |
 | V5__orders.sql | orders, order_items |
 | V6__payments.sql | payments |
 | V7__cash.sql | cash_sessions, cash_movements |
@@ -32,10 +31,12 @@ PostgreSQL 16
 | V9__audit.sql | audit_logs |
 | V10__seed_data.sql | Demo data |
 | V18__inventory.sql | stock_lots, stock_movements |
-| V19__price_history.sql | product_sale_price_history, supplier_product_cost_history |
-| V20__purchasing.sql | purchase_orders, purchase_order_items, purchase_receipts, purchase_receipt_items |
-| V21__inventory_purchasing_links.sql | add supplier and receipt references to stock_lots, add movement reference fields |
-| V22__pricing_batches.sql | pricing_rules, price_update_batches, price_update_batch_items |
+| V19__inventory_purchasing_links.sql | add supplier and receipt references to stock_lots, add movement reference fields |
+| V20__suppliers.sql | suppliers, supplier_products, supplier_product_cost_history |
+| V21__seed_suppliers.sql | Demo suppliers and product-supplier associations |
+| V22__price_history.sql | product_sale_price_history |
+| V23__purchasing.sql | purchase_orders, purchase_order_items, purchase_receipts, purchase_receipt_items |
+| V24__pricing_batches.sql | pricing_rules, price_update_batches, price_update_batch_items |
 
 Migration numbers after V18 can be adjusted to the current database history when implementing. Existing deployed migration numbers must never be reused.
 

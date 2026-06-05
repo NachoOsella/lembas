@@ -76,6 +76,12 @@ export class ErrorMappingService {
     // Inventory errors
     BRANCH_NOT_FOUND: 'La sucursal seleccionada no fue encontrada o esta inactiva.',
 
+    // Supplier errors
+    SUPPLIER_NOT_FOUND: 'El proveedor seleccionado no fue encontrado.',
+    SUPPLIER_CUIT_DUPLICATED: 'Ya existe un proveedor activo con ese CUIT.',
+    SUPPLIER_PRODUCT_NOT_FOUND: 'La asociacion producto-proveedor no fue encontrada.',
+    SUPPLIER_PRODUCT_DUPLICATED: 'Ese producto ya esta asociado a este proveedor.',
+
     // Database errors
     DATA_INTEGRITY_VIOLATION: 'Los datos ingresados conflictan con información existente.',
 

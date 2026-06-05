@@ -2,9 +2,12 @@
 
 ## 2026-06-05
 
+- `frontend/src/app/features/admin/suppliers/suppliers.css` -- corregido scroll horizontal de tablas de proveedores: override de `table-layout:fixed` a `table-layout:auto` + `min-width:100%` en lugar de `width:100%` para que las tablas se expandan segun el contenido y PrimeNG active el scroll horizontal del wrapper `.p-datatable-table-container` (que ya tiene `overflow:auto` interno); removidos `max-width`, `overflow:hidden` y `text-overflow:ellipsis` de celdas para que el contenido completo sea visible al scrollear.
 - `docs/02-domain/`, `docs/03-architecture/`, `docs/04-processes/`, `docs/05-api/endpoints.md` -- actualizada la documentacion conceptual de stock, compras y precios: separacion de costo de reposicion, historial de costos/precios, ordenes de compra, recepciones, lotes con costo real congelado y batches de actualizacion de precios.
 - `docs/04-processes/supplier-price-update-flow.md`, `docs/03-architecture/database-design.md`, `docs/05-api/endpoints.md` -- ampliado el flujo de importacion de lista de proveedor para soportar pantalla unificada manual/Excel, creacion de productos nuevos, actualizacion de existentes, defaults globales, aplicar a todos y overrides por producto.
 - `backend/src/main/resources/db/migration/V19__inventory_purchasing_links.sql`, `backend/src/main/java/com/dietetica/lembas/inventory/`, `frontend/src/app/shared/models/inventory.ts` -- implementada S2-US15: extension del modelo de lotes/movimientos para compras con `initial_quantity`, `unit_cost`, estado, referencias de origen y snapshot de costo en movimientos.
+- `backend/src/main/resources/db/migration/V20__suppliers.sql`, `backend/src/main/java/com/dietetica/lembas/suppliers/`, `frontend/src/app/features/admin/suppliers/` -- implementada S2-US11: ABM de proveedores, asociacion producto-proveedor con costo de reposicion actual, historial de costos, endpoints admin y pantalla backoffice con buscador de producto.
+- `backend/src/main/resources/db/migration/V21__seed_suppliers.sql` -- datos semilla de proveedores de prueba y asociaciones producto-proveedor con costos de reposicion.
 
 ## 2026-06-04
 

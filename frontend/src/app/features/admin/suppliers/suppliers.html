@@ -1,1 +1,347 @@
-<p>suppliers works!</p>
+<div class="admin-page suppliers-page">
+  <app-page-header
+    eyebrow="Proveedores"
+    title="Proveedores y costos"
+    description="Gestiona proveedores, productos asociados y costos actuales de reposicion."
+  >
+    <div class="header-actions">
+      <app-button icon="pi pi-link" variant="secondary" (click)="openSupplierProductCreate()">
+        Asociar producto
+      </app-button>
+      <app-button icon="pi pi-plus" (click)="openSupplierCreate()"> Nuevo proveedor </app-button>
+    </div>
+  </app-page-header>
+
+  @if (error()) {
+    <app-error-alert variant="inline" [title]="error()" message="">
+      <app-button variant="secondary" size="sm" (click)="refreshAll()">Reintentar</app-button>
+    </app-error-alert>
+  }
+
+  <section class="supplier-grid" aria-label="Gestion de proveedores">
+    <app-data-table
+      [data]="suppliers()"
+      [columns]="supplierColumns"
+      [loading]="loadingSuppliers()"
+      [sortable]="true"
+      [paginated]="true"
+      [lazy]="true"
+      [totalRecords]="supplierTotalRecords()"
+      [first]="supplierFirst()"
+      [rows]="supplierPageSize()"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      (pageChange)="onSupplierPageChange($event)"
+      (sortChange)="onSupplierSort($event)"
+      emptyTitle="No hay proveedores"
+      emptyDescription="Crea el primer proveedor para empezar a asociar costos de reposicion."
+    >
+      <ng-template #toolbar>
+        <div class="table-toolbar__info">
+          <p class="table-toolbar__kicker">Directorio</p>
+          <h2 class="table-toolbar__title">Proveedores activos</h2>
+        </div>
+        <div class="table-toolbar__actions suppliers-toolbar">
+          <app-search-bar
+            [(value)]="search"
+            placeholder="Buscar proveedor, CUIT o contacto..."
+            (search)="onSearch($event)"
+            (clear)="clearSearch()"
+          />
+        </div>
+      </ng-template>
+
+      <ng-template #body let-supplier>
+        <tr>
+          <td>
+            <div class="supplier-name-cell">
+              <span class="supplier-avatar">{{ supplier.name.charAt(0) }}</span>
+              <div>
+                <strong>{{ supplier.name }}</strong>
+                <small>{{ supplier.cuit || 'Sin CUIT' }}</small>
+              </div>
+            </div>
+          </td>
+          <td>{{ supplier.contactName || 'Sin contacto' }}</td>
+          <td>{{ supplier.phone || '-' }}</td>
+          <td>{{ supplier.email || '-' }}</td>
+          <td>{{ supplier.cuit || '-' }}</td>
+          <td>
+            <div class="table-actions">
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-link"
+                [iconOnly]="true"
+                [ariaLabel]="'Asociar producto a ' + supplier.name"
+                (click)="openSupplierProductCreate(supplier)"
+              />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-pencil"
+                [iconOnly]="true"
+                [ariaLabel]="'Editar ' + supplier.name"
+                (click)="openSupplierEdit(supplier)"
+              />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-trash"
+                [iconOnly]="true"
+                [ariaLabel]="'Eliminar ' + supplier.name"
+                (click)="supplierToDelete.set(supplier)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </app-data-table>
+
+    <app-data-table
+      [data]="supplierProducts()"
+      [columns]="supplierProductColumns"
+      [loading]="loadingProducts()"
+      [sortable]="true"
+      [paginated]="true"
+      [lazy]="true"
+      [totalRecords]="productTotalRecords()"
+      [first]="productFirst()"
+      [rows]="productPageSize()"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      (pageChange)="onProductPageChange($event)"
+      (sortChange)="onProductSort($event)"
+      emptyTitle="No hay productos asociados"
+      emptyDescription="Asocia productos a proveedores para precargar costos de compras."
+    >
+      <ng-template #toolbar>
+        <div class="table-toolbar__info">
+          <p class="table-toolbar__kicker">Reposicion</p>
+          <h2 class="table-toolbar__title">Productos por proveedor</h2>
+        </div>
+        <div class="table-toolbar__actions">
+          <app-search-bar
+            [(value)]="productSearch"
+            placeholder="Buscar por producto, proveedor o SKU..."
+            (search)="onProductSearch($event)"
+            (clear)="clearProductSearch()"
+          />
+        </div>
+      </ng-template>
+
+      <ng-template #body let-item>
+        <tr>
+          <td>
+            <strong>{{ item.productName }}</strong>
+            <small class="cell-muted">{{ item.productBarcode || 'Sin barcode' }}</small>
+          </td>
+          <td>{{ item.supplierName }}</td>
+          <td>{{ item.supplierSku || '-' }}</td>
+          <td>{{ formatPrice(item.currentCost) }}</td>
+          <td>
+            <span class="preferred-pill" [class.preferred-pill--off]="!item.preferred">
+              {{ item.preferred ? 'Preferido' : 'Alternativo' }}
+            </span>
+          </td>
+          <td>
+            <div class="table-actions">
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-pencil"
+                [iconOnly]="true"
+                [ariaLabel]="'Editar costo de ' + item.productName"
+                (click)="openSupplierProductEdit(item)"
+              />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-trash"
+                [iconOnly]="true"
+                [ariaLabel]="'Eliminar asociacion de ' + item.productName"
+                (click)="supplierProductToDelete.set(item)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </app-data-table>
+  </section>
+</div>
+
+<app-modal
+  [(visible)]="supplierDialogVisible"
+  [title]="editingSupplier() ? 'Editar proveedor' : 'Nuevo proveedor'"
+  [width]="'min(38rem, 92vw)'"
+>
+  <form class="supplier-form" (ngSubmit)="saveSupplier()">
+    <app-form-section
+      [index]="1"
+      title="Datos del proveedor"
+      description="Informacion de contacto y identificacion fiscal."
+    >
+      <div class="supplier-form__grid">
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-form-field
+            label="Nombre"
+            [required]="true"
+            [(value)]="supplierFormName"
+            placeholder="Nombre del proveedor"
+            testId="supplier-name"
+          />
+        </div>
+
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-form-field
+            label="Contacto"
+            [(value)]="supplierFormContactName"
+            placeholder="Persona de contacto"
+            testId="supplier-contact"
+          />
+        </div>
+
+        <div class="supplier-form__field">
+          <app-form-field
+            label="Telefono"
+            type="tel"
+            [(value)]="supplierFormPhone"
+            placeholder="+54 351 123 4567"
+            testId="supplier-phone"
+          />
+        </div>
+
+        <div class="supplier-form__field">
+          <app-form-field
+            label="Email"
+            type="email"
+            [(value)]="supplierFormEmail"
+            placeholder="correo@ejemplo.com"
+            testId="supplier-email"
+          />
+        </div>
+
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-form-field
+            label="CUIT"
+            [(value)]="supplierFormCuit"
+            placeholder="30-12345678-9"
+            testId="supplier-cuit"
+          />
+        </div>
+      </div>
+    </app-form-section>
+
+    <div class="supplier-form__actions" modalFooter>
+      <app-button variant="secondary" type="button" (click)="supplierDialogVisible.set(false)">
+        Cancelar
+      </app-button>
+      <app-button type="submit" [loading]="saving()">Guardar</app-button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal
+  [(visible)]="supplierProductDialogVisible"
+  [title]="editingSupplierProduct() ? 'Editar costo de reposicion' : 'Asociar producto a proveedor'"
+  [width]="'min(42rem, 92vw)'"
+>
+  <form class="supplier-form" (ngSubmit)="saveSupplierProduct()">
+    <app-form-section
+      [index]="1"
+      title="Producto y proveedor"
+      description="Asocia un producto con su proveedor y define el costo de reposicion."
+    >
+      <div class="supplier-form__grid">
+        <div class="supplier-form__field supplier-form__field--wide">
+          <label class="supplier-form__label">
+            Producto <span class="supplier-form__required" aria-hidden="true">*</span>
+          </label>
+          <app-product-selector
+            [(selected)]="selectedProduct"
+            [suggestions]="productSuggestions()"
+            placeholder="Buscar por nombre o barcode..."
+            (search)="searchProducts($event)"
+          />
+        </div>
+
+        <div class="supplier-form__field supplier-form__field--wide">
+          <label class="supplier-form__label">
+            Proveedor <span class="supplier-form__required" aria-hidden="true">*</span>
+          </label>
+          <p-select
+            [options]="supplierOptions()"
+            [(ngModel)]="supplierProductFormSupplierId"
+            name="supplierId"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar proveedor"
+            appendTo="body"
+            class="supplier-form__select"
+          />
+        </div>
+
+        <div class="supplier-form__field">
+          <app-form-field
+            label="SKU proveedor"
+            [(value)]="supplierProductFormSupplierSku"
+            placeholder="Codigo del proveedor"
+            testId="supplier-product-sku"
+          />
+        </div>
+
+        <div class="supplier-form__field">
+          <label class="supplier-form__label">
+            Costo actual de reposicion <span class="supplier-form__required" aria-hidden="true">*</span>
+          </label>
+          <p-inputnumber
+            [(ngModel)]="supplierProductFormCurrentCost"
+            name="currentCost"
+            mode="currency"
+            currency="ARS"
+            locale="es-AR"
+            [min]="0"
+            [maxFractionDigits]="2"
+            class="supplier-form__inputnumber"
+          />
+        </div>
+
+        <div class="supplier-form__field supplier-form__field--wide">
+          <label class="supplier-form__checkbox-row">
+            <p-checkbox
+              [binary]="true"
+              [(ngModel)]="supplierProductFormPreferred"
+              name="preferred"
+            />
+            Marcar como proveedor preferido para este producto
+          </label>
+        </div>
+      </div>
+    </app-form-section>
+
+    <div class="supplier-form__actions" modalFooter>
+      <app-button variant="secondary" type="button" (click)="supplierProductDialogVisible.set(false)">
+        Cancelar
+      </app-button>
+      <app-button type="submit" [loading]="saving()">Guardar costo</app-button>
+    </div>
+  </form>
+</app-modal>
+
+<app-confirm-dialog
+  [visible]="!!supplierToDelete()"
+  title="Eliminar proveedor"
+  [message]="'Vas a eliminar ' + (supplierToDelete()?.name ?? 'este proveedor') + '. Sus historiales quedan preservados.'"
+  confirmLabel="Eliminar"
+  [destructive]="true"
+  (confirmed)="confirmDeleteSupplier()"
+  (cancelled)="supplierToDelete.set(null)"
+/>
+
+<app-confirm-dialog
+  [visible]="!!supplierProductToDelete()"
+  title="Eliminar asociacion"
+  [message]="'Vas a eliminar la asociacion de ' + (supplierProductToDelete()?.productName ?? 'este producto') + ' con el proveedor.'"
+  confirmLabel="Eliminar"
+  [destructive]="true"
+  (confirmed)="confirmDeleteSupplierProduct()"
+  (cancelled)="supplierProductToDelete.set(null)"
+/>
