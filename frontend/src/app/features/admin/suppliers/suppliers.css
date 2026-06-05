@@ -17,6 +17,11 @@
 .supplier-grid {
   display: grid;
   gap: 1.25rem;
+  min-width: 0;
+}
+
+.supplier-grid app-data-table {
+  min-width: 0;
 }
 
 .suppliers-toolbar {
@@ -175,14 +180,14 @@
    the table is wider than the viewport.
    --------------------------------------------------------------------------- */
 
-/* Let the table expand based on content instead of clipping it to 100% */
+/* Keep the table full-width on desktop, but let long content create horizontal scroll. */
 :host ::ng-deep .supplier-grid .app-data-table .p-datatable-table {
   table-layout: auto;
-  width: auto;
-  min-width: 100%;
+  width: 100%;
+  min-width: max-content;
 }
 
-/* Remove the text truncation from cells so all content is visible */
+/* Avoid aggressive ellipsis: users can read full values by scrolling sideways. */
 :host ::ng-deep .supplier-grid .app-data-table .p-datatable-tbody > tr > td {
   max-width: none;
   overflow: visible;
@@ -190,7 +195,7 @@
   white-space: nowrap;
 }
 
-/* Keep headers on one line too */
+/* Keep headers on one line so column intent remains clear while scrolling. */
 :host ::ng-deep .supplier-grid .app-data-table .p-datatable-thead > tr > th {
   white-space: nowrap;
 }
