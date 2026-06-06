@@ -1,0 +1,144 @@
+:host {
+  display: block;
+}
+
+.purchase-orders-page {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.purchase-orders-toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(10rem, 1fr));
+  width: min(100%, 42rem);
+}
+
+.purchase-orders-toolbar app-select {
+  min-width: 0;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.purchase-order-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.purchase-order-form__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.purchase-order-form__field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.purchase-order-form__field--wide {
+  grid-column: 1 / -1;
+}
+
+.purchase-order-form__error {
+  color: var(--color-red);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.purchase-order-item-picker {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) minmax(12rem, auto);
+  gap: var(--space-3);
+  align-items: start;
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface-warmest);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: var(--radius-card);
+}
+
+.purchase-order-item-picker__action {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 12rem;
+}
+
+.purchase-order-item-picker__action-label {
+  color: var(--color-bark);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight, -0.01em);
+  line-height: 1.5;
+}
+
+.purchase-order-item-picker__action app-button {
+  width: 100%;
+}
+
+.purchase-order-items-table {
+  display: block;
+}
+
+.purchase-order-item-muted {
+  display: block;
+  color: var(--color-text-muted);
+  margin-top: 0.2rem;
+}
+
+:host ::ng-deep .purchase-order-items-table .app-data-table .p-datatable-table {
+  min-width: 54rem;
+}
+
+:host ::ng-deep .purchase-order-items-table .app-data-table .p-datatable-tbody > tr > td {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: initial;
+  vertical-align: top;
+}
+
+:host ::ng-deep .purchase-order-items-table .app-data-table .p-datatable-tbody > tr > td:nth-child(4) {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+.purchase-order-total {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  color: var(--color-text);
+  font-size: 1.1rem;
+}
+
+.purchase-order-total strong {
+  color: var(--color-primary-dark);
+  font-weight: 800;
+}
+
+.purchase-order-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.purchase-order-cancel {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (max-width: 768px) {
+  .purchase-order-form__grid,
+  .purchase-order-item-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .purchase-order-form__actions {
+    justify-content: stretch;
+  }
+}

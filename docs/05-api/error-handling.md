@@ -62,6 +62,10 @@ Services may throw `DomainException` directly when a dedicated exception subclas
 | SUPPLIER_CUIT_DUPLICATED | Suppliers | 409 | Active supplier already uses the CUIT |
 | SUPPLIER_PRODUCT_NOT_FOUND | Suppliers | 404 | Product-supplier association does not exist or is inactive |
 | SUPPLIER_PRODUCT_DUPLICATED | Suppliers | 409 | Product is already associated with that supplier |
+| PURCHASE_ORDER_NOT_FOUND | Suppliers | 404 | Purchase order does not exist |
+| PURCHASE_ORDER_INVALID_STATE | Suppliers | 409 | Purchase order transition or edit is not allowed in current state |
+| PURCHASE_ORDER_EMPTY | Suppliers | 400 | Purchase order has no items |
+| PURCHASE_ORDER_SUPPLIER_PRODUCT_INVALID | Suppliers | 409 | Selected product is not associated with the selected supplier |
 | CATEGORY_NOT_FOUND | Catalog | 404 | Category does not exist |
 | PARENT_NOT_FOUND | Catalog | 404 | Parent category does not exist |
 | PARENT_INVALID | Catalog | 409 | Category parent assignment is invalid |

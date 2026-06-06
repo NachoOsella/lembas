@@ -1,0 +1,18 @@
+<div class="control-field" [class.control-field--wide]="wide()" [class.control-field--error]="hasError()">
+  <label class="control-field__label" [attr.for]="forId()">
+    {{ label() }}
+    @if (required()) {
+      <span class="control-field__required" aria-hidden="true">*</span>
+    }
+  </label>
+
+  <div class="control-field__control">
+    <ng-content />
+  </div>
+
+  @if (hasError()) {
+    <app-field-hint tone="error">{{ error() }}</app-field-hint>
+  } @else if (hint()) {
+    <app-field-hint tone="hint">{{ hint() }}</app-field-hint>
+  }
+</div>

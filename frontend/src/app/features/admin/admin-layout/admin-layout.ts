@@ -23,6 +23,7 @@ const NAV_ITEMS: readonly AdminNavItem[] = [
   { label: 'POS', icon: 'pi pi-shopping-cart', route: '/admin/pos' },
   { label: 'Caja', icon: 'pi pi-dollar', route: '/admin/cash' },
   { label: 'Proveedores', icon: 'pi pi-truck', route: '/admin/suppliers' },
+  { label: 'Ordenes compra', icon: 'pi pi-file', route: '/admin/purchase-orders' },
   { label: 'Reportes', icon: 'pi pi-chart-bar', route: '/admin/reports' },
   { label: 'Usuarios', icon: 'pi pi-users', route: '/admin/users' },
 ];
@@ -38,6 +39,8 @@ const LABEL_MAP: Record<string, string> = {
   pos: 'POS',
   cash: 'Caja',
   suppliers: 'Proveedores',
+  purchase: 'Compra',
+  'purchase-orders': 'Ordenes de compra',
   reports: 'Reportes',
   users: 'Usuarios',
 };

@@ -1,0 +1,48 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.control-field {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.control-field--wide {
+  grid-column: 1 / -1;
+}
+
+.control-field__label {
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight, -0.01em);
+}
+
+.control-field__required {
+  color: var(--color-red);
+}
+
+.control-field__control {
+  min-width: 0;
+}
+
+.control-field__control > :where(p-select, p-datepicker, p-inputnumber, input, textarea) {
+  width: 100%;
+}
+
+:host ::ng-deep .control-field__control .p-select,
+:host ::ng-deep .control-field__control .p-datepicker,
+:host ::ng-deep .control-field__control .p-inputnumber,
+:host ::ng-deep .control-field__control .p-inputtext {
+  width: 100%;
+}
+
+:host ::ng-deep .control-field--error .p-inputtext,
+:host ::ng-deep .control-field--error .p-select,
+:host ::ng-deep .control-field--error .p-inputnumber .p-inputtext {
+  background: var(--color-red-tint) !important;
+  border-color: var(--color-red) !important;
+}

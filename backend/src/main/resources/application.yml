@@ -38,6 +38,12 @@ app:
     success-url: ${MP_SUCCESS_URL:http://localhost:4200/customer/payment/callback}
     failure-url: ${MP_FAILURE_URL:http://localhost:4200/customer/payment/callback}
     pending-url: ${MP_PENDING_URL:http://localhost:4200/customer/payment/callback}
+  business:
+    name: ${BUSINESS_NAME:Dietetica Lembas}
+    address: ${BUSINESS_ADDRESS:}
+    phone: ${BUSINESS_PHONE:}
+    email: ${BUSINESS_EMAIL:}
+    cuit: ${BUSINESS_CUIT:}
 
 springdoc:
   api-docs:

@@ -127,14 +127,14 @@ describe('AdminLayout', () => {
     expect(trigger.getAttribute('aria-label')).toBe('Abrir menu de usuario');
   });
 
-  /** Should show all 10 nav items including Usuarios when role is ADMIN. */
+  /** Should show all nav items including Usuarios when role is ADMIN. */
   it('Should_showUsersInSidebar_when_roleIsAdmin', () => {
     setup(adminUser);
 
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
     );
-    expect(navLinks.length).toBe(10);
+    expect(navLinks.length).toBe(12);
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );
@@ -148,7 +148,7 @@ describe('AdminLayout', () => {
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
     );
-    expect(navLinks.length).toBe(9);
+    expect(navLinks.length).toBe(11);
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );
@@ -162,7 +162,7 @@ describe('AdminLayout', () => {
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
     );
-    expect(navLinks.length).toBe(9);
+    expect(navLinks.length).toBe(11);
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );

@@ -29,16 +29,26 @@
           <div class="product-selector__option-mark" aria-hidden="true">
             {{ product.name.charAt(0) }}
           </div>
+
           <div class="product-selector__option-body">
-            <strong>{{ product.name }}</strong>
-            <span>{{ product.brandName || product.categoryName }}</span>
-            @if (product.barcode) {
-              <small>Codigo {{ product.barcode }}</small>
-            }
+            <div class="product-selector__option-title-row">
+              <strong>{{ product.name }}</strong>
+              <span class="product-selector__option-price product-selector__option-price--inline">
+                {{ product.salePrice | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+              </span>
+            </div>
+
+            <div class="product-selector__option-meta">
+              <span class="product-selector__option-brand">{{ product.brandName || product.categoryName }}</span>
+              @if (product.barcode) {
+                <span class="product-selector__option-code">Codigo {{ product.barcode }}</span>
+              }
+            </div>
           </div>
-          <div class="product-selector__option-price">
+
+          <span class="product-selector__option-price product-selector__option-price--side">
             {{ product.salePrice | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
-          </div>
+          </span>
         </div>
       </ng-template>
       <ng-template #empty>

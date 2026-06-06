@@ -1,6 +1,7 @@
 export * from './app-badge/app-badge';
 export * from './app-breadcrumb/app-breadcrumb';
 export * from './app-button/app-button';
+export * from './app-control-field/app-control-field';
 export * from './app-eyebrow/app-eyebrow';
 export * from './app-card-banner/app-card-banner';
 export * from './app-data-table/app-data-table';
@@ -15,6 +16,7 @@ export * from './quantity-stepper/quantity-stepper';
 export * from './app-pagination/app-pagination';
 export * from './app-search-bar/app-search-bar';
 export * from './app-section-card/app-section-card';
+export * from './app-select/app-select';
 export * from './app-tabs/app-tabs';
 export * from './app-toast/app-toast';
 export * from './app-toggle-switch/app-toggle-switch';

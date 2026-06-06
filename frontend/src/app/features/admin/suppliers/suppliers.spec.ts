@@ -50,13 +50,14 @@ describe('Suppliers', () => {
   });
 
   it('should create a supplier from the dialog form', () => {
-    component.supplierFormName.set('Distribuidora Cordoba');
-    component.supplierFormContactName.set('');
-    component.supplierFormPhone.set('');
-    component.supplierFormEmail.set('');
-    component.supplierFormCuit.set('');
+    const cmp = component as any;
+    cmp.supplierFormName.set('Distribuidora Cordoba');
+    cmp.supplierFormContactName.set('');
+    cmp.supplierFormPhone.set('');
+    cmp.supplierFormEmail.set('');
+    cmp.supplierFormCuit.set('');
 
-    component.saveSupplier();
+    cmp.saveSupplier();
 
     expect(supplierService.createSupplier).toHaveBeenCalledWith({
       name: 'Distribuidora Cordoba',
