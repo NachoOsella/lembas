@@ -44,6 +44,33 @@ describe('InventoryService', () => {
     req.flush(response);
   });
 
+  it('should post a purchase receipt', () => {
+    const response = {
+      stockLotId: 1,
+      stockLot: {
+        id: 1,
+        productId: 10,
+        productName: 'Granola',
+        branchId: 20,
+        branchName: 'Centro',
+        quantityAvailable: 2,
+        totalAvailableForProductBranch: 5,
+      },
+      totalAvailableForProductBranch: 5,
+    };
+
+    service
+      .createPurchaseReceipt({ productId: 10, branchId: 20, quantity: 2, unitCost: 500 })
+      .subscribe((receipt) => {
+        expect(receipt).toEqual(response);
+      });
+
+    const req = httpMock.expectOne('/api/admin/stock/receipts');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ productId: 10, branchId: 20, quantity: 2, unitCost: 500 });
+    req.flush(response);
+  });
+
   it('should list stock lots with filters', () => {
     service
       .listLots({ productId: 10, branchId: 20, expiringSoon: true, page: 1, size: 5 })

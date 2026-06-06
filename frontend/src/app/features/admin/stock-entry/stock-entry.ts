@@ -138,22 +138,23 @@ export class StockEntry {
 
     this.submitting.set(true);
     this.inventoryService
-      .createStockLot({
+      .createPurchaseReceipt({
         productId: product.id,
         branchId,
         quantity,
         lotCode: this.lotCode().trim() || null,
         expirationDate: this.formatDate(this.expirationDate()),
-        costPrice: this.costPrice(),
+        unitCost: this.costPrice(),
       })
       .subscribe({
-        next: (lot) => {
+        next: (receipt) => {
+          const lot = receipt.stockLot;
           this.submitting.set(false);
           this.createdLot.set(lot);
           this.messageService.add({
             severity: 'success',
             summary: 'Stock actualizado',
-            detail: `${lot.productName} ahora tiene ${lot.totalAvailableForProductBranch ?? lot.quantityAvailable} unidades disponibles.`,
+            detail: `${lot.productName} ahora tiene ${receipt.totalAvailableForProductBranch ?? lot.quantityAvailable} unidades disponibles.`,
             life: 3000,
           });
           this.resetVariableFields();

@@ -2,7 +2,13 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { CreateStockLotRequest, StockLotDto, StockLotPage } from '../../shared/models/inventory';
+import {
+  CreateStockLotRequest,
+  PurchaseReceiptDto,
+  PurchaseReceiptRequest,
+  StockLotDto,
+  StockLotPage,
+} from '../../shared/models/inventory';
 
 /** Filters accepted by the admin stock lot endpoint. */
 export interface StockLotFilters {
@@ -19,6 +25,7 @@ export interface StockLotFilters {
 export class InventoryService {
   private readonly http = inject(HttpClient);
   private readonly stockLotsUrl = '/api/admin/stock/lots';
+  private readonly purchaseReceiptsUrl = '/api/admin/stock/receipts';
 
   /** Returns a paginated list of stock lots matching the provided filters. */
   listLots(filters: StockLotFilters = {}): Observable<StockLotPage> {
@@ -43,5 +50,10 @@ export class InventoryService {
   /** Registers a new stock lot and returns the resulting product-branch stock total. */
   createStockLot(request: CreateStockLotRequest): Observable<StockLotDto> {
     return this.http.post<StockLotDto>(this.stockLotsUrl, request);
+  }
+
+  /** Confirms a merchandise receipt and returns the generated stock lot summary. */
+  createPurchaseReceipt(request: PurchaseReceiptRequest): Observable<PurchaseReceiptDto> {
+    return this.http.post<PurchaseReceiptDto>(this.purchaseReceiptsUrl, request);
   }
 }

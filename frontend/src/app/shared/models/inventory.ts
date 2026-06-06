@@ -10,6 +10,16 @@ export interface CreateStockLotRequest {
   readonly costPrice?: number | null;
 }
 
+/** Request sent by admins to confirm received merchandise and generate stock. */
+export interface PurchaseReceiptRequest {
+  readonly productId: number;
+  readonly branchId: number;
+  readonly quantity: number;
+  readonly lotCode?: string | null;
+  readonly expirationDate?: string | null;
+  readonly unitCost?: number | null;
+}
+
 /** Stock lot returned by the inventory API. */
 export interface StockLotDto {
   readonly id: number;
@@ -28,6 +38,13 @@ export interface StockLotDto {
   readonly supplierProductId?: number | null;
   readonly purchaseReceiptId?: number | null;
   readonly purchaseReceiptItemId?: number | null;
+  readonly totalAvailableForProductBranch?: number | null;
+}
+
+/** Result returned after a purchase receipt creates stock. */
+export interface PurchaseReceiptDto {
+  readonly stockLotId: number;
+  readonly stockLot: StockLotDto;
   readonly totalAvailableForProductBranch?: number | null;
 }
 

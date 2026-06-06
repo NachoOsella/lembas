@@ -48,6 +48,11 @@ export default [
       },
       {
         path: 'stock/entry',
+        redirectTo: 'stock/receipts',
+        pathMatch: 'full',
+      },
+      {
+        path: 'stock/receipts',
         loadComponent: () => import('./stock-entry/stock-entry').then((m) => m.StockEntry),
       },
       {

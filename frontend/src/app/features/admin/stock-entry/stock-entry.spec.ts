@@ -23,12 +23,12 @@ const product = {
 describe('StockEntry', () => {
   let fixture: ComponentFixture<StockEntry>;
   let component: StockEntry;
-  let inventoryService: { createStockLot: ReturnType<typeof vi.fn> };
+  let inventoryService: { createPurchaseReceipt: ReturnType<typeof vi.fn> };
   let productService: { listAdminProducts: ReturnType<typeof vi.fn> };
   let userService: { listBranches: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    inventoryService = { createStockLot: vi.fn() };
+    inventoryService = { createPurchaseReceipt: vi.fn() };
     productService = { listAdminProducts: vi.fn().mockReturnValue(of({ content: [product] })) };
     userService = { listBranches: vi.fn().mockReturnValue(of([{ id: 20, name: 'Centro' }])) };
 
@@ -61,7 +61,7 @@ describe('StockEntry', () => {
     (component as any).save();
 
     expect((component as any).productInvalid()).toBe(true);
-    expect(inventoryService.createStockLot).not.toHaveBeenCalled();
+    expect(inventoryService.createPurchaseReceipt).not.toHaveBeenCalled();
   });
 
   it('should reject submit when quantity is not positive', () => {
@@ -71,22 +71,26 @@ describe('StockEntry', () => {
     (component as any).save();
 
     expect((component as any).quantityInvalid()).toBe(true);
-    expect(inventoryService.createStockLot).not.toHaveBeenCalled();
+    expect(inventoryService.createPurchaseReceipt).not.toHaveBeenCalled();
   });
 
   it('should submit a valid stock entry and show the created summary', () => {
-    inventoryService.createStockLot.mockReturnValue(
+    inventoryService.createPurchaseReceipt.mockReturnValue(
       of({
-        id: 1,
-        productId: 10,
-        productName: 'Granola',
-        branchId: 20,
-        branchName: 'Centro',
-        initialQuantity: 2,
-        quantityAvailable: 2,
-        unitCost: 0,
-        status: 'ACTIVE',
+        stockLotId: 1,
         totalAvailableForProductBranch: 7,
+        stockLot: {
+          id: 1,
+          productId: 10,
+          productName: 'Granola',
+          branchId: 20,
+          branchName: 'Centro',
+          initialQuantity: 2,
+          quantityAvailable: 2,
+          unitCost: 0,
+          status: 'ACTIVE',
+          totalAvailableForProductBranch: 7,
+        },
       }),
     );
     (component as any).selectedProduct.set(product);
@@ -95,19 +99,19 @@ describe('StockEntry', () => {
 
     (component as any).save();
 
-    expect(inventoryService.createStockLot).toHaveBeenCalledWith({
+    expect(inventoryService.createPurchaseReceipt).toHaveBeenCalledWith({
       productId: 10,
       branchId: 20,
       quantity: 2,
       lotCode: 'L-001',
       expirationDate: null,
-      costPrice: null,
+      unitCost: null,
     });
     expect((component as any).createdLot()?.totalAvailableForProductBranch).toBe(7);
   });
 
   it('should expose an error message when backend creation fails', () => {
-    inventoryService.createStockLot.mockReturnValue(throwError(() => new Error('boom')));
+    inventoryService.createPurchaseReceipt.mockReturnValue(throwError(() => new Error('boom')));
     (component as any).selectedProduct.set(product);
     (component as any).quantity.set(2);
 

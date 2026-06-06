@@ -1,6 +1,8 @@
 package com.dietetica.lembas.inventory.web;
 
 import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
+import com.dietetica.lembas.inventory.dto.PurchaseReceiptDto;
+import com.dietetica.lembas.inventory.dto.PurchaseReceiptRequest;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
 import com.dietetica.lembas.inventory.service.InventoryService;
 import com.dietetica.lembas.shared.dto.PageResponse;
@@ -20,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Admin REST controller for inventory stock lot queries and entries. */
 @RestController
-@RequestMapping("/api/admin/stock/lots")
+@RequestMapping("/api/admin/stock")
 @PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
 @SecurityRequirement(name = "bearerAuth")
 public class StockLotAdminController {
@@ -32,7 +34,7 @@ public class StockLotAdminController {
     }
 
     /** Returns paginated stock lots matching the optional inventory filters. */
-    @GetMapping
+    @GetMapping("/lots")
     public PageResponse<StockLotDto> listLots(
             @RequestParam(required = false) Long productId,
             @RequestParam(required = false) Long branchId,
@@ -43,9 +45,16 @@ public class StockLotAdminController {
     }
 
     /** Registers a new stock lot and its PURCHASE_ENTRY movement. */
-    @PostMapping
+    @PostMapping("/lots")
     @ResponseStatus(HttpStatus.CREATED)
     public StockLotDto create(@Valid @RequestBody CreateStockLotRequest request) {
         return inventoryService.createStockLot(request);
+    }
+
+    /** Confirms a merchandise receipt and returns the created lot summary. */
+    @PostMapping("/receipts")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PurchaseReceiptDto confirmReceipt(@Valid @RequestBody PurchaseReceiptRequest request) {
+        return inventoryService.confirmPurchaseReceipt(request);
     }
 }
