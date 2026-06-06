@@ -1,0 +1,245 @@
+<div class="admin-page purchase-orders-page">
+  <app-page-header
+    eyebrow="Compras"
+    title="Ordenes de compra"
+    description="Crea ordenes a proveedores, confirma estados y descarga el PDF para enviarlo manualmente."
+  >
+    <app-button icon="pi pi-plus" (click)="openCreate()">Nueva orden</app-button>
+  </app-page-header>
+
+  @if (error()) {
+    <app-error-alert variant="inline" [title]="error()" message="">
+      <app-button variant="secondary" size="sm" (click)="loadOrders()">Reintentar</app-button>
+    </app-error-alert>
+  }
+
+  <app-data-table
+    [data]="orders()"
+    [columns]="columns"
+    [loading]="loading()"
+    [sortable]="false"
+    [paginated]="true"
+    [lazy]="true"
+    [totalRecords]="totalRecords()"
+    [first]="first()"
+    [rows]="pageSize()"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    (pageChange)="onPageChange($event)"
+    emptyTitle="No hay ordenes de compra"
+    emptyDescription="Crea la primera orden para registrar una intencion de compra a proveedor."
+    emptyActionLabel="Nueva orden"
+    (emptyAction)="openCreate()"
+  >
+    <ng-template #toolbar>
+      <div class="table-toolbar__info">
+        <p class="table-toolbar__kicker">Compras a proveedores</p>
+        <h2 class="table-toolbar__title">Ordenes registradas</h2>
+      </div>
+      <div class="table-toolbar__actions purchase-orders-toolbar">
+        <app-select
+          [value]="supplierFilter()"
+          (valueChange)="supplierFilter.set($event); applyFilters()"
+          [options]="supplierOptions()"
+          placeholder="Proveedor"
+          [showClear]="true"
+          filterPlaceholder="Buscar proveedor..."
+        />
+        <app-select
+          [value]="branchFilter()"
+          (valueChange)="branchFilter.set($event); applyFilters()"
+          [options]="branchOptions()"
+          placeholder="Sucursal"
+          [showClear]="true"
+          filterPlaceholder="Buscar sucursal..."
+        />
+        <app-select
+          [value]="statusFilter()"
+          (valueChange)="statusFilter.set($event); applyFilters()"
+          [options]="statusOptions"
+          placeholder="Estado"
+          [showClear]="true"
+          filterPlaceholder="Buscar estado..."
+        />
+      </div>
+    </ng-template>
+
+    <ng-template #body let-order>
+      <tr>
+        <td><strong>#{{ order.id }}</strong></td>
+        <td>{{ order.supplierName }}</td>
+        <td>{{ order.branchName }}</td>
+        <td><app-status-badge [status]="order.status" [config]="statusBadges" /></td>
+        <td>{{ order.expectedDeliveryDate || 'Sin fecha' }}</td>
+        <td>{{ formatPrice(order.total) }}</td>
+        <td>
+          <div class="table-actions">
+            @if (canEdit(order)) {
+              <app-button variant="ghost" size="sm" icon="pi pi-pencil" [iconOnly]="true" [ariaLabel]="'Editar orden ' + order.id" (click)="openEdit(order)" />
+            }
+            @if (canConfirm(order)) {
+              <app-button variant="ghost" size="sm" icon="pi pi-check" [iconOnly]="true" [ariaLabel]="'Confirmar orden ' + order.id" (click)="confirm(order)" />
+            }
+            @if (canSend(order)) {
+              <app-button variant="ghost" size="sm" icon="pi pi-send" [iconOnly]="true" [ariaLabel]="'Marcar enviada ' + order.id" (click)="markSent(order)" />
+            }
+            <app-button variant="ghost" size="sm" icon="pi pi-download" [iconOnly]="true" [ariaLabel]="'Descargar PDF orden ' + order.id" (click)="downloadPdf(order)" />
+            @if (canCancel(order)) {
+              <app-button variant="ghost" size="sm" icon="pi pi-times" [iconOnly]="true" [ariaLabel]="'Cancelar orden ' + order.id" (click)="openCancel(order)" />
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </app-data-table>
+</div>
+
+<app-modal [(visible)]="dialogVisible" [title]="editingOrder() ? 'Editar orden de compra' : 'Nueva orden de compra'" [width]="'min(64rem, 96vw)'">
+  <form class="purchase-order-form" (ngSubmit)="save()" novalidate>
+    <app-form-section [index]="1" title="Datos generales" description="Selecciona proveedor, sucursal y fecha esperada.">
+      <div class="purchase-order-form__grid">
+        <app-control-field label="Proveedor" forId="po-supplier" [required]="true" [error]="submitted() && !supplierId() ? 'Selecciona un proveedor.' : ''">
+          <app-select
+            inputId="po-supplier"
+            [value]="supplierId()"
+            (valueChange)="onSupplierChange($event)"
+            name="supplierId"
+            [options]="supplierOptions()"
+            placeholder="Seleccionar proveedor"
+            [loading]="loadingLookups()"
+            filterPlaceholder="Buscar proveedor..."
+          />
+        </app-control-field>
+
+        <app-control-field label="Sucursal" forId="po-branch" [required]="true" [error]="submitted() && !branchId() ? 'Selecciona una sucursal.' : ''">
+          <app-select
+            inputId="po-branch"
+            [value]="branchId()"
+            (valueChange)="branchId.set($event)"
+            name="branchId"
+            [options]="branchOptions()"
+            placeholder="Seleccionar sucursal"
+            [loading]="loadingLookups()"
+            filterPlaceholder="Buscar sucursal..."
+          />
+        </app-control-field>
+
+        <app-control-field label="Fecha esperada" forId="po-date">
+          <p-datepicker
+            inputId="po-date"
+            [ngModel]="expectedDeliveryDate()"
+            (ngModelChange)="expectedDeliveryDate.set($event)"
+            name="expectedDeliveryDate"
+            dateFormat="yy-mm-dd"
+            placeholder="Sin fecha"
+            appendTo="body"
+          />
+        </app-control-field>
+
+        <div class="purchase-order-form__field purchase-order-form__field--wide">
+          <app-form-field
+            label="Notas"
+            [multiline]="true"
+            [(value)]="notes"
+            placeholder="Indicaciones para el proveedor"
+            testId="purchase-order-notes"
+          />
+        </div>
+      </div>
+    </app-form-section>
+
+    <app-form-section [index]="2" title="Items" description="Agrega productos asociados al proveedor. El costo se precarga y puede editarse.">
+      <div class="purchase-order-item-picker">
+        <app-control-field label="Producto del proveedor" forId="po-item-product" hint="Solo se muestran productos asociados al proveedor seleccionado.">
+          <app-select
+            inputId="po-item-product"
+            [value]="selectedSupplierProductId()"
+            (valueChange)="selectedSupplierProductId.set($event)"
+            name="selectedSupplierProductId"
+            [options]="supplierProductOptions()"
+            placeholder="Producto del proveedor"
+            [loading]="loadingProducts()"
+            filterPlaceholder="Buscar producto..."
+          />
+        </app-control-field>
+
+        <div class="purchase-order-item-picker__action" aria-label="Agregar producto a la orden">
+          <span class="purchase-order-item-picker__action-label">Accion</span>
+          <app-button
+            type="button"
+            variant="primary"
+            size="lg"
+            icon="pi pi-plus-circle"
+            [disabled]="!selectedSupplierProductId()"
+            (click)="addSelectedItem()"
+          >
+            Agregar producto
+          </app-button>
+        </div>
+      </div>
+
+      @if (submitted() && draftItems().length === 0) {
+        <small class="purchase-order-form__error">Agrega al menos un item.</small>
+      }
+
+      <app-data-table
+        class="purchase-order-items-table"
+        [data]="draftItems()"
+        [columns]="itemColumns"
+        [sortable]="false"
+        [paginated]="false"
+        emptyTitle="Sin items"
+        emptyDescription="Agrega productos asociados al proveedor para completar la orden."
+      >
+        <ng-template #body let-item>
+          <tr>
+            <td>
+              <strong>{{ item.productName }}</strong>
+              <small class="purchase-order-item-muted">{{ item.supplierSku || 'Sin SKU proveedor' }}</small>
+            </td>
+            <td>
+              <app-control-field label="Cantidad" [error]="submitted() && (item.quantityOrdered ?? 0) <= 0 ? 'Mayor a cero.' : ''">
+                <p-inputnumber [(ngModel)]="item.quantityOrdered" [ngModelOptions]="{ standalone: true }" mode="decimal" [min]="0" [maxFractionDigits]="3" />
+              </app-control-field>
+            </td>
+            <td>
+              <app-control-field label="Costo unitario" [error]="submitted() && (item.unitCost ?? 0) < 0 ? 'No puede ser negativo.' : ''">
+                <p-inputnumber [(ngModel)]="item.unitCost" [ngModelOptions]="{ standalone: true }" mode="currency" currency="ARS" locale="es-AR" [min]="0" [maxFractionDigits]="2" />
+              </app-control-field>
+            </td>
+            <td>{{ formatPrice(itemSubtotal(item)) }}</td>
+            <td>
+              <div class="table-actions">
+                <app-button variant="ghost" size="sm" icon="pi pi-trash" [iconOnly]="true" [ariaLabel]="'Quitar ' + item.productName" (click)="removeItem(item.supplierProductId)" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </app-data-table>
+
+      <div class="purchase-order-total">
+        <span>Total</span>
+        <strong>{{ formatPrice(total()) }}</strong>
+      </div>
+    </app-form-section>
+
+    <div class="purchase-order-form__actions">
+      <app-button type="button" variant="secondary" (click)="dialogVisible.set(false)">Cancelar</app-button>
+      <app-button type="submit" [loading]="saving()">Guardar orden</app-button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal [(visible)]="cancelDialogVisible" title="Cancelar orden de compra" [width]="'min(32rem, 92vw)'">
+  <div class="purchase-order-cancel">
+    <app-form-field
+      label="Motivo"
+      [(value)]="cancelReason"
+      placeholder="Motivo opcional"
+      testId="purchase-order-cancel-reason"
+    />
+    <div class="purchase-order-form__actions">
+      <app-button variant="secondary" (click)="cancelDialogVisible.set(false)">Volver</app-button>
+      <app-button variant="danger" (click)="cancelSelected()">Cancelar orden</app-button>
+    </div>
+  </div>
+</app-modal>

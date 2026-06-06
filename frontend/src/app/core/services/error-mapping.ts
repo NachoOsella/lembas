@@ -82,6 +82,12 @@ export class ErrorMappingService {
     SUPPLIER_PRODUCT_NOT_FOUND: 'La asociacion producto-proveedor no fue encontrada.',
     SUPPLIER_PRODUCT_DUPLICATED: 'Ese producto ya esta asociado a este proveedor.',
 
+    // Purchase order errors
+    PURCHASE_ORDER_NOT_FOUND: 'La orden de compra solicitada no fue encontrada.',
+    PURCHASE_ORDER_INVALID_STATE: 'La orden de compra ya no permite esa operacion.',
+    PURCHASE_ORDER_EMPTY: 'La orden de compra debe tener al menos un item.',
+    PURCHASE_ORDER_SUPPLIER_PRODUCT_INVALID: 'El producto no esta asociado al proveedor seleccionado.',
+
     // Database errors
     DATA_INTEGRITY_VIOLATION: 'Los datos ingresados conflictan con información existente.',
 

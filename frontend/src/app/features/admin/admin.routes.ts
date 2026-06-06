@@ -71,6 +71,10 @@ export default [
         loadComponent: () => import('./suppliers/suppliers').then((m) => m.Suppliers),
       },
       {
+        path: 'purchase-orders',
+        loadComponent: () => import('./purchase-orders/purchase-orders').then((m) => m.PurchaseOrders),
+      },
+      {
         path: 'reports',
         loadComponent: () => import('./reports/reports').then((m) => m.Reports),
       },

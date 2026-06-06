@@ -3,7 +3,13 @@ package com.dietetica.lembas;
 import com.dietetica.lembas.auth.repository.RefreshTokenRepository;
 import com.dietetica.lembas.catalog.repository.CategoryRepository;
 import com.dietetica.lembas.catalog.repository.ProductRepository;
+import com.dietetica.lembas.inventory.repository.StockLotRepository;
+import com.dietetica.lembas.inventory.repository.StockMovementRepository;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
+import com.dietetica.lembas.suppliers.repository.PurchaseOrderRepository;
+import com.dietetica.lembas.suppliers.repository.SupplierProductCostHistoryRepository;
+import com.dietetica.lembas.suppliers.repository.SupplierProductRepository;
+import com.dietetica.lembas.suppliers.repository.SupplierRepository;
 import com.dietetica.lembas.users.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,6 +55,30 @@ class LembasBackendApplicationTests {
      */
     @MockitoBean
     private ProductRepository productRepository;
+
+    /** Provides inventory repository collaborators while JPA repositories are disabled. */
+    @MockitoBean
+    private StockLotRepository stockLotRepository;
+
+    /** Provides inventory movement repository collaborators while JPA repositories are disabled. */
+    @MockitoBean
+    private StockMovementRepository stockMovementRepository;
+
+    /** Provides supplier repository collaborators while JPA repositories are disabled. */
+    @MockitoBean
+    private SupplierRepository supplierRepository;
+
+    /** Provides supplier-product repository collaborators while JPA repositories are disabled. */
+    @MockitoBean
+    private SupplierProductRepository supplierProductRepository;
+
+    /** Provides supplier cost history repository collaborators while JPA repositories are disabled. */
+    @MockitoBean
+    private SupplierProductCostHistoryRepository supplierProductCostHistoryRepository;
+
+    /** Provides purchase order repository collaborators while JPA repositories are disabled. */
+    @MockitoBean
+    private PurchaseOrderRepository purchaseOrderRepository;
 
     /**
      * Keeps a fast smoke test for the application context without external services.

@@ -149,6 +149,7 @@ GET    /api/admin/purchase-orders/{id}
 PATCH  /api/admin/purchase-orders/{id}/confirm
 PATCH  /api/admin/purchase-orders/{id}/send
 PATCH  /api/admin/purchase-orders/{id}/cancel  Request: { reason }
+GET    /api/admin/purchase-orders/{id}/pdf
 
 GET    /api/admin/purchase-receipts?purchaseOrderId=&supplierId=&branchId=&status=&page=&size=
 POST   /api/admin/purchase-receipts

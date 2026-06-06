@@ -138,6 +138,10 @@ All errors use a uniform `ApiError` object:
 | CATEGORY_HAS_PRODUCTS | Catalog | 409 |
 | INSUFFICIENT_STOCK | Inventory | 409 |
 | LOT_EXPIRED | Inventory | 409 |
+| PURCHASE_ORDER_NOT_FOUND | Suppliers | 404 |
+| PURCHASE_ORDER_INVALID_STATE | Suppliers | 409 |
+| PURCHASE_ORDER_EMPTY | Suppliers | 400 |
+| PURCHASE_ORDER_SUPPLIER_PRODUCT_INVALID | Suppliers | 409 |
 | ORDER_NOT_FOUND | Orders | 404 |
 | ORDER_INVALID_STATE | Orders | 409 |
 | PAYMENT_FAILED | Payments | 409 |

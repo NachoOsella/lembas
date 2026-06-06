@@ -8,6 +8,8 @@ import com.dietetica.lembas.catalog.dto.ProductStatusUpdateRequest;
 import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
 import com.dietetica.lembas.catalog.repository.CategoryRepository;
 import com.dietetica.lembas.catalog.repository.ProductRepository;
+import com.dietetica.lembas.suppliers.repository.SupplierProductCostHistoryRepository;
+import com.dietetica.lembas.suppliers.repository.SupplierProductRepository;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
@@ -60,10 +62,18 @@ class CatalogAdminStoreIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private SupplierProductRepository supplierProductRepository;
+
+    @Autowired
+    private SupplierProductCostHistoryRepository supplierProductCostHistoryRepository;
+
     private String adminToken;
 
     @BeforeEach
     void cleanDatabaseAndCreateAdmin() {
+        supplierProductCostHistoryRepository.deleteAllInBatch();
+        supplierProductRepository.deleteAllInBatch();
         productRepository.deleteAllInBatch();
         categoryRepository.deleteAllInBatch();
         userRepository.deleteAllInBatch();
