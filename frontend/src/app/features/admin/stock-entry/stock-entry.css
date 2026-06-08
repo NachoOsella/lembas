@@ -4,24 +4,63 @@
 
 .stock-entry {
   display: grid;
-  gap: var(--space-5);
-}
-
-/* --- Form + summary grid --- */
-
-.stock-entry__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 22rem;
   gap: var(--space-4);
-  align-items: start;
 }
 
-.stock-entry__form,
-.stock-entry__summary {
+/* --- Single card wrapper ----------------------------------------- */
+
+.stock-entry__card {
+  background: var(--color-surface);
+  border: 1px solid rgba(7, 95, 54, 0.08);
+  border-radius: var(--radius-card, 12px);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
   min-width: 0;
 }
 
-/* --- Form fields --- */
+/* --- Section headers (replaces form-section) -------------------- */
+
+.stock-entry__section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.stock-entry__section-badge {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.8rem;
+  background: var(--color-primary-dark);
+  color: var(--color-text-on-dark);
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-family: var(--font-sans);
+}
+
+.stock-entry__section-title {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  font-family: var(--font-sans);
+}
+
+.stock-entry__section-desc {
+  margin: 0.16rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  font-family: var(--font-sans);
+}
+
+/* --- Form fields ------------------------------------------------ */
 
 .stock-entry__fields {
   display: grid;
@@ -30,137 +69,150 @@
 }
 
 .stock-entry__field {
-  display: grid;
-  gap: var(--space-1);
+  min-width: 0;
 }
 
 .stock-entry__field--wide {
   grid-column: 1 / -1;
 }
 
-.stock-entry__label {
-  color: var(--color-text);
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.stock-entry__label span,
 .stock-entry__error {
   color: var(--color-red);
-}
-
-.stock-entry__error {
   font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: var(--space-1);
+}
+
+/* --- Items table ------------------------------------------------ */
+
+.stock-entry__items-table {
+  display: block;
+}
+
+/* Remove outer card border/shadow since table is inside .stock-entry__card */
+.stock-entry__card .app-data-table-shell {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.stock-entry__card .app-data-table__toolbar {
+  border-radius: var(--radius-card, 12px) var(--radius-card, 12px) 0 0;
+}
+
+:host ::ng-deep .stock-entry__items-table .app-data-table .p-datatable-table {
+  min-width: 68rem;
+}
+
+:host ::ng-deep .stock-entry__items-table .app-data-table .p-datatable-tbody > tr > td {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: initial;
+  max-width: none;
+  vertical-align: middle;
+  padding: 0.5rem 0.75rem;
+}
+
+.stock-entry__cell--numeric {
+  text-align: center;
   font-weight: 600;
+  color: var(--color-text-muted);
 }
 
-.stock-entry__control,
-.stock-entry__text-input {
+.stock-entry__cell-control {
+  min-width: 0;
   width: 100%;
+  display: flex;
+  align-items: center;
 }
 
-/* Plain text input for fields not using a PrimeNG component */
+/* Make all PrimeNG wrappers inside the table fill their cell uniformly */
+:host ::ng-deep .stock-entry__items-table .p-inputnumber,
+:host ::ng-deep .stock-entry__items-table .p-datepicker,
+:host ::ng-deep .stock-entry__items-table .p-inputtext {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
 
-.stock-entry__text-input {
-  background: var(--color-surface-warmest, #fffef9);
-  border: 1px solid var(--color-input-border, rgba(0, 0, 0, 0.12));
+/* Remove the extra horizontal button group from p-inputnumber inside tables */
+:host ::ng-deep .stock-entry__items-table .p-inputnumber .p-inputnumber-button-group {
+  display: none !important;
+}
+
+/* Uniform height for all wrappers so they align visually */
+:host ::ng-deep .stock-entry__items-table .p-inputnumber,
+:host ::ng-deep .stock-entry__items-table .p-datepicker,
+:host ::ng-deep .stock-entry__items-table .p-inputtext {
+  height: 2.5rem !important;
+  min-height: 2.5rem !important;
+}
+
+/* Make sure inner inputs fill their wrapper exactly */
+:host ::ng-deep .stock-entry__items-table .p-inputnumber .p-inputnumber-input,
+:host ::ng-deep .stock-entry__items-table .p-datepicker .p-datepicker-input,
+:host ::ng-deep .stock-entry__items-table .p-inputtext {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 2.5rem !important;
+  min-height: 2.5rem !important;
   border-radius: var(--radius-card, 12px);
-  color: var(--color-text);
+  padding: 0 0.75rem;
   font-family: var(--font-sans);
-  font-weight: 500;
-  min-height: 2.75rem;
-  padding: 0 var(--space-2);
+  font-size: 0.88rem;
+  letter-spacing: -0.01em;
+  border: 1px solid var(--color-input-border, rgba(0, 0, 0, 0.12));
+  background: var(--color-surface-warmest, #fffef9);
+  color: var(--color-text);
   transition: border-color 200ms ease, box-shadow 200ms ease;
+  box-sizing: border-box;
 }
 
-.stock-entry__text-input:focus {
+:host ::ng-deep .stock-entry__items-table .p-inputnumber .p-inputnumber-input:focus,
+:host ::ng-deep .stock-entry__items-table .p-datepicker .p-datepicker-input:focus,
+:host ::ng-deep .stock-entry__items-table .p-inputtext:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 1px var(--color-primary);
   outline: 0;
 }
 
-.stock-entry__text-input::placeholder {
+:host ::ng-deep .stock-entry__items-table .p-inputnumber .p-inputnumber-input::placeholder,
+:host ::ng-deep .stock-entry__items-table .p-datepicker .p-datepicker-input::placeholder,
+:host ::ng-deep .stock-entry__items-table .p-inputtext::placeholder {
   color: var(--color-overlay-black, rgba(0, 0, 0, 0.4));
   font-weight: 400;
 }
 
-/* --- Submit row --- */
+.stock-entry__table-input {
+  /* Handled by the ::ng-deep rules above since pInputText adds .p-inputtext */
+}
+
+.stock-entry__muted {
+  color: var(--color-text-muted);
+  display: block;
+  font-size: 0.78rem;
+  margin-top: 0.2rem;
+}
+
+.stock-entry__row--invalid td {
+  background: var(--color-red-tint, hsla(4, 82%, 43%, 0.05));
+}
+
+.stock-entry__row--invalid td:first-child {
+  box-shadow: inset 0.25rem 0 0 var(--color-red);
+}
+
+/* --- Submit row ------------------------------------------------ */
 
 .stock-entry__actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: var(--space-3);
+  margin-top: var(--space-2);
 }
 
-/* --- Summary sidebar --- */
-
-.stock-entry__summary-card {
-  background: var(--color-surface);
-  border: 1px solid rgba(7, 95, 54, 0.11);
-  border-radius: var(--radius-card, 12px);
-  box-shadow: var(--shadow-card);
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-4);
-}
-
-.stock-entry__summary-kicker {
-  color: var(--color-bark);
-  font-family: var(--font-sans);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-.stock-entry__summary-card h2 {
-  color: var(--color-text);
-  font-family: var(--font-sans);
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0;
-}
-
-.stock-entry__summary-card p {
-  color: var(--color-text-muted);
-  font-size: 0.88rem;
-  line-height: 1.6;
-  margin: 0;
-}
-
-.stock-entry__summary-card dl {
-  display: grid;
-  gap: var(--space-2);
-  margin: 0;
-}
-
-.stock-entry__summary-card dl div {
-  border-top: 1px solid var(--color-overlay-black-light, rgba(0, 0, 0, 0.05));
-  display: grid;
-  gap: 0.2rem;
-  padding-top: var(--space-2);
-}
-
-.stock-entry__summary-card dt {
-  color: var(--color-text-muted);
-  font-family: var(--font-sans);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.stock-entry__summary-card dd {
-  color: var(--color-primary-dark);
-  font-family: var(--font-sans);
-  font-weight: 700;
-  margin: 0;
-}
-
-/* --- Invalid form states --- */
+/* --- Invalid form states --------------------------------------- */
 
 :host ::ng-deep .p-inputtext.ng-invalid,
 :host ::ng-deep .p-select.ng-invalid,
@@ -169,13 +221,7 @@
   background: var(--color-red-tint, hsla(4, 82%, 43%, 0.05));
 }
 
-/* --- Responsive --- */
-
-@media (max-width: 1024px) {
-  .stock-entry__grid {
-    grid-template-columns: 1fr;
-  }
-}
+/* --- Responsive ------------------------------------------------ */
 
 @media (max-width: 640px) {
   .stock-entry__fields {
@@ -184,5 +230,9 @@
 
   .stock-entry__actions {
     justify-content: stretch;
+  }
+
+  .stock-entry__card {
+    padding: var(--space-3);
   }
 }

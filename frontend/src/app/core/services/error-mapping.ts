@@ -87,6 +87,10 @@ export class ErrorMappingService {
     PURCHASE_ORDER_INVALID_STATE: 'La orden de compra ya no permite esa operacion.',
     PURCHASE_ORDER_EMPTY: 'La orden de compra debe tener al menos un item.',
     PURCHASE_ORDER_SUPPLIER_PRODUCT_INVALID: 'El producto no esta asociado al proveedor seleccionado.',
+    PURCHASE_RECEIPT_INVALID_STATE: 'Solo se pueden recepcionar ordenes enviadas o parcialmente recibidas.',
+    PURCHASE_RECEIPT_ITEM_INVALID: 'Un item de la recepcion no pertenece a la orden seleccionada.',
+    PURCHASE_RECEIPT_ITEM_DUPLICATED: 'Hay items duplicados en la recepcion.',
+    PURCHASE_RECEIPT_OVER_RECEIVED: 'La cantidad recibida supera la cantidad pendiente de la orden.',
 
     // Database errors
     DATA_INTEGRITY_VIOLATION: 'Los datos ingresados conflictan con información existente.',

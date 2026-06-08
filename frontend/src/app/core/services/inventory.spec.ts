@@ -21,7 +21,7 @@ describe('InventoryService', () => {
     httpMock.verify();
   });
 
-  it('should post a stock lot entry', () => {
+  it('should post a legacy stock lot entry', () => {
     const response = {
       id: 1,
       productId: 10,
@@ -44,30 +44,47 @@ describe('InventoryService', () => {
     req.flush(response);
   });
 
-  it('should post a purchase receipt', () => {
+  it('should post a purchase receipt for an order', () => {
     const response = {
-      stockLotId: 1,
-      stockLot: {
-        id: 1,
-        productId: 10,
-        productName: 'Granola',
-        branchId: 20,
-        branchName: 'Centro',
-        quantityAvailable: 2,
-        totalAvailableForProductBranch: 5,
-      },
-      totalAvailableForProductBranch: 5,
+      id: 50,
+      purchaseOrderId: 1,
+      supplierId: 30,
+      supplierName: 'Proveedor',
+      branchId: 20,
+      branchName: 'Centro',
+      status: 'CONFIRMED',
+      purchaseOrderStatus: 'RECEIVED',
+      totalReceivedQuantity: 2,
+      items: [
+        {
+          id: 60,
+          purchaseOrderItemId: 100,
+          productId: 10,
+          productName: 'Granola',
+          quantityReceived: 2,
+          unitCost: 500,
+          createdStockLotId: 70,
+        },
+      ],
     };
 
     service
-      .createPurchaseReceipt({ productId: 10, branchId: 20, quantity: 2, unitCost: 500 })
+      .createPurchaseReceipt({
+        purchaseOrderId: 1,
+        invoiceNumber: 'FAC-1',
+        items: [{ purchaseOrderItemId: 100, quantityReceived: 2, unitCost: 500, lotCode: 'L-1' }],
+      })
       .subscribe((receipt) => {
         expect(receipt).toEqual(response);
       });
 
     const req = httpMock.expectOne('/api/admin/stock/receipts');
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ productId: 10, branchId: 20, quantity: 2, unitCost: 500 });
+    expect(req.request.body).toEqual({
+      purchaseOrderId: 1,
+      invoiceNumber: 'FAC-1',
+      items: [{ purchaseOrderItemId: 100, quantityReceived: 2, unitCost: 500, lotCode: 'L-1' }],
+    });
     req.flush(response);
   });
 

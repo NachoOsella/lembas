@@ -1,36 +1,65 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import { InventoryService } from '../../../core/services/inventory';
-import { ProductService } from '../../../core/services/product';
-import { UserService } from '../../../core/services/user';
+import { PurchaseOrderService } from '../../../core/services/purchase-order';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { StockEntry } from './stock-entry';
 
-const product = {
-  id: 10,
-  name: 'Granola',
-  brandName: 'Lembas',
-  barcode: '7790001',
-  salePrice: 1000,
-  onlineStatus: 'PUBLISHED' as const,
-  categoryId: 1,
-  categoryName: 'Cereales',
+const orderSummary = {
+  id: 1,
+  supplierId: 30,
+  supplierName: 'Proveedor',
+  branchId: 20,
+  branchName: 'Centro',
+  status: 'SENT' as const,
+  orderDate: '2026-06-01T12:00:00Z',
+  expectedDeliveryDate: '2026-06-10',
+  total: 1000,
+  itemCount: 1,
+  createdAt: '2026-06-01T12:00:00Z',
 };
 
-/** Unit tests for the stock entry form validation and submit flow. */
+const orderDetail = {
+  ...orderSummary,
+  supplierPhone: null,
+  supplierEmail: null,
+  supplierCuit: null,
+  notes: null,
+  items: [
+    {
+      id: 100,
+      productId: 10,
+      productName: 'Granola',
+      productBarcode: '7790001',
+      supplierProductId: 40,
+      supplierSku: 'GRA-1',
+      quantityOrdered: 2,
+      unitCost: 500,
+      subtotal: 1000,
+    },
+  ],
+  confirmedAt: '2026-06-01T12:30:00Z',
+  sentAt: '2026-06-01T13:00:00Z',
+  cancelledAt: null,
+  cancellationReason: null,
+};
+
+/** Unit tests for purchase receipt form validation and submit flow. */
 describe('StockEntry', () => {
   let fixture: ComponentFixture<StockEntry>;
   let component: StockEntry;
   let inventoryService: { createPurchaseReceipt: ReturnType<typeof vi.fn> };
-  let productService: { listAdminProducts: ReturnType<typeof vi.fn> };
-  let userService: { listBranches: ReturnType<typeof vi.fn> };
+  let purchaseOrderService: { list: ReturnType<typeof vi.fn>; get: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     inventoryService = { createPurchaseReceipt: vi.fn() };
-    productService = { listAdminProducts: vi.fn().mockReturnValue(of({ content: [product] })) };
-    userService = { listBranches: vi.fn().mockReturnValue(of([{ id: 20, name: 'Centro' }])) };
+    purchaseOrderService = {
+      list: vi.fn((filters) => of({ content: filters.status === 'SENT' ? [orderSummary] : [] })),
+      get: vi.fn().mockReturnValue(of(orderDetail)),
+    };
 
     await TestBed.configureTestingModule({
       imports: [StockEntry],
@@ -38,8 +67,7 @@ describe('StockEntry', () => {
         MessageService,
         ErrorMappingService,
         { provide: InventoryService, useValue: inventoryService },
-        { provide: ProductService, useValue: productService },
-        { provide: UserService, useValue: userService },
+        { provide: PurchaseOrderService, useValue: purchaseOrderService },
       ],
     }).compileComponents();
 
@@ -49,74 +77,91 @@ describe('StockEntry', () => {
     await fixture.whenStable();
   });
 
-  it('should create and load the only branch by default', () => {
+  it('should create and load receivable purchase orders', () => {
     expect(component).toBeTruthy();
-    expect(userService.listBranches).toHaveBeenCalled();
-    expect((component as any).branchId()).toBe(20);
+    expect(purchaseOrderService.list).toHaveBeenCalledWith({ status: 'SENT', page: 0, size: 50, sort: 'createdAt,desc' });
+    expect(purchaseOrderService.list).toHaveBeenCalledWith({ status: 'PARTIALLY_RECEIVED', page: 0, size: 50, sort: 'createdAt,desc' });
+    expect((component as any).orders()).toEqual([orderSummary]);
   });
 
-  it('should reject submit when product is missing', () => {
-    (component as any).quantity.set(2);
+  it('should load selected order and initialize receipt rows from order items', () => {
+    (component as any).selectOrder(1);
 
+    expect(purchaseOrderService.get).toHaveBeenCalledWith(1);
+    expect((component as any).rows()[0]).toEqual({
+      purchaseOrderItemId: 100,
+      productName: 'Granola',
+      productBarcode: '7790001',
+      orderedQuantity: 2,
+      unitCost: 500,
+      quantityReceived: 2,
+      lotCode: '',
+      expirationDate: null,
+    });
+  });
+
+  it('should reject submit when no order is selected', () => {
     (component as any).save();
 
-    expect((component as any).productInvalid()).toBe(true);
+    expect((component as any).formValid()).toBe(false);
     expect(inventoryService.createPurchaseReceipt).not.toHaveBeenCalled();
   });
 
-  it('should reject submit when quantity is not positive', () => {
-    (component as any).selectedProduct.set(product);
-    (component as any).quantity.set(0);
-
-    (component as any).save();
-
-    expect((component as any).quantityInvalid()).toBe(true);
-    expect(inventoryService.createPurchaseReceipt).not.toHaveBeenCalled();
-  });
-
-  it('should submit a valid stock entry and show the created summary', () => {
+  it('should submit a valid purchase receipt and show the confirmation summary', () => {
     inventoryService.createPurchaseReceipt.mockReturnValue(
       of({
-        stockLotId: 1,
-        totalAvailableForProductBranch: 7,
-        stockLot: {
-          id: 1,
-          productId: 10,
-          productName: 'Granola',
-          branchId: 20,
-          branchName: 'Centro',
-          initialQuantity: 2,
-          quantityAvailable: 2,
-          unitCost: 0,
-          status: 'ACTIVE',
-          totalAvailableForProductBranch: 7,
-        },
+        id: 50,
+        purchaseOrderId: 1,
+        supplierId: 30,
+        supplierName: 'Proveedor',
+        branchId: 20,
+        branchName: 'Centro',
+        status: 'CONFIRMED',
+        purchaseOrderStatus: 'RECEIVED',
+        totalReceivedQuantity: 2,
+        items: [
+          {
+            id: 60,
+            purchaseOrderItemId: 100,
+            productId: 10,
+            productName: 'Granola',
+            quantityReceived: 2,
+            unitCost: 500,
+            lotCode: 'L-1',
+            createdStockLotId: 70,
+          },
+        ],
       }),
     );
-    (component as any).selectedProduct.set(product);
-    (component as any).quantity.set(2);
-    (component as any).lotCode.set('L-001');
+    (component as any).selectOrder(1);
+    (component as any).updateRow(100, { lotCode: 'L-1' });
+    (component as any).invoiceNumber.set('FAC-1');
 
     (component as any).save();
 
     expect(inventoryService.createPurchaseReceipt).toHaveBeenCalledWith({
-      productId: 10,
-      branchId: 20,
-      quantity: 2,
-      lotCode: 'L-001',
-      expirationDate: null,
-      unitCost: null,
+      purchaseOrderId: 1,
+      invoiceNumber: 'FAC-1',
+      notes: null,
+      items: [
+        {
+          purchaseOrderItemId: 100,
+          quantityReceived: 2,
+          unitCost: 500,
+          lotCode: 'L-1',
+          expirationDate: null,
+        },
+      ],
     });
-    expect((component as any).createdLot()?.totalAvailableForProductBranch).toBe(7);
+    expect((component as any).confirmedReceipt()?.id).toBe(50);
   });
 
-  it('should expose an error message when backend creation fails', () => {
+  it('should expose an error message when backend confirmation fails', () => {
     inventoryService.createPurchaseReceipt.mockReturnValue(throwError(() => new Error('boom')));
-    (component as any).selectedProduct.set(product);
-    (component as any).quantity.set(2);
+    (component as any).selectOrder(1);
 
     (component as any).save();
 
-    expect((component as any).error()).toBe('No pudimos registrar el ingreso de stock.');
+    expect((component as any).error()).toBe('No pudimos confirmar la recepcion.');
   });
 });
