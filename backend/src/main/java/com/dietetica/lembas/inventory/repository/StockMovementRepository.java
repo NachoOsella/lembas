@@ -1,49 +1,29 @@
 package com.dietetica.lembas.inventory.repository;
 
 import com.dietetica.lembas.inventory.model.StockMovement;
-import com.dietetica.lembas.inventory.model.StockMovementType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 
 /** Repository for append-only stock movement trace entries. */
-public interface StockMovementRepository extends JpaRepository<StockMovement, Long> {
+public interface StockMovementRepository extends JpaRepository<StockMovement, Long>, JpaSpecificationExecutor<StockMovement> {
 
     /** Finds movements for a lot, used to verify purchase entry traceability. */
     List<StockMovement> findByStockLotId(Long stockLotId);
 
     /**
-     * Paginated search across stock movements with optional filters.
+     * Applies the movement read graph to specification-based searches.
      *
-     * @param type      filter by movement type (optional)
-     * @param productId filter by product (optional)
-     * @param branchId  filter by branch (optional)
-     * @param fromDate  lower bound for creation timestamp (optional)
-     * @param toDate    upper bound for creation timestamp (optional)
-     * @param pageable  pagination and sort
-     * @return matching movements with eagerly fetched product and branch
+     * <p>The inherited {@code findAll(spec, pageable)} method is redeclared so the
+     * entity graph is applied while keeping dynamic predicates out of static JPQL.
      */
+    @Override
     @EntityGraph(attributePaths = {"product", "branch", "stockLot"})
-    @Query("""
-            select m from StockMovement m
-            where (:type is null or m.type = :type)
-              and (:productId is null or m.product.id = :productId)
-              and (:branchId is null or m.branch.id = :branchId)
-              and (:fromDate is null or m.createdAt >= :fromDate)
-              and (:toDate is null or m.createdAt <= :toDate)
-            """)
-    Page<StockMovement> searchMovements(
-            @Param("type") StockMovementType type,
-            @Param("productId") Long productId,
-            @Param("branchId") Long branchId,
-            @Param("fromDate") OffsetDateTime fromDate,
-            @Param("toDate") OffsetDateTime toDate,
-            Pageable pageable
-    );
+    Page<StockMovement> findAll(@Nullable Specification<StockMovement> specification, Pageable pageable);
 }

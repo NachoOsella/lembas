@@ -13,6 +13,7 @@ import com.dietetica.lembas.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -102,7 +103,7 @@ public class StockLotAdminController {
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) LocalDate from,
             @RequestParam(required = false) LocalDate to,
-            @PageableDefault(size = 10, sort = "createdAt,desc") Pageable pageable
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return PageResponse.from(inventoryService.listMovements(type, productId, branchId, from, to, pageable));
     }

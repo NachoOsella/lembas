@@ -2,6 +2,8 @@
 
 ## 2026-06-08
 
+- `backend/src/main/java/com/dietetica/lembas/inventory/`, `backend/src/test/java/com/dietetica/lembas/inventory/repository/StockMovementRepositoryTest.java` -- corregido 500 en listado de movimientos usando busqueda dinamica por Specification para evitar parametros temporales nulos en PostgreSQL; agregado test JPA con Testcontainers.
+
 - `frontend/src/app/features/admin/stock-adjustment/` (delete), `frontend/src/app/features/admin/inventory/` (modify) -- movido formulario de ajuste de stock desde pagina standalone a modal dentro del inventory component; eliminado StockAdjustmentPageComponent, ruta y nav item.
 
 - `backend/.../inventory/`, `frontend/src/app/features/admin/stock-movements/` -- implementada S2-US04: ajustes manuales de stock (MANUAL_ADJUSTMENT, INTERNAL_CONSUMPTION, WASTE) con motivo obligatorio, FEFO para negativos, created_by_user_id, listado de movimientos filtrable con badge de color por tipo. Tests: 8 nuevos backend, 474 frontend.

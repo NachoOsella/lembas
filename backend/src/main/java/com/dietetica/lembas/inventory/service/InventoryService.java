@@ -19,10 +19,12 @@ import com.dietetica.lembas.inventory.repository.StockMovementRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -270,8 +273,37 @@ public class InventoryService {
                                                 LocalDate from, LocalDate to, Pageable pageable) {
         OffsetDateTime fromDate = from != null ? from.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime() : null;
         OffsetDateTime toDate = to != null ? to.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC) : null;
-        return stockMovementRepository.searchMovements(type, productId, branchId, fromDate, toDate, pageable)
+        return stockMovementRepository.findAll(movementSearchSpec(type, productId, branchId, fromDate, toDate), pageable)
                 .map(this::toMovementDto);
+    }
+
+    /**
+     * Builds dynamic movement filters without binding null temporal parameters.
+     *
+     * <p>PostgreSQL cannot infer a type for expressions like {@code ? is null}
+     * when the date parameter is absent, so only active filters are added.
+     */
+    private Specification<StockMovement> movementSearchSpec(StockMovementType type, Long productId, Long branchId,
+                                                            OffsetDateTime fromDate, OffsetDateTime toDate) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (type != null) {
+                predicates.add(criteriaBuilder.equal(root.get("type"), type));
+            }
+            if (productId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("product").get("id"), productId));
+            }
+            if (branchId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("branch").get("id"), branchId));
+            }
+            if (fromDate != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+            }
+            if (toDate != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), toDate));
+            }
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     /** Calculates available stock from stock_lots without using a denormalized cache. */
