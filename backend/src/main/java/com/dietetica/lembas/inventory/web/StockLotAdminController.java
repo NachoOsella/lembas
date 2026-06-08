@@ -1,8 +1,6 @@
 package com.dietetica.lembas.inventory.web;
 
 import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
-import com.dietetica.lembas.inventory.dto.PurchaseReceiptDto;
-import com.dietetica.lembas.inventory.dto.PurchaseReceiptRequest;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
 import com.dietetica.lembas.inventory.service.InventoryService;
 import com.dietetica.lembas.shared.dto.PageResponse;
@@ -49,12 +47,5 @@ public class StockLotAdminController {
     @ResponseStatus(HttpStatus.CREATED)
     public StockLotDto create(@Valid @RequestBody CreateStockLotRequest request) {
         return inventoryService.createStockLot(request);
-    }
-
-    /** Confirms a merchandise receipt and returns the created lot summary. */
-    @PostMapping("/receipts")
-    @ResponseStatus(HttpStatus.CREATED)
-    public PurchaseReceiptDto confirmReceipt(@Valid @RequestBody PurchaseReceiptRequest request) {
-        return inventoryService.confirmPurchaseReceipt(request);
     }
 }

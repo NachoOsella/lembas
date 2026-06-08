@@ -4,8 +4,6 @@ import com.dietetica.lembas.auth.service.JwtAuthenticationFilter;
 import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.auth.service.LembasUserDetailsService;
 import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
-import com.dietetica.lembas.inventory.dto.PurchaseReceiptDto;
-import com.dietetica.lembas.inventory.dto.PurchaseReceiptRequest;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
 import com.dietetica.lembas.inventory.service.InventoryService;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
@@ -103,22 +101,6 @@ class StockLotAdminControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.totalAvailableForProductBranch").value(8.5));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void Should_return201_when_adminConfirmsPurchaseReceipt() throws Exception {
-        PurchaseReceiptRequest request = new PurchaseReceiptRequest(
-                10L, 20L, BigDecimal.valueOf(3.5), "L-001", LocalDate.now().plusDays(30), BigDecimal.valueOf(500));
-        when(inventoryService.confirmPurchaseReceipt(any(PurchaseReceiptRequest.class)))
-                .thenReturn(PurchaseReceiptDto.fromStockLot(aLot()));
-
-        mockMvc.perform(post("/api/admin/stock/receipts")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.stockLotId").value(1L))
-                .andExpect(jsonPath("$.stockLot.totalAvailableForProductBranch").value(8.5));
     }
 
     @Test
