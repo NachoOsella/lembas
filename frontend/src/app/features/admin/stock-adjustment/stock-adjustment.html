@@ -1,0 +1,104 @@
+<div class="admin-page">
+  <app-page-header
+    eyebrow="Stock"
+    title="Ajustar stock"
+    description="Corrige diferencias de inventario, registra consumos internos o mermas. El motivo es obligatorio y queda registrado para trazabilidad."
+  />
+
+  @if (successMessage()) {
+    <p-message
+      severity="success"
+      [text]="successMessage()"
+      [closable]="true"
+      (onClose)="successMessage.set('')"
+      styleClass="mb-4"
+    />
+  }
+
+  @if (error()) {
+    <app-error-alert variant="inline" [title]="error()" message="">
+      <app-button variant="secondary" size="sm" (click)="error.set('')">Descartar</app-button>
+    </app-error-alert>
+  }
+
+  <section class="card">
+    <form class="stock-adjustment-form" (ngSubmit)="submit()" #adjustmentForm="ngForm">
+      <div class="stock-adjustment-form__grid">
+        <div class="stock-adjustment-form__field stock-adjustment-form__field--wide">
+          <app-control-field label="Producto" [required]="true">
+            <app-product-selector
+              [label]="''"
+              [selected]="selectedProduct()"
+              (selectedChange)="onProductChange($event)"
+              [suggestions]="productSuggestions()"
+              placeholder="Buscar producto por nombre o codigo..."
+              (search)="searchProducts($event)"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="stock-adjustment-form__field stock-adjustment-form__field--wide">
+          <app-control-field label="Sucursal" [required]="true">
+            <app-select
+              [value]="selectedBranchId()"
+              (valueChange)="onBranchChange($event)"
+              [options]="branchOptions()"
+              placeholder="Seleccionar sucursal"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="stock-adjustment-form__field">
+          <app-control-field label="Tipo" [required]="true">
+            <app-select
+              [value]="adjustmentType()"
+              (valueChange)="adjustmentType.set($event ?? 'MANUAL_ADJUSTMENT')"
+              [options]="typeOptions"
+              placeholder="Seleccionar tipo"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="stock-adjustment-form__field">
+          <app-control-field label="Cantidad" [required]="true">
+            <p-inputnumber
+              [(ngModel)]="adjustmentQuantity"
+              name="quantity"
+              [min]="0"
+              [maxFractionDigits]="3"
+              placeholder="0"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="stock-adjustment-form__field stock-adjustment-form__field--wide">
+          <app-form-field
+            label="Motivo"
+            [required]="true"
+            [(value)]="adjustmentReason"
+            placeholder="Explica el motivo del ajuste (obligatorio)"
+            testId="adjustment-reason"
+          />
+        </div>
+      </div>
+
+      @if (currentStockLabel()) {
+        <div class="stock-adjustment-form__stock-info">
+          <i class="pi pi-info-circle"></i>
+          <span>{{ currentStockLabel() }}</span>
+        </div>
+      }
+
+      <div class="stock-adjustment-form__actions">
+        <app-button variant="secondary" type="button" (click)="resetForm()">Limpiar</app-button>
+        <app-button
+          type="submit"
+          [loading]="saving()"
+          [disabled]="!canSubmit()"
+        >
+          Ejecutar ajuste
+        </app-button>
+      </div>
+    </form>
+  </section>
+</div>

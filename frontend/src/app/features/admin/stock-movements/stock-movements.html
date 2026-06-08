@@ -1,0 +1,73 @@
+<div class="admin-page">
+  <app-page-header
+    eyebrow="Stock"
+    title="Movimientos de stock"
+    description="Trazabilidad completa de todos los cambios de stock: entradas, ventas, ajustes, consumos y mermas."
+  />
+
+  @if (error()) {
+    <app-error-alert variant="inline" [title]="error()" message="">
+      <app-button variant="secondary" size="sm" (click)="loadMovements()">Reintentar</app-button>
+    </app-error-alert>
+  }
+
+  <app-data-table
+    [data]="movements()"
+    [columns]="columns"
+    [loading]="loading()"
+    [sortable]="true"
+    [paginated]="true"
+    [lazy]="true"
+    [totalRecords]="totalRecords()"
+    [first]="first()"
+    [rows]="pageSize()"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    (pageChange)="onPageChange($event)"
+    (sortChange)="onSort($event)"
+    emptyTitle="No hay movimientos"
+    emptyDescription="Los movimientos de stock apareceran automaticamente cuando se registren entradas, ventas o ajustes."
+  >
+    <ng-template #toolbar>
+      <div class="table-toolbar__info">
+        <p class="table-toolbar__kicker">Trazabilidad</p>
+        <h2 class="table-toolbar__title">Movimientos</h2>
+      </div>
+      <div class="table-toolbar__actions movements-toolbar">
+        <app-search-bar
+          placeholder="Buscar producto..."
+          [value]="searchTerm()"
+          (search)="searchTerm.set($event); loadMovements()"
+        />
+        <app-select
+          [value]="typeFilter()"
+          (valueChange)="typeFilter.set($event); loadMovements()"
+          [options]="typeFilterOptions()"
+          placeholder="Todos los tipos"
+        />
+        <app-select
+          [value]="branchFilter()"
+          (valueChange)="branchFilter.set($event); loadMovements()"
+          [options]="branchOptions()"
+          placeholder="Todas las sucursales"
+        />
+      </div>
+    </ng-template>
+
+    <ng-template #row let-item>
+      <td>
+        <span class="movement-type-badge" [class]="'movement-type-badge--' + typeSeverity(item.type)">
+          {{ typeLabel(item.type) }}
+        </span>
+      </td>
+      <td>{{ item.createdAt | date:'dd/MM/yy HH:mm' }}</td>
+      <td>{{ item.productName }}</td>
+      <td>{{ item.branchName }}</td>
+      <td>
+        <span class="movement-quantity" [class]="item.quantity >= 0 ? 'movement-quantity--positive' : 'movement-quantity--negative'">
+          {{ item.quantity >= 0 ? '+' : '' }}{{ item.quantity | number:'1.0-3' }}
+        </span>
+      </td>
+      <td>{{ item.reason ?? '-' }}</td>
+    </ng-template>
+  </app-data-table>
+</div>

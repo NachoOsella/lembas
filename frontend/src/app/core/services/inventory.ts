@@ -6,8 +6,11 @@ import {
   CreateStockLotRequest,
   PurchaseReceiptDto,
   PurchaseReceiptRequest,
+  StockAdjustmentRequest,
   StockLotDto,
   StockLotPage,
+  StockMovementDto,
+  StockMovementPage,
   StockProductSummaryDto,
   StockProductSummaryPage,
 } from '../../shared/models/inventory';
@@ -33,12 +36,26 @@ export interface ProductSummaryFilters {
   readonly sort?: string;
 }
 
+/** Filters accepted by the stock movements list endpoint. */
+export interface MovementFilters {
+  readonly type?: string;
+  readonly productId?: number | null;
+  readonly branchId?: number | null;
+  readonly from?: string;
+  readonly to?: string;
+  readonly page?: number;
+  readonly size?: number;
+  readonly sort?: string;
+}
+
 /** Provides admin inventory operations for stock lot entries and queries. */
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
   private readonly http = inject(HttpClient);
   private readonly stockLotsUrl = '/api/admin/stock/lots';
   private readonly stockProductsUrl = '/api/admin/stock/products';
+  private readonly stockAdjustmentsUrl = '/api/admin/stock/adjustments';
+  private readonly stockMovementsUrl = '/api/admin/stock/movements';
   private readonly purchaseReceiptsUrl = '/api/admin/stock/receipts';
 
   /** Returns a paginated list of stock lots matching the provided filters. */
@@ -92,5 +109,36 @@ export class InventoryService {
   /** Confirms a merchandise receipt and returns the generated stock lot summary. */
   createPurchaseReceipt(request: PurchaseReceiptRequest): Observable<PurchaseReceiptDto> {
     return this.http.post<PurchaseReceiptDto>(this.purchaseReceiptsUrl, request);
+  }
+
+  /** Sends a manual stock adjustment request. */
+  adjustStock(request: StockAdjustmentRequest): Observable<void> {
+    return this.http.post<void>(this.stockAdjustmentsUrl, request);
+  }
+
+  /** Returns a paginated list of stock movements with optional filters. */
+  listMovements(filters: MovementFilters = {}): Observable<StockMovementPage> {
+    let params = new HttpParams()
+      .set('page', filters.page ?? 0)
+      .set('size', filters.size ?? 10)
+      .set('sort', filters.sort ?? 'createdAt,dsc');
+
+    if (filters.type) {
+      params = params.set('type', filters.type);
+    }
+    if (filters.productId) {
+      params = params.set('productId', filters.productId);
+    }
+    if (filters.branchId) {
+      params = params.set('branchId', filters.branchId);
+    }
+    if (filters.from) {
+      params = params.set('from', filters.from);
+    }
+    if (filters.to) {
+      params = params.set('to', filters.to);
+    }
+
+    return this.http.get<StockMovementPage>(this.stockMovementsUrl, { params });
   }
 }

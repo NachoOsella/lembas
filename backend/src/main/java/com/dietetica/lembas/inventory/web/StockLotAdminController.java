@@ -2,8 +2,10 @@ package com.dietetica.lembas.inventory.web;
 
 import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
 import com.dietetica.lembas.inventory.dto.DeductionPlan;
+import com.dietetica.lembas.inventory.dto.StockAdjustmentRequest;
 import com.dietetica.lembas.inventory.dto.StockDeductionRequest;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
+import com.dietetica.lembas.inventory.dto.StockMovementDto;
 import com.dietetica.lembas.inventory.dto.StockProductSummaryDto;
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import com.dietetica.lembas.inventory.service.InventoryService;
@@ -21,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
 
 /** Admin REST controller for inventory stock lot queries and entries. */
 @RestController
@@ -75,5 +79,31 @@ public class StockLotAdminController {
                 request.quantity(),
                 StockMovementType.MANUAL_ADJUSTMENT
         );
+    }
+
+    /**
+     * Applies a manual stock adjustment with mandatory reason.
+     * Positive quantity increases stock, negative decreases it using FEFO.
+     */
+    @PostMapping("/adjustments")
+    @ResponseStatus(HttpStatus.OK)
+    public void adjust(@Valid @RequestBody StockAdjustmentRequest request) {
+        inventoryService.adjustStock(request);
+    }
+
+    /**
+     * Returns paginated stock movements with optional type, product, branch,
+     * and date-range filters.
+     */
+    @GetMapping("/movements")
+    public PageResponse<StockMovementDto> listMovements(
+            @RequestParam(required = false) StockMovementType type,
+            @RequestParam(required = false) Long productId,
+            @RequestParam(required = false) Long branchId,
+            @RequestParam(required = false) LocalDate from,
+            @RequestParam(required = false) LocalDate to,
+            @PageableDefault(size = 10, sort = "createdAt,dsc") Pageable pageable
+    ) {
+        return PageResponse.from(inventoryService.listMovements(type, productId, branchId, from, to, pageable));
     }
 }
