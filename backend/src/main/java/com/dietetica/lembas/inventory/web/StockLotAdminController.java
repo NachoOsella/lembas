@@ -37,12 +37,13 @@ public class StockLotAdminController {
     /** Returns paginated stock lots matching the optional inventory filters. */
     @GetMapping("/lots")
     public PageResponse<StockLotDto> listLots(
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) Long productId,
             @RequestParam(required = false) Long branchId,
             @RequestParam(defaultValue = "false") boolean expiringSoon,
             @PageableDefault(size = 10, sort = "expirationDate") Pageable pageable
     ) {
-        return PageResponse.from(inventoryService.listLots(productId, branchId, expiringSoon, pageable));
+        return PageResponse.from(inventoryService.listLots(search, productId, branchId, expiringSoon, pageable));
     }
 
     /** Registers a new stock lot and its PURCHASE_ENTRY movement. */

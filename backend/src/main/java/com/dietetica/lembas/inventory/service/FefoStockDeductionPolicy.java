@@ -1,6 +1,7 @@
 package com.dietetica.lembas.inventory.service;
 
 import com.dietetica.lembas.inventory.dto.DeductionPlan;
+import org.springframework.stereotype.Service;
 import com.dietetica.lembas.inventory.dto.DeductionPlan.DeductionEntry;
 import com.dietetica.lembas.inventory.model.StockLot;
 import com.dietetica.lembas.shared.exception.DomainException;
@@ -14,7 +15,9 @@ import java.util.List;
  * Pure domain policy that plans FEFO stock deductions.
  *
  * <p>This class is stateless, has no Spring dependencies, and can be fully
- * unit-tested without mocks. It consumes pre-ordered lots (as returned by
+ * unit-tested without mocks. It is annotated {@code @Service} so that Spring
+ * can inject it into {@link com.dietetica.lembas.inventory.service.InventoryService}.
+ * The annotation adds no Spring behavior to the policy itself.</p> It consumes pre-ordered lots (as returned by
  * {@link com.dietetica.lembas.inventory.repository.StockLotRepository#findAvailableLotsForUpdate})
  * and produces a {@link DeductionPlan} that the caller applies transactionally.</p>
  *
@@ -26,6 +29,7 @@ import java.util.List;
  *   <li>Lots with {@code quantityAvailable <= 0} are skipped silently.</li>
  * </ul>
  */
+@Service
 public class FefoStockDeductionPolicy {
 
     /**

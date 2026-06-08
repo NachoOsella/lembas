@@ -5,19 +5,26 @@
 /* --- Toolbar ------------------------------------------------------ */
 
 .inventory-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: minmax(14rem, 1fr) minmax(10rem, auto) auto;
+  gap: 0.75rem;
   align-items: center;
+  width: min(100%, 46rem);
 }
 
 .inventory-toolbar app-product-selector {
-  min-width: 16rem;
-  flex: 1 1 16rem;
+  min-width: 0;
 }
 
 .inventory-toolbar app-select {
-  min-width: 12rem;
+  min-width: 0;
+}
+
+.inventory-expiring-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .inventory-expiring-label {

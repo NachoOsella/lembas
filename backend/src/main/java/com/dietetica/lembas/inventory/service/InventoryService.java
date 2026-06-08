@@ -82,11 +82,12 @@ public class InventoryService {
         return toDto(savedLot, totalAvailable);
     }
 
-    /** Lists stock lots with optional filters for the admin inventory table. */
+    /** Lists stock lots with optional product search and filters for the admin inventory table. */
     @Transactional(readOnly = true)
-    public Page<StockLotDto> listLots(Long productId, Long branchId, boolean expiringSoon, Pageable pageable) {
+    public Page<StockLotDto> listLots(String search, Long productId, Long branchId, boolean expiringSoon, Pageable pageable) {
         LocalDate expiringSoonLimit = LocalDate.now(clock).plusDays(EXPIRING_SOON_DAYS);
-        return stockLotRepository.searchLots(productId, branchId, expiringSoon, expiringSoonLimit, mapSort(pageable))
+        String searchPattern = buildSearchPattern(search);
+        return stockLotRepository.searchLots(searchPattern, productId, branchId, expiringSoon, expiringSoonLimit, mapSort(pageable))
                 .map(lot -> toDto(lot, null));
     }
 
@@ -209,5 +210,13 @@ public class InventoryService {
     /** Normalizes optional text fields before persistence. */
     private String normalizeBlank(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    /** Builds a LIKE pattern from search text, or null when empty. */
+    private String buildSearchPattern(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return "%" + value.trim() + "%";
     }
 }

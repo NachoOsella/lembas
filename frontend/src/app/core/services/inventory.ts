@@ -12,6 +12,7 @@ import {
 
 /** Filters accepted by the admin stock lot endpoint. */
 export interface StockLotFilters {
+  readonly search?: string;
   readonly productId?: number | null;
   readonly branchId?: number | null;
   readonly expiringSoon?: boolean;
@@ -34,6 +35,9 @@ export class InventoryService {
       .set('size', filters.size ?? 10)
       .set('sort', filters.sort ?? 'expirationDate,asc');
 
+    if (filters.search) {
+      params = params.set('search', filters.search);
+    }
     if (filters.productId) {
       params = params.set('productId', filters.productId);
     }

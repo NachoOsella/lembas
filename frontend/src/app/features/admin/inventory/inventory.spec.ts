@@ -103,15 +103,26 @@ describe('Inventory', () => {
     expect(cmp.error()).toBe('');
   });
 
-  it('should apply product filter and reload', () => {
+  it('should search by product name and reload', () => {
     const cmp = component as any;
-    cmp.selectedProduct.set({ id: 10, name: 'Granola', barcode: '779' });
-    cmp.onFilterChange();
+    cmp.onSearch('Granola');
 
+    expect(cmp.search()).toBe('Granola');
     expect(inventoryService.listLots).toHaveBeenCalledWith(
-      expect.objectContaining({ productId: 10 })
+      expect.objectContaining({ search: 'Granola' })
     );
     expect(cmp.first()).toBe(0);
+  });
+
+  it('should clear search and reload', () => {
+    const cmp = component as any;
+    cmp.search.set('Yerba');
+    cmp.clearSearch();
+
+    expect(cmp.search()).toBe('');
+    expect(inventoryService.listLots).toHaveBeenCalledWith(
+      expect.objectContaining({ search: '' })
+    );
   });
 
   it('should apply branch filter and reload', () => {

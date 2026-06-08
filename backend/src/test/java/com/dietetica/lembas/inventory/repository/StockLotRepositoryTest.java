@@ -102,7 +102,7 @@ class StockLotRepositoryTest {
         stockLotRepository.flush();
 
         var result = stockLotRepository.searchLots(
-                product.getId(), branch.getId(), true, LocalDate.now().plusDays(30), PageRequest.of(0, 10));
+                null, product.getId(), branch.getId(), true, LocalDate.now().plusDays(30), PageRequest.of(0, 10));
 
         assertThat(result.getContent())
                 .extracting(StockLot::getLotCode)

@@ -47,13 +47,14 @@ public interface StockLotRepository extends JpaRepository<StockLot, Long> {
             @Param("branchId") Long branchId
     );
 
-    /** Returns admin stock lots with optional product, branch, and expiring-soon filters. */
+    /** Returns admin stock lots with optional product name search, branch, and expiring-soon filters. */
     @EntityGraph(attributePaths = {"product", "branch"})
     @Query("""
             select l from StockLot l
             join l.product p
             join l.branch b
-            where (:productId is null or p.id = :productId)
+            where (:searchPattern is null or p.name like :searchPattern)
+              and (:productId is null or p.id = :productId)
               and (:branchId is null or b.id = :branchId)
               and (
                     :expiringSoon = false
@@ -64,6 +65,7 @@ public interface StockLotRepository extends JpaRepository<StockLot, Long> {
               )
             """)
     Page<StockLot> searchLots(
+            @Param("searchPattern") String searchPattern,
             @Param("productId") Long productId,
             @Param("branchId") Long branchId,
             @Param("expiringSoon") boolean expiringSoon,

@@ -67,7 +67,7 @@ class StockLotAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void Should_return200_when_adminListsLots() throws Exception {
-        when(inventoryService.listLots(isNull(), isNull(), eq(false), any(Pageable.class)))
+        when(inventoryService.listLots(isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(aLot()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/admin/stock/lots"))
@@ -82,7 +82,7 @@ class StockLotAdminControllerTest {
     @Test
     @WithMockUser(roles = "MANAGER")
     void Should_forwardFilters_when_managerListsLots() throws Exception {
-        when(inventoryService.listLots(eq(10L), eq(20L), eq(true), any(Pageable.class)))
+        when(inventoryService.listLots(isNull(), eq(10L), eq(20L), eq(true), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
 
         mockMvc.perform(get("/api/admin/stock/lots")
@@ -148,7 +148,7 @@ class StockLotAdminControllerTest {
     @Test
     @WithMockUser(roles = "EMPLOYEE")
     void Should_return200_when_employeeListsLots() throws Exception {
-        when(inventoryService.listLots(isNull(), isNull(), eq(false), any(Pageable.class)))
+        when(inventoryService.listLots(isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
 
         mockMvc.perform(get("/api/admin/stock/lots"))

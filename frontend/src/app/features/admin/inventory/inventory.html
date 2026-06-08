@@ -37,12 +37,11 @@
         <h2 class="table-toolbar__title">Lotes activos</h2>
       </div>
       <div class="table-toolbar__actions inventory-toolbar">
-        <app-product-selector
-          [selected]="selectedProduct()"
-          (selectedChange)="selectedProduct.set($event); onFilterChange()"
-          [suggestions]="productSuggestions()"
-          placeholder="Buscar producto..."
-          (search)="searchProducts($event)"
+        <app-search-bar
+          [(value)]="search"
+          placeholder="Buscar por producto..."
+          (search)="onSearch($event)"
+          (clear)="clearSearch()"
         />
         <app-select
           [value]="selectedBranchId()"
@@ -51,12 +50,14 @@
           placeholder="Sucursal"
           [showClear]="true"
         />
-        <app-toggle-switch
-          [(checked)]="expiringSoon"
-          (checkedChange)="onFilterChange()"
-          [ariaLabel]="'Filtrar solo lotes proximos a vencer'"
-        />
-        <label class="inventory-expiring-label">Prox. a vencer</label>
+        <div class="inventory-expiring-toggle">
+          <app-toggle-switch
+            [(checked)]="expiringSoon"
+            (checkedChange)="onFilterChange()"
+            [ariaLabel]="'Filtrar solo lotes proximos a vencer'"
+          />
+          <label class="inventory-expiring-label">Prox. a vencer</label>
+        </div>
       </div>
     </ng-template>
 

@@ -19,6 +19,7 @@ import { AppPageHeader } from '../../../shared/components/app-page-header/app-pa
 import { AppFormField } from '../../../shared/components/app-form-field/app-form-field';
 import { AppModal } from '../../../shared/components/app-modal/app-modal';
 import { AppProductSelector } from '../../../shared/components/app-product-selector/app-product-selector';
+import { AppSearchBar } from '../../../shared/components/app-search-bar/app-search-bar';
 import { AppSelect } from '../../../shared/components/app-select/app-select';
 import { AppToggleSwitch } from '../../../shared/components/app-toggle-switch/app-toggle-switch';
 import { StatusBadge, StatusBadgeConfig } from '../../../shared/components/status-badge/status-badge';
@@ -53,6 +54,7 @@ const STOCK_LOT_STATUS_BADGES: Record<string, StatusBadgeConfig> = {
     AppModal,
     AppPageHeader,
     AppProductSelector,
+    AppSearchBar,
     AppSelect,
     AppToggleSwitch,
     DatePicker,
@@ -79,10 +81,9 @@ export class Inventory {
   protected readonly error = signal('');
 
   // -- Filters ----------------------------------------------------------------
-  protected readonly selectedProduct = signal<ProductSummary | null>(null);
+  protected readonly search = signal('');
   protected readonly selectedBranchId = signal<number | null>(null);
   protected readonly expiringSoon = signal(false);
-  protected readonly productSuggestions = signal<ProductSummary[]>([]);
   protected readonly branches = signal<Branch[]>([]);
 
   // -- Lazy pagination --------------------------------------------------------
@@ -144,7 +145,7 @@ export class Inventory {
     const sort = this.buildSortParam(this.sortField(), this.sortOrder(), 'expirationDate');
     this.inventoryService
       .listLots({
-        productId: this.selectedProduct()?.id ?? null,
+        search: this.search(),
         branchId: this.selectedBranchId(),
         expiringSoon: this.expiringSoon(),
         page,
@@ -174,22 +175,16 @@ export class Inventory {
     this.loadLots();
   }
 
-  /** Clears the product filter and reloads. */
-  protected clearProductFilter(): void {
-    this.selectedProduct.set(null);
-    this.onFilterChange();
+  /** Applies search filter, resetting to first page. */
+  protected onSearch(query: string): void {
+    this.search.set(query);
+    this.first.set(0);
+    this.loadLots();
   }
 
-  /** Searches products for the filter autocomplete. */
-  protected searchProducts(query: string): void {
-    if (query.length < 2) {
-      this.productSuggestions.set([]);
-      return;
-    }
-    this.productService.listAdminProducts({ search: query, size: 10 }).subscribe({
-      next: (page) => this.productSuggestions.set(page.content),
-      error: () => this.productSuggestions.set([]),
-    });
+  /** Clears search filter, resetting to first page. */
+  protected clearSearch(): void {
+    this.onSearch('');
   }
 
   // ---------------------------------------------------------------------------
