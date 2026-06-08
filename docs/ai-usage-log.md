@@ -2,7 +2,9 @@
 
 ## 2026-06-08
 
-- `backend/.../inventory/`, `frontend/src/app/features/admin/stock-adjustment/`, `frontend/src/app/features/admin/stock-movements/` -- implementada S2-US04: ajustes manuales de stock (MANUAL_ADJUSTMENT, INTERNAL_CONSUMPTION, WASTE) con motivo obligatorio, FEFO para negativos, created_by_user_id, listado de movimientos filtrable, pantalla de ajuste con stock actual y tabla de movimientos con badge de color por tipo. Tests: 8 nuevos backend, 474 frontend.
+- `frontend/src/app/features/admin/stock-adjustment/` (delete), `frontend/src/app/features/admin/inventory/` (modify) -- movido formulario de ajuste de stock desde pagina standalone a modal dentro del inventory component; eliminado StockAdjustmentPageComponent, ruta y nav item.
+
+- `backend/.../inventory/`, `frontend/src/app/features/admin/stock-movements/` -- implementada S2-US04: ajustes manuales de stock (MANUAL_ADJUSTMENT, INTERNAL_CONSUMPTION, WASTE) con motivo obligatorio, FEFO para negativos, created_by_user_id, listado de movimientos filtrable con badge de color por tipo. Tests: 8 nuevos backend, 474 frontend.
 
 ## 2026-06-05
 
