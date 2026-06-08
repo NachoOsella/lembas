@@ -134,7 +134,7 @@ describe('AdminLayout', () => {
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
     );
-    expect(navLinks.length).toBe(14);
+    expect(navLinks.length).toBe(13);
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );
@@ -148,7 +148,7 @@ describe('AdminLayout', () => {
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
     );
-    expect(navLinks.length).toBe(13);
+    expect(navLinks.length).toBe(12);
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );
@@ -162,7 +162,7 @@ describe('AdminLayout', () => {
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
     );
-    expect(navLinks.length).toBe(13);
+    expect(navLinks.length).toBe(12);
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );

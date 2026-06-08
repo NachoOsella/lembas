@@ -82,11 +82,6 @@ export default [
         loadComponent: () => import('./cash/cash').then((m) => m.Cash),
       },
       {
-        path: 'stock/adjustments',
-        loadComponent: () =>
-          import('./stock-adjustment/stock-adjustment').then((m) => m.StockAdjustment),
-      },
-      {
         path: 'stock/movements',
         loadComponent: () =>
           import('./stock-movements/stock-movements').then((m) => m.StockMovements),
