@@ -1,5 +1,9 @@
 # Registro de uso de IA
 
+## 2026-06-08
+
+- `backend/.../inventory/`, `frontend/src/app/features/admin/stock-adjustment/`, `frontend/src/app/features/admin/stock-movements/` -- implementada S2-US04: ajustes manuales de stock (MANUAL_ADJUSTMENT, INTERNAL_CONSUMPTION, WASTE) con motivo obligatorio, FEFO para negativos, created_by_user_id, listado de movimientos filtrable, pantalla de ajuste con stock actual y tabla de movimientos con badge de color por tipo. Tests: 8 nuevos backend, 474 frontend.
+
 ## 2026-06-05
 
 - `backend/src/main/resources/db/migration/V22__purchase_orders.sql`, `backend/src/main/java/com/dietetica/lembas/suppliers/`, `frontend/src/app/features/admin/purchase-orders/`, `frontend/src/app/shared/components/app-control-field/` -- implementada S2-US13: ordenes de compra a proveedores con estados DRAFT/CONFIRMED/SENT/CANCELLED, costos precargados desde proveedor-producto, PDF descargable bajo demanda, pantalla admin alineada a DESING.md, wrapper generico de campos proyectados y tests backend/frontend.
