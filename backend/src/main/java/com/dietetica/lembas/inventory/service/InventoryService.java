@@ -3,8 +3,6 @@ package com.dietetica.lembas.inventory.service;
 import com.dietetica.lembas.catalog.model.Product;
 import com.dietetica.lembas.catalog.repository.ProductRepository;
 import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
-import com.dietetica.lembas.inventory.dto.PurchaseReceiptDto;
-import com.dietetica.lembas.inventory.dto.PurchaseReceiptRequest;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
 import com.dietetica.lembas.inventory.model.StockLot;
 import com.dietetica.lembas.inventory.model.StockMovement;
@@ -50,13 +48,6 @@ public class InventoryService {
         this.productRepository = productRepository;
         this.branchRepository = branchRepository;
         this.clock = clock;
-    }
-
-    /** Confirms a merchandise receipt by creating its stock lot and purchase-entry movement. */
-    @Transactional
-    public PurchaseReceiptDto confirmPurchaseReceipt(PurchaseReceiptRequest request) {
-        StockLotDto stockLot = createStockLot(request.toCreateStockLotRequest());
-        return PurchaseReceiptDto.fromStockLot(stockLot);
     }
 
     /** Creates a new stock lot and records its PURCHASE_ENTRY movement in the same transaction. */

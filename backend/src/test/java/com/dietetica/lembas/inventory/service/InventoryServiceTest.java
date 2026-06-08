@@ -3,7 +3,6 @@ package com.dietetica.lembas.inventory.service;
 import com.dietetica.lembas.catalog.model.Product;
 import com.dietetica.lembas.catalog.repository.ProductRepository;
 import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
-import com.dietetica.lembas.inventory.dto.PurchaseReceiptRequest;
 import com.dietetica.lembas.inventory.model.StockLot;
 import com.dietetica.lembas.inventory.model.StockMovement;
 import com.dietetica.lembas.inventory.model.StockMovementType;
@@ -101,29 +100,6 @@ class InventoryServiceTest {
         assertThat(movement.getStockLot()).isSameAs(savedLot);
 
         assertThat(result.totalAvailableForProductBranch()).isEqualByComparingTo("8.5");
-    }
-
-    @Test
-    void confirmPurchaseReceiptShouldReturnCreatedLotSummary() {
-        Product product = product(10L, "Granola");
-        Branch branch = branch(20L, "Centro", true);
-        PurchaseReceiptRequest request = new PurchaseReceiptRequest(
-                10L, 20L, BigDecimal.valueOf(4), "R-001", LocalDate.now().plusDays(45), BigDecimal.valueOf(750));
-        when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
-        when(stockLotRepository.save(any(StockLot.class))).thenAnswer(invocation -> {
-            StockLot lot = invocation.getArgument(0);
-            lot.setId(99L);
-            return lot;
-        });
-        when(stockLotRepository.calculateAvailableQuantity(10L, 20L)).thenReturn(BigDecimal.valueOf(12));
-
-        var result = inventoryService.confirmPurchaseReceipt(request);
-
-        assertThat(result.stockLotId()).isEqualTo(99L);
-        assertThat(result.stockLot().unitCost()).isEqualByComparingTo("750");
-        assertThat(result.totalAvailableForProductBranch()).isEqualByComparingTo("12");
-        verify(stockMovementRepository).save(any(StockMovement.class));
     }
 
     @Test
