@@ -2,7 +2,6 @@ package com.dietetica.lembas.inventory.dto;
 
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -12,7 +11,9 @@ import java.math.BigDecimal;
  *
  * <p>A positive quantity increases stock (manual correction, found difference).
  * A negative quantity decreases stock using FEFO or from a specific lot.
- * The reason is mandatory for traceability.</p>
+ * The reason is mandatory for traceability. The quantity is validated in the
+ * service to be non-zero since {@code @PositiveOrZero} would reject the
+ * negative values needed for consumption and waste types.</p>
  *
  * @param productId  the product to adjust
  * @param branchId   the branch where stock resides
@@ -24,7 +25,7 @@ import java.math.BigDecimal;
 public record StockAdjustmentRequest(
         @NotNull Long productId,
         @NotNull Long branchId,
-        @NotNull @PositiveOrZero BigDecimal quantity,
+        @NotNull BigDecimal quantity,
         @NotNull @Size(min = 1, max = 500) String reason,
         @NotNull StockMovementType type,
         Long stockLotId

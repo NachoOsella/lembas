@@ -102,7 +102,7 @@ public class StockLotAdminController {
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) LocalDate from,
             @RequestParam(required = false) LocalDate to,
-            @PageableDefault(size = 10, sort = "createdAt,dsc") Pageable pageable
+            @PageableDefault(size = 10, sort = "createdAt,desc") Pageable pageable
     ) {
         return PageResponse.from(inventoryService.listMovements(type, productId, branchId, from, to, pageable));
     }

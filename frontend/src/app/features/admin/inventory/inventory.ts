@@ -281,12 +281,15 @@ export class Inventory {
   // ---------------------------------------------------------------------------
 
   protected openAdjustDialog(item: StockProductSummaryDto): void {
-    this.adjSelectedProduct.set({
+    const product: ProductSummary = {
       id: item.productId,
       name: item.productName,
       salePrice: 0,
       onlineStatus: 'PUBLISHED',
-    } as ProductSummary);
+      categoryId: 0,
+      categoryName: '',
+    };
+    this.adjSelectedProduct.set(product);
     this.adjSelectedBranchId.set(item.branchId);
     this.adjType.set('MANUAL_ADJUSTMENT');
     this.adjQuantity.set(null);

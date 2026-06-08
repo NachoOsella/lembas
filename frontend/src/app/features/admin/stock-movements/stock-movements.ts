@@ -10,7 +10,6 @@ import { AppSearchBar } from '../../../shared/components/app-search-bar/app-sear
 import { AppSelect } from '../../../shared/components/app-select/app-select';
 import { InventoryService } from '../../../core/services/inventory';
 import { UserService } from '../../../core/services/user';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { getApiError } from '../../../shared/models/api-error';
 import { StockMovementDto, MOVEMENT_TYPE_LABELS, MOVEMENT_TYPE_SEVERITY } from '../../../shared/models/inventory';
 import { Branch } from '../../../shared/models/user';
@@ -33,7 +32,6 @@ import { Branch } from '../../../shared/models/user';
 export class StockMovements {
   private readonly inventoryService = inject(InventoryService);
   private readonly userService = inject(UserService);
-  private readonly errorMapping = inject(ErrorMappingService);
 
   readonly columns: ColumnDef[] = [
     { field: 'type', header: 'Tipo', sortable: true, width: '10rem' },
@@ -90,7 +88,7 @@ export class StockMovements {
     this.loading.set(true);
     this.error.set('');
 
-    const sortParam = `${this.sortField()},${this.sortOrder() === -1 ? 'dsc' : 'asc'}`;
+    const sortParam = `${this.sortField()},${this.sortOrder() === -1 ? 'desc' : 'asc'}`;
 
     this.inventoryService.listMovements({
       type: this.typeFilter() ?? undefined,

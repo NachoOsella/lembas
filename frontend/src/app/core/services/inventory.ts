@@ -121,7 +121,7 @@ export class InventoryService {
     let params = new HttpParams()
       .set('page', filters.page ?? 0)
       .set('size', filters.size ?? 10)
-      .set('sort', filters.sort ?? 'createdAt,dsc');
+      .set('sort', filters.sort ?? 'createdAt,desc');
 
     if (filters.type) {
       params = params.set('type', filters.type);
