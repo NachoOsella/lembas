@@ -333,12 +333,12 @@ export class Inventory {
   }
 
   private updateAdjStockLabel(productId: number, branchId: number): void {
-    this.inventoryService.listLots({ productId, branchId, size: 1 }).subscribe({
+    const productName = this.adjSelectedProduct()?.name ?? 'Producto';
+    this.inventoryService.listProductSummaries({ search: productName, branchId, size: 20 }).subscribe({
       next: (page) => {
-        const productName = this.adjSelectedProduct()?.name ?? 'Producto';
-        this.adjCurrentStockLabel.set(
-          `Stock actual: ${page.totalElements} unidades de ${productName}`
-        );
+        const summary = page.content.find((item) => item.productId === productId && item.branchId === branchId);
+        const available = summary?.totalAvailable ?? 0;
+        this.adjCurrentStockLabel.set(`Stock actual: ${this.formatQuantity(available)} unidades de ${productName}`);
       },
       error: () => this.adjCurrentStockLabel.set(''),
     });

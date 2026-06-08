@@ -73,10 +73,7 @@ export class StockMovements {
   private loadBranches(): void {
     this.userService.listBranches().subscribe({
       next: (branches: Branch[]) => {
-        this.branchOptions.set([
-          { label: 'Todas las sucursales', value: null as unknown as number },
-          ...branches.map((b) => ({ label: b.name, value: b.id })),
-        ]);
+        this.branchOptions.set(branches.map((b) => ({ label: b.name, value: b.id })));
       },
       error: () => {
         this.branchOptions.set([]);
@@ -91,8 +88,8 @@ export class StockMovements {
     const sortParam = `${this.sortField()},${this.sortOrder() === -1 ? 'desc' : 'asc'}`;
 
     this.inventoryService.listMovements({
+      search: this.searchTerm().trim() || undefined,
       type: this.typeFilter() ?? undefined,
-      productId: this.searchTerm() ? undefined : null,
       branchId: this.branchFilter(),
       page: Math.floor(this.first() / this.pageSize()),
       size: this.pageSize(),
@@ -108,6 +105,17 @@ export class StockMovements {
         this.error.set(getApiError(err)?.message ?? 'Error al cargar movimientos');
       },
     });
+  }
+
+  onSearch(query: string): void {
+    this.searchTerm.set(query);
+    this.first.set(0);
+    this.loadMovements();
+  }
+
+  onFilterChange(): void {
+    this.first.set(0);
+    this.loadMovements();
   }
 
   onPageChange(event: { first: number; rows: number }): void {

@@ -192,6 +192,10 @@ public class InventoryService {
             throw new DomainException("ADJUSTMENT_QUANTITY_ZERO", HttpStatus.BAD_REQUEST,
                     "Adjustment quantity must not be zero");
         }
+        if (quantity.compareTo(BigDecimal.ZERO) > 0 && typeRequiresNegativeQuantity(request.type())) {
+            throw new DomainException("INVALID_ADJUSTMENT_SIGN", HttpStatus.BAD_REQUEST,
+                    "Waste and internal consumption adjustments must decrease stock");
+        }
 
         Long currentUserId = securityContextHelper.getCurrentUser().getId();
 
@@ -206,13 +210,12 @@ public class InventoryService {
                                           StockMovementType type, String reason,
                                           Long stockLotId, Long currentUserId) {
         if (stockLotId != null) {
-            StockLot lot = stockLotRepository.findById(stockLotId)
+            StockLot lot = stockLotRepository.findByIdForUpdate(stockLotId)
                     .orElseThrow(() -> new DomainException("STOCK_LOT_NOT_FOUND", HttpStatus.NOT_FOUND, "Stock lot not found"));
-            if (!lot.getProduct().getId().equals(product.getId()) || !lot.getBranch().getId().equals(branch.getId())) {
-                throw new DomainException("STOCK_LOT_MISMATCH", HttpStatus.BAD_REQUEST,
-                        "Stock lot does not belong to the specified product and branch");
-            }
+            validateLotBelongsToProductAndBranch(lot, product, branch);
+            ensureLotIsNotCancelled(lot);
             lot.setQuantityAvailable(lot.getQuantityAvailable().add(quantity));
+            lot.setStatus(StockLotStatus.ACTIVE);
             stockMovementRepository.save(adjustmentMovement(lot, product, branch, quantity, type, reason, currentUserId));
         } else {
             StockLot lot = new StockLot();
@@ -233,12 +236,10 @@ public class InventoryService {
         BigDecimal positiveQuantity = quantity.negate();
 
         if (stockLotId != null) {
-            StockLot lot = stockLotRepository.findById(stockLotId)
+            StockLot lot = stockLotRepository.findByIdForUpdate(stockLotId)
                     .orElseThrow(() -> new DomainException("STOCK_LOT_NOT_FOUND", HttpStatus.NOT_FOUND, "Stock lot not found"));
-            if (!lot.getProduct().getId().equals(product.getId()) || !lot.getBranch().getId().equals(branch.getId())) {
-                throw new DomainException("STOCK_LOT_MISMATCH", HttpStatus.BAD_REQUEST,
-                        "Stock lot does not belong to the specified product and branch");
-            }
+            validateLotBelongsToProductAndBranch(lot, product, branch);
+            ensureLotIsActive(lot);
             if (lot.getQuantityAvailable().compareTo(positiveQuantity) < 0) {
                 throw new DomainException("INSUFFICIENT_STOCK", HttpStatus.CONFLICT,
                         "Stock lot has insufficient available quantity");
@@ -270,10 +271,12 @@ public class InventoryService {
     /** Returns paginated stock movements with optional filters. */
     @Transactional(readOnly = true)
     public Page<StockMovementDto> listMovements(StockMovementType type, Long productId, Long branchId,
-                                                LocalDate from, LocalDate to, Pageable pageable) {
+                                                String search, LocalDate from, LocalDate to, Pageable pageable) {
         OffsetDateTime fromDate = from != null ? from.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime() : null;
         OffsetDateTime toDate = to != null ? to.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC) : null;
-        return stockMovementRepository.findAll(movementSearchSpec(type, productId, branchId, fromDate, toDate), pageable)
+        String searchPattern = buildSearchPattern(search);
+        return stockMovementRepository
+                .findAll(movementSearchSpec(type, productId, branchId, searchPattern, fromDate, toDate), mapMovementSort(pageable))
                 .map(this::toMovementDto);
     }
 
@@ -284,7 +287,8 @@ public class InventoryService {
      * when the date parameter is absent, so only active filters are added.
      */
     private Specification<StockMovement> movementSearchSpec(StockMovementType type, Long productId, Long branchId,
-                                                            OffsetDateTime fromDate, OffsetDateTime toDate) {
+                                                            String searchPattern, OffsetDateTime fromDate,
+                                                            OffsetDateTime toDate) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (type != null) {
@@ -296,6 +300,9 @@ public class InventoryService {
             if (branchId != null) {
                 predicates.add(criteriaBuilder.equal(root.get("branch").get("id"), branchId));
             }
+            if (searchPattern != null) {
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("product").get("name")), searchPattern));
+            }
             if (fromDate != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
             }
@@ -304,6 +311,35 @@ public class InventoryService {
             }
             return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
         };
+    }
+
+    /** Returns true when the movement type can only represent stock decreases. */
+    private boolean typeRequiresNegativeQuantity(StockMovementType type) {
+        return type == StockMovementType.WASTE || type == StockMovementType.INTERNAL_CONSUMPTION;
+    }
+
+    /** Verifies that a manually selected lot belongs to the requested product and branch. */
+    private void validateLotBelongsToProductAndBranch(StockLot lot, Product product, Branch branch) {
+        if (!lot.getProduct().getId().equals(product.getId()) || !lot.getBranch().getId().equals(branch.getId())) {
+            throw new DomainException("STOCK_LOT_MISMATCH", HttpStatus.BAD_REQUEST,
+                    "Stock lot does not belong to the specified product and branch");
+        }
+    }
+
+    /** Prevents stock changes on cancelled lots while allowing depleted lots to be reactivated by positive adjustments. */
+    private void ensureLotIsNotCancelled(StockLot lot) {
+        if (lot.getStatus() == StockLotStatus.CANCELLED) {
+            throw new DomainException("STOCK_LOT_NOT_ACTIVE", HttpStatus.CONFLICT,
+                    "Cancelled stock lots cannot be adjusted");
+        }
+    }
+
+    /** Ensures a lot can be used as a source for stock decreases. */
+    private void ensureLotIsActive(StockLot lot) {
+        if (lot.getStatus() != StockLotStatus.ACTIVE) {
+            throw new DomainException("STOCK_LOT_NOT_ACTIVE", HttpStatus.CONFLICT,
+                    "Only active stock lots can be decreased");
+        }
     }
 
     /** Calculates available stock from stock_lots without using a denormalized cache. */
@@ -397,6 +433,27 @@ public class InventoryService {
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mappedSort);
     }
 
+    /** Maps frontend sort field names to entity paths used by the movement query. */
+    private Pageable mapMovementSort(Pageable pageable) {
+        if (pageable.getSort().isUnsorted()) {
+            return pageable;
+        }
+        Sort mappedSort = Sort.unsorted();
+        for (Sort.Order order : pageable.getSort()) {
+            String property = switch (order.getProperty()) {
+                case "productName" -> "product.name";
+                case "branchName" -> "branch.name";
+                case "type", "createdAt", "quantity", "reason" -> order.getProperty();
+                default -> null;
+            };
+            if (property == null) {
+                return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+            }
+            mappedSort = mappedSort.and(Sort.by(new Sort.Order(order.getDirection(), property)));
+        }
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mappedSort);
+    }
+
     /** Maps frontend sort field names to entity paths used by the stock lot query. */
     private Pageable mapSort(Pageable pageable) {
         if (pageable.getSort().isUnsorted()) {
@@ -447,6 +504,6 @@ public class InventoryService {
         if (value == null || value.isBlank()) {
             return null;
         }
-        return "%" + value.trim() + "%";
+        return "%" + value.trim().toLowerCase() + "%";
     }
 }

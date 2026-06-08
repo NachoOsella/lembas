@@ -38,6 +38,7 @@ export interface ProductSummaryFilters {
 
 /** Filters accepted by the stock movements list endpoint. */
 export interface MovementFilters {
+  readonly search?: string;
   readonly type?: string;
   readonly productId?: number | null;
   readonly branchId?: number | null;
@@ -123,6 +124,9 @@ export class InventoryService {
       .set('size', filters.size ?? 10)
       .set('sort', filters.sort ?? 'createdAt,desc');
 
+    if (filters.search) {
+      params = params.set('search', filters.search);
+    }
     if (filters.type) {
       params = params.set('type', filters.type);
     }

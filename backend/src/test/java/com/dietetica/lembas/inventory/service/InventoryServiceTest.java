@@ -417,10 +417,11 @@ class InventoryServiceTest {
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
         when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
-        when(stockLotRepository.findById(1L)).thenReturn(Optional.of(lot));
+        when(stockLotRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(lot));
 
         inventoryService.adjustStock(request);
 
+        verify(stockLotRepository).findByIdForUpdate(1L);
         assertThat(lot.getQuantityAvailable()).isEqualByComparingTo("13");
         ArgumentCaptor<StockMovement> captor = ArgumentCaptor.forClass(StockMovement.class);
         verify(stockMovementRepository).save(captor.capture());
@@ -440,16 +441,56 @@ class InventoryServiceTest {
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
         when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
-        when(stockLotRepository.findById(1L)).thenReturn(Optional.of(lot));
+        when(stockLotRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(lot));
 
         inventoryService.adjustStock(request);
 
+        verify(stockLotRepository).findByIdForUpdate(1L);
         assertThat(lot.getQuantityAvailable()).isEqualByComparingTo("6");
         assertThat(lot.getStatus()).isEqualTo(StockLotStatus.ACTIVE);
         ArgumentCaptor<StockMovement> captor = ArgumentCaptor.forClass(StockMovement.class);
         verify(stockMovementRepository).save(captor.capture());
         assertThat(captor.getValue().getType()).isEqualTo(StockMovementType.INTERNAL_CONSUMPTION);
         assertThat(captor.getValue().getQuantity()).isEqualByComparingTo("-4");
+    }
+
+    @Test
+    void adjustStock_positive_specificDepletedLot_reactivatesThatLot() {
+        Product product = product(10L, "Granola");
+        Branch branch = branch(20L, "Centro", true);
+        User user = user(100L);
+        StockLot lot = lot(1L, "0.000");
+        lot.setProduct(product);
+        lot.setBranch(branch);
+        lot.setStatus(StockLotStatus.DEPLETED);
+        StockAdjustmentRequest request = new StockAdjustmentRequest(
+                10L, 20L, BigDecimal.valueOf(2), "Reconteo", StockMovementType.MANUAL_ADJUSTMENT, 1L);
+        when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
+        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(securityContextHelper.getCurrentUser()).thenReturn(user);
+        when(stockLotRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(lot));
+
+        inventoryService.adjustStock(request);
+
+        assertThat(lot.getQuantityAvailable()).isEqualByComparingTo("2");
+        assertThat(lot.getStatus()).isEqualTo(StockLotStatus.ACTIVE);
+    }
+
+    @Test
+    void adjustStock_positiveWaste_throwsInvalidSign() {
+        Product product = product(10L, "Granola");
+        Branch branch = branch(20L, "Centro", true);
+        StockAdjustmentRequest request = new StockAdjustmentRequest(
+                10L, 20L, BigDecimal.valueOf(2), "Merma", StockMovementType.WASTE, null);
+        when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
+        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+
+        assertThatThrownBy(() -> inventoryService.adjustStock(request))
+                .isInstanceOf(DomainException.class)
+                .extracting("code")
+                .isEqualTo("INVALID_ADJUSTMENT_SIGN");
+
+        verify(stockMovementRepository, never()).save(any());
     }
 
     /** Creates a product with the minimum fields required by the service. */

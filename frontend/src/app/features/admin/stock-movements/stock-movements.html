@@ -36,38 +36,42 @@
         <app-search-bar
           placeholder="Buscar producto..."
           [value]="searchTerm()"
-          (search)="searchTerm.set($event); loadMovements()"
+          (search)="onSearch($event)"
+          (clear)="onSearch('')"
         />
         <app-select
           [value]="typeFilter()"
-          (valueChange)="typeFilter.set($event); loadMovements()"
+          (valueChange)="typeFilter.set($event); onFilterChange()"
           [options]="typeFilterOptions()"
           placeholder="Todos los tipos"
         />
         <app-select
           [value]="branchFilter()"
-          (valueChange)="branchFilter.set($event); loadMovements()"
+          (valueChange)="branchFilter.set($event); onFilterChange()"
           [options]="branchOptions()"
           placeholder="Todas las sucursales"
+          [showClear]="true"
         />
       </div>
     </ng-template>
 
-    <ng-template #row let-item>
-      <td>
-        <span class="movement-type-badge" [class]="'movement-type-badge--' + typeSeverity(item.type)">
-          {{ typeLabel(item.type) }}
-        </span>
-      </td>
-      <td>{{ item.createdAt | date:'dd/MM/yy HH:mm' }}</td>
-      <td>{{ item.productName }}</td>
-      <td>{{ item.branchName }}</td>
-      <td>
-        <span class="movement-quantity" [class]="item.quantity >= 0 ? 'movement-quantity--positive' : 'movement-quantity--negative'">
-          {{ item.quantity >= 0 ? '+' : '' }}{{ item.quantity | number:'1.0-3' }}
-        </span>
-      </td>
-      <td>{{ item.reason ?? '-' }}</td>
+    <ng-template #body let-item>
+      <tr>
+        <td>
+          <span class="movement-type-badge" [class]="'movement-type-badge--' + typeSeverity(item.type)">
+            {{ typeLabel(item.type) }}
+          </span>
+        </td>
+        <td>{{ item.createdAt | date:'dd/MM/yy HH:mm' }}</td>
+        <td>{{ item.productName }}</td>
+        <td>{{ item.branchName }}</td>
+        <td>
+          <span class="movement-quantity" [class]="item.quantity >= 0 ? 'movement-quantity--positive' : 'movement-quantity--negative'">
+            {{ item.quantity >= 0 ? '+' : '' }}{{ item.quantity | number:'1.0-3' }}
+          </span>
+        </td>
+        <td>{{ item.reason ?? '-' }}</td>
+      </tr>
     </ng-template>
   </app-data-table>
 </div>

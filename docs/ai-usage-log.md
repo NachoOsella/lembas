@@ -2,6 +2,8 @@
 
 ## 2026-06-08
 
+- `backend/src/main/java/com/dietetica/lembas/inventory/`, `frontend/src/app/features/admin/{inventory,stock-movements}/`, `docs/05-api/` -- corregida revision S2-US04: bloqueo pesimista en ajustes por lote, reactivacion de lotes depleted, validacion de signo para mermas/consumo interno, busqueda y ordenamiento de movimientos, template custom de tabla y documentacion de errores.
+
 - `backend/src/main/java/com/dietetica/lembas/inventory/`, `backend/src/test/java/com/dietetica/lembas/inventory/repository/StockMovementRepositoryTest.java` -- corregido 500 en listado de movimientos usando busqueda dinamica por Specification para evitar parametros temporales nulos en PostgreSQL; agregado test JPA con Testcontainers.
 
 - `frontend/src/app/features/admin/stock-adjustment/` (delete), `frontend/src/app/features/admin/inventory/` (modify) -- movido formulario de ajuste de stock desde pagina standalone a modal dentro del inventory component; eliminado StockAdjustmentPageComponent, ruta y nav item.

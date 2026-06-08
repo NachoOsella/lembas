@@ -8,6 +8,7 @@ import com.dietetica.lembas.inventory.dto.DeductionPlan;
 import com.dietetica.lembas.inventory.dto.DeductionPlan.DeductionEntry;
 import com.dietetica.lembas.inventory.dto.StockDeductionRequest;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
+import com.dietetica.lembas.inventory.dto.StockMovementDto;
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import com.dietetica.lembas.inventory.service.InventoryService;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
@@ -28,11 +29,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -210,6 +213,27 @@ class StockLotAdminControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void Should_forwardSearch_when_adminListsMovements() throws Exception {
+        StockMovementDto movement = new StockMovementDto(
+                1L, 2L, 10L, "Granola", 20L, "Centro", "MANUAL_ADJUSTMENT",
+                BigDecimal.ONE, BigDecimal.valueOf(500), "Reconteo", 100L, OffsetDateTime.now());
+        when(inventoryService.listMovements(eq(StockMovementType.MANUAL_ADJUSTMENT), isNull(), eq(20L),
+                eq("granola"), any(), any(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(movement), PageRequest.of(0, 10), 1));
+
+        mockMvc.perform(get("/api/admin/stock/movements")
+                        .param("type", "MANUAL_ADJUSTMENT")
+                        .param("branchId", "20")
+                        .param("search", "granola"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].productName").value("Granola"));
+
+        verify(inventoryService).listMovements(eq(StockMovementType.MANUAL_ADJUSTMENT), isNull(), eq(20L),
+                eq("granola"), any(), any(), any(Pageable.class));
     }
 
     /** Creates a stock lot response used by controller tests. */

@@ -93,7 +93,7 @@ GET    /api/admin/stock/lots?productId=&branchId=&expiringSoon=
 POST   /api/admin/stock/receipts     Request: { purchaseOrderId, invoiceNumber?, notes?, items: [{ purchaseOrderItemId, quantityReceived, unitCost, lotCode?, expirationDate? }] }
 POST   /api/admin/stock/deductions   Request: { productId, branchId, quantity, reason? }
 POST   /api/admin/stock/adjustments  Request: { productId, branchId, quantity, reason, stockLotId? }
-GET    /api/admin/stock/movements?productId=&branchId=&type=&from=&to=&page=&size=
+GET    /api/admin/stock/movements?search=&productId=&branchId=&type=&from=&to=&page=&size=
 ```
 
 Notes: supplier merchandise entry should use purchase receipts. Confirmed receipt items create lots and PURCHASE_ENTRY movements transactionally.

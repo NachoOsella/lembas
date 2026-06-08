@@ -14,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /** Repository for stock lot availability and FEFO queries. */
 public interface StockLotRepository extends JpaRepository<StockLot, Long> {
@@ -30,6 +31,11 @@ public interface StockLotRepository extends JpaRepository<StockLot, Long> {
             @Param("productId") Long productId,
             @Param("branchId") Long branchId
     );
+
+    /** Finds one lot and locks it for safe manual stock updates. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select l from StockLot l where l.id = :id")
+    Optional<StockLot> findByIdForUpdate(@Param("id") Long id);
 
     /** Lists positive-quantity lots in FEFO order and locks them for safe deduction. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
