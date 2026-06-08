@@ -66,6 +66,10 @@ Services may throw `DomainException` directly when a dedicated exception subclas
 | PURCHASE_ORDER_INVALID_STATE | Suppliers | 409 | Purchase order transition or edit is not allowed in current state |
 | PURCHASE_ORDER_EMPTY | Suppliers | 400 | Purchase order has no items |
 | PURCHASE_ORDER_SUPPLIER_PRODUCT_INVALID | Suppliers | 409 | Selected product is not associated with the selected supplier |
+| PURCHASE_RECEIPT_INVALID_STATE | Suppliers | 409 | Purchase order is not sent or partially received |
+| PURCHASE_RECEIPT_ITEM_INVALID | Suppliers | 400 | Receipt item does not belong to the selected purchase order |
+| PURCHASE_RECEIPT_ITEM_DUPLICATED | Suppliers | 400 | Same purchase-order item was sent more than once in a receipt |
+| PURCHASE_RECEIPT_OVER_RECEIVED | Suppliers | 409 | Received quantity exceeds ordered quantity |
 | CATEGORY_NOT_FOUND | Catalog | 404 | Category does not exist |
 | PARENT_NOT_FOUND | Catalog | 404 | Parent category does not exist |
 | PARENT_INVALID | Catalog | 409 | Category parent assignment is invalid |

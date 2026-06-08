@@ -90,7 +90,7 @@ DELETE /api/admin/categories/{id}
 
 ```
 GET    /api/admin/stock/lots?productId=&branchId=&expiringSoon=
-POST   /api/admin/stock/receipts     Request: { productId, branchId, quantity, lotCode?, expirationDate?, unitCost? }
+POST   /api/admin/stock/receipts     Request: { purchaseOrderId, invoiceNumber?, notes?, items: [{ purchaseOrderItemId, quantityReceived, unitCost, lotCode?, expirationDate? }] }
 POST   /api/admin/stock/adjustments  Request: { productId, branchId, quantity, reason, stockLotId? }
 GET    /api/admin/stock/movements?productId=&branchId=&type=&from=&to=&page=&size=
 ```
