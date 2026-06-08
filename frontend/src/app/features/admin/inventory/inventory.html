@@ -1,1 +1,183 @@
-<p>inventory works!</p>
+<div class="admin-page inventory-page">
+  <app-page-header
+    eyebrow="Inventario"
+    title="Stock por lotes"
+    description="Consulta el stock disponible por lote, sucursal y producto. Los lotes se consumen en orden FEFO: primero vencidos, ultimo los que no tienen vencimiento."
+  >
+    <app-button icon="pi pi-plus" (click)="openCreateDialog()">Nuevo lote</app-button>
+  </app-page-header>
+
+  @if (error()) {
+    <app-error-alert variant="inline" [title]="error()" message="">
+      <app-button variant="secondary" size="sm" (click)="loadLots()">Reintentar</app-button>
+    </app-error-alert>
+  }
+
+  <app-data-table
+    [data]="lots()"
+    [columns]="columns"
+    [loading]="loading()"
+    [sortable]="true"
+    [paginated]="true"
+    [lazy]="true"
+    [totalRecords]="totalRecords()"
+    [first]="first()"
+    [rows]="pageSize()"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    (pageChange)="onPageChange($event)"
+    (sortChange)="onSort($event)"
+    emptyTitle="No hay lotes de stock"
+    emptyDescription="Registra una recepcion de mercaderia para que aparezcan los primeros lotes."
+    emptyActionLabel="Ir a recepciones"
+    (emptyAction)="navigateToReceipts()"
+  >
+    <ng-template #toolbar>
+      <div class="table-toolbar__info">
+        <p class="table-toolbar__kicker">Stock por lotes</p>
+        <h2 class="table-toolbar__title">Lotes activos</h2>
+      </div>
+      <div class="table-toolbar__actions inventory-toolbar">
+        <app-product-selector
+          [selected]="selectedProduct()"
+          (selectedChange)="selectedProduct.set($event); onFilterChange()"
+          [suggestions]="productSuggestions()"
+          placeholder="Buscar producto..."
+          (search)="searchProducts($event)"
+        />
+        <app-select
+          [value]="selectedBranchId()"
+          (valueChange)="selectedBranchId.set($event); onFilterChange()"
+          [options]="branchOptions()"
+          placeholder="Sucursal"
+          [showClear]="true"
+        />
+        <app-toggle-switch
+          [(checked)]="expiringSoon"
+          (checkedChange)="onFilterChange()"
+          [ariaLabel]="'Filtrar solo lotes proximos a vencer'"
+        />
+        <label class="inventory-expiring-label">Prox. a vencer</label>
+      </div>
+    </ng-template>
+
+    <ng-template #body let-lot>
+      <tr>
+        <td>
+          <strong>{{ lot.productName }}</strong>
+        </td>
+        <td>{{ lot.branchName }}</td>
+        <td class="inventory-qty">{{ formatQuantity(lot.quantityAvailable) }}</td>
+        <td class="inventory-qty">{{ formatQuantity(lot.initialQuantity) }}</td>
+        <td>{{ lot.lotCode || '-' }}</td>
+        <td>{{ formatDate(lot.expirationDate) }}</td>
+        <td>{{ formatPrice(lot.unitCost) }}</td>
+        <td>
+          <app-status-badge [status]="lot.status" [config]="statusBadges" />
+        </td>
+      </tr>
+    </ng-template>
+  </app-data-table>
+</div>
+
+<app-modal
+  [(visible)]="dialogVisible"
+  title="Nuevo lote de stock"
+  [width]="'min(38rem, 92vw)'"
+>
+  <form class="inventory-form" (ngSubmit)="saveLot()">
+    <app-form-section
+      [index]="1"
+      title="Datos del lote"
+      description="Registra stock directamente. Para ingresos habituales usa Recepciones de mercaderia."
+    >
+      <div class="inventory-form__grid">
+        <div class="inventory-form__field inventory-form__field--wide">
+          <label class="inventory-form__label">
+            Producto <span class="inventory-form__required" aria-hidden="true">*</span>
+          </label>
+          <app-product-selector
+            [selected]="newProduct()"
+            (selectedChange)="newProduct.set($event)"
+            [suggestions]="newProductSuggestions()"
+            placeholder="Buscar producto por nombre o codigo..."
+            (search)="searchNewProduct($event)"
+          />
+        </div>
+
+        <div class="inventory-form__field inventory-form__field--wide">
+          <label class="inventory-form__label">
+            Sucursal <span class="inventory-form__required" aria-hidden="true">*</span>
+          </label>
+          <app-select
+            [value]="newBranchId()"
+            (valueChange)="newBranchId.set($event)"
+            [options]="branchOptions()"
+            placeholder="Seleccionar sucursal"
+          />
+        </div>
+
+        <div class="inventory-form__field">
+          <label class="inventory-form__label">
+            Cantidad <span class="inventory-form__required" aria-hidden="true">*</span>
+          </label>
+          <p-inputnumber
+            [(ngModel)]="newQuantity"
+            name="quantity"
+            [min]="0"
+            [maxFractionDigits]="3"
+            placeholder="0"
+            class="inventory-form__inputnumber"
+          />
+        </div>
+
+        <div class="inventory-form__field">
+          <label class="inventory-form__label">Costo unitario</label>
+          <p-inputnumber
+            [(ngModel)]="newCostPrice"
+            name="costPrice"
+            mode="currency"
+            currency="ARS"
+            locale="es-AR"
+            [min]="0"
+            [maxFractionDigits]="2"
+            class="inventory-form__inputnumber"
+          />
+        </div>
+
+        <div class="inventory-form__field">
+          <app-form-field
+            label="Codigo de lote"
+            [value]="newLotCode()"
+            (valueChange)="newLotCode.set($event)"
+            placeholder="Lote del proveedor"
+            testId="lot-code"
+          />
+        </div>
+
+        <div class="inventory-form__field">
+          <label class="inventory-form__label">Fecha de vencimiento</label>
+          <p-datepicker
+            [(ngModel)]="newExpirationDate"
+            name="expirationDate"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [minDate]="minDate()"
+            placeholder="Seleccionar fecha"
+            class="inventory-form__datepicker"
+          />
+        </div>
+      </div>
+    </app-form-section>
+
+    @if (error()) {
+      <app-error-alert variant="inline" [title]="error()" message="" />
+    }
+
+    <div class="inventory-form__actions" modalFooter>
+      <app-button variant="secondary" type="button" (click)="dialogVisible.set(false)">
+        Cancelar
+      </app-button>
+      <app-button type="submit" [loading]="saving()">Guardar lote</app-button>
+    </div>
+  </form>
+</app-modal>

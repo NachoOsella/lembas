@@ -1,0 +1,81 @@
+/* ------------------------------------------------------------------ */
+/*  Inventory page — admin stock lot listing and manual lot creation  */
+/* ------------------------------------------------------------------ */
+
+/* --- Toolbar ------------------------------------------------------ */
+
+.inventory-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.inventory-toolbar app-product-selector {
+  min-width: 16rem;
+  flex: 1 1 16rem;
+}
+
+.inventory-toolbar app-select {
+  min-width: 12rem;
+}
+
+.inventory-expiring-label {
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color);
+  white-space: nowrap;
+}
+
+/* --- Quantity cells ----------------------------------------------- */
+
+.inventory-qty {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* --- Modal form --------------------------------------------------- */
+
+.inventory-form__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.5rem;
+}
+
+.inventory-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.inventory-form__field--wide {
+  grid-column: 1 / -1;
+}
+
+.inventory-form__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.inventory-form__required {
+  color: var(--p-red-500);
+}
+
+.inventory-form__inputnumber,
+.inventory-form__datepicker {
+  width: 100%;
+}
+
+.inventory-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+/* --- Error alert inside modal ------------------------------------- */
+
+.inventory-form .app-error-alert {
+  margin-top: 1rem;
+}
