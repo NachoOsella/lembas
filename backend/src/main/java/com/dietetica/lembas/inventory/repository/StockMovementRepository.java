@@ -4,6 +4,7 @@ import com.dietetica.lembas.inventory.model.StockMovement;
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,10 +29,9 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, Lo
      * @param pageable  pagination and sort
      * @return matching movements with eagerly fetched product and branch
      */
+    @EntityGraph(attributePaths = {"product", "branch", "stockLot"})
     @Query("""
             select m from StockMovement m
-            join fetch m.product p
-            join fetch m.branch b
             where (:type is null or m.type = :type)
               and (:productId is null or m.product.id = :productId)
               and (:branchId is null or m.branch.id = :branchId)
