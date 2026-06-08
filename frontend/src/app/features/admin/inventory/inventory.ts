@@ -2,67 +2,49 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
-import { InputNumber } from 'primeng/inputnumber';
 import { DatePicker } from 'primeng/datepicker';
+import { InputNumber } from 'primeng/inputnumber';
 
 import { InventoryService } from '../../../core/services/inventory';
 import { ProductService } from '../../../core/services/product';
 import { UserService } from '../../../core/services/user';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { getApiError } from '../../../shared/models/api-error';
-import { StockLotDto } from '../../../shared/models/inventory';
+import { StockProductSummaryDto } from '../../../shared/models/inventory';
 import { ProductSummary } from '../../../shared/models/product';
 import { Branch } from '../../../shared/models/user';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
 import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppFormField } from '../../../shared/components/app-form-field/app-form-field';
 import { AppModal } from '../../../shared/components/app-modal/app-modal';
+import { AppControlField } from '../../../shared/components/app-control-field/app-control-field';
+import { AppFormField } from '../../../shared/components/app-form-field/app-form-field';
 import { AppProductSelector } from '../../../shared/components/app-product-selector/app-product-selector';
 import { AppSearchBar } from '../../../shared/components/app-search-bar/app-search-bar';
 import { AppSelect } from '../../../shared/components/app-select/app-select';
 import { AppToggleSwitch } from '../../../shared/components/app-toggle-switch/app-toggle-switch';
-import { StatusBadge, StatusBadgeConfig } from '../../../shared/components/status-badge/status-badge';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { FormSection } from '../../../shared/components/form-section/form-section';
 
-/** Fields that the backend supports for server-side sorting on the stock lots endpoint. */
-const STOCK_LOT_SORT_FIELDS = new Set([
-  'productName',
-  'branchName',
-  'initialQuantity',
-  'quantityAvailable',
-  'expirationDate',
-  'unitCost',
-  'status',
-]);
-
-/** Status badge visual configuration for stock lot lifecycle states. */
-const STOCK_LOT_STATUS_BADGES: Record<string, StatusBadgeConfig> = {
-  ACTIVE: { label: 'Activo', tone: 'success', icon: 'pi pi-check-circle' },
-  DEPLETED: { label: 'Agotado', tone: 'neutral', icon: 'pi pi-stop-circle' },
-  CANCELLED: { label: 'Cancelado', tone: 'danger', icon: 'pi pi-times-circle' },
-};
-
-/** Admin page for browsing stock lots, filtering by product/branch/expiration, and creating manual lots. */
+/** Admin page showing aggregated stock per product and branch. */
 @Component({
   selector: 'app-inventory',
   imports: [
     AppButton,
     AppDataTable,
+    AppControlField,
     AppFormField,
     AppModal,
+    DatePicker,
+    FormsModule,
+    InputNumber,
     AppPageHeader,
     AppProductSelector,
     AppSearchBar,
     AppSelect,
     AppToggleSwitch,
-    DatePicker,
     ErrorAlert,
     FormSection,
-    FormsModule,
-    InputNumber,
-    StatusBadge,
   ],
   templateUrl: './inventory.html',
   styleUrl: './inventory.css',
@@ -76,7 +58,7 @@ export class Inventory {
   private readonly errorMapping = inject(ErrorMappingService);
 
   // -- Table data -------------------------------------------------------------
-  protected readonly lots = signal<StockLotDto[]>([]);
+  protected readonly products = signal<StockProductSummaryDto[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal('');
 
@@ -109,42 +91,35 @@ export class Inventory {
     this.branches().map((b) => ({ label: b.name, value: b.id })),
   );
 
-  /** Minimum selectable date for date pickers (today). */
   protected readonly minDate = computed(() => new Date());
 
   protected readonly columns: ColumnDef[] = [
     { field: 'productName', header: 'Producto', sortable: true },
     { field: 'branchName', header: 'Sucursal', sortable: true },
-    { field: 'quantityAvailable', header: 'Disponible', sortable: true },
-    { field: 'initialQuantity', header: 'Recibido', sortable: true },
-    { field: 'lotCode', header: 'Lote', sortable: false },
-    { field: 'expirationDate', header: 'Vencimiento', sortable: true },
-    { field: 'unitCost', header: 'Costo unit.', sortable: true },
-    { field: 'status', header: 'Estado', sortable: true },
+    { field: 'totalAvailable', header: 'Total disponible', sortable: false, width: '9rem' },
+    { field: 'nearestExpirationDate', header: 'Proximo vencimiento', sortable: false },
+    { field: 'actions', header: 'Acciones', sortable: false, width: '7rem' },
   ];
-
-  protected readonly statusBadges = STOCK_LOT_STATUS_BADGES;
 
   constructor() {
     this.userService.listBranches().subscribe({
       next: (branches) => this.branches.set(branches),
       error: () => this.branches.set([]),
     });
-    this.loadLots();
+    this.loadProducts();
   }
 
   // ---------------------------------------------------------------------------
   // Data loading
   // ---------------------------------------------------------------------------
 
-  /** Loads the stock lots page with current filters, pagination, and sort. */
-  protected loadLots(): void {
+  protected loadProducts(): void {
     this.loading.set(true);
     this.error.set('');
     const page = Math.floor(this.first() / this.pageSize());
-    const sort = this.buildSortParam(this.sortField(), this.sortOrder(), 'expirationDate');
+    const sort = this.buildSortParam(this.sortField(), this.sortOrder(), 'productName');
     this.inventoryService
-      .listLots({
+      .listProductSummaries({
         search: this.search(),
         branchId: this.selectedBranchId(),
         expiringSoon: this.expiringSoon(),
@@ -154,7 +129,7 @@ export class Inventory {
       })
       .subscribe({
         next: (response) => {
-          this.lots.set(response.content);
+          this.products.set(response.content);
           this.totalRecords.set(response.totalElements);
           this.loading.set(false);
         },
@@ -169,20 +144,16 @@ export class Inventory {
   // Filter handlers
   // ---------------------------------------------------------------------------
 
-  /** Called when any filter changes: resets to first page and reloads. */
   protected onFilterChange(): void {
     this.first.set(0);
-    this.loadLots();
+    this.loadProducts();
   }
 
-  /** Applies search filter, resetting to first page. */
   protected onSearch(query: string): void {
     this.search.set(query);
-    this.first.set(0);
-    this.loadLots();
+    this.onFilterChange();
   }
 
-  /** Clears search filter, resetting to first page. */
   protected clearSearch(): void {
     this.onSearch('');
   }
@@ -191,34 +162,43 @@ export class Inventory {
   // Pagination handlers
   // ---------------------------------------------------------------------------
 
-  /** Handles page change from the data table. */
   protected onPageChange(event: { first: number; rows: number }): void {
     this.first.set(event.first);
     this.pageSize.set(event.rows);
-    this.loadLots();
+    this.loadProducts();
   }
 
-  /** Handles sort change from the data table. */
   protected onSort(event: { field: string; order: number }): void {
     this.first.set(0);
-
-    if (!STOCK_LOT_SORT_FIELDS.has(event.field) || ![1, -1].includes(event.order)) {
+    if (![1, -1].includes(event.order)) {
       this.sortField.set(undefined);
       this.sortOrder.set(undefined);
-      this.loadLots();
+      this.loadProducts();
       return;
     }
-
     this.sortField.set(event.field);
     this.sortOrder.set(event.order);
-    this.loadLots();
+    this.loadProducts();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Navigation
+  // ---------------------------------------------------------------------------
+
+  protected viewLots(item: StockProductSummaryDto): void {
+    this.router.navigate(['/admin/inventory/product', item.productId, 'lots'], {
+      queryParams: { branchId: item.branchId, productName: item.productName, branchName: item.branchName },
+    });
+  }
+
+  protected navigateToReceipts(): void {
+    this.router.navigate(['/admin/receips']);
   }
 
   // ---------------------------------------------------------------------------
   // Create lot dialog
   // ---------------------------------------------------------------------------
 
-  /** Opens the dialog to manually create a stock lot. */
   protected openCreateDialog(): void {
     this.newProduct.set(null);
     this.newBranchId.set(null);
@@ -230,7 +210,6 @@ export class Inventory {
     this.dialogVisible.set(true);
   }
 
-  /** Searches products for the create-lot dialog autocomplete. */
   protected searchNewProduct(query: string): void {
     if (query.length < 2) {
       this.newProductSuggestions.set([]);
@@ -242,7 +221,6 @@ export class Inventory {
     });
   }
 
-  /** Persists a new stock lot via the direct entry endpoint. */
   protected saveLot(): void {
     const product = this.newProduct();
     const branchId = this.newBranchId();
@@ -271,7 +249,7 @@ export class Inventory {
           this.saving.set(false);
           this.dialogVisible.set(false);
           this.messageService.add({ severity: 'success', summary: 'Lote creado', detail: 'El lote de stock fue registrado correctamente.' });
-          this.loadLots();
+          this.loadProducts();
         },
         error: (err) => {
           this.saving.set(false);
@@ -280,26 +258,14 @@ export class Inventory {
       });
   }
 
-  /** Navigates to the purchase receipts page. */
-  protected navigateToReceipts(): void {
-    this.router.navigate(['/admin/receips']);
-  }
-
   // ---------------------------------------------------------------------------
   // Formatting helpers
   // ---------------------------------------------------------------------------
 
-  /** Formats a decimal quantity for display. */
   protected formatQuantity(value: number): string {
     return Number(value).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
   }
 
-  /** Formats a price value for Argentina pesos. */
-  protected formatPrice(value: number): string {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(value);
-  }
-
-  /** Formats a date string for display. */
   protected formatDate(value: string | null | undefined): string {
     if (!value) return 'Sin venc.';
     return new Date(value).toLocaleDateString('es-AR');
@@ -309,7 +275,6 @@ export class Inventory {
   // Internal helpers
   // ---------------------------------------------------------------------------
 
-  /** Builds a Spring Data sort param string from field and order signals. */
   private buildSortParam(field: string | undefined, order: number | undefined, defaultField: string): string | undefined {
     if (!field || ![1, -1].includes(order ?? 0)) {
       return `${defaultField},asc`;
@@ -317,18 +282,15 @@ export class Inventory {
     return `${field},${order === 1 ? 'asc' : 'desc'}`;
   }
 
-  /** Maps backend errors to user-facing messages. */
   private messageForError(error: unknown, fallback: string): string {
     const apiError = getApiError(error);
     return apiError ? this.errorMapping.getMessage(apiError.code, apiError.message) : fallback;
   }
 
-  /** Converts empty text fields to null for API requests. */
   private blankToNull(value: string): string | null {
     return value.trim() ? value.trim() : null;
   }
 
-  /** Converts a Date to an ISO date string (yyyy-MM-dd). */
   private toDateString(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');

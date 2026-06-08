@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Inventory page — admin stock lot listing and manual lot creation  */
+/*  Inventory page — admin aggregated stock view                      */
 /* ------------------------------------------------------------------ */
 
 /* --- Toolbar ------------------------------------------------------ */
@@ -12,7 +12,7 @@
   width: min(100%, 46rem);
 }
 
-.inventory-toolbar app-product-selector {
+.inventory-toolbar app-search-bar {
   min-width: 0;
 }
 
@@ -41,48 +41,64 @@
   font-weight: 600;
 }
 
-/* --- Modal form --------------------------------------------------- */
+/* --- Actions column ----------------------------------------------- */
 
-.inventory-form__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem 1.5rem;
+.table-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  align-items: center;
+  justify-content: flex-end;
 }
 
-.inventory-form__field {
+/* --- Modal form --------------------------------------------------- */
+
+.supplier-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.supplier-form__field {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
+  min-width: 0;
 }
 
-.inventory-form__field--wide {
+.supplier-form__field--wide {
   grid-column: 1 / -1;
 }
 
-.inventory-form__label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--p-text-color);
+.supplier-form__label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.4;
 }
 
-.inventory-form__required {
-  color: var(--p-red-500);
+.supplier-form__required {
+  color: var(--color-red);
+  margin-left: 0.125rem;
 }
 
-.inventory-form__inputnumber,
-.inventory-form__datepicker {
+/* Ensure PrimeNG components fill their containers */
+:host ::ng-deep .supplier-form .p-select,
+:host ::ng-deep .supplier-form .p-inputnumber,
+:host ::ng-deep .supplier-form .p-inputnumber-input {
   width: 100%;
 }
 
-.inventory-form__actions {
+/* Form actions footer */
+.supplier-form__actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  padding-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: 0.25rem;
 }
 
-/* --- Error alert inside modal ------------------------------------- */
-
-.inventory-form .app-error-alert {
+.supplier-form .app-error-alert {
   margin-top: 1rem;
 }

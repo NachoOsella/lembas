@@ -8,6 +8,8 @@ import {
   PurchaseReceiptRequest,
   StockLotDto,
   StockLotPage,
+  StockProductSummaryDto,
+  StockProductSummaryPage,
 } from '../../shared/models/inventory';
 
 /** Filters accepted by the admin stock lot endpoint. */
@@ -21,11 +23,22 @@ export interface StockLotFilters {
   readonly sort?: string;
 }
 
+/** Filters accepted by the aggregated product summary endpoint. */
+export interface ProductSummaryFilters {
+  readonly search?: string;
+  readonly branchId?: number | null;
+  readonly expiringSoon?: boolean;
+  readonly page?: number;
+  readonly size?: number;
+  readonly sort?: string;
+}
+
 /** Provides admin inventory operations for stock lot entries and queries. */
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
   private readonly http = inject(HttpClient);
   private readonly stockLotsUrl = '/api/admin/stock/lots';
+  private readonly stockProductsUrl = '/api/admin/stock/products';
   private readonly purchaseReceiptsUrl = '/api/admin/stock/receipts';
 
   /** Returns a paginated list of stock lots matching the provided filters. */
@@ -54,6 +67,26 @@ export class InventoryService {
   /** Registers a new stock lot and returns the resulting product-branch stock total. */
   createStockLot(request: CreateStockLotRequest): Observable<StockLotDto> {
     return this.http.post<StockLotDto>(this.stockLotsUrl, request);
+  }
+
+  /** Returns aggregated stock summaries grouped by product and branch. */
+  listProductSummaries(filters: ProductSummaryFilters = {}): Observable<StockProductSummaryPage> {
+    let params = new HttpParams()
+      .set('page', filters.page ?? 0)
+      .set('size', filters.size ?? 10)
+      .set('sort', filters.sort ?? 'productName,asc');
+
+    if (filters.search) {
+      params = params.set('search', filters.search);
+    }
+    if (filters.branchId) {
+      params = params.set('branchId', filters.branchId);
+    }
+    if (filters.expiringSoon) {
+      params = params.set('expiringSoon', true);
+    }
+
+    return this.http.get<StockProductSummaryPage>(this.stockProductsUrl, { params });
   }
 
   /** Confirms a merchandise receipt and returns the generated stock lot summary. */

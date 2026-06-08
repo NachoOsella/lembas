@@ -11,41 +11,42 @@ import { UserService } from '../../../core/services/user';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { Inventory } from './inventory';
 
-function lot(id: number, productName: string, branchName: string, qty: string, status = 'ACTIVE') {
+function summary(productName: string, branchName: string, qty: string) {
   return {
-    id,
-    productId: id + 10,
+    productId: 10,
     productName,
-    branchId: id + 20,
+    branchId: 20,
     branchName,
-    initialQuantity: Number(qty),
-    quantityAvailable: Number(qty),
-    lotCode: 'L-' + id,
-    expirationDate: '2026-12-31',
-    costPrice: 500,
-    unitCost: 500,
-    status,
-    supplierId: null,
-    supplierProductId: null,
-    purchaseReceiptId: null,
-    purchaseReceiptItemId: null,
-    totalAvailableForProductBranch: null,
+    totalAvailable: Number(qty),
+    nearestExpirationDate: '2026-12-31',
+    activeLotCount: 2,
   };
 }
 
-const PAGE_EMPTY = { content: [], totalElements: 0, totalPages: 0, number: 0, size: 10, first: true, last: true, empty: true };
+const PAGE_EMPTY = {
+  content: [],
+  totalElements: 0,
+  totalPages: 0,
+  number: 0,
+  size: 10,
+  first: true,
+  last: true,
+  empty: true,
+};
 
-/** Unit tests for the Inventory admin stock lots page. */
 describe('Inventory', () => {
   let component: Inventory;
   let fixture: ComponentFixture<Inventory>;
-  let inventoryService: { listLots: ReturnType<typeof vi.fn>; createStockLot: ReturnType<typeof vi.fn> };
+  let inventoryService: {
+    listProductSummaries: ReturnType<typeof vi.fn>;
+    createStockLot: ReturnType<typeof vi.fn>;
+  };
   let userService: { listBranches: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     inventoryService = {
-      listLots: vi.fn().mockReturnValue(of(PAGE_EMPTY)),
-      createStockLot: vi.fn().mockReturnValue(of(lot(99, 'New', 'Centro', '10'))),
+      listProductSummaries: vi.fn().mockReturnValue(of(PAGE_EMPTY)),
+      createStockLot: vi.fn(),
     };
 
     userService = {
@@ -73,13 +74,13 @@ describe('Inventory', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
     expect(userService.listBranches).toHaveBeenCalled();
-    expect(inventoryService.listLots).toHaveBeenCalled();
+    expect(inventoryService.listProductSummaries).toHaveBeenCalled();
   });
 
-  it('should load lots on init', () => {
+  it('should load products on init', () => {
     const cmp = component as any;
     const page = {
-      content: [lot(1, 'Granola', 'Centro', '10.000')],
+      content: [summary('Granola', 'Centro', '25.500')],
       totalElements: 1,
       totalPages: 1,
       number: 0,
@@ -88,18 +89,18 @@ describe('Inventory', () => {
       last: true,
       empty: false,
     };
-    inventoryService.listLots.mockReturnValue(of(page));
-    cmp.loadLots();
+    inventoryService.listProductSummaries.mockReturnValue(of(page));
+    cmp.loadProducts();
 
-    expect(cmp.lots().length).toBe(1);
-    expect(cmp.lots()[0].productName).toBe('Granola');
+    expect(cmp.products().length).toBe(1);
+    expect(cmp.products()[0].productName).toBe('Granola');
     expect(cmp.totalRecords()).toBe(1);
   });
 
   it('should show error when API fails', () => {
     const cmp = component as any;
-    inventoryService.listLots.mockReturnValue(of(PAGE_EMPTY));
-    cmp.loadLots();
+    inventoryService.listProductSummaries.mockReturnValue(of(PAGE_EMPTY));
+    cmp.loadProducts();
     expect(cmp.error()).toBe('');
   });
 
@@ -108,8 +109,8 @@ describe('Inventory', () => {
     cmp.onSearch('Granola');
 
     expect(cmp.search()).toBe('Granola');
-    expect(inventoryService.listLots).toHaveBeenCalledWith(
-      expect.objectContaining({ search: 'Granola' })
+    expect(inventoryService.listProductSummaries).toHaveBeenCalledWith(
+      expect.objectContaining({ search: 'Granola' }),
     );
     expect(cmp.first()).toBe(0);
   });
@@ -120,8 +121,8 @@ describe('Inventory', () => {
     cmp.clearSearch();
 
     expect(cmp.search()).toBe('');
-    expect(inventoryService.listLots).toHaveBeenCalledWith(
-      expect.objectContaining({ search: '' })
+    expect(inventoryService.listProductSummaries).toHaveBeenCalledWith(
+      expect.objectContaining({ search: '' }),
     );
   });
 
@@ -130,8 +131,8 @@ describe('Inventory', () => {
     cmp.selectedBranchId.set(5);
     cmp.onFilterChange();
 
-    expect(inventoryService.listLots).toHaveBeenCalledWith(
-      expect.objectContaining({ branchId: 5 })
+    expect(inventoryService.listProductSummaries).toHaveBeenCalledWith(
+      expect.objectContaining({ branchId: 5 }),
     );
   });
 
@@ -139,8 +140,8 @@ describe('Inventory', () => {
     const cmp = component as any;
     cmp.onSort({ field: 'productName', order: 1 });
 
-    expect(inventoryService.listLots).toHaveBeenCalledWith(
-      expect.objectContaining({ sort: 'productName,asc' })
+    expect(inventoryService.listProductSummaries).toHaveBeenCalledWith(
+      expect.objectContaining({ sort: 'productName,asc' }),
     );
     expect(cmp.first()).toBe(0);
   });
@@ -152,5 +153,18 @@ describe('Inventory', () => {
     (component as any).navigateToReceipts();
 
     expect(navigateSpy).toHaveBeenCalledWith(['/admin/receips']);
+  });
+
+  it('should navigate to lot detail when viewLots is called', () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const item = summary('Granola', 'Centro', '10');
+
+    (component as any).viewLots(item);
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      ['/admin/inventory/product', 10, 'lots'],
+      { queryParams: { branchId: 20, productName: 'Granola', branchName: 'Centro' } },
+    );
   });
 });

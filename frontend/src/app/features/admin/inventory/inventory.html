@@ -1,20 +1,20 @@
 <div class="admin-page inventory-page">
   <app-page-header
     eyebrow="Inventario"
-    title="Stock por lotes"
-    description="Consulta el stock disponible por lote, sucursal y producto."
+    title="Stock por producto"
+    description="Stock disponible agrupado por producto y sucursal. El vencimiento muestra la fecha del lote mas proximo a vencer."
   >
     <app-button icon="pi pi-plus" (click)="openCreateDialog()">Nuevo lote</app-button>
   </app-page-header>
 
   @if (error()) {
     <app-error-alert variant="inline" [title]="error()" message="">
-      <app-button variant="secondary" size="sm" (click)="loadLots()">Reintentar</app-button>
+      <app-button variant="secondary" size="sm" (click)="loadProducts()">Reintentar</app-button>
     </app-error-alert>
   }
 
   <app-data-table
-    [data]="lots()"
+    [data]="products()"
     [columns]="columns"
     [loading]="loading()"
     [sortable]="true"
@@ -26,15 +26,15 @@
     [rowsPerPageOptions]="[10, 20, 50]"
     (pageChange)="onPageChange($event)"
     (sortChange)="onSort($event)"
-    emptyTitle="No hay lotes de stock"
-    emptyDescription="Registra una recepcion de mercaderia para que aparezcan los primeros lotes."
+    emptyTitle="No hay stock disponible"
+    emptyDescription="Registra una recepcion de mercaderia para que aparezcan los primeros productos con stock."
     emptyActionLabel="Ir a recepciones"
     (emptyAction)="navigateToReceipts()"
   >
     <ng-template #toolbar>
       <div class="table-toolbar__info">
-        <p class="table-toolbar__kicker">Stock por lotes</p>
-        <h2 class="table-toolbar__title">Lotes activos</h2>
+        <p class="table-toolbar__kicker">Stock disponible</p>
+        <h2 class="table-toolbar__title">Productos con stock</h2>
       </div>
       <div class="table-toolbar__actions inventory-toolbar">
         <app-search-bar
@@ -54,26 +54,38 @@
           <app-toggle-switch
             [(checked)]="expiringSoon"
             (checkedChange)="onFilterChange()"
-            [ariaLabel]="'Filtrar solo lotes proximos a vencer'"
+            [ariaLabel]="'Filtrar solo productos proximos a vencer'"
           />
           <label class="inventory-expiring-label">Prox. a vencer</label>
         </div>
       </div>
     </ng-template>
 
-    <ng-template #body let-lot>
+    <ng-template #body let-item>
       <tr>
+        <td><strong>{{ item.productName }}</strong></td>
+        <td>{{ item.branchName }}</td>
+        <td class="inventory-qty">{{ formatQuantity(item.totalAvailable) }}</td>
+        <td>{{ formatDate(item.nearestExpirationDate) }}</td>
         <td>
-          <strong>{{ lot.productName }}</strong>
-        </td>
-        <td>{{ lot.branchName }}</td>
-        <td class="inventory-qty">{{ formatQuantity(lot.quantityAvailable) }}</td>
-        <td class="inventory-qty">{{ formatQuantity(lot.initialQuantity) }}</td>
-        <td>{{ lot.lotCode || '-' }}</td>
-        <td>{{ formatDate(lot.expirationDate) }}</td>
-        <td>{{ formatPrice(lot.unitCost) }}</td>
-        <td>
-          <app-status-badge [status]="lot.status" [config]="statusBadges" />
+          <div class="table-actions">
+            <app-button
+              variant="ghost"
+              size="sm"
+              icon="pi pi-list"
+              [iconOnly]="true"
+              [ariaLabel]="'Ver lotes de ' + item.productName + ' en ' + item.branchName"
+              (click)="viewLots(item)"
+            />
+            <app-button
+              variant="ghost"
+              size="sm"
+              icon="pi pi-sliders-v"
+              [iconOnly]="true"
+              [disabled]="true"
+              [ariaLabel]="'Ajustar stock de ' + item.productName"
+            />
+          </div>
         </td>
       </tr>
     </ng-template>
@@ -85,67 +97,64 @@
   title="Nuevo lote de stock"
   [width]="'min(38rem, 92vw)'"
 >
-  <form class="inventory-form" (ngSubmit)="saveLot()">
+  <form class="supplier-form" (ngSubmit)="saveLot()">
     <app-form-section
       [index]="1"
       title="Datos del lote"
       description="Registra stock directamente. Para ingresos habituales usa Recepciones de mercaderia."
     >
-      <div class="inventory-form__grid">
-        <div class="inventory-form__field inventory-form__field--wide">
-          <label class="inventory-form__label">
-            Producto <span class="inventory-form__required" aria-hidden="true">*</span>
-          </label>
-          <app-product-selector
-            [selected]="newProduct()"
-            (selectedChange)="newProduct.set($event)"
-            [suggestions]="newProductSuggestions()"
-            placeholder="Buscar producto por nombre o codigo..."
-            (search)="searchNewProduct($event)"
-          />
+      <div class="supplier-form__grid">
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-control-field label="Producto" [required]="true">
+            <app-product-selector
+              [label]="''"
+              [selected]="newProduct()"
+              (selectedChange)="newProduct.set($event)"
+              [suggestions]="newProductSuggestions()"
+              placeholder="Buscar producto por nombre o codigo..."
+              (search)="searchNewProduct($event)"
+            />
+          </app-control-field>
         </div>
 
-        <div class="inventory-form__field inventory-form__field--wide">
-          <label class="inventory-form__label">
-            Sucursal <span class="inventory-form__required" aria-hidden="true">*</span>
-          </label>
-          <app-select
-            [value]="newBranchId()"
-            (valueChange)="newBranchId.set($event)"
-            [options]="branchOptions()"
-            placeholder="Seleccionar sucursal"
-          />
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-control-field label="Sucursal" [required]="true">
+            <app-select
+              [value]="newBranchId()"
+              (valueChange)="newBranchId.set($event)"
+              [options]="branchOptions()"
+              placeholder="Seleccionar sucursal"
+            />
+          </app-control-field>
         </div>
 
-        <div class="inventory-form__field">
-          <label class="inventory-form__label">
-            Cantidad <span class="inventory-form__required" aria-hidden="true">*</span>
-          </label>
-          <p-inputnumber
-            [(ngModel)]="newQuantity"
-            name="quantity"
-            [min]="0"
-            [maxFractionDigits]="3"
-            placeholder="0"
-            class="inventory-form__inputnumber"
-          />
+        <div class="supplier-form__field">
+          <app-control-field label="Cantidad" [required]="true">
+            <p-inputnumber
+              [(ngModel)]="newQuantity"
+              name="quantity"
+              [min]="0"
+              [maxFractionDigits]="3"
+              placeholder="0"
+            />
+          </app-control-field>
         </div>
 
-        <div class="inventory-form__field">
-          <label class="inventory-form__label">Costo unitario</label>
-          <p-inputnumber
-            [(ngModel)]="newCostPrice"
-            name="costPrice"
-            mode="currency"
-            currency="ARS"
-            locale="es-AR"
-            [min]="0"
-            [maxFractionDigits]="2"
-            class="inventory-form__inputnumber"
-          />
+        <div class="supplier-form__field">
+          <app-control-field label="Costo unitario">
+            <p-inputnumber
+              [(ngModel)]="newCostPrice"
+              name="costPrice"
+              mode="currency"
+              currency="ARS"
+              locale="es-AR"
+              [min]="0"
+              [maxFractionDigits]="2"
+            />
+          </app-control-field>
         </div>
 
-        <div class="inventory-form__field">
+        <div class="supplier-form__field">
           <app-form-field
             label="Codigo de lote"
             [value]="newLotCode()"
@@ -155,17 +164,18 @@
           />
         </div>
 
-        <div class="inventory-form__field">
-          <label class="inventory-form__label">Fecha de vencimiento</label>
-          <p-datepicker
-            [(ngModel)]="newExpirationDate"
-            name="expirationDate"
-            dateFormat="dd/mm/yy"
-            [showIcon]="true"
-            [minDate]="minDate()"
-            placeholder="Seleccionar fecha"
-            class="inventory-form__datepicker"
-          />
+        <div class="supplier-form__field">
+          <app-control-field label="Fecha de vencimiento">
+            <p-datepicker
+              inputId="lot-expiration-date"
+              [(ngModel)]="newExpirationDate"
+              name="expirationDate"
+              dateFormat="dd/mm/yy"
+              [minDate]="minDate()"
+              placeholder="Seleccionar fecha"
+              appendTo="body"
+            />
+          </app-control-field>
         </div>
       </div>
     </app-form-section>
@@ -174,7 +184,7 @@
       <app-error-alert variant="inline" [title]="error()" message="" />
     }
 
-    <div class="inventory-form__actions" modalFooter>
+    <div class="supplier-form__actions" modalFooter>
       <app-button variant="secondary" type="button" (click)="dialogVisible.set(false)">
         Cancelar
       </app-button>

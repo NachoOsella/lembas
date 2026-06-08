@@ -1,0 +1,45 @@
+<div class="admin-page stock-lot-detail-page">
+  <app-page-header
+    eyebrow="Inventario"
+    [title]="productName() + ' (' + branchName() + ')'"
+    [description]="'Lotes individuales de ' + productName() + ' en la sucursal ' + branchName() + '. Stock total disponible de todos los lotes activos.'"
+  >
+    <app-button variant="secondary" icon="pi pi-arrow-left" (click)="goBack()">
+      Volver al inventario
+    </app-button>
+  </app-page-header>
+
+  @if (error()) {
+    <app-error-alert variant="inline" [title]="error()" message="">
+      <app-button variant="secondary" size="sm" (click)="loadLots()">Reintentar</app-button>
+    </app-error-alert>
+  }
+
+  <app-data-table
+    [data]="lots()"
+    [columns]="columns"
+    [loading]="loading()"
+    [sortable]="false"
+    [paginated]="true"
+    [lazy]="true"
+    [totalRecords]="totalRecords()"
+    [first]="first()"
+    [rows]="pageSize()"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    (pageChange)="onPageChange($event)"
+    emptyTitle="No hay lotes individuales"
+    emptyDescription="Este producto no tiene lotes registrados en esta sucursal."
+  >
+    <ng-template #body let-lot>
+      <tr>
+        <td>{{ lot.lotCode || '-' }}</td>
+        <td>{{ formatDate(lot.expirationDate) }}</td>
+        <td class="lot-detail-qty">{{ formatQuantity(lot.quantityAvailable) }}</td>
+        <td>{{ formatPrice(lot.unitCost) }}</td>
+        <td>
+          <app-status-badge [status]="lot.status" [config]="statusBadges" />
+        </td>
+      </tr>
+    </ng-template>
+  </app-data-table>
+</div>

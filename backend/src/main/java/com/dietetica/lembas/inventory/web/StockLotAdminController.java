@@ -4,6 +4,7 @@ import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
 import com.dietetica.lembas.inventory.dto.DeductionPlan;
 import com.dietetica.lembas.inventory.dto.StockDeductionRequest;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
+import com.dietetica.lembas.inventory.dto.StockProductSummaryDto;
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import com.dietetica.lembas.inventory.service.InventoryService;
 import com.dietetica.lembas.shared.dto.PageResponse;
@@ -32,6 +33,17 @@ public class StockLotAdminController {
 
     public StockLotAdminController(InventoryService inventoryService) {
         this.inventoryService = inventoryService;
+    }
+
+    /** Returns aggregated stock summaries grouped by product and branch. */
+    @GetMapping("/products")
+    public PageResponse<StockProductSummaryDto> listProductSummaries(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long branchId,
+            @RequestParam(defaultValue = "false") boolean expiringSoon,
+            @PageableDefault(size = 10, sort = "productName") Pageable pageable
+    ) {
+        return PageResponse.from(inventoryService.listProductSummaries(search, branchId, expiringSoon, pageable));
     }
 
     /** Returns paginated stock lots matching the optional inventory filters. */

@@ -1,0 +1,14 @@
+/* ------------------------------------------------------------------ */
+/*  Stock Lot Detail — individual lots for one product in a branch    */
+/* ------------------------------------------------------------------ */
+
+.stock-lot-detail-page {
+  display: grid;
+  gap: var(--space-4, 2.4rem);
+}
+
+.lot-detail-qty {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}

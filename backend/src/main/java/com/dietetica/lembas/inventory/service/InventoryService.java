@@ -6,6 +6,7 @@ import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
 import com.dietetica.lembas.inventory.dto.DeductionPlan;
 import com.dietetica.lembas.inventory.dto.DeductionPlan.DeductionEntry;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
+import com.dietetica.lembas.inventory.dto.StockProductSummaryDto;
 import com.dietetica.lembas.inventory.model.StockLot;
 import com.dietetica.lembas.inventory.model.StockLotStatus;
 import com.dietetica.lembas.inventory.model.StockMovement;
@@ -80,6 +81,14 @@ public class InventoryService {
         stockMovementRepository.save(purchaseEntryMovement(savedLot, product, branch, request.quantity()));
         BigDecimal totalAvailable = stockLotRepository.calculateAvailableQuantity(product.getId(), branch.getId());
         return toDto(savedLot, totalAvailable);
+    }
+
+    /** Returns aggregated stock summaries grouped by product and branch. */
+    @Transactional(readOnly = true)
+    public Page<StockProductSummaryDto> listProductSummaries(String search, Long branchId, boolean expiringSoon, Pageable pageable) {
+        LocalDate expiringSoonLimit = LocalDate.now(clock).plusDays(EXPIRING_SOON_DAYS);
+        String searchPattern = buildSearchPattern(search);
+        return stockLotRepository.searchProductSummaries(searchPattern, branchId, expiringSoon, expiringSoonLimit, mapProductSort(pageable));
     }
 
     /** Lists stock lots with optional product search and filters for the admin inventory table. */
@@ -165,6 +174,26 @@ public class InventoryService {
         movement.setReferenceId(lot.getId());
         movement.setReason(type == StockMovementType.POS_SALE ? "POS sale deduction" : "Online sale deduction");
         return movement;
+    }
+
+    /** Maps frontend sort field names to entity paths used by the aggregated product query. */
+    private Pageable mapProductSort(Pageable pageable) {
+        if (pageable.getSort().isUnsorted()) {
+            return pageable;
+        }
+        Sort mappedSort = Sort.unsorted();
+        for (Sort.Order order : pageable.getSort()) {
+            String property = switch (order.getProperty()) {
+                case "productName" -> "p.name";
+                case "branchName" -> "b.name";
+                default -> null;
+            };
+            if (property == null) {
+                return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+            }
+            mappedSort = mappedSort.and(Sort.by(new Sort.Order(order.getDirection(), property)));
+        }
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mappedSort);
     }
 
     /** Maps frontend sort field names to entity paths used by the stock lot query. */

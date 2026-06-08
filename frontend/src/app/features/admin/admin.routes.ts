@@ -47,6 +47,10 @@ export default [
         loadComponent: () => import('./inventory/inventory').then((m) => m.Inventory),
       },
       {
+        path: 'inventory/product/:productId/lots',
+        loadComponent: () => import('./stock-lot-detail/stock-lot-detail').then((m) => m.StockLotDetail),
+      },
+      {
         path: 'stock/entry',
         redirectTo: 'receips',
         pathMatch: 'full',

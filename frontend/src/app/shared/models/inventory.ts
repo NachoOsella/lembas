@@ -78,5 +78,19 @@ export interface PurchaseReceiptDto {
   readonly items: PurchaseReceiptItemDto[];
 }
 
+/** Aggregated stock summary for one product in one branch. */
+export interface StockProductSummaryDto {
+  readonly productId: number;
+  readonly productName: string;
+  readonly branchId: number;
+  readonly branchName: string;
+  readonly totalAvailable: number;
+  readonly nearestExpirationDate?: string | null;
+  readonly activeLotCount: number;
+}
+
 /** Paginated response for stock lot listings. */
 export type StockLotPage = PageResponse<StockLotDto>;
+
+/** Paginated response for product summaries. */
+export type StockProductSummaryPage = PageResponse<StockProductSummaryDto>;
