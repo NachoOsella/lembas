@@ -91,11 +91,29 @@ DELETE /api/admin/categories/{id}
 ```
 GET    /api/admin/stock/lots?productId=&branchId=&expiringSoon=
 POST   /api/admin/stock/receipts     Request: { purchaseOrderId, invoiceNumber?, notes?, items: [{ purchaseOrderItemId, quantityReceived, unitCost, lotCode?, expirationDate? }] }
+POST   /api/admin/stock/deductions   Request: { productId, branchId, quantity, reason? }
 POST   /api/admin/stock/adjustments  Request: { productId, branchId, quantity, reason, stockLotId? }
 GET    /api/admin/stock/movements?productId=&branchId=&type=&from=&to=&page=&size=
 ```
 
 Notes: supplier merchandise entry should use purchase receipts. Confirmed receipt items create lots and PURCHASE_ENTRY movements transactionally.
+
+Stock deductions follow FEFO policy: lots are consumed in expiration-date order, null expiration last. If total available stock is insufficient, the endpoint returns `INSUFFICIENT_STOCK`.
+
+### Deduction response
+
+```json
+{
+  "entries": [
+    { "stockLotId": 1, "quantityToDeduct": 3, "lotAvailableBefore": 10, "lotAvailableAfter": 7 }
+  ],
+  "totalRequested": 3,
+  "totalAvailable": 10,
+  "fullySatisfied": true
+}
+```
+
+The operation is transactional and uses `PESSIMISTIC_WRITE` locks on the selected lots.
 
 ### Orders
 

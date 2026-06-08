@@ -70,6 +70,9 @@ Services may throw `DomainException` directly when a dedicated exception subclas
 | PURCHASE_RECEIPT_ITEM_INVALID | Suppliers | 400 | Receipt item does not belong to the selected purchase order |
 | PURCHASE_RECEIPT_ITEM_DUPLICATED | Suppliers | 400 | Same purchase-order item was sent more than once in a receipt |
 | PURCHASE_RECEIPT_OVER_RECEIVED | Suppliers | 409 | Received quantity exceeds ordered quantity |
+| INSUFFICIENT_STOCK | Inventory | 409 | Total available stock is less than requested deduction quantity |
+| INVALID_DEDUCTION_QUANTITY | Inventory | 400 | Deduction quantity must be positive |
+| STOCK_LOT_NOT_FOUND | Inventory | 404 | Stock lot not found during deduction |
 | CATEGORY_NOT_FOUND | Catalog | 404 | Category does not exist |
 | PARENT_NOT_FOUND | Catalog | 404 | Parent category does not exist |
 | PARENT_INVALID | Catalog | 409 | Category parent assignment is invalid |
