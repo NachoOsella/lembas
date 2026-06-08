@@ -86,6 +86,24 @@ export class Inventory {
   protected readonly newCostPrice = signal<number | null>(null);
   protected readonly newProductSuggestions = signal<ProductSummary[]>([]);
 
+  // -- Adjustment dialog ------------------------------------------------------
+  protected readonly adjDialogVisible = signal(false);
+  protected readonly adjSelectedProduct = signal<ProductSummary | null>(null);
+  protected readonly adjSelectedBranchId = signal<number | null>(null);
+  protected readonly adjType = signal<string>('MANUAL_ADJUSTMENT');
+  protected readonly adjQuantity = signal<number | null>(null);
+  protected readonly adjReason = signal('');
+  protected readonly adjSaving = signal(false);
+  protected readonly adjError = signal('');
+  protected readonly adjCurrentStockLabel = signal('');
+  protected readonly adjProductSuggestions = signal<ProductSummary[]>([]);
+
+  protected readonly adjTypeOptions = [
+    { label: 'Ajuste manual', value: 'MANUAL_ADJUSTMENT' },
+    { label: 'Consumo interno', value: 'INTERNAL_CONSUMPTION' },
+    { label: 'Merma', value: 'WASTE' },
+  ];
+
   // -- Computed options -------------------------------------------------------
   protected readonly branchOptions = computed(() =>
     this.branches().map((b) => ({ label: b.name, value: b.id })),
@@ -254,6 +272,127 @@ export class Inventory {
         error: (err) => {
           this.saving.set(false);
           this.error.set(this.messageForError(err, 'No pudimos crear el lote.'));
+        },
+      });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Adjustment dialog
+  // ---------------------------------------------------------------------------
+
+  protected openAdjustDialog(item: StockProductSummaryDto): void {
+    const product: ProductSummary = {
+      id: item.productId,
+      name: item.productName,
+      salePrice: 0,
+      onlineStatus: 'PUBLISHED',
+      categoryId: 0,
+      categoryName: '',
+    };
+    this.adjSelectedProduct.set(product);
+    this.adjSelectedBranchId.set(item.branchId);
+    this.adjType.set('MANUAL_ADJUSTMENT');
+    this.adjQuantity.set(null);
+    this.adjReason.set('');
+    this.adjError.set('');
+    this.adjCurrentStockLabel.set('');
+    this.adjProductSuggestions.set([]);
+    this.updateAdjStockLabel(item.productId, item.branchId);
+    this.adjDialogVisible.set(true);
+  }
+
+  protected searchAdjProduct(query: string): void {
+    if (query.length < 2) {
+      this.adjProductSuggestions.set([]);
+      return;
+    }
+    this.productService.listAdminProducts({ search: query, size: 10 }).subscribe({
+      next: (page) => this.adjProductSuggestions.set(page.content),
+      error: () => this.adjProductSuggestions.set([]),
+    });
+  }
+
+  protected onAdjProductChange(product: ProductSummary | null): void {
+    this.adjSelectedProduct.set(product);
+    this.updateAdjStock();
+  }
+
+  protected onAdjBranchChange(branchId: number | null): void {
+    this.adjSelectedBranchId.set(branchId);
+    this.updateAdjStock();
+  }
+
+  private updateAdjStock(): void {
+    const product = this.adjSelectedProduct();
+    const branchId = this.adjSelectedBranchId();
+    if (!product || !branchId) {
+      this.adjCurrentStockLabel.set('');
+      return;
+    }
+    this.updateAdjStockLabel(product.id, branchId);
+  }
+
+  private updateAdjStockLabel(productId: number, branchId: number): void {
+    const productName = this.adjSelectedProduct()?.name ?? 'Producto';
+    this.inventoryService.listProductSummaries({ search: productName, branchId, size: 20 }).subscribe({
+      next: (page) => {
+        const summary = page.content.find((item) => item.productId === productId && item.branchId === branchId);
+        const available = summary?.totalAvailable ?? 0;
+        this.adjCurrentStockLabel.set(`Stock actual: ${this.formatQuantity(available)} unidades de ${productName}`);
+      },
+      error: () => this.adjCurrentStockLabel.set(''),
+    });
+  }
+
+  protected get canSubmitAdjustment(): boolean {
+    return (
+      this.adjSelectedProduct() !== null &&
+      this.adjSelectedBranchId() !== null &&
+      this.adjQuantity() !== null &&
+      this.adjQuantity()! > 0 &&
+      this.adjReason().trim().length > 0
+    );
+  }
+
+  protected saveAdjustment(): void {
+    const product = this.adjSelectedProduct();
+    const branchId = this.adjSelectedBranchId();
+    const quantity = this.adjQuantity();
+    const reason = this.adjReason().trim();
+    const type = this.adjType();
+
+    if (!product || !branchId || !quantity || quantity <= 0 || !reason) {
+      return;
+    }
+
+    this.adjSaving.set(true);
+    this.adjError.set('');
+
+    const signedQuantity = type === 'MANUAL_ADJUSTMENT' ? quantity : -quantity;
+
+    this.inventoryService
+      .adjustStock({
+        productId: product.id,
+        branchId,
+        quantity: signedQuantity,
+        reason,
+        type: type as 'MANUAL_ADJUSTMENT' | 'INTERNAL_CONSUMPTION' | 'WASTE',
+      })
+      .subscribe({
+        next: () => {
+          this.adjSaving.set(false);
+          this.adjDialogVisible.set(false);
+          const typeLabel = this.adjTypeOptions.find((t) => t.value === type)?.label ?? type;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Ajuste registrado',
+            detail: `${typeLabel}: ${signedQuantity > 0 ? '+' : ''}${signedQuantity} unidades de ${product.name}`,
+          });
+          this.loadProducts();
+        },
+        error: (err) => {
+          this.adjSaving.set(false);
+          this.adjError.set(getApiError(err)?.message ?? 'Error al ejecutar el ajuste');
         },
       });
   }

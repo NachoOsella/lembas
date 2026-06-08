@@ -138,6 +138,14 @@ All errors use a uniform `ApiError` object:
 | CATEGORY_HAS_PRODUCTS | Catalog | 409 |
 | INSUFFICIENT_STOCK | Inventory | 409 |
 | LOT_EXPIRED | Inventory | 409 |
+| BRANCH_NOT_FOUND | Inventory | 404 |
+| STOCK_LOT_NOT_FOUND | Inventory | 404 |
+| STOCK_LOT_MISMATCH | Inventory | 400 |
+| STOCK_LOT_NOT_ACTIVE | Inventory | 409 |
+| ADJUSTMENT_REASON_REQUIRED | Inventory | 400 |
+| ADJUSTMENT_QUANTITY_ZERO | Inventory | 400 |
+| INVALID_ADJUSTMENT_TYPE | Inventory | 400 |
+| INVALID_ADJUSTMENT_SIGN | Inventory | 400 |
 | PURCHASE_ORDER_NOT_FOUND | Suppliers | 404 |
 | PURCHASE_ORDER_INVALID_STATE | Suppliers | 409 |
 | PURCHASE_ORDER_EMPTY | Suppliers | 400 |

@@ -1,5 +1,15 @@
 # Registro de uso de IA
 
+## 2026-06-08
+
+- `backend/src/main/java/com/dietetica/lembas/inventory/`, `frontend/src/app/features/admin/{inventory,stock-movements}/`, `docs/05-api/` -- corregida revision S2-US04: bloqueo pesimista en ajustes por lote, reactivacion de lotes depleted, validacion de signo para mermas/consumo interno, busqueda y ordenamiento de movimientos, template custom de tabla y documentacion de errores.
+
+- `backend/src/main/java/com/dietetica/lembas/inventory/`, `backend/src/test/java/com/dietetica/lembas/inventory/repository/StockMovementRepositoryTest.java` -- corregido 500 en listado de movimientos usando busqueda dinamica por Specification para evitar parametros temporales nulos en PostgreSQL; agregado test JPA con Testcontainers.
+
+- `frontend/src/app/features/admin/stock-adjustment/` (delete), `frontend/src/app/features/admin/inventory/` (modify) -- movido formulario de ajuste de stock desde pagina standalone a modal dentro del inventory component; eliminado StockAdjustmentPageComponent, ruta y nav item.
+
+- `backend/.../inventory/`, `frontend/src/app/features/admin/stock-movements/` -- implementada S2-US04: ajustes manuales de stock (MANUAL_ADJUSTMENT, INTERNAL_CONSUMPTION, WASTE) con motivo obligatorio, FEFO para negativos, created_by_user_id, listado de movimientos filtrable con badge de color por tipo. Tests: 8 nuevos backend, 474 frontend.
+
 ## 2026-06-05
 
 - `backend/src/main/resources/db/migration/V22__purchase_orders.sql`, `backend/src/main/java/com/dietetica/lembas/suppliers/`, `frontend/src/app/features/admin/purchase-orders/`, `frontend/src/app/shared/components/app-control-field/` -- implementada S2-US13: ordenes de compra a proveedores con estados DRAFT/CONFIRMED/SENT/CANCELLED, costos precargados desde proveedor-producto, PDF descargable bajo demanda, pantalla admin alineada a DESING.md, wrapper generico de campos proyectados y tests backend/frontend.

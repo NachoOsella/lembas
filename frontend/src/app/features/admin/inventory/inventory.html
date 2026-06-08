@@ -82,8 +82,8 @@
               size="sm"
               icon="pi pi-sliders-v"
               [iconOnly]="true"
-              [disabled]="true"
               [ariaLabel]="'Ajustar stock de ' + item.productName"
+              (click)="openAdjustDialog(item)"
             />
           </div>
         </td>
@@ -189,6 +189,99 @@
         Cancelar
       </app-button>
       <app-button type="submit" [loading]="saving()">Guardar lote</app-button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal
+  [(visible)]="adjDialogVisible"
+  title="Ajustar stock"
+  [width]="'min(38rem, 92vw)'"
+>
+  <form class="supplier-form" (ngSubmit)="saveAdjustment()">
+    <app-form-section
+      [index]="1"
+      title="Datos del ajuste"
+      description="Corrige diferencias de inventario, registra consumos internos o mermas. El motivo es obligatorio."
+    >
+      <div class="supplier-form__grid">
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-control-field label="Producto" [required]="true">
+            <app-product-selector
+              [label]="''"
+              [selected]="adjSelectedProduct()"
+              (selectedChange)="onAdjProductChange($event)"
+              [suggestions]="adjProductSuggestions()"
+              placeholder="Buscar producto por nombre o codigo..."
+              (search)="searchAdjProduct($event)"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-control-field label="Sucursal" [required]="true">
+            <app-select
+              [value]="adjSelectedBranchId()"
+              (valueChange)="onAdjBranchChange($event)"
+              [options]="branchOptions()"
+              placeholder="Seleccionar sucursal"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field">
+          <app-control-field label="Tipo" [required]="true">
+            <app-select
+              [value]="adjType()"
+              (valueChange)="adjType.set($event ?? 'MANUAL_ADJUSTMENT')"
+              [options]="adjTypeOptions"
+              placeholder="Seleccionar tipo"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field">
+          <app-control-field label="Cantidad" [required]="true">
+            <p-inputnumber
+              [(ngModel)]="adjQuantity"
+              name="adjQuantity"
+              [min]="0"
+              [maxFractionDigits]="3"
+              placeholder="0"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-form-field
+            label="Motivo"
+            [required]="true"
+            [(value)]="adjReason"
+            placeholder="Explica el motivo del ajuste (obligatorio)"
+            testId="adjustment-reason"
+          />
+        </div>
+      </div>
+
+      @if (adjCurrentStockLabel()) {
+        <div class="adjustment-form__stock-info">
+          <i class="pi pi-info-circle"></i>
+          <span>{{ adjCurrentStockLabel() }}</span>
+        </div>
+      }
+
+      @if (adjError()) {
+        <app-error-alert variant="inline" [title]="adjError()" message="" />
+      }
+    </app-form-section>
+
+    <div class="supplier-form__actions" modalFooter>
+      <app-button variant="secondary" type="button" (click)="adjDialogVisible.set(false)">
+        Cancelar
+      </app-button>
+      <app-button type="submit" [loading]="adjSaving()" [disabled]="!canSubmitAdjustment">
+        Ejecutar ajuste
+      </app-button>
     </div>
   </form>
 </app-modal>

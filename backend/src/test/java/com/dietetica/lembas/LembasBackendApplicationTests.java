@@ -7,6 +7,8 @@ import com.dietetica.lembas.inventory.repository.StockLotRepository;
 import com.dietetica.lembas.inventory.repository.StockMovementRepository;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.suppliers.repository.PurchaseOrderRepository;
+import com.dietetica.lembas.suppliers.repository.PurchaseReceiptItemRepository;
+import com.dietetica.lembas.suppliers.repository.PurchaseReceiptRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierProductCostHistoryRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierProductRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierRepository;
@@ -79,6 +81,14 @@ class LembasBackendApplicationTests {
     /** Provides purchase order repository collaborators while JPA repositories are disabled. */
     @MockitoBean
     private PurchaseOrderRepository purchaseOrderRepository;
+
+    /** Provides purchase receipt repository collaborators while JPA repositories are disabled. */
+    @MockitoBean
+    private PurchaseReceiptRepository purchaseReceiptRepository;
+
+    /** Provides purchase receipt item repository collaborators while JPA repositories are disabled. */
+    @MockitoBean
+    private PurchaseReceiptItemRepository purchaseReceiptItemRepository;
 
     /**
      * Keeps a fast smoke test for the application context without external services.

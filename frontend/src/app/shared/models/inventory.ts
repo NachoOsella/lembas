@@ -94,3 +94,54 @@ export type StockLotPage = PageResponse<StockLotDto>;
 
 /** Paginated response for product summaries. */
 export type StockProductSummaryPage = PageResponse<StockProductSummaryDto>;
+
+/** Request sent by admins to manually adjust stock. */
+export interface StockAdjustmentRequest {
+  readonly productId: number;
+  readonly branchId: number;
+  readonly quantity: number;
+  readonly reason: string;
+  readonly type: 'MANUAL_ADJUSTMENT' | 'INTERNAL_CONSUMPTION' | 'WASTE';
+  readonly stockLotId?: number | null;
+}
+
+/** Stock movement returned by the movements list endpoint. */
+export interface StockMovementDto {
+  readonly id: number;
+  readonly stockLotId: number;
+  readonly productId: number;
+  readonly productName: string;
+  readonly branchId: number;
+  readonly branchName: string;
+  readonly type: string;
+  readonly quantity: number;
+  readonly unitCostSnapshot?: number | null;
+  readonly reason?: string | null;
+  readonly createdByUserId?: number | null;
+  readonly createdAt: string;
+}
+
+/** Paginated response for stock movements. */
+export type StockMovementPage = PageResponse<StockMovementDto>;
+
+/** Movement type translated labels for display. */
+export const MOVEMENT_TYPE_LABELS: Record<string, string> = {
+  PURCHASE_ENTRY: 'Entrada de compra',
+  POS_SALE: 'Venta (POS)',
+  ONLINE_SALE: 'Venta (Online)',
+  CANCELLATION_RETURN: 'Devolucion',
+  MANUAL_ADJUSTMENT: 'Ajuste manual',
+  INTERNAL_CONSUMPTION: 'Consumo interno',
+  WASTE: 'Merma',
+};
+
+/** Movement type badge severity mapping. */
+export const MOVEMENT_TYPE_SEVERITY: Record<string, string> = {
+  PURCHASE_ENTRY: 'success',
+  POS_SALE: 'info',
+  ONLINE_SALE: 'info',
+  CANCELLATION_RETURN: 'warn',
+  MANUAL_ADJUSTMENT: 'warn',
+  INTERNAL_CONSUMPTION: 'contrast',
+  WASTE: 'danger',
+};
