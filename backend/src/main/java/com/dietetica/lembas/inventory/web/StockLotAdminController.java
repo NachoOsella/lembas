@@ -1,7 +1,10 @@
 package com.dietetica.lembas.inventory.web;
 
 import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
+import com.dietetica.lembas.inventory.dto.DeductionPlan;
+import com.dietetica.lembas.inventory.dto.StockDeductionRequest;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
+import com.dietetica.lembas.inventory.model.StockMovementType;
 import com.dietetica.lembas.inventory.service.InventoryService;
 import com.dietetica.lembas.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -47,5 +50,17 @@ public class StockLotAdminController {
     @ResponseStatus(HttpStatus.CREATED)
     public StockLotDto create(@Valid @RequestBody CreateStockLotRequest request) {
         return inventoryService.createStockLot(request);
+    }
+
+    /** Deducts stock using FEFO policy. Records a MANUAL_ADJUSTMENT movement. */
+    @PostMapping("/deductions")
+    @ResponseStatus(HttpStatus.OK)
+    public DeductionPlan deduct(@Valid @RequestBody StockDeductionRequest request) {
+        return inventoryService.deductStock(
+                request.productId(),
+                request.branchId(),
+                request.quantity(),
+                StockMovementType.MANUAL_ADJUSTMENT
+        );
     }
 }

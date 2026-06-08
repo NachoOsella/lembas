@@ -4,7 +4,11 @@ import com.dietetica.lembas.auth.service.JwtAuthenticationFilter;
 import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.auth.service.LembasUserDetailsService;
 import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
+import com.dietetica.lembas.inventory.dto.DeductionPlan;
+import com.dietetica.lembas.inventory.dto.DeductionPlan.DeductionEntry;
+import com.dietetica.lembas.inventory.dto.StockDeductionRequest;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
+import com.dietetica.lembas.inventory.model.StockMovementType;
 import com.dietetica.lembas.inventory.service.InventoryService;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
 import com.dietetica.lembas.users.web.SecurityConfigForTest;
@@ -155,6 +159,57 @@ class StockLotAdminControllerTest {
     void Should_return401_when_unauthenticatedUserListsLots() throws Exception {
         mockMvc.perform(get("/api/admin/stock/lots"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void Should_return200_when_adminDeductsStock() throws Exception {
+        DeductionPlan plan = new DeductionPlan(
+                List.of(new DeductionEntry(1L, BigDecimal.valueOf(3), BigDecimal.valueOf(10), BigDecimal.valueOf(7))),
+                BigDecimal.valueOf(3), BigDecimal.valueOf(10), true
+        );
+        when(inventoryService.deductStock(eq(10L), eq(20L), eq(BigDecimal.valueOf(3)), eq(StockMovementType.MANUAL_ADJUSTMENT)))
+                .thenReturn(plan);
+
+        String json = """
+                {"productId": 10, "branchId": 20, "quantity": 3}
+                """;
+
+        mockMvc.perform(post("/api/admin/stock/deductions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.entries[0].stockLotId").value(1L))
+                .andExpect(jsonPath("$.entries[0].quantityToDeduct").value(3))
+                .andExpect(jsonPath("$.totalRequested").value(3));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void Should_return400_when_deductionHasInvalidQuantity() throws Exception {
+        String invalidJson = """
+                {"productId": 10, "branchId": 20, "quantity": -5}
+                """;
+
+        mockMvc.perform(post("/api/admin/stock/deductions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void Should_return200_when_employeeDeductsStock() throws Exception {
+        DeductionPlan plan = new DeductionPlan(List.of(), BigDecimal.ZERO, BigDecimal.ZERO, false);
+        when(inventoryService.deductStock(eq(10L), eq(20L), eq(BigDecimal.valueOf(1)), eq(StockMovementType.MANUAL_ADJUSTMENT)))
+                .thenReturn(plan);
+
+        String json = "{\"productId\": 10, \"branchId\": 20, \"quantity\": 1}";
+        mockMvc.perform(post("/api/admin/stock/deductions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk());
     }
 
     /** Creates a stock lot response used by controller tests. */
