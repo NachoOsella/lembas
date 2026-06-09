@@ -90,6 +90,7 @@ public class AuthController {
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        authService.logout(readCookie(httpRequest, AuthCookieService.REFRESH_COOKIE_NAME));
         authCookieService.clearAuthCookies(httpRequest, httpResponse);
     }
 

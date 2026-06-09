@@ -437,6 +437,38 @@ class AuthServiceTest {
     }
 
     @Nested
+    class Logout {
+
+        @Test
+        void Should_revokeRefreshToken_when_tokenExists() {
+            User user = new User(1L, null, "frodo@lembas.com", "hash", "Frodo", "Baggins",
+                    null, Role.CUSTOMER, true, null, null);
+            RefreshToken refreshToken = new RefreshToken(user, hashToken("refresh-token"), Instant.now().plusSeconds(3600), Instant.now());
+            when(refreshTokenRepository.findByTokenHash(hashToken("refresh-token"))).thenReturn(Optional.of(refreshToken));
+
+            authService.logout("refresh-token");
+
+            assertThat(refreshToken.getRevokedAt()).isNotNull();
+        }
+
+        @Test
+        void Should_skipRepositoryLookup_when_tokenIsBlank() {
+            authService.logout(" ");
+
+            verify(refreshTokenRepository, never()).findByTokenHash(anyString());
+        }
+
+        private String hashToken(String rawToken) {
+            try {
+                java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+                return java.util.HexFormat.of().formatHex(digest.digest(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+            } catch (java.security.NoSuchAlgorithmException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+
+    @Nested
     class GetCurrentUser {
 
         @Test

@@ -14,6 +14,7 @@ import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -229,6 +230,19 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.code").value("INVALID_REFRESH_TOKEN"));
+    }
+
+    /**
+     * Verifies logout revokes the refresh token presented by cookie and clears browser cookies.
+     */
+    @Test
+    void Should_revokeRefreshTokenAndClearCookies_when_logoutIsCalled() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                        .cookie(new Cookie(AuthCookieService.REFRESH_COOKIE_NAME, "refresh-token")))
+                .andExpect(status().isNoContent());
+
+        verify(authService).logout("refresh-token");
+        verify(authCookieService).clearAuthCookies(any(), any());
     }
 
     /**
