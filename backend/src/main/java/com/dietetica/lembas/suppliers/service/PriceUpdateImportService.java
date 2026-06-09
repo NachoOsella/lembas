@@ -29,11 +29,15 @@ import java.util.Map;
 @Service
 public class PriceUpdateImportService {
     private static final int MAX_ROWS = 1000;
+    private static final long MAX_FILE_SIZE_BYTES = 2L * 1024L * 1024L;
 
     /** Parses a supplier file and returns normalized rows with per-row errors when possible. */
     public List<SupplierPriceRow> parse(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new DomainException("PRICE_BATCH_FILE_EMPTY", HttpStatus.BAD_REQUEST, "Supplier price file is empty");
+        }
+        if (file.getSize() > MAX_FILE_SIZE_BYTES) {
+            throw new DomainException("PRICE_BATCH_FILE_TOO_LARGE", HttpStatus.BAD_REQUEST, "Supplier price file must be 2 MB or smaller");
         }
         String name = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase(Locale.ROOT);
         try {
