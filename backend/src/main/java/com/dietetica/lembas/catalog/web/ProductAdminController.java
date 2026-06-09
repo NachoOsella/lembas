@@ -4,6 +4,7 @@ import com.dietetica.lembas.catalog.dto.ProductDetailDto;
 import com.dietetica.lembas.catalog.dto.ProductRequest;
 import com.dietetica.lembas.catalog.dto.ProductStatusUpdateRequest;
 import com.dietetica.lembas.catalog.dto.ProductSummaryDto;
+import com.dietetica.lembas.catalog.dto.ProductSalePriceHistoryDto;
 import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
 import com.dietetica.lembas.catalog.service.ProductService;
 import com.dietetica.lembas.shared.dto.PageResponse;
@@ -53,6 +54,15 @@ public class ProductAdminController {
     @GetMapping("/{id}")
     public ProductDetailDto detail(@PathVariable Long id) {
         return productService.getDetail(id);
+    }
+
+    /** Returns sale price history for one product. */
+    @GetMapping("/{id}/sale-price-history")
+    public PageResponse<ProductSalePriceHistoryDto> salePriceHistory(
+            @PathVariable Long id,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return PageResponse.from(productService.listSalePriceHistory(id, pageable));
     }
 
     /** Creates a product. */

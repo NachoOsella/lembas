@@ -99,6 +99,10 @@ export default [
         loadComponent: () => import('./purchase-orders/purchase-orders').then((m) => m.PurchaseOrders),
       },
       {
+        path: 'pricing',
+        loadComponent: () => import('./pricing/price-update-workflow').then((m) => m.PriceUpdateWorkflow),
+      },
+      {
         path: 'reports',
         loadComponent: () => import('./reports/reports').then((m) => m.Reports),
       },

@@ -1,5 +1,11 @@
 # Registro de uso de IA
 
+## 2026-06-09
+
+- `backend/src/main/resources/db/migration/V24__pricing_batches.sql`, `backend/src/main/java/com/dietetica/lembas/{suppliers,catalog}/` -- implementada base S2-US14: historial de precios de venta, reglas de pricing, batches de actualizacion de precios/catalogo, items con estados de preview, import CSV/XLSX, matching por SKU/barcode/nombre, calculos de margen/traslado/redondeo y apply transaccional con historiales sin tocar stock.
+- `frontend/src/app/features/admin/pricing/`, `frontend/src/app/core/services/price-update-batch.ts`, `frontend/src/app/shared/models/price-update-batch.ts` -- agregada pantalla admin unificada para importar lista de proveedor o crear preview manual, editar defaults, aplicar defaults a todas las filas, sobrescribir filas y aplicar/cancelar batches.
+- `docs/05-api/api-guidelines.md` -- documentados codigos de error de price update batches.
+
 ## 2026-06-08
 
 - `frontend/src/app/shared/components/` -- creados 4 nuevos wrappers genericos: `app-input-number` (envuelve p-inputnumber), `app-date-picker` (envuelve p-datepicker), `app-checkbox` (envuelve p-checkbox), `app-menu` (envuelve p-menu con metodo toggle). Extendido `app-select` con soporte para `optionLabel`/`optionValue` variables y templates `#item`/`#selectedItem`.

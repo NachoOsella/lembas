@@ -22,6 +22,8 @@
         <springdoc.version>2.8.9</springdoc.version>
         <mercadopago.version>2.4.0</mercadopago.version>
         <openpdf.version>2.2.5</openpdf.version>
+        <commons-csv.version>1.14.1</commons-csv.version>
+        <poi.version>5.4.1</poi.version>
         <testcontainers.version>2.0.5</testcontainers.version>
     </properties>
 
@@ -91,6 +93,16 @@
             <groupId>com.github.librepdf</groupId>
             <artifactId>openpdf</artifactId>
             <version>${openpdf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>${commons-csv.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
