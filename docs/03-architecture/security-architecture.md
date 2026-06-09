@@ -4,6 +4,7 @@
 
 - JWT-based stateless authentication
 - Access and refresh JWTs are delivered as `HttpOnly` cookies with `SameSite=Strict`
+- Unsafe `/api/**` requests with an `Origin` header are rejected unless the origin is explicitly allowed
 - Tokens expire after 24 hours
 - Passwords hashed with BCrypt
 - No server-side sessions
@@ -41,7 +42,8 @@
 ```text
 SecurityFilterChain
   ├── CorsFilter
-  ├── CsrfFilter (DISABLED) -- API REST stateless; auth cookies use SameSite=Strict
+  ├── CsrfFilter (DISABLED) -- API REST stateless; cookie CSRF risk is mitigated by SameSite=Strict + OriginValidationFilter
+  ├── OriginValidationFilter (unsafe API methods only)
   ├── JwtAuthenticationFilter (Authorization header or HttpOnly access cookie)
   └── ExceptionHandlerFilter
 
@@ -92,4 +94,4 @@ Critical actions are logged in `audit_logs` with user, timestamp, and descriptio
 | No sensitive card data stored | MVP |
 | Rate limiting on login | MVP |
 | HTTPS (via Nginx) | Deployment |
-| CSRF disabled (stateless API) | MVP |
+| CSRF disabled with SameSite=Strict cookies and origin validation for unsafe API requests | MVP |
