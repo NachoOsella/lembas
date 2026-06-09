@@ -210,7 +210,7 @@ export class Inventory {
   }
 
   protected navigateToReceipts(): void {
-    this.router.navigate(['/admin/receips']);
+    this.router.navigate(['/admin/receipts']);
   }
 
   // ---------------------------------------------------------------------------

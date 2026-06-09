@@ -152,7 +152,7 @@ describe('Inventory', () => {
 
     (component as any).navigateToReceipts();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/admin/receips']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/admin/receipts']);
   });
 
   it('should navigate to lot detail when viewLots is called', () => {

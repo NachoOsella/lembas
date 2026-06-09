@@ -1,5 +1,6 @@
 package com.dietetica.lembas.shared.config;
 
+import com.dietetica.lembas.auth.service.AuthCookieService;
 import com.dietetica.lembas.auth.service.AuthService;
 import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.auth.service.LembasUserDetailsService;
@@ -30,6 +31,9 @@ class SecurityConfigTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private AuthCookieService authCookieService;
 
     @MockitoBean
     private SecurityContextHelper securityContextHelper;

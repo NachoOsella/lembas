@@ -19,7 +19,7 @@ const NAV_ITEMS: readonly AdminNavItem[] = [
   { label: 'Productos', icon: 'pi pi-box', route: '/admin/products' },
   { label: 'Inventario', icon: 'pi pi-warehouse', route: '/admin/inventory' },
   { label: 'Movimientos', icon: 'pi pi-list', route: '/admin/stock/movements' },
-  { label: 'Recepciones', icon: 'pi pi-plus-circle', route: '/admin/receips' },
+  { label: 'Recepciones', icon: 'pi pi-plus-circle', route: '/admin/receipts' },
   { label: 'Pedidos', icon: 'pi pi-receipt', route: '/admin/orders' },
   { label: 'POS', icon: 'pi pi-shopping-cart', route: '/admin/pos' },
   { label: 'Caja', icon: 'pi pi-dollar', route: '/admin/cash' },

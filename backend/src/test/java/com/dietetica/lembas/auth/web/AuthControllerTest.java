@@ -5,6 +5,7 @@ import com.dietetica.lembas.auth.dto.LoginRequest;
 import com.dietetica.lembas.auth.dto.RefreshTokenRequest;
 import com.dietetica.lembas.auth.dto.RegisterRequest;
 import com.dietetica.lembas.auth.dto.UserDto;
+import com.dietetica.lembas.auth.service.AuthCookieService;
 import com.dietetica.lembas.auth.service.AuthService;
 import com.dietetica.lembas.auth.service.JwtAuthenticationFilter;
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
@@ -13,6 +14,7 @@ import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,10 +50,21 @@ class AuthControllerTest {
     private AuthService authService;
 
     @MockitoBean
+    private AuthCookieService authCookieService;
+
+    @MockitoBean
     private SecurityContextHelper securityContextHelper;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @BeforeEach
+    void setUpCookieService() {
+        doAnswer(invocation -> {
+            AuthResponse response = invocation.getArgument(0);
+            return new AuthResponse(null, null, response.user());
+        }).when(authCookieService).withoutBodyTokens(any(AuthResponse.class));
+    }
 
     /**
      * Verifies that a valid registration request delegates to the service and returns 201.
@@ -68,8 +82,8 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest())))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.token").value("access-token"))
-                .andExpect(jsonPath("$.refreshToken").value("refresh-token"))
+                .andExpect(jsonPath("$.token").doesNotExist())
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
                 .andExpect(jsonPath("$.user.id").value(1))
                 .andExpect(jsonPath("$.user.email").value("frodo@lembas.com"))
                 .andExpect(jsonPath("$.user.role").value("CUSTOMER"));
@@ -130,8 +144,8 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validLogin())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("access-token"))
-                .andExpect(jsonPath("$.refreshToken").value("refresh-token"))
+                .andExpect(jsonPath("$.token").doesNotExist())
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
                 .andExpect(jsonPath("$.user.email").value("frodo@lembas.com"));
 
         verify(authService).authenticate(any(LoginRequest.class));
@@ -191,8 +205,8 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RefreshTokenRequest("old-refresh-token"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("new-access-token"))
-                .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"))
+                .andExpect(jsonPath("$.token").doesNotExist())
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
                 .andExpect(jsonPath("$.user.email").value("frodo@lembas.com"));
 
         verify(authService).refresh("old-refresh-token");

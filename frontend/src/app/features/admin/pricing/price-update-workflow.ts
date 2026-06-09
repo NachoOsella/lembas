@@ -12,12 +12,15 @@ import { PriceUpdateBatchDetailDto, PriceUpdateBatchItemDto } from '../../../sha
 import { ProductSummary } from '../../../shared/models/product';
 import { SupplierDto } from '../../../shared/models/supplier';
 import { AppButton } from '../../../shared/components/app-button/app-button';
+import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
 import { AppCheckbox } from '../../../shared/components/app-checkbox/app-checkbox';
 import { AppControlField } from '../../../shared/components/app-control-field/app-control-field';
+import { AppInput } from '../../../shared/components/app-input/app-input';
 import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
 import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
 import { AppProductSelector } from '../../../shared/components/app-product-selector/app-product-selector';
 import { AppSelect } from '../../../shared/components/app-select/app-select';
+import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { FormSection } from '../../../shared/components/form-section/form-section';
 import { StatusBadge, StatusBadgeConfig } from '../../../shared/components/status-badge/status-badge';
@@ -72,6 +75,12 @@ interface EditablePriceRow {
   excluded: boolean;
 }
 
+/** Table view-model that keeps immutable backend data and editable row state together. */
+interface PriceTableRow {
+  readonly item: PriceUpdateBatchItemDto;
+  readonly row: EditablePriceRow;
+}
+
 /** Unified admin workflow for supplier file/manual catalog and price updates. */
 @Component({
   selector: 'app-price-update-workflow',
@@ -79,10 +88,13 @@ interface EditablePriceRow {
     AppButton,
     AppCheckbox,
     AppControlField,
+    AppDataTable,
+    AppInput,
     AppInputNumber,
     AppPageHeader,
     AppProductSelector,
     AppSelect,
+    ConfirmDialog,
     CurrencyPipe,
     DatePipe,
     ErrorAlert,
@@ -108,6 +120,7 @@ export class PriceUpdateWorkflow {
   protected readonly error = signal('');
   protected readonly batch = signal<PriceUpdateBatchDetailDto | null>(null);
   protected readonly rows = signal<EditablePriceRow[]>([]);
+  protected readonly confirmApplyVisible = signal(false);
 
   protected readonly supplierId = signal<number | null>(null);
   protected readonly defaultMargin = signal<number | null>(35);
@@ -149,6 +162,25 @@ export class PriceUpdateWorkflow {
   protected readonly supplierOptions = computed<Option<number>[]>(() =>
     this.allSuppliers().map((s) => ({ label: s.name, value: s.id })),
   );
+
+  protected readonly tableRows = computed<PriceTableRow[]>(() => {
+    const current = this.batch();
+    if (!current) return [];
+    return current.items.map((item, index) => ({ item, row: this.rows()[index] }));
+  });
+
+  protected readonly tableColumns: ColumnDef[] = [
+    { field: 'status', header: 'Estado', sortable: false },
+    { field: 'supplierProduct', header: 'Producto proveedor', sortable: false },
+    { field: 'match', header: 'Match', sortable: false },
+    { field: 'codes', header: 'SKU / barcode', sortable: false },
+    { field: 'cost', header: 'Costo', sortable: false },
+    { field: 'variation', header: 'Variacion', sortable: false },
+    { field: 'salePrice', header: 'Precio venta', sortable: false },
+    { field: 'overrides', header: 'Overrides', sortable: false },
+    { field: 'apply', header: 'Aplicar', sortable: false },
+    { field: 'actions', header: 'Acciones', sortable: false },
+  ];
 
   protected readonly itemStatusBadges = ITEM_STATUS_BADGES;
   protected readonly batchStatusBadges = BATCH_STATUS_BADGES;
@@ -298,11 +330,15 @@ export class PriceUpdateWorkflow {
 
   /** Applies the current batch after human confirmation. */
   protected applyBatch(): void {
+    if (!this.batch() || !this.canApply()) return;
+    this.confirmApplyVisible.set(true);
+  }
+
+  /** Applies the batch after the shared confirmation dialog is accepted. */
+  protected confirmApplyBatch(): void {
     const current = this.batch();
+    this.confirmApplyVisible.set(false);
     if (!current || !this.canApply()) return;
-    if (!confirm('Confirmar aplicacion del lote. Esta accion actualiza costos, precios e historiales.')) {
-      return;
-    }
     this.saving.set(true);
     this.batches.apply(current.id).subscribe({
       next: (batch) => this.setBatch(batch, 'Lote aplicado'),

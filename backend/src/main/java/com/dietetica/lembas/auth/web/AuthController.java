@@ -4,9 +4,13 @@ import com.dietetica.lembas.auth.dto.AuthResponse;
 import com.dietetica.lembas.auth.dto.LoginRequest;
 import com.dietetica.lembas.auth.dto.RefreshTokenRequest;
 import com.dietetica.lembas.auth.dto.RegisterRequest;
+import com.dietetica.lembas.auth.service.AuthCookieService;
 import com.dietetica.lembas.auth.service.AuthService;
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,10 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthCookieService authCookieService;
     private final SecurityContextHelper securityContextHelper;
 
-    public AuthController(AuthService authService, SecurityContextHelper securityContextHelper) {
+    public AuthController(AuthService authService, AuthCookieService authCookieService, SecurityContextHelper securityContextHelper) {
         this.authService = authService;
+        this.authCookieService = authCookieService;
         this.securityContextHelper = securityContextHelper;
     }
 
@@ -39,8 +45,12 @@ public class AuthController {
      */
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
-        return authService.registerCustomer(request);
+    public AuthResponse register(@Valid @RequestBody RegisterRequest request,
+                                 HttpServletRequest httpRequest,
+                                 HttpServletResponse httpResponse) {
+        AuthResponse authResponse = authService.registerCustomer(request);
+        authCookieService.writeAuthCookies(authResponse, httpRequest, httpResponse);
+        return authCookieService.withoutBodyTokens(authResponse);
     }
 
     /**
@@ -50,8 +60,12 @@ public class AuthController {
      * @return authentication response with access and refresh tokens
      */
     @PostMapping("/login")
-    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
-        return authService.authenticate(request);
+    public AuthResponse login(@Valid @RequestBody LoginRequest request,
+                              HttpServletRequest httpRequest,
+                              HttpServletResponse httpResponse) {
+        AuthResponse authResponse = authService.authenticate(request);
+        authCookieService.writeAuthCookies(authResponse, httpRequest, httpResponse);
+        return authCookieService.withoutBodyTokens(authResponse);
     }
 
     /**
@@ -61,8 +75,22 @@ public class AuthController {
      * @return authentication response with fresh access and refresh tokens
      */
     @PostMapping("/refresh")
-    public AuthResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        return authService.refresh(request.refreshToken());
+    public AuthResponse refresh(@RequestBody(required = false) @Valid RefreshTokenRequest request,
+                                HttpServletRequest httpRequest,
+                                HttpServletResponse httpResponse) {
+        String refreshToken = request != null ? request.refreshToken() : readCookie(httpRequest, AuthCookieService.REFRESH_COOKIE_NAME);
+        AuthResponse authResponse = authService.refresh(refreshToken);
+        authCookieService.writeAuthCookies(authResponse, httpRequest, httpResponse);
+        return authCookieService.withoutBodyTokens(authResponse);
+    }
+
+    /**
+     * Clears authentication cookies in the browser.
+     */
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        authCookieService.clearAuthCookies(httpRequest, httpResponse);
     }
 
     /**
@@ -77,5 +105,19 @@ public class AuthController {
     @SecurityRequirement(name = "bearerAuth")
     public AuthResponse me() {
         return authService.getCurrentUser(securityContextHelper.getCurrentUser());
+    }
+
+    /** Reads a named cookie from the request, returning null when it is missing. */
+    private String readCookie(HttpServletRequest request, String cookieName) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return null;
+        }
+        for (Cookie cookie : cookies) {
+            if (cookieName.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 }

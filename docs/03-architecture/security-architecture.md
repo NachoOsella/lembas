@@ -3,6 +3,7 @@
 ## Authentication
 
 - JWT-based stateless authentication
+- Access and refresh JWTs are delivered as `HttpOnly` cookies with `SameSite=Strict`
 - Tokens expire after 24 hours
 - Passwords hashed with BCrypt
 - No server-side sessions
@@ -40,11 +41,11 @@
 ```text
 SecurityFilterChain
   ├── CorsFilter
-  ├── CsrfFilter (DISABLED) -- API REST stateless
-  ├── JwtAuthenticationFilter
+  ├── CsrfFilter (DISABLED) -- API REST stateless; auth cookies use SameSite=Strict
+  ├── JwtAuthenticationFilter (Authorization header or HttpOnly access cookie)
   └── ExceptionHandlerFilter
 
-Public routes:   POST /api/auth/register, POST /api/auth/login, /api/store/**, /api/webhooks/**, /uploads/**
+Public routes:   POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, POST /api/auth/logout, /api/store/**, /api/webhooks/**, /uploads/**
 Authenticated:   GET /api/auth/me
 Customer routes: /api/customer/** (role CUSTOMER)
 Admin routes:    /api/admin/** (roles ADMIN, MANAGER, EMPLOYEE)

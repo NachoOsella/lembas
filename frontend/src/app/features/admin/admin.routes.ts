@@ -52,21 +52,26 @@ export default [
       },
       {
         path: 'stock/entry',
-        redirectTo: 'receips',
+        redirectTo: 'receipts',
         pathMatch: 'full',
       },
       {
         path: 'stock/receipts',
-        redirectTo: 'receips',
+        redirectTo: 'receipts',
         pathMatch: 'full',
       },
       {
         path: 'recepciones',
-        redirectTo: 'receips',
+        redirectTo: 'receipts',
         pathMatch: 'full',
       },
       {
         path: 'receips',
+        redirectTo: 'receipts',
+        pathMatch: 'full',
+      },
+      {
+        path: 'receipts',
         loadComponent: () => import('./stock-entry/stock-entry').then((m) => m.StockEntry),
       },
       {

@@ -236,7 +236,7 @@ describe('Register component', () => {
     fixture.detectChanges();
 
     expect(component.registrationSucceeded()).toBe(true);
-    expect(authService.currentUser()).toBeNull();
+    expect(authService.currentUser()?.email).toBe('frodo@lembas.com');
     expect(navigateSpy).toHaveBeenCalledWith(['/auth/login'], {
       queryParams: { registered: 'true' },
     });
