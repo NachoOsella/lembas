@@ -96,18 +96,13 @@
               Tu rol actual
             </span>
           }
-          <p-select
+          <app-select
             inputId="user-role"
             [options]="roleOptions"
-            [ngModel]="formRole()"
-            (ngModelChange)="onRoleChange($event); formSubmitted.set(false)"
-            optionLabel="label"
-            optionValue="value"
+            [(value)]="formRole"
             placeholder="Seleccionar rol"
-            class="w-full"
-            [style]="{ width: '100%' }"
             [disabled]="isEditingSelf()"
-            [appendTo]="'body'"
+            (valueChange)="onRoleChange($event); formSubmitted.set(false)"
           >
             <ng-template #selectedItem let-option>
               <span class="select-option">
@@ -124,7 +119,7 @@
                 </div>
               </div>
             </ng-template>
-          </p-select>
+          </app-select>
           @if (isEditingSelf()) {
             <small class="user-form__hint user-form__hint--self">
               <i class="pi pi-info-circle" aria-hidden="true"></i>
@@ -141,20 +136,16 @@
             <label for="user-branch" class="user-form__label">
               Sucursal <span class="user-form__required" aria-hidden="true">*</span>
             </label>
-            <p-select
+            <app-select
               inputId="user-branch"
               [options]="branches()"
-              [ngModel]="formBranchId()"
-              (ngModelChange)="onBranchChange($event); formSubmitted.set(false)"
               optionLabel="name"
               optionValue="id"
+              [(value)]="formBranchId"
               placeholder="Seleccionar sucursal"
-              class="w-full"
-              [style]="{ width: '100%' }"
               [showClear]="true"
               [disabled]="branches().length === 0"
-              [appendTo]="'body'"
-              [class.ng-invalid]="formSubmitted() && !formBranchValid()"
+              (valueChange)="onBranchChange($event); formSubmitted.set(false)"
             >
               <ng-template #selectedItem let-branch>
                 <span class="select-option">
@@ -171,7 +162,7 @@
                   </div>
                 </div>
               </ng-template>
-            </p-select>
+            </app-select>
             @if (formSubmitted() && !formBranchValid()) {
               <small class="user-form__error">Debe seleccionar una sucursal para este rol.</small>
             }

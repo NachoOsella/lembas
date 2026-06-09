@@ -2,8 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { InputNumber } from 'primeng/inputnumber';
-import { Select } from 'primeng/select';
+import { AppInputNumber } from '../../../../shared/components/app-input-number/app-input-number';
+import { AppSelect } from '../../../../shared/components/app-select/app-select';
 
 import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
 import { CategoryService } from '../../../../core/services/category';
@@ -34,13 +34,13 @@ interface Option<T> {
   imports: [
     AppButton,
     AppFormField,
+    AppInputNumber,
     AppPageHeader,
+    AppSelect,
     ErrorAlert,
     FormSection,
     FormsModule,
-    InputNumber,
     RouterLink,
-    Select,
     Skeleton,
   ],
   templateUrl: './product-form.html',

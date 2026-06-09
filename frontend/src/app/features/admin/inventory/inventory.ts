@@ -2,8 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
-import { DatePicker } from 'primeng/datepicker';
-import { InputNumber } from 'primeng/inputnumber';
+import { AppDatePicker } from '../../../shared/components/app-date-picker/app-date-picker';
+import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
 
 import { InventoryService } from '../../../core/services/inventory';
 import { ProductService } from '../../../core/services/product';
@@ -31,13 +31,12 @@ import { FormSection } from '../../../shared/components/form-section/form-sectio
   selector: 'app-inventory',
   imports: [
     AppButton,
-    AppDataTable,
     AppControlField,
+    AppDataTable,
+    AppDatePicker,
     AppFormField,
+    AppInputNumber,
     AppModal,
-    DatePicker,
-    FormsModule,
-    InputNumber,
     AppPageHeader,
     AppProductSelector,
     AppSearchBar,
@@ -45,6 +44,7 @@ import { FormSection } from '../../../shared/components/form-section/form-sectio
     AppToggleSwitch,
     ErrorAlert,
     FormSection,
+    FormsModule,
   ],
   templateUrl: './inventory.html',
   styleUrl: './inventory.css',

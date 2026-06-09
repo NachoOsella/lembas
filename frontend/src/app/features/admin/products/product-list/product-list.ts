@@ -2,8 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MenuItem, MessageService } from 'primeng/api';
-import { Menu } from 'primeng/menu';
-import { Select } from 'primeng/select';
+import { AppMenu } from '../../../../shared/components/app-menu/app-menu';
+import { AppSelect } from '../../../../shared/components/app-select/app-select';
 
 import { CategoryService } from '../../../../core/services/category';
 import { ErrorMappingService } from '../../../../core/services/error-mapping';
@@ -38,14 +38,14 @@ interface Option<T> {
   imports: [
     AppButton,
     AppDataTable,
+    AppMenu,
     AppPageHeader,
     AppSearchBar,
+    AppSelect,
     ConfirmDialog,
     ErrorAlert,
     FormsModule,
-    Menu,
     RouterLink,
-    Select,
     StatusBadge,
   ],
   templateUrl: './product-list.html',

@@ -1,8 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePicker } from 'primeng/datepicker';
-import { InputNumber } from 'primeng/inputnumber';
-import { InputText } from 'primeng/inputtext';
+import { AppDatePicker } from '../../../shared/components/app-date-picker/app-date-picker';
+import { AppFormField } from '../../../shared/components/app-form-field/app-form-field';
+import { AppInput } from '../../../shared/components/app-input/app-input';
+import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
 import { MessageService } from 'primeng/api';
 
 import { InventoryService } from '../../../core/services/inventory';
@@ -27,7 +28,7 @@ interface ReceiptRow {
   readonly productName: string;
   readonly productBarcode?: string | null;
   readonly orderedQuantity: number;
-  readonly unitCost: number;
+  readonly unitCost: number | null;
   quantityReceived: number | null;
   lotCode: string;
   expirationDate: Date | null;
@@ -40,13 +41,14 @@ interface ReceiptRow {
     AppButton,
     AppControlField,
     AppDataTable,
+    AppDatePicker,
+    AppFormField,
+    AppInput,
+    AppInputNumber,
     AppPageHeader,
     AppSelect,
-    DatePicker,
     ErrorAlert,
     FormsModule,
-    InputNumber,
-    InputText,
   ],
   templateUrl: './stock-entry.html',
   styleUrl: './stock-entry.css',
@@ -240,7 +242,7 @@ export class StockEntry {
   /** Validates one row. Zero quantity rows are allowed because they are skipped. */
   private rowValid(row: ReceiptRow): boolean {
     const quantity = Number(row.quantityReceived ?? 0);
-    return quantity >= 0 && quantity <= row.orderedQuantity && Number(row.unitCost) >= 0;
+    return quantity >= 0 && quantity <= row.orderedQuantity && Number(row.unitCost ?? 0) >= 0;
   }
 
   /** Refreshes the order selector after a successful receipt. */

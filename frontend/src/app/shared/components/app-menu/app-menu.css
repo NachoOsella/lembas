@@ -1,0 +1,7 @@
+:host {
+  display: none;
+}
+
+:host-context(.app-menu--visible) {
+  display: block;
+}

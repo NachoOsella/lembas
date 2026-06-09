@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  min-width: 0;
+  width: 100%;
+}
+
+:host ::ng-deep .app-input-number.p-inputnumber {
+  width: 100%;
+}
+
+:host ::ng-deep .app-input-number .p-inputnumber-input {
+  width: 100%;
+}

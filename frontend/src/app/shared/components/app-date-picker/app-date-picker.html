@@ -1,0 +1,16 @@
+<p-datepicker
+  [inputId]="inputId()"
+  [ngModel]="value()"
+  (ngModelChange)="value.set($event)"
+  [placeholder]="placeholder()"
+  [disabled]="disabled()"
+  [dateFormat]="dateFormat()"
+  [minDate]="minDate() ?? undefined"
+  [maxDate]="maxDate() ?? undefined"
+  [showIcon]="showIcon()"
+  [iconDisplay]="iconDisplay()"
+  [appendTo]="appendTo()"
+  [name]="name()"
+  [selectionMode]="selectionMode()"
+  class="app-date-picker"
+/>

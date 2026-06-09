@@ -124,14 +124,11 @@
         </app-control-field>
 
         <app-control-field label="Fecha esperada" forId="po-date">
-          <p-datepicker
+          <app-date-picker
             inputId="po-date"
-            [ngModel]="expectedDeliveryDate()"
-            (ngModelChange)="expectedDeliveryDate.set($event)"
-            name="expectedDeliveryDate"
+            [(value)]="expectedDeliveryDate"
             dateFormat="yy-mm-dd"
             placeholder="Sin fecha"
-            appendTo="body"
           />
         </app-control-field>
 
@@ -198,12 +195,12 @@
             </td>
             <td>
               <app-control-field label="Cantidad" [error]="submitted() && (item.quantityOrdered ?? 0) <= 0 ? 'Mayor a cero.' : ''">
-                <p-inputnumber [(ngModel)]="item.quantityOrdered" [ngModelOptions]="{ standalone: true }" mode="decimal" [min]="0" [maxFractionDigits]="3" />
+                <app-input-number [(value)]="item.quantityOrdered" mode="decimal" [min]="0" [maxFractionDigits]="3" />
               </app-control-field>
             </td>
             <td>
               <app-control-field label="Costo unitario" [error]="submitted() && (item.unitCost ?? 0) < 0 ? 'No puede ser negativo.' : ''">
-                <p-inputnumber [(ngModel)]="item.unitCost" [ngModelOptions]="{ standalone: true }" mode="currency" currency="ARS" locale="es-AR" [min]="0" [maxFractionDigits]="2" />
+                <app-input-number [(value)]="item.unitCost" mode="currency" currency="ARS" locale="es-AR" [min]="0" [maxFractionDigits]="2" />
               </app-control-field>
             </td>
             <td>{{ formatPrice(itemSubtotal(item)) }}</td>

@@ -3,9 +3,9 @@
   [name]="name()"
   [ngModel]="value()"
   (ngModelChange)="value.set($event)"
-  [options]="options()"
-  optionLabel="label"
-  optionValue="value"
+  [options]="$any(options())"
+  [optionLabel]="optionLabel()"
+  [optionValue]="optionValue()"
   [placeholder]="placeholder()"
   [disabled]="disabled()"
   [loading]="loading()"
@@ -16,4 +16,15 @@
   [emptyMessage]="emptyMessage()"
   [emptyFilterMessage]="emptyFilterMessage()"
   [appendTo]="appendTo()"
-/>
+>
+  @if (selectedItemTemplate(); as tpl) {
+    <ng-template #selectedItem let-option>
+      <ng-container *ngTemplateOutlet="tpl; context: { $implicit: option }" />
+    </ng-template>
+  }
+  @if (itemTemplate(); as tpl) {
+    <ng-template #item let-option>
+      <ng-container *ngTemplateOutlet="tpl; context: { $implicit: option }" />
+    </ng-template>
+  }
+</p-select>

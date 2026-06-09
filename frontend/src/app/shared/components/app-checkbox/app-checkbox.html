@@ -1,0 +1,15 @@
+<label class="app-checkbox__row">
+  <p-checkbox
+    [inputId]="inputId()"
+    [name]="name()"
+    [binary]="binary()"
+    [ngModel]="value()"
+    (ngModelChange)="value.set($event)"
+    [disabled]="disabled()"
+  />
+  @if (label(); as lbl) {
+    <span class="app-checkbox__label">{{ lbl }}</span>
+  } @else {
+    <span class="app-checkbox__label"><ng-content /></span>
+  }
+</label>

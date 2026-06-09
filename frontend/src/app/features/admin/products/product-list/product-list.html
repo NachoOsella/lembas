@@ -44,27 +44,17 @@
             (search)="onSearch($event)"
             (clear)="onSearchClear()"
           />
-          <p-select
+          <app-select
             [options]="categoryOptions()"
-            [ngModel]="categoryId()"
-            (ngModelChange)="categoryId.set($event)"
-            optionLabel="label"
-            optionValue="value"
+            [(value)]="categoryId"
             class="products-filters__select"
-            [style]="{ width: '13rem' }"
-            appendTo="body"
-            (onChange)="onFilterChange()"
+            (valueChange)="onFilterChange()"
           />
-          <p-select
+          <app-select
             [options]="statusOptions"
-            [ngModel]="onlineStatus()"
-            (ngModelChange)="onlineStatus.set($event)"
-            optionLabel="label"
-            optionValue="value"
+            [(value)]="onlineStatus"
             class="products-filters__select"
-            [style]="{ width: '12rem' }"
-            appendTo="body"
-            (onChange)="onFilterChange()"
+            (valueChange)="onFilterChange()"
           />
         </div>
       </ng-template>
@@ -94,7 +84,7 @@
           </td>
           <td>
             <div class="table-actions">
-              <p-menu #statusMenu [model]="statusActions(product)" [popup]="true" appendTo="body" />
+              <app-menu #statusMenu [model]="statusActions(product)" [popup]="true" appendTo="body" />
               <app-button
                 variant="ghost"
                 size="sm"

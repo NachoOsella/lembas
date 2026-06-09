@@ -23,18 +23,13 @@
 
         <div class="category-form__field category-form__field--wide">
           <label for="category-parent" class="category-form__label">Categoria padre</label>
-          <p-select
+          <app-select
             inputId="category-parent"
             [options]="parentOptions()"
-            [ngModel]="formParentId()"
-            (ngModelChange)="formParentId.set($event); formSubmitted.set(false)"
-            optionLabel="label"
-            optionValue="value"
+            [(value)]="formParentId"
             placeholder="Seleccionar categoria padre"
-            class="w-full category-form__select category-form__select--rich"
-            [style]="{ width: '100%' }"
-            [appendTo]="'body'"
-            panelStyleClass="category-form__select-panel"
+            class="category-form__select category-form__select--rich"
+            (valueChange)="formSubmitted.set(false)"
           >
             <ng-template #selectedItem let-option>
               <span class="select-option">
@@ -51,7 +46,7 @@
                 </div>
               </div>
             </ng-template>
-          </p-select>
+          </app-select>
         </div>
 
         <div class="category-form__field category-form__field--wide">

@@ -42,37 +42,19 @@
           />
         </app-control-field>
 
-        <app-control-field
+        <app-form-field
           label="Factura / remito"
-          forId="receipt-invoice"
-        >
-          <input
-            id="receipt-invoice"
-            pInputText
-            type="text"
-            [ngModel]="invoiceNumber()"
-            (ngModelChange)="invoiceNumber.set($event); confirmedReceipt.set(null)"
-            name="invoiceNumber"
-            maxlength="100"
-            placeholder="Ej. FAC-2026-001"
-          />
-        </app-control-field>
+          [(value)]="invoiceNumber"
+          placeholder="Ej. FAC-2026-001"
+          testId="receipt-invoice"
+        />
 
-        <app-control-field
+        <app-form-field
           label="Notas"
-          forId="receipt-notes"
-        >
-          <input
-            id="receipt-notes"
-            pInputText
-            type="text"
-            [ngModel]="notes()"
-            (ngModelChange)="notes.set($event); confirmedReceipt.set(null)"
-            name="notes"
-            maxlength="1000"
-            placeholder="Observaciones de la recepcion"
-          />
-        </app-control-field>
+          [(value)]="notes"
+          placeholder="Observaciones de la recepcion"
+          testId="receipt-notes"
+        />
       </div>
 
       <!-- Seccion 2: Items -->
@@ -112,11 +94,9 @@
             <td [style.width]="columns[1]?.width" class="stock-entry__cell--numeric">{{ row.orderedQuantity }}</td>
             <td [style.width]="columns[2]?.width">
               <div class="stock-entry__cell-control">
-                <p-inputnumber
-                  [inputId]="'receipt-qty-' + row.purchaseOrderItemId"
-                  [ngModel]="row.quantityReceived"
-                  (ngModelChange)="updateRow(row.purchaseOrderItemId, { quantityReceived: $event })"
-                  [name]="'quantityReceived-' + row.purchaseOrderItemId"
+                <app-input-number
+                  [value]="row.quantityReceived"
+                  (valueChange)="updateRow(row.purchaseOrderItemId, { quantityReceived: $event })"
                   mode="decimal"
                   [min]="0"
                   [max]="row.orderedQuantity"
@@ -128,39 +108,29 @@
             </td>
             <td [style.width]="columns[3]?.width">
               <div class="stock-entry__cell-control">
-                <input
-                  pInputText
-                  type="text"
-                  [ngModel]="row.lotCode"
-                  (ngModelChange)="updateRow(row.purchaseOrderItemId, { lotCode: $event })"
-                  [name]="'lotCode-' + row.purchaseOrderItemId"
-                  maxlength="100"
+                <app-input
+                  [value]="row.lotCode"
+                  (valueChange)="updateRow(row.purchaseOrderItemId, { lotCode: $event })"
                   placeholder="Opcional"
-                  class="stock-entry__table-input"
                 />
               </div>
             </td>
             <td [style.width]="columns[4]?.width">
               <div class="stock-entry__cell-control">
-                <p-datepicker
-                  [inputId]="'receipt-exp-' + row.purchaseOrderItemId"
-                  [ngModel]="row.expirationDate"
-                  (ngModelChange)="updateRow(row.purchaseOrderItemId, { expirationDate: $event })"
-                  [name]="'expirationDate-' + row.purchaseOrderItemId"
+                <app-date-picker
+                  [value]="row.expirationDate"
+                  (valueChange)="updateRow(row.purchaseOrderItemId, { expirationDate: $event })"
                   [minDate]="minExpirationDate()"
                   dateFormat="yy-mm-dd"
                   placeholder="Sin vencimiento"
-                  appendTo="body"
                 />
               </div>
             </td>
             <td [style.width]="columns[5]?.width">
               <div class="stock-entry__cell-control">
-                <p-inputnumber
-                  [inputId]="'receipt-cost-' + row.purchaseOrderItemId"
-                  [ngModel]="row.unitCost"
-                  (ngModelChange)="updateRow(row.purchaseOrderItemId, { unitCost: $event })"
-                  [name]="'unitCost-' + row.purchaseOrderItemId"
+                <app-input-number
+                  [value]="row.unitCost"
+                  (valueChange)="updateRow(row.purchaseOrderItemId, { unitCost: $event })"
                   mode="currency"
                   currency="ARS"
                   locale="es-AR"

@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Select } from 'primeng/select';
+import { AppSelect } from '../../../../shared/components/app-select/app-select';
 
 import { MessageService } from 'primeng/api';
 import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
@@ -21,7 +21,7 @@ interface ParentOption {
 /** Modal form for creating and editing product categories with realtime validation. */
 @Component({
   selector: 'app-category-form',
-  imports: [AppButton, AppFormField, AppModal, ErrorAlert, FormSection, FormsModule, Select],
+  imports: [AppButton, AppFormField, AppModal, AppSelect, ErrorAlert, FormSection, FormsModule],
   templateUrl: './category-form.html',
   styleUrl: './category-form.css',
 })

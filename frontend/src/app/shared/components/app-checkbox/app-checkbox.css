@@ -1,0 +1,18 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-checkbox__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.app-checkbox__label {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.87);
+  cursor: pointer;
+}

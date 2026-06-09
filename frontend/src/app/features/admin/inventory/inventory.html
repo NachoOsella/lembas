@@ -130,9 +130,8 @@
 
         <div class="supplier-form__field">
           <app-control-field label="Cantidad" [required]="true">
-            <p-inputnumber
-              [(ngModel)]="newQuantity"
-              name="quantity"
+            <app-input-number
+              [(value)]="newQuantity"
               [min]="0"
               [maxFractionDigits]="3"
               placeholder="0"
@@ -142,9 +141,8 @@
 
         <div class="supplier-form__field">
           <app-control-field label="Costo unitario">
-            <p-inputnumber
-              [(ngModel)]="newCostPrice"
-              name="costPrice"
+            <app-input-number
+              [(value)]="newCostPrice"
               mode="currency"
               currency="ARS"
               locale="es-AR"
@@ -166,14 +164,12 @@
 
         <div class="supplier-form__field">
           <app-control-field label="Fecha de vencimiento">
-            <p-datepicker
+            <app-date-picker
               inputId="lot-expiration-date"
-              [(ngModel)]="newExpirationDate"
-              name="expirationDate"
+              [(value)]="newExpirationDate"
               dateFormat="dd/mm/yy"
               [minDate]="minDate()"
               placeholder="Seleccionar fecha"
-              appendTo="body"
             />
           </app-control-field>
         </div>
@@ -242,9 +238,8 @@
 
         <div class="supplier-form__field">
           <app-control-field label="Cantidad" [required]="true">
-            <p-inputnumber
-              [(ngModel)]="adjQuantity"
-              name="adjQuantity"
+            <app-input-number
+              [(value)]="adjQuantity"
               [min]="0"
               [maxFractionDigits]="3"
               placeholder="0"

@@ -38,16 +38,11 @@
             <label for="product-category" class="product-form__label"
               >Categoria <span aria-hidden="true">*</span></label
             >
-            <p-select
+            <app-select
               inputId="product-category"
               [options]="categoryOptions()"
-              [ngModel]="categoryId()"
-              (ngModelChange)="categoryId.set($event)"
-              name="categoryId"
-              optionLabel="label"
-              optionValue="value"
+              [(value)]="categoryId"
               placeholder="Seleccionar"
-              appendTo="body"
               [class.ng-invalid]="submitted() && !categoryId()"
             />
             @if (submitted() && !categoryId()) {
@@ -76,15 +71,10 @@
 
           <div class="product-form__field">
             <label for="product-status" class="product-form__label">Estado online</label>
-            <p-select
+            <app-select
               inputId="product-status"
               [options]="statusOptions()"
-              [ngModel]="onlineStatus()"
-              (ngModelChange)="onlineStatus.set($event)"
-              name="onlineStatus"
-              optionLabel="label"
-              optionValue="value"
-              appendTo="body"
+              [(value)]="onlineStatus"
             />
           </div>
 
@@ -111,16 +101,13 @@
               <label for="product-price" class="product-form__label"
                 >Precio de venta <span aria-hidden="true">*</span></label
               >
-              <p-inputnumber
+              <app-input-number
                 inputId="product-price"
-                [ngModel]="salePrice()"
-                (ngModelChange)="salePrice.set($event)"
-                name="salePrice"
+                [(value)]="salePrice"
                 mode="currency"
                 currency="ARS"
                 locale="es-AR"
                 [min]="0"
-                [class.ng-invalid]="submitted() && (salePrice() === null || salePrice()! < 0)"
               />
               @if (submitted() && (salePrice() === null || salePrice()! < 0)) {
                 <small class="product-form__error">El precio debe ser mayor o igual a cero.</small>
@@ -129,11 +116,9 @@
 
             <div class="product-form__field">
               <label for="product-min-stock" class="product-form__label">Stock minimo</label>
-              <p-inputnumber
+              <app-input-number
                 inputId="product-min-stock"
-                [ngModel]="minimumStock()"
-                (ngModelChange)="minimumStock.set($event)"
-                name="minimumStock"
+                [(value)]="minimumStock"
                 [min]="0"
               />
             </div>

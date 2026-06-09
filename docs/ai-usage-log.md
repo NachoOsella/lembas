@@ -2,6 +2,24 @@
 
 ## 2026-06-08
 
+- `frontend/src/app/shared/components/` -- creados 4 nuevos wrappers genericos: `app-input-number` (envuelve p-inputnumber), `app-date-picker` (envuelve p-datepicker), `app-checkbox` (envuelve p-checkbox), `app-menu` (envuelve p-menu con metodo toggle). Extendido `app-select` con soporte para `optionLabel`/`optionValue` variables y templates `#item`/`#selectedItem`.
+
+- `frontend/src/app/features/admin/{users,products,categories,suppliers}/*.html` -- migrados 8 usos de `p-select` raw a `app-select`.
+
+- `frontend/src/app/features/admin/{stock-entry,inventory,product-form,suppliers,purchase-orders}/*.html` -- migrados 10 usos de `p-inputnumber` raw a `app-input-number`.
+
+- `frontend/src/app/features/admin/{stock-entry,inventory,purchase-orders}/*.html` -- migrados 3 usos de `p-datepicker` raw a `app-date-picker`.
+
+- `frontend/src/app/features/admin/suppliers/*.html` -- migrado `p-checkbox` raw a `app-checkbox`.
+
+- `frontend/src/app/features/admin/{admin-layout,product-list}/*.html` -- migrados 2 usos de `p-menu` raw a `app-menu`.
+
+- `frontend/src/app/features/admin/stock-entry/*.html` -- migrados 2 `pInputText` raw a `app-form-field` (invoice, notes) y 1 `input pInputText` raw a `app-input` (lotCode en tabla).
+
+- `frontend/src/app/features/auth/{login,register}/*.html` -- corregido `rounded-[28px]` a `rounded-xl` (12px segun DESING.md).
+
+- `frontend/src/app/shared/components/index.ts` -- barrel actualizado con todos los componentes nuevos y algunos faltantes (app-product-selector, error-page, hero-flowers).
+
 - `backend/src/main/java/com/dietetica/lembas/inventory/`, `frontend/src/app/features/admin/{inventory,stock-movements}/`, `docs/05-api/` -- corregida revision S2-US04: bloqueo pesimista en ajustes por lote, reactivacion de lotes depleted, validacion de signo para mermas/consumo interno, busqueda y ordenamiento de movimientos, template custom de tabla y documentacion de errores.
 
 - `backend/src/main/java/com/dietetica/lembas/inventory/`, `backend/src/test/java/com/dietetica/lembas/inventory/repository/StockMovementRepositoryTest.java` -- corregido 500 en listado de movimientos usando busqueda dinamica por Specification para evitar parametros temporales nulos en PostgreSQL; agregado test JPA con Testcontainers.

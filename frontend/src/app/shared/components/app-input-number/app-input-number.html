@@ -1,0 +1,17 @@
+<p-inputnumber
+  [inputId]="inputId()"
+  [ngModel]="value()"
+  (ngModelChange)="value.set($event)"
+  [mode]="mode()"
+  [currency]="currency()"
+  [locale]="locale()"
+  [placeholder]="placeholder()"
+  [disabled]="disabled()"
+  [min]="min() ?? undefined"
+  [max]="max() ?? undefined"
+  [minFractionDigits]="minFractionDigits()"
+  [maxFractionDigits]="maxFractionDigits()"
+  [showButtons]="showButtons()"
+  [name]="name()"
+  class="app-input-number"
+/>

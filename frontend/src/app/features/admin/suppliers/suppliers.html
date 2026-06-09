@@ -267,14 +267,10 @@
           <label class="supplier-form__label">
             Proveedor <span class="supplier-form__required" aria-hidden="true">*</span>
           </label>
-          <p-select
+          <app-select
             [options]="supplierOptions()"
-            [(ngModel)]="supplierProductFormSupplierId"
-            name="supplierId"
-            optionLabel="label"
-            optionValue="value"
+            [(value)]="supplierProductFormSupplierId"
             placeholder="Seleccionar proveedor"
-            appendTo="body"
             class="supplier-form__select"
           />
         </div>
@@ -292,9 +288,8 @@
           <label class="supplier-form__label">
             Costo actual de reposicion <span class="supplier-form__required" aria-hidden="true">*</span>
           </label>
-          <p-inputnumber
-            [(ngModel)]="supplierProductFormCurrentCost"
-            name="currentCost"
+          <app-input-number
+            [(value)]="supplierProductFormCurrentCost"
             mode="currency"
             currency="ARS"
             locale="es-AR"
@@ -306,12 +301,11 @@
 
         <div class="supplier-form__field supplier-form__field--wide">
           <label class="supplier-form__checkbox-row">
-            <p-checkbox
-              [binary]="true"
-              [(ngModel)]="supplierProductFormPreferred"
-              name="preferred"
-            />
-            Marcar como proveedor preferido para este producto
+            <app-checkbox
+              [(value)]="supplierProductFormPreferred"
+            >
+              Marcar como proveedor preferido para este producto
+            </app-checkbox>
           </label>
         </div>
       </div>

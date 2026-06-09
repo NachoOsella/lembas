@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePicker } from 'primeng/datepicker';
-import { InputNumber } from 'primeng/inputnumber';
+import { AppDatePicker } from '../../../shared/components/app-date-picker/app-date-picker';
+import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
 import { MessageService } from 'primeng/api';
 
 import { PurchaseOrderService } from '../../../core/services/purchase-order';
@@ -59,15 +59,15 @@ const PURCHASE_ORDER_STATUS_BADGES: Record<string, StatusBadgeConfig> = {
     AppButton,
     AppControlField,
     AppDataTable,
+    AppDatePicker,
     AppFormField,
+    AppInputNumber,
     AppModal,
     AppPageHeader,
-    DatePicker,
+    AppSelect,
     ErrorAlert,
     FormSection,
     FormsModule,
-    InputNumber,
-    AppSelect,
     StatusBadge,
   ],
   templateUrl: './purchase-orders.html',

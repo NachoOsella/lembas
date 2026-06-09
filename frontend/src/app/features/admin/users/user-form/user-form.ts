@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, input, output, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Select } from 'primeng/select';
+import { AppSelect } from '../../../../shared/components/app-select/app-select';
 import { MessageService } from 'primeng/api';
 
 import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
@@ -38,7 +38,7 @@ const ROLE_ICON: Record<InternalRole, string> = {
 
 @Component({
   selector: 'app-user-form',
-  imports: [FormsModule, Select, AppButton, AppFormField, AppModal, ErrorAlert, FormSection],
+  imports: [FormsModule, AppSelect, AppButton, AppFormField, AppModal, ErrorAlert, FormSection],
   templateUrl: './user-form.html',
   styleUrl: './user-form.css',
 })
@@ -181,10 +181,12 @@ export class UserForm {
   // ---------------------------------------------------------------------------
   // Role interaction
   // ---------------------------------------------------------------------------
-  protected onRoleChange(role: InternalRole): void {
-    this.formRole.set(role);
-    if (role === 'ADMIN') {
-      this.formBranchId.set(null);
+  protected onRoleChange(role: InternalRole | null): void {
+    if (role) {
+      this.formRole.set(role);
+      if (role === 'ADMIN') {
+        this.formBranchId.set(null);
+      }
     }
   }
 

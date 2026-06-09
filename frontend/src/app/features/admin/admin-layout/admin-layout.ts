@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, inject, signal, computed } from '@angular
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subject, filter, takeUntil } from 'rxjs';
 import { MenuItem } from 'primeng/api';
-import { MenuModule } from 'primeng/menu';
+import { AppMenu } from '../../../shared/components/app-menu/app-menu';
 
 import { AuthService } from '../../../core/services/auth';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
@@ -48,7 +48,7 @@ const LABEL_MAP: Record<string, string> = {
 
 @Component({
   selector: 'app-admin-layout',
-  imports: [MenuModule, RouterLink, RouterLinkActive, RouterOutlet, AppToast],
+  imports: [AppMenu, RouterLink, RouterLinkActive, RouterOutlet, AppToast],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css',
 })

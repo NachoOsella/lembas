@@ -1,9 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
-import { Checkbox } from 'primeng/checkbox';
-import { InputNumber } from 'primeng/inputnumber';
-import { Select } from 'primeng/select';
+import { AppCheckbox } from '../../../shared/components/app-checkbox/app-checkbox';
+import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
+import { AppSelect } from '../../../shared/components/app-select/app-select';
 
 import { SupplierService } from '../../../core/services/supplier';
 import { ProductService } from '../../../core/services/product';
@@ -33,19 +33,19 @@ const SUPPLIER_PRODUCT_SORT_FIELDS = new Set(['productName', 'supplierName', 'su
   selector: 'app-suppliers',
   imports: [
     AppButton,
+    AppCheckbox,
     AppDataTable,
     AppFormField,
-    FormSection,
+    AppInputNumber,
     AppModal,
     AppPageHeader,
     AppProductSelector,
     AppSearchBar,
-    Checkbox,
+    AppSelect,
     ConfirmDialog,
     ErrorAlert,
+    FormSection,
     FormsModule,
-    InputNumber,
-    Select,
   ],
   templateUrl: './suppliers.html',
   styleUrl: './suppliers.css',
