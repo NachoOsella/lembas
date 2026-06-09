@@ -199,6 +199,17 @@ public class AuthService {
         return authMapper.toAuthResponse(null, null, user, null);
     }
 
+    /** Revokes the presented refresh token during logout, if it is known to the server. */
+    @Transactional
+    public void logout(String rawRefreshToken) {
+        if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+            return;
+        }
+        String tokenHash = hashToken(rawRefreshToken);
+        refreshTokenRepository.findByTokenHash(tokenHash)
+                .ifPresent(refreshToken -> refreshToken.revoke(Instant.now()));
+    }
+
     /** Creates and persists a new active refresh token for the user. */
     private String issueRefreshToken(User user) {
         Instant now = Instant.now();

@@ -19,6 +19,12 @@ public interface SupplierProductRepository extends JpaRepository<SupplierProduct
 
     boolean existsByProductIdAndSupplierIdAndActiveTrueAndIdNot(Long productId, Long supplierId, Long id);
 
+    @EntityGraph(attributePaths = {"product", "product.category", "supplier"})
+    Optional<SupplierProduct> findBySupplierIdAndSupplierSkuIgnoreCaseAndActiveTrue(Long supplierId, String supplierSku);
+
+    @EntityGraph(attributePaths = {"product", "product.category", "supplier"})
+    Optional<SupplierProduct> findByProductIdAndSupplierIdAndActiveTrue(Long productId, Long supplierId);
+
     /** Lists active supplier products filtered by product, supplier, and text search. */
     @EntityGraph(attributePaths = {"product", "product.category", "supplier"})
     @Query("""

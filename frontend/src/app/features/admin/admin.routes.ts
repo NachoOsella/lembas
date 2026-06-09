@@ -52,21 +52,26 @@ export default [
       },
       {
         path: 'stock/entry',
-        redirectTo: 'receips',
+        redirectTo: 'receipts',
         pathMatch: 'full',
       },
       {
         path: 'stock/receipts',
-        redirectTo: 'receips',
+        redirectTo: 'receipts',
         pathMatch: 'full',
       },
       {
         path: 'recepciones',
-        redirectTo: 'receips',
+        redirectTo: 'receipts',
         pathMatch: 'full',
       },
       {
         path: 'receips',
+        redirectTo: 'receipts',
+        pathMatch: 'full',
+      },
+      {
+        path: 'receipts',
         loadComponent: () => import('./stock-entry/stock-entry').then((m) => m.StockEntry),
       },
       {
@@ -97,6 +102,10 @@ export default [
       {
         path: 'purchase-orders',
         loadComponent: () => import('./purchase-orders/purchase-orders').then((m) => m.PurchaseOrders),
+      },
+      {
+        path: 'pricing',
+        loadComponent: () => import('./pricing/price-update-workflow').then((m) => m.PriceUpdateWorkflow),
       },
       {
         path: 'reports',

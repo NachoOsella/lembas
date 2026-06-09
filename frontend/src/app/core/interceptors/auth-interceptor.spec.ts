@@ -52,15 +52,14 @@ describe('AuthInterceptor', () => {
     capturedRequest = null;
   });
 
-  /** Should attach Authorization: Bearer header when a token is available. */
-  it('Should_attachBearerHeader_when_tokenExists', () => {
-    const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.abc';
-    mockAuthService.getAccessToken.mockReturnValue(token);
+  /** Should not attach Authorization because tokens are HttpOnly cookies. */
+  it('Should_notAttachBearerHeader_when_cookieAuthIsUsed', () => {
+    mockAuthService.getAccessToken.mockReturnValue('unreadable-cookie-token');
 
     run(new HttpRequest<null>('GET', '/api/auth/me'));
 
     expect(capturedRequest).toBeTruthy();
-    expect(capturedRequest!.headers.get('Authorization')).toBe(`Bearer ${token}`);
+    expect(capturedRequest!.headers.has('Authorization')).toBe(false);
   });
 
   /** Should not attach Authorization header when no token is available. */
@@ -108,27 +107,22 @@ describe('AuthInterceptor', () => {
     expect(capturedRequest!.headers.has('Authorization')).toBe(false);
   });
 
-  /** Should attach token to POST requests (not just GET). */
-  it('Should_attachBearerHeader_onPostRequest', () => {
-    const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.def';
-    mockAuthService.getAccessToken.mockReturnValue(token);
+  /** Should not attach Authorization to POST requests either. */
+  it('Should_notAttachBearerHeader_onPostRequest', () => {
+    mockAuthService.getAccessToken.mockReturnValue('unreadable-cookie-token');
 
     run(new HttpRequest<unknown>('POST', '/api/customer/orders', { productId: 1 }));
 
     expect(capturedRequest).toBeTruthy();
-    expect(capturedRequest!.headers.get('Authorization')).toBe(`Bearer ${token}`);
+    expect(capturedRequest!.headers.has('Authorization')).toBe(false);
   });
 
   /** Should refresh the session and retry the original request after a protected 401. */
   it('Should_refreshAndRetryRequest_when_protectedApiReturns401', async () => {
-    const oldToken = 'old-access-token';
-    const newToken = 'new-access-token';
-    mockAuthService.getAccessToken.mockReturnValueOnce(oldToken).mockReturnValueOnce(newToken);
-    mockAuthService.getRefreshToken.mockReturnValue('refresh-token');
     mockAuthService.refreshSession.mockReturnValue(
       of({
-        token: newToken,
-        refreshToken: 'new-refresh-token',
+        token: null,
+        refreshToken: null,
         user: {
           id: 1,
           email: 'frodo@lembas.com',
@@ -158,8 +152,8 @@ describe('AuthInterceptor', () => {
 
     expect(mockAuthService.refreshSession).toHaveBeenCalledTimes(1);
     expect(handledRequests).toHaveLength(2);
-    expect(handledRequests[0].headers.get('Authorization')).toBe(`Bearer ${oldToken}`);
-    expect(handledRequests[1].headers.get('Authorization')).toBe(`Bearer ${newToken}`);
+    expect(handledRequests[0].headers.has('Authorization')).toBe(false);
+    expect(handledRequests[1].headers.has('Authorization')).toBe(false);
   });
 
   /** Should clear auth and propagate the original 401 when refresh fails. */

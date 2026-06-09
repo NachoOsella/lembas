@@ -1,0 +1,222 @@
+<div class="pricing-page">
+  <app-confirm-dialog
+    [visible]="confirmApplyVisible()"
+    title="Confirmar aplicacion del lote"
+    message="Esta accion actualiza costos, precios e historiales. Verifica el preview antes de continuar."
+    confirmLabel="Aplicar cambios"
+    cancelLabel="Volver"
+    [destructive]="true"
+    (confirmed)="confirmApplyBatch()"
+    (cancelled)="confirmApplyVisible.set(false)"
+  />
+
+  <app-page-header
+    eyebrow="Precios"
+    title="Actualizar catalogo y precios"
+    description="Importa listas de proveedor, revisa el preview y aplica cambios con confirmacion humana."
+  />
+
+  @if (error()) {
+    <app-error-alert variant="inline" [title]="error()" message="">
+      <app-button variant="secondary" size="sm" (click)="error.set('')">Cerrar</app-button>
+    </app-error-alert>
+  }
+
+  <app-form-section [index]="1" title="Origen y defaults" description="Configura el proveedor, archivo o carga manual y los defaults comerciales.">
+    <div class="pricing-form__grid">
+      <app-control-field label="Proveedor" forId="supplier">
+        <app-select
+          inputId="supplier"
+          [value]="supplierId()"
+          (valueChange)="supplierId.set($event)"
+          [options]="supplierOptions()"
+          placeholder="Seleccionar proveedor"
+          [loading]="loadingLookups()"
+          filterPlaceholder="Buscar proveedor..."
+        />
+      </app-control-field>
+
+      <app-control-field label="Margen nuevos (%)" forId="margin">
+        <app-input-number inputId="margin" [(value)]="defaultMargin" [min]="0" [max]="99" [maxFractionDigits]="2" />
+      </app-control-field>
+
+      <app-control-field label="Traslado variacion (%)" forId="transfer">
+        <app-input-number inputId="transfer" [(value)]="defaultTransfer" [min]="0" [maxFractionDigits]="3" />
+      </app-control-field>
+
+      <app-control-field label="Redondeo" forId="rounding">
+        <app-input-number inputId="rounding" [(value)]="roundingMultiple" [min]="1" mode="currency" />
+      </app-control-field>
+    </div>
+
+    <div class="pricing-toggles">
+      <app-checkbox [(value)]="applyCostUpdates">Actualizar costos por defecto</app-checkbox>
+      <app-checkbox [(value)]="applySalePriceUpdates">Actualizar precios de venta por defecto</app-checkbox>
+      <app-checkbox [(value)]="excludeUnchanged">Excluir filas sin cambios</app-checkbox>
+    </div>
+
+    <app-control-field label="Notas" forId="notes">
+      <textarea id="notes" class="pricing-notes" rows="2" [ngModel]="notes()" (ngModelChange)="notes.set($event)" name="notes" placeholder="Notas opcionales para este lote"></textarea>
+    </app-control-field>
+
+    <div class="pricing-actions">
+      <input #fileInput type="file" accept=".csv,.xlsx" (change)="onFileSelected($event)" class="pricing-file-input" hidden />
+      <app-button type="button" icon="pi pi-upload" [loading]="saving()" (click)="fileInput.click()">Importar CSV/XLSX</app-button>
+      @if (fileToImport()) {
+        <span class="pricing-file-name">
+          <i class="pi pi-file"></i>
+          {{ fileToImport()!.name }}
+        </span>
+      }
+      @if (batch()) {
+        <app-button type="button" variant="secondary" icon="pi pi-save" [loading]="saving()" (click)="saveDefaults()">Guardar defaults</app-button>
+        <app-button type="button" variant="secondary" icon="pi pi-refresh" [loading]="saving()" (click)="applyDefaultsToAll()">Aplicar defaults a todos</app-button>
+      }
+    </div>
+  </app-form-section>
+
+  <app-form-section [index]="2" title="Carga manual rapida" description="Usa esta opcion para probar o actualizar un unico producto sin archivo.">
+    <div class="pricing-form__grid pricing-form__grid--manual">
+      <app-control-field label="SKU proveedor" forId="manualSku">
+        <app-input [(value)]="manualSku" placeholder="SKU" />
+      </app-control-field>
+      <app-control-field label="Codigo de barras" forId="manualBarcode">
+        <app-input [(value)]="manualBarcode" placeholder="Barcode" />
+      </app-control-field>
+      <div class="pricing-form__field--wide">
+        <app-product-selector
+          label="Producto (buscar existente)"
+          [selected]="manualProduct()"
+          (selectedChange)="onManualProductChange($event)"
+          [suggestions]="productSuggestions()"
+          placeholder="Buscar producto por nombre o codigo..."
+          (search)="onProductSearch($event)"
+        />
+      </div>
+      <app-control-field label="Nombre proveedor" forId="manualName">
+        <app-input [(value)]="manualProductName" placeholder="Nombre del producto" />
+      </app-control-field>
+      <app-control-field label="Nuevo costo" forId="manualCost">
+        <app-input-number inputId="manualCost" [(value)]="manualCost" [min]="0" mode="currency" />
+      </app-control-field>
+    </div>
+    <div class="pricing-actions">
+      <app-button type="button" icon="pi pi-eye" [loading]="saving()" (click)="createManualPreview()">Crear preview manual</app-button>
+    </div>
+  </app-form-section>
+
+  <!-- Preview data-table shell -->
+  <section class="pricing-preview">
+    @if (batch(); as currentBatch) {
+      <!-- Toolbar -->
+      <div class="pricing-toolbar">
+        <div class="pricing-toolbar__info">
+          <p class="pricing-toolbar__kicker">Lote #{{ currentBatch.id }} &middot; {{ currentBatch.type }}</p>
+          <h2 class="pricing-toolbar__title">{{ currentBatch.supplierName }}</h2>
+          <p class="pricing-toolbar__meta">
+            Creado {{ currentBatch.createdAt | date: 'short' }}
+            <app-status-badge [status]="currentBatch.status" [config]="batchStatusBadges" />
+          </p>
+        </div>
+        <div class="pricing-toolbar__actions">
+          @if (hasBlockingItems()) {
+            <app-button type="button" variant="secondary" icon="pi pi-ban" [loading]="saving()" (click)="excludeBlockingRows()">Excluir errores</app-button>
+          }
+          @if (hasUnapprovedCreates()) {
+            <app-button type="button" variant="secondary" icon="pi pi-plus-circle" [loading]="saving()" (click)="approveAllCreates()">Aprobar nuevos</app-button>
+          }
+          <app-button type="button" variant="success" icon="pi pi-check" [disabled]="!canApply()" [loading]="saving()" (click)="applyBatch()">Guardar cambios</app-button>
+          <app-button type="button" variant="danger" icon="pi pi-times" [disabled]="currentBatch.status === 'APPLIED' || currentBatch.status === 'CANCELLED'" [loading]="saving()" (click)="cancelBatch()">Cancelar</app-button>
+        </div>
+      </div>
+
+      @if (currentBatch.items.length === 0) {
+        <div class="pricing-empty">
+          <span class="pricing-empty__icon pi pi-inbox"></span>
+          <p class="pricing-empty__title">Sin filas para revisar</p>
+          <p class="pricing-empty__desc">El lote no tiene items. Importa otra lista o crea una carga manual.</p>
+        </div>
+      } @else {
+        <app-data-table
+          [data]="tableRows()"
+          [columns]="tableColumns"
+          [loading]="saving()"
+          [sortable]="false"
+          [paginated]="false"
+          emptyTitle="Sin filas para revisar"
+          emptyDescription="El lote no tiene items. Importa otra lista o crea una carga manual."
+        >
+          <ng-template #body let-view>
+            @let item = view.item;
+            @let row = view.row;
+            <tr>
+              <td>
+                <app-status-badge [status]="item.status" [config]="itemStatusBadges" />
+                @if (item.errorMessage) {
+                  <span class="pricing-row-error">{{ errorMessageTranslations[item.errorMessage] || item.errorMessage }}</span>
+                }
+              </td>
+              <td>
+                <app-input [(value)]="row.productName" placeholder="Nombre proveedor" size="sm" />
+              </td>
+              <td>
+                <strong>{{ item.productName || 'Nuevo producto' }}</strong>
+                @if (item.productId) {
+                  <small>ID {{ item.productId }}</small>
+                }
+              </td>
+              <td>
+                <app-input [(value)]="row.supplierSku" placeholder="SKU" size="sm" />
+                <app-input [(value)]="row.barcode" placeholder="Barcode" size="sm" />
+              </td>
+              <td>
+                <small>Anterior {{ item.oldCost | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</small>
+                <app-input-number [(value)]="row.newCost" [min]="0" mode="currency" />
+              </td>
+              <td>
+                <span class="pricing-variation"
+                  [class.pricing-variation--up]="(item.supplierVariationPercentage ?? 0) > 0"
+                  [class.pricing-variation--down]="(item.supplierVariationPercentage ?? 0) < 0"
+                  [class.pricing-variation--neutral]="(item.supplierVariationPercentage ?? 0) === 0"
+                >{{ item.supplierVariationPercentage ?? 0 }}%</span>
+              </td>
+              <td>
+                <small>Actual {{ item.oldSalePrice | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</small>
+                <small>Sugerido {{ item.suggestedSalePrice | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</small>
+                <app-input-number [(value)]="row.finalSalePrice" [min]="0" mode="currency" />
+              </td>
+              <td>
+                <small>Traslado</small>
+                <app-input-number [(value)]="row.transferPercentage" [min]="0" [maxFractionDigits]="3" />
+                <small>Margen</small>
+                <app-input-number [(value)]="row.newProductMarginPercentage" [min]="0" [max]="99" />
+              </td>
+              <td>
+                <div class="pricing-checks">
+                  <app-checkbox [(value)]="row.applyCostUpdate">Costo</app-checkbox>
+                  <app-checkbox [(value)]="row.applySalePriceUpdate">Precio</app-checkbox>
+                  <app-checkbox [(value)]="row.createProduct">Crear</app-checkbox>
+                  <app-checkbox [(value)]="row.excluded">Excluir</app-checkbox>
+                </div>
+              </td>
+              <td>
+                <app-button type="button" size="sm" icon="pi pi-save" [loading]="saving()" (click)="saveRow(row)">Guardar</app-button>
+              </td>
+            </tr>
+          </ng-template>
+        </app-data-table>
+
+        <!-- Paginator footer -->
+        <div class="pricing-paginator">
+          <span class="pricing-paginator__summary">{{ currentBatch.items.length }} filas en este batch</span>
+        </div>
+      }
+    } @else {
+      <div class="pricing-empty">
+        <span class="pricing-empty__icon pi pi-upload"></span>
+        <p class="pricing-empty__title">Sin preview activo</p>
+        <p class="pricing-empty__desc">Importa una lista de proveedor o crea una carga manual para comenzar la revision.</p>
+      </div>
+    }
+  </section>
+</div>

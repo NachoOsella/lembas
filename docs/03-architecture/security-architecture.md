@@ -3,6 +3,8 @@
 ## Authentication
 
 - JWT-based stateless authentication
+- Access and refresh JWTs are delivered as `HttpOnly` cookies with `SameSite=Strict`
+- Unsafe `/api/**` requests with an `Origin` header are rejected unless the origin is explicitly allowed
 - Tokens expire after 24 hours
 - Passwords hashed with BCrypt
 - No server-side sessions
@@ -40,11 +42,12 @@
 ```text
 SecurityFilterChain
   ├── CorsFilter
-  ├── CsrfFilter (DISABLED) -- API REST stateless
-  ├── JwtAuthenticationFilter
+  ├── CsrfFilter (DISABLED) -- API REST stateless; cookie CSRF risk is mitigated by SameSite=Strict + OriginValidationFilter
+  ├── OriginValidationFilter (unsafe API methods only)
+  ├── JwtAuthenticationFilter (Authorization header or HttpOnly access cookie)
   └── ExceptionHandlerFilter
 
-Public routes:   POST /api/auth/register, POST /api/auth/login, /api/store/**, /api/webhooks/**, /uploads/**
+Public routes:   POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, POST /api/auth/logout, /api/store/**, /api/webhooks/**, /uploads/**
 Authenticated:   GET /api/auth/me
 Customer routes: /api/customer/** (role CUSTOMER)
 Admin routes:    /api/admin/** (roles ADMIN, MANAGER, EMPLOYEE)
@@ -91,4 +94,4 @@ Critical actions are logged in `audit_logs` with user, timestamp, and descriptio
 | No sensitive card data stored | MVP |
 | Rate limiting on login | MVP |
 | HTTPS (via Nginx) | Deployment |
-| CSRF disabled (stateless API) | MVP |
+| CSRF disabled with SameSite=Strict cookies and origin validation for unsafe API requests | MVP |

@@ -17,23 +17,14 @@ function isBackendApiRequest(url: string): boolean {
   return url.startsWith('/api/');
 }
 
-/** Returns true for auth endpoints that must never receive stale access tokens. */
+/** Returns true for auth endpoints that must not trigger a refresh retry. */
 function isPublicAuthRequest(url: string): boolean {
-  return url === '/api/auth/login' || url === '/api/auth/register' || url === '/api/auth/refresh';
+  return url === '/api/auth/login' || url === '/api/auth/register' || url === '/api/auth/refresh' || url === '/api/auth/logout';
 }
 
-/** Returns true when a failed response can be retried after token rotation. */
+/** Returns true when a failed response can be retried after refresh-cookie rotation. */
 function canAttemptRefresh(req: HttpRequest<unknown>, error: HttpErrorResponse): boolean {
   return error.status === 401 && isBackendApiRequest(req.url) && !isPublicAuthRequest(req.url);
-}
-
-/** Clones a request with the latest access token, preserving existing headers. */
-function withBearerToken(req: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
-  return req.clone({
-    setHeaders: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
 }
 
 /** Returns a shared refresh observable, creating it only once while refresh is in flight. */
@@ -50,49 +41,26 @@ function getOrStartRefresh(authService: AuthService): Observable<AuthResponse> {
 }
 
 /**
- * Attaches JWT access tokens to backend API requests and transparently refreshes
- * the session once when a protected endpoint returns 401.
+ * Retries protected API requests once after a 401 by rotating HttpOnly cookies.
  *
- * <p>Refresh-token rotation is handled by {@link AuthService#refreshSession}.
- * The presented refresh token is exchanged for a fresh access/refresh pair, then
- * the original request is retried with the new access token. If refresh fails,
- * auth state is cleared and the original 401 continues to the global error
- * interceptor, which redirects to login.</p>
+ * <p>No Authorization header is attached here because access and refresh tokens
+ * are intentionally inaccessible to JavaScript. The browser sends the scoped
+ * cookies automatically to same-origin API endpoints.</p>
  */
 export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
   next: HttpHandlerFn,
 ): Observable<HttpEvent<unknown>> => {
   const authService = inject(AuthService);
-  const token = authService.getAccessToken();
 
-  const requestWithToken =
-    isBackendApiRequest(req.url) &&
-    !isPublicAuthRequest(req.url) &&
-    token &&
-    !req.headers.has('Authorization')
-      ? withBearerToken(req, token)
-      : req;
-
-  return next(requestWithToken).pipe(
+  return next(req).pipe(
     catchError((error: unknown) => {
       if (!(error instanceof HttpErrorResponse) || !canAttemptRefresh(req, error)) {
         return throwError(() => error);
       }
 
-      if (!authService.getRefreshToken()) {
-        authService.clearAuth();
-        return throwError(() => error);
-      }
-
       return getOrStartRefresh(authService).pipe(
-        switchMap(() => {
-          const refreshedToken = authService.getAccessToken();
-          if (!refreshedToken) {
-            return throwError(() => error);
-          }
-          return next(withBearerToken(req, refreshedToken));
-        }),
+        switchMap(() => next(req)),
         catchError(() => {
           authService.clearAuth();
           return throwError(() => error);

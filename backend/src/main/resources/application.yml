@@ -17,6 +17,14 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  data:
+    web:
+      pageable:
+        max-page-size: 100
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
 
 server:
   port: ${SERVER_PORT:8080}
@@ -32,6 +40,7 @@ app:
   security:
     jwt-secret: ${JWT_SECRET:change-me-to-at-least-256-bits-before-running-outside-local-dev}
     jwt-expiration: 24h
+    allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:8080}
   mercado-pago:
     access-token: ${MP_ACCESS_TOKEN:}
     webhook-secret: ${MP_WEBHOOK_SECRET:}

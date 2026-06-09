@@ -123,9 +123,6 @@ describe('errorInterceptor', () => {
       detail: 'Su sesion ha expirado. Por favor, inicie sesion nuevamente.',
       life: 5000,
     });
-    expect(localStorage.getItem('lembas_access_token')).toBeNull();
-    expect(localStorage.getItem('lembas_refresh_token')).toBeNull();
-    expect(localStorage.getItem('lembas_user_first_name')).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/auth/login']);
   });
 

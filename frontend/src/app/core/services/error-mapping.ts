@@ -92,6 +92,16 @@ export class ErrorMappingService {
     PURCHASE_RECEIPT_ITEM_DUPLICATED: 'Hay items duplicados en la recepcion.',
     PURCHASE_RECEIPT_OVER_RECEIVED: 'La cantidad recibida supera la cantidad pendiente de la orden.',
 
+    // Price update batch errors
+    PRICE_BATCH_NOT_FOUND: 'El lote de precios no fue encontrado.',
+    PRICE_BATCH_INVALID_STATE: 'El lote ya no permite esta operacion.',
+    PRICE_BATCH_HAS_UNRESOLVED_ITEMS: 'Resuelve filas en revision, con error o productos nuevos sin aprobar antes de aplicar.',
+    PRICE_BATCH_ITEM_INVALID: 'Una fila del lote tiene datos invalidos.',
+    PRICE_BATCH_ITEM_NOT_FOUND: 'La fila del lote no fue encontrada.',
+    PRICE_BATCH_FILE_EMPTY: 'El archivo del proveedor esta vacio.',
+    PRICE_BATCH_FILE_UNSUPPORTED: 'Solo se admiten archivos CSV o XLSX validos.',
+    PRICE_BATCH_REQUIRED_COLUMNS_MISSING: 'El archivo debe incluir costo y al menos un identificador de producto.',
+
     // Database errors
     DATA_INTEGRITY_VIOLATION: 'Los datos ingresados conflictan con información existente.',
 

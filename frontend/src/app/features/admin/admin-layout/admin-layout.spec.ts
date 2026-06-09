@@ -127,9 +127,24 @@ describe('AdminLayout', () => {
     expect(trigger.getAttribute('aria-label')).toBe('Abrir menu de usuario');
   });
 
-  /** Should show all nav items including Usuarios when role is ADMIN. */
+  /** Should show all nav items including pricing and Usuarios when role is ADMIN. */
   it('Should_showUsersInSidebar_when_roleIsAdmin', () => {
     setup(adminUser);
+
+    const navLinks: Element[] = Array.from(
+      fixture.nativeElement.querySelectorAll('.admin__nav-link'),
+    );
+    expect(navLinks.length).toBe(14);
+    const labels = navLinks.map(
+      (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
+    );
+    expect(labels).toContain('Precios');
+    expect(labels).toContain('Usuarios');
+  });
+
+  /** Should hide Usuarios but keep pricing in sidebar when role is MANAGER. */
+  it('Should_hideUsersFromSidebar_when_roleIsManager', () => {
+    setup(managerUser);
 
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
@@ -138,34 +153,22 @@ describe('AdminLayout', () => {
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );
-    expect(labels).toContain('Usuarios');
-  });
-
-  /** Should hide Usuarios from sidebar when role is MANAGER. */
-  it('Should_hideUsersFromSidebar_when_roleIsManager', () => {
-    setup(managerUser);
-
-    const navLinks: Element[] = Array.from(
-      fixture.nativeElement.querySelectorAll('.admin__nav-link'),
-    );
-    expect(navLinks.length).toBe(12);
-    const labels = navLinks.map(
-      (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
-    );
+    expect(labels).toContain('Precios');
     expect(labels).not.toContain('Usuarios');
   });
 
-  /** Should hide Usuarios from sidebar when role is EMPLOYEE. */
+  /** Should hide Usuarios but keep pricing in sidebar when role is EMPLOYEE. */
   it('Should_hideUsersFromSidebar_when_roleIsEmployee', () => {
     setup(employeeUser);
 
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
     );
-    expect(navLinks.length).toBe(12);
+    expect(navLinks.length).toBe(13);
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );
+    expect(labels).toContain('Precios');
     expect(labels).not.toContain('Usuarios');
   });
 });

@@ -5,6 +5,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -22,8 +23,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * Extracts and validates JWT tokens from the {@code Authorization} header
- * on every request, populating the Spring Security context for valid tokens.
+ * Extracts and validates JWT tokens from the {@code Authorization} header or
+ * the HttpOnly access-token cookie on every request, populating the Spring
+ * Security context for valid tokens.
  *
  * <p>This filter runs once per request (via {@link OncePerRequestFilter})
  * after Spring Security's built-in filters. It does not abort the filter
@@ -102,7 +104,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Extracts the bearer token from the {@code Authorization} header.
+     * Extracts the access token from the bearer header or auth cookie.
      *
      * @param request the incoming HTTP request
      * @return the raw token string without the {@code Bearer } prefix, or {@code null}
@@ -111,6 +113,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (StringUtils.hasText(header) && header.startsWith(BEARER_PREFIX)) {
             return header.substring(BEARER_PREFIX.length());
+        }
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return null;
+        }
+        for (Cookie cookie : cookies) {
+            if (AuthCookieService.ACCESS_COOKIE_NAME.equals(cookie.getName()) && StringUtils.hasText(cookie.getValue())) {
+                return cookie.getValue();
+            }
         }
         return null;
     }

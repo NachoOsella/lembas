@@ -1,0 +1,386 @@
+/* Pricing workflow page — Lembas design system aligned.
+   Follows: data-table shell, form-section, control-field, status-badge patterns.
+   Tokens: --color-primary (#2f8d72), --color-primary-dark (#075f36), --color-text (rgba(0,0,0,0.87)),
+           --color-text-muted (rgba(0,0,0,0.58)), --color-surface (#fff), --color-surface-warmest (#fffef9),
+           --color-mint-wash-subtle (#eef6f1), --color-mint-wash (#d7eadf), --color-border-warm (#e7e7e7),
+           --color-red (#c82014), --color-bark (#9a5b19). */
+
+:host {
+  display: block;
+}
+
+.pricing-page {
+  display: grid;
+  gap: var(--space-4);
+  color: var(--color-text);
+}
+
+/* ---------------------------------------------------------------------------
+   Form grid (section 1: defaults)
+   --------------------------------------------------------------------------- */
+
+.pricing-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--space-3);
+}
+
+.pricing-form__grid--manual {
+  align-items: end;
+}
+
+.pricing-form__field--wide {
+  grid-column: 1 / -1;
+}
+
+/* ---------------------------------------------------------------------------
+   Toggle row
+   --------------------------------------------------------------------------- */
+
+.pricing-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-3);
+}
+
+/* ---------------------------------------------------------------------------
+   Text inputs (notes, manual fields)
+   --------------------------------------------------------------------------- */
+
+.pricing-input,
+.pricing-notes {
+  width: 100%;
+  border: 1px solid var(--color-input-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--radius-card, 12px);
+  padding: 0.65rem 0.8rem;
+  color: var(--color-text);
+  background: var(--color-surface-warmest, #fffef9);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  letter-spacing: var(--tracking-tight, -0.01em);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.pricing-notes {
+  resize: vertical;
+  min-height: 3.2rem;
+}
+
+.pricing-input:focus,
+.pricing-notes:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+  outline: 0;
+}
+
+.pricing-input::placeholder,
+.pricing-notes::placeholder {
+  color: var(--color-overlay-black, rgba(0, 0, 0, 0.4));
+}
+
+/* ---------------------------------------------------------------------------
+   Action row (import, defaults, file badge)
+   --------------------------------------------------------------------------- */
+
+.pricing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-3);
+}
+
+.pricing-file-input {
+  display: none;
+}
+
+.pricing-file-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: var(--color-mint-wash, #d7eadf);
+  border: 1px solid rgba(47, 141, 114, 0.18);
+  border-radius: var(--radius-pill, 50px);
+  padding: 0.3rem 0.75rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Preview section — data-table shell
+   --------------------------------------------------------------------------- */
+
+.pricing-preview {
+  border: 1px solid rgba(7, 95, 54, 0.11);
+  border-radius: var(--radius-card, 12px);
+  background: var(--color-surface, #ffffff);
+  box-shadow: 0 0 0.5px rgba(0, 0, 0, 0.14), 0 1px 1px rgba(0, 0, 0, 0.24);
+  overflow: hidden;
+}
+
+.pricing-preview--empty {
+  text-align: center;
+  padding: var(--space-6);
+  color: var(--color-text-muted);
+}
+
+/* --- Toolbar (header with info + actions) --- */
+
+.pricing-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-3);
+  background: var(--color-neutral-cool, #f9f9f9);
+  border-bottom: 1px solid rgba(7, 95, 54, 0.09);
+}
+
+.pricing-toolbar__info {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.pricing-toolbar__kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--color-bark, #9a5b19);
+}
+
+.pricing-toolbar__title {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight, -0.01em);
+}
+
+.pricing-toolbar__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.pricing-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+/* --- Empty state --- */
+
+.pricing-empty {
+  display: grid;
+  place-items: center;
+  gap: var(--space-2);
+  padding: var(--space-7) var(--space-4);
+  text-align: center;
+}
+
+.pricing-empty__icon {
+  width: 3.6rem;
+  height: 3.6rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-neutral-warm, #f6ead6);
+  color: var(--color-primary);
+  font-size: 1.4rem;
+}
+
+.pricing-empty__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: var(--tracking-tight, -0.01em);
+}
+
+.pricing-empty__desc {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Table
+   --------------------------------------------------------------------------- */
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pricing-table {
+  width: 100%;
+  min-width: 78rem;
+  border-collapse: collapse;
+}
+
+.pricing-table thead {
+  background: var(--color-mint-wash-subtle, #eef6f1);
+}
+
+.pricing-table th {
+  padding: 0.65rem 0.75rem;
+  color: rgba(18, 55, 42, 0.86);
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid rgba(7, 95, 54, 0.1);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pricing-table td {
+  padding: 0.65rem 0.75rem;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border-warm, #e7e7e7);
+  font-size: 0.85rem;
+}
+
+.pricing-table tbody tr:hover {
+  background: rgba(47, 141, 114, 0.045);
+  box-shadow: inset 0.25rem 0 0 rgba(47, 141, 114, 0.75);
+}
+
+.pricing-table small {
+  display: block;
+  color: var(--color-text-muted);
+  margin-bottom: 0.2rem;
+  font-size: 0.76rem;
+  font-weight: 500;
+}
+
+.pricing-table strong {
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight, -0.01em);
+}
+
+/* --- Inline table inputs --- */
+
+.pricing-table-input {
+  width: 100%;
+  border: 1px solid var(--color-input-border, rgba(0, 0, 0, 0.12));
+  border-radius: 10px;
+  padding: 0.45rem 0.6rem;
+  color: var(--color-text);
+  background: var(--color-surface-warmest, #fffef9);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  letter-spacing: var(--tracking-tight, -0.01em);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.pricing-table-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+  outline: 0;
+}
+
+.pricing-table-input::placeholder {
+  color: var(--color-overlay-black, rgba(0, 0, 0, 0.35));
+}
+
+/* Tighter input-number inside table cells */
+.pricing-table :host ::ng-deep app-input-number .p-inputnumber,
+.pricing-table :host ::ng-deep .p-inputnumber {
+  width: 100%;
+}
+
+.pricing-table :host ::ng-deep .p-inputnumber-input {
+  border-radius: 10px;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.6rem;
+}
+
+/* --- Variation column --- */
+
+.pricing-variation {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.pricing-variation--up {
+  color: var(--color-amber, #d9822b);
+}
+
+.pricing-variation--down {
+  color: var(--color-primary);
+}
+
+.pricing-variation--neutral {
+  color: var(--color-text-muted);
+}
+
+/* --- Row error --- */
+
+.pricing-row-error {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--color-red, #c82014);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* --- Checkbox compact in table --- */
+
+.pricing-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Paginator (footer)
+   --------------------------------------------------------------------------- */
+
+.pricing-paginator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-mint-wash-pale, #f6fbf7);
+  border-top: 1px solid rgba(7, 95, 54, 0.06);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.pricing-paginator__summary {
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 64rem) {
+  .pricing-toolbar {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .pricing-toolbar__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

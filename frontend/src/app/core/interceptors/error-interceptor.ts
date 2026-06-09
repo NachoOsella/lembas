@@ -77,9 +77,6 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
               detail: 'Su sesion ha expirado. Por favor, inicie sesion nuevamente.',
               life: 5000,
             });
-            localStorage.removeItem('lembas_access_token');
-            localStorage.removeItem('lembas_refresh_token');
-            localStorage.removeItem('lembas_user_first_name');
             router.navigate(['/auth/login']);
           }
           break;

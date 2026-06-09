@@ -23,6 +23,17 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByIdAndActiveTrue(Long id);
 
     @EntityGraph(attributePaths = "category")
+    Optional<Product> findByBarcodeIgnoreCaseAndActiveTrue(String barcode);
+
+    @EntityGraph(attributePaths = "category")
+    @Query("""
+            select p from Product p
+            where p.active = true
+              and lower(p.name) = lower(:name)
+            """)
+    List<Product> findActiveByNameIgnoreCase(@Param("name") String name);
+
+    @EntityGraph(attributePaths = "category")
     @Query("""
             select p from Product p
             join p.category c

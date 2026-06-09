@@ -2,14 +2,18 @@ package com.dietetica.lembas.catalog.service;
 
 import com.dietetica.lembas.catalog.dto.ProductDetailDto;
 import com.dietetica.lembas.catalog.dto.ProductRequest;
+import com.dietetica.lembas.catalog.dto.ProductSalePriceHistoryDto;
 import com.dietetica.lembas.catalog.dto.ProductSummaryDto;
 import com.dietetica.lembas.catalog.model.Category;
 import com.dietetica.lembas.catalog.model.Product;
 import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
 import com.dietetica.lembas.catalog.repository.CategoryRepository;
 import com.dietetica.lembas.catalog.repository.ProductRepository;
+import com.dietetica.lembas.catalog.repository.ProductSalePriceHistoryRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,10 +29,16 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductSalePriceHistoryRepository salePriceHistoryRepository;
 
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+    public ProductService(
+            ProductRepository productRepository,
+            CategoryRepository categoryRepository,
+            ObjectProvider<ProductSalePriceHistoryRepository> salePriceHistoryRepository
+    ) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.salePriceHistoryRepository = salePriceHistoryRepository == null ? null : salePriceHistoryRepository.getIfAvailable();
     }
 
     /** Lists active products with optional table filters. */
@@ -62,6 +72,27 @@ public class ProductService {
         validateBarcodeUnique(request.barcode(), id);
         applyRequest(product, request);
         return toDetailDto(product);
+    }
+
+    /** Lists sale price history for one active product. */
+    @Transactional(readOnly = true)
+    public Page<ProductSalePriceHistoryDto> listSalePriceHistory(Long productId, Pageable pageable) {
+        findActiveById(productId);
+        if (salePriceHistoryRepository == null) {
+            return new PageImpl<>(java.util.List.of(), pageable, 0);
+        }
+        return salePriceHistoryRepository.findByProductIdOrderByValidFromDesc(productId, pageable)
+                .map(history -> new ProductSalePriceHistoryDto(
+                        history.getId(),
+                        history.getProduct().getId(),
+                        history.getOldPrice(),
+                        history.getNewPrice(),
+                        history.getValidFrom(),
+                        history.getReason(),
+                        history.getSource(),
+                        history.getReferenceType(),
+                        history.getReferenceId()
+                ));
     }
 
     /** Soft-deletes a product so future stock/order relations can keep history. */

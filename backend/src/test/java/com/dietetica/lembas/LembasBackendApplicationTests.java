@@ -12,6 +12,9 @@ import com.dietetica.lembas.suppliers.repository.PurchaseReceiptRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierProductCostHistoryRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierProductRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierRepository;
+import com.dietetica.lembas.suppliers.repository.PriceUpdateBatchRepository;
+import com.dietetica.lembas.suppliers.repository.PriceUpdateBatchItemRepository;
+import com.dietetica.lembas.catalog.repository.ProductSalePriceHistoryRepository;
 import com.dietetica.lembas.users.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -89,6 +92,15 @@ class LembasBackendApplicationTests {
     /** Provides purchase receipt item repository collaborators while JPA repositories are disabled. */
     @MockitoBean
     private PurchaseReceiptItemRepository purchaseReceiptItemRepository;
+
+    @MockitoBean
+    private PriceUpdateBatchRepository priceUpdateBatchRepository;
+
+    @MockitoBean
+    private PriceUpdateBatchItemRepository priceUpdateBatchItemRepository;
+
+    @MockitoBean
+    private ProductSalePriceHistoryRepository productSalePriceHistoryRepository;
 
     /**
      * Keeps a fast smoke test for the application context without external services.

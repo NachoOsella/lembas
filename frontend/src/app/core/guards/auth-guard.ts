@@ -1,19 +1,30 @@
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { inject } from '@angular/core';
+import { Observable, map } from 'rxjs';
 import { AuthService } from '../services/auth';
 
-/**
- * Route guard that allows access only to authenticated users.
- *
- * <p>If the user is not authenticated (no valid JWT token), the guard
- * redirects to {@code /auth/login} and returns {@code false}.</p>
- *
- * <p>Used as the base guard for customer and admin routes, combined with
- * role-specific guards via {@code canActivate: [authGuard, customerGuard]}
- * or {@code canActivate: [authGuard, adminGuard]}.</p>
- *
- * @returns true when a valid auth state exists, false and redirects otherwise
- */
+/** Guard result supported by Angular route guards. */
+type GuardResult = boolean | UrlTree;
+
+/** Returns true when the injected auth service can hydrate HttpOnly cookie sessions. */
+function canHydrateSession(authService: AuthService): boolean {
+  return typeof authService.ensureSession === 'function';
+}
+
+/** Hydrates auth state from HttpOnly cookies. */
+function ensureSession(authService: AuthService): Observable<boolean> {
+  return authService.ensureSession();
+}
+
+/** Builds the staff-role decision once auth state is known. */
+function staffDecision(authService: AuthService, router: Router): GuardResult {
+  const role = authService.getUserRole();
+  return role === 'ADMIN' || role === 'MANAGER' || role === 'EMPLOYEE'
+    ? true
+    : router.createUrlTree(['/store']);
+}
+
+/** Allows access only to authenticated users. */
 export const authGuard: CanActivateFn = (_route, _state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
@@ -21,103 +32,92 @@ export const authGuard: CanActivateFn = (_route, _state) => {
   if (authService.isAuthenticated()) {
     return true;
   }
+  if (!canHydrateSession(authService)) {
+    return router.createUrlTree(['/auth/login']);
+  }
 
-  return router.createUrlTree(['/auth/login']);
+  return ensureSession(authService).pipe(
+    map((authenticated) => (authenticated ? true : router.createUrlTree(['/auth/login']))),
+  );
 };
 
-/**
- * Route guard that allows access only to staff users (ADMIN, MANAGER, EMPLOYEE).
- *
- * @returns true when the user is authenticated and has a staff role
- */
+/** Allows access only to staff users (ADMIN, MANAGER, EMPLOYEE). */
 export const adminGuard: CanActivateFn = (_route, _state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.isAuthenticated()) {
+  if (authService.isAuthenticated()) {
+    return staffDecision(authService, router);
+  }
+  if (!canHydrateSession(authService)) {
     return router.createUrlTree(['/auth/login']);
   }
 
-  const role = authService.getUserRole();
-
-  if (role === 'ADMIN' || role === 'MANAGER' || role === 'EMPLOYEE') {
-    return true;
-  }
-
-  // Non-staff user -- redirect to the store
-  return router.createUrlTree(['/store']);
+  return ensureSession(authService).pipe(
+    map((authenticated) =>
+      authenticated ? staffDecision(authService, router) : router.createUrlTree(['/auth/login']),
+    ),
+  );
 };
 
-/**
- * Route guard that allows access only to unauthenticated (guest) users.
- *
- * <p>Authenticated users are redirected to their home area:
- * {@code CUSTOMER} -> {@code /store}, staff -> {@code /admin}.</p>
- *
- * <p>Applied to {@code /auth/login} and {@code /auth/register} to prevent
- * logged-in users from seeing the auth forms.</p>
- *
- * @returns true when not authenticated, a redirect UrlTree otherwise
- */
+/** Redirects authenticated users away from login/register pages. */
 export const guestGuard: CanActivateFn = (_route, _state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.isAuthenticated()) {
+  const redirectAuthenticated = (): UrlTree =>
+    authService.getUserRole() === 'CUSTOMER'
+      ? router.createUrlTree(['/store'])
+      : router.createUrlTree(['/admin']);
+
+  if (authService.isAuthenticated()) {
+    return redirectAuthenticated();
+  }
+  if (!canHydrateSession(authService)) {
     return true;
   }
 
-  const role = authService.getUserRole();
-  if (role === 'CUSTOMER') {
-    return router.createUrlTree(['/store']);
-  }
-  return router.createUrlTree(['/admin']);
+  return ensureSession(authService).pipe(
+    map((authenticated) => (authenticated ? redirectAuthenticated() : true)),
+  );
 };
 
-/**
- * Route guard that allows access only to ADMIN users within the admin area.
- *
- * <p>MANAGER and EMPLOYEE roles are silently redirected to the admin
- * dashboard. This guard is applied on admin child routes that only an
- * ADMIN should access (e.g. {@code /admin/users}).</p>
- *
- * @returns true when the user is authenticated and has the ADMIN role, a
- *          redirect to {@code /admin/dashboard} for non-ADMIN staff, or a
- *          redirect to {@code /auth/login} for unauthenticated users
- */
+/** Allows access only to ADMIN users within the admin area. */
 export const adminOnlyGuard: CanActivateFn = (_route, _state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.isAuthenticated()) {
+  const decide = (): GuardResult =>
+    authService.getUserRole() === 'ADMIN' ? true : router.createUrlTree(['/admin/dashboard']);
+
+  if (authService.isAuthenticated()) {
+    return decide();
+  }
+  if (!canHydrateSession(authService)) {
     return router.createUrlTree(['/auth/login']);
   }
 
-  if (authService.getUserRole() === 'ADMIN') {
-    return true;
-  }
-
-  // MANAGER or EMPLOYEE -- silently redirect to dashboard
-  return router.createUrlTree(['/admin/dashboard']);
+  return ensureSession(authService).pipe(
+    map((authenticated) => (authenticated ? decide() : router.createUrlTree(['/auth/login']))),
+  );
 };
 
-/**
- * Route guard that allows access only to CUSTOMER users.
- *
- * @returns true when the user is authenticated and has the CUSTOMER role
- */
+/** Allows access only to CUSTOMER users. */
 export const customerGuard: CanActivateFn = (_route, _state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.isAuthenticated()) {
+  const decide = (): GuardResult =>
+    authService.getUserRole() === 'CUSTOMER' ? true : router.createUrlTree(['/admin']);
+
+  if (authService.isAuthenticated()) {
+    return decide();
+  }
+  if (!canHydrateSession(authService)) {
     return router.createUrlTree(['/auth/login']);
   }
 
-  if (authService.getUserRole() === 'CUSTOMER') {
-    return true;
-  }
-
-  // Non-customer user -- redirect to admin
-  return router.createUrlTree(['/admin']);
+  return ensureSession(authService).pipe(
+    map((authenticated) => (authenticated ? decide() : router.createUrlTree(['/auth/login']))),
+  );
 };

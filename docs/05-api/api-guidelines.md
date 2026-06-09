@@ -124,6 +124,7 @@ All errors use a uniform `ApiError` object:
 | INVALID_CREDENTIALS | Auth | 401 |
 | ACCOUNT_DISABLED | Auth | 403 |
 | INVALID_REFRESH_TOKEN | Auth | 401 |
+| INVALID_ORIGIN | Security | 403 |
 | EMAIL_DUPLICATED | Auth, Users | 409 |
 | INVALID_USER_BRANCH | Users | 400 |
 | PRODUCT_NOT_FOUND | Catalog | 404 |
@@ -146,6 +147,7 @@ All errors use a uniform `ApiError` object:
 | ADJUSTMENT_QUANTITY_ZERO | Inventory | 400 |
 | INVALID_ADJUSTMENT_TYPE | Inventory | 400 |
 | INVALID_ADJUSTMENT_SIGN | Inventory | 400 |
+| SUPPLIER_NOT_FOUND | Suppliers | 404 |
 | PURCHASE_ORDER_NOT_FOUND | Suppliers | 404 |
 | PURCHASE_ORDER_INVALID_STATE | Suppliers | 409 |
 | PURCHASE_ORDER_EMPTY | Suppliers | 400 |
@@ -154,6 +156,15 @@ All errors use a uniform `ApiError` object:
 | PURCHASE_RECEIPT_ITEM_INVALID | Suppliers | 400 |
 | PURCHASE_RECEIPT_ITEM_DUPLICATED | Suppliers | 400 |
 | PURCHASE_RECEIPT_OVER_RECEIVED | Suppliers | 409 |
+| PRICE_BATCH_NOT_FOUND | Suppliers | 404 |
+| PRICE_BATCH_INVALID_STATE | Suppliers | 409 |
+| PRICE_BATCH_HAS_UNRESOLVED_ITEMS | Suppliers | 409 |
+| PRICE_BATCH_ITEM_INVALID | Suppliers | 400/409 |
+| PRICE_BATCH_ITEM_NOT_FOUND | Suppliers | 404 |
+| PRICE_BATCH_FILE_EMPTY | Suppliers | 400 |
+| PRICE_BATCH_FILE_UNSUPPORTED | Suppliers | 400 |
+| PRICE_BATCH_FILE_TOO_LARGE | Suppliers | 400 |
+| PRICE_BATCH_REQUIRED_COLUMNS_MISSING | Suppliers | 400 |
 | ORDER_NOT_FOUND | Orders | 404 |
 | ORDER_INVALID_STATE | Orders | 409 |
 | PAYMENT_FAILED | Payments | 409 |
