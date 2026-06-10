@@ -63,14 +63,14 @@
             <span>Resultados para</span>
             <span class="font-bold text-primary-dark">"{{ searchQuery() }}"</span>
           </span>
-          <button
-            type="button"
-            class="flex h-5 w-5 items-center justify-center rounded-full bg-[rgba(0,0,0,0.06)] text-[rgba(0,0,0,0.45)] transition-all hover:bg-[rgba(0,0,0,0.1)] hover:text-[rgba(0,0,0,0.7)] cursor-pointer"
+          <app-button
+            variant="ghost"
+            size="sm"
+            [iconOnly]="true"
+            icon="pi pi-times"
+            ariaLabel="Limpiar busqueda"
             (click)="clearSearch()"
-            aria-label="Limpiar busqueda"
-          >
-            <i class="pi pi-times text-[10px]" aria-hidden="true"></i>
-          </button>
+          />
         </div>
       }
     </div>
@@ -84,14 +84,14 @@
         variant="inline"
         [dismissible]="false"
       >
-        <button
-          type="button"
-          class="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red transition-colors hover:bg-red/8 cursor-pointer"
+        <app-button
+          variant="ghost"
+          size="sm"
+          [iconOnly]="true"
+          icon="pi pi-refresh"
+          ariaLabel="Reintentar"
           (click)="loadProducts()"
-          aria-label="Reintentar"
-        >
-          <i class="pi pi-refresh text-sm" aria-hidden="true"></i>
-        </button>
+        />
       </app-error-alert>
     } @else if (initialLoadDone() && products().length === 0) {
       <div

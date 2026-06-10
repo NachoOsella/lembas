@@ -3,19 +3,19 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { form, FormField, submit, required, email, minLength } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
-import { InputText } from 'primeng/inputtext';
 
 import { AuthService, LoginRequest } from '../../../core/services/auth';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { ApiErrorResponse } from '../../../shared/models/api-error';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
+import { AppInput } from '../../../shared/components/app-input/app-input';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
 import { PasswordToggle } from '../../../shared/components/password-toggle/password-toggle';
 
 @Component({
   selector: 'app-login',
-  imports: [ErrorAlert, AppToast, FormField, RouterLink, AppButton, InputText, PasswordToggle],
+  imports: [ErrorAlert, AppToast, FormField, RouterLink, AppInput, AppButton, PasswordToggle],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })

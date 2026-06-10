@@ -2,10 +2,11 @@ import { Component, computed, input, model, output } from '@angular/core';
 import { InputText } from 'primeng/inputtext';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
+import { FormField } from '@angular/forms/signals';
 
 @Component({
   selector: 'app-input',
-  imports: [InputText, IconField, InputIcon],
+  imports: [InputText, IconField, InputIcon, FormField],
   templateUrl: './app-input.html',
   styleUrl: './app-input.css',
 })
@@ -13,6 +14,7 @@ export class AppInput {
   readonly inputId = input<string | null>(null);
   readonly type = input<string>('text');
   readonly placeholder = input<string>('');
+  readonly autocomplete = input<string | null>(null);
   readonly disabled = input(false);
   readonly readonly = input(false);
   readonly invalid = input(false);
@@ -21,6 +23,9 @@ export class AppInput {
   readonly suffixIcon = input<string | undefined>(undefined);
   readonly ariaLabel = input<string | null>(null);
   readonly testId = input<string | null>(null);
+
+  /** When provided, binds to Angular signal forms instead of the value model. */
+  readonly formField = input<any>(undefined);
 
   readonly value = model<string>('');
   readonly blur = output<void>();
