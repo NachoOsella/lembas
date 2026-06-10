@@ -1,14 +1,22 @@
 import { PageResponse } from './page';
 
 export type PriceUpdateBatchStatus = 'DRAFT' | 'VALIDATED' | 'APPLIED' | 'CANCELLED';
-export type PriceUpdateBatchType = 'SUPPLIER_FILE' | 'PERCENTAGE_INCREASE' | 'MANUAL_GRID' | 'SINGLE_PRODUCT_MANUAL';
-export type PriceUpdateBatchItemStatus = 'CREATE' | 'UPDATE' | 'UNCHANGED' | 'REVIEW' | 'EXCLUDED' | 'ERROR';
+export type PriceUpdateBatchType =
+  | 'SUPPLIER_FILE'
+  | 'PERCENTAGE_INCREASE'
+  | 'MANUAL_GRID'
+  | 'SINGLE_PRODUCT_MANUAL';
+export type PriceUpdateBatchItemStatus =
+  | 'CREATE'
+  | 'UPDATE'
+  | 'UNCHANGED'
+  | 'REVIEW'
+  | 'EXCLUDED'
+  | 'ERROR';
 
 /** Global defaults used to calculate batch preview rows. */
 export interface PriceUpdateBatchDefaultsRequest {
   readonly newProductMarginPercentage?: number | null;
-  readonly transferPercentage?: number | null;
-  readonly roundingMultiple?: number | null;
   readonly applyCostUpdatesByDefault?: boolean | null;
   readonly applySalePriceUpdatesByDefault?: boolean | null;
   readonly excludeUnchangedByDefault?: boolean | null;
@@ -37,7 +45,6 @@ export interface PriceUpdateBatchItemUpdateRequest {
   readonly barcode?: string | null;
   readonly productName?: string | null;
   readonly newCost?: number | null;
-  readonly transferPercentage?: number | null;
   readonly newProductMarginPercentage?: number | null;
   readonly finalSalePrice?: number | null;
   readonly applyCostUpdate?: boolean | null;
@@ -70,7 +77,6 @@ export interface PriceUpdateBatchItemDto {
   readonly oldCost?: number | null;
   readonly newCost?: number | null;
   readonly supplierVariationPercentage?: number | null;
-  readonly transferPercentage?: number | null;
   readonly newProductMarginPercentage?: number | null;
   readonly oldSalePrice?: number | null;
   readonly suggestedSalePrice?: number | null;
@@ -85,8 +91,6 @@ export interface PriceUpdateBatchItemDto {
 /** Full batch preview with defaults and editable rows. */
 export interface PriceUpdateBatchDetailDto extends PriceUpdateBatchSummaryDto {
   readonly defaultNewProductMarginPercentage?: number | null;
-  readonly defaultTransferPercentage?: number | null;
-  readonly defaultRoundingMultiple?: number | null;
   readonly applyCostUpdatesByDefault: boolean;
   readonly applySalePriceUpdatesByDefault: boolean;
   readonly excludeUnchangedByDefault: boolean;

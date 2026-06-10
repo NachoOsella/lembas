@@ -47,15 +47,22 @@ export class PriceUpdateBatchService {
   }
 
   /** Imports a CSV/XLSX supplier list. */
-  importFile(supplierId: number, file: File, defaults: PriceUpdateBatchDefaultsRequest, notes?: string | null): Observable<PriceUpdateBatchDetailDto> {
+  importFile(
+    supplierId: number,
+    file: File,
+    defaults: PriceUpdateBatchDefaultsRequest,
+    notes?: string | null,
+  ): Observable<PriceUpdateBatchDetailDto> {
     const data = new FormData();
     data.append('supplierId', String(supplierId));
     data.append('file', file);
     this.appendNumber(data, 'newProductMarginPercentage', defaults.newProductMarginPercentage);
-    this.appendNumber(data, 'transferPercentage', defaults.transferPercentage);
-    this.appendNumber(data, 'roundingMultiple', defaults.roundingMultiple);
     this.appendBoolean(data, 'applyCostUpdatesByDefault', defaults.applyCostUpdatesByDefault);
-    this.appendBoolean(data, 'applySalePriceUpdatesByDefault', defaults.applySalePriceUpdatesByDefault);
+    this.appendBoolean(
+      data,
+      'applySalePriceUpdatesByDefault',
+      defaults.applySalePriceUpdatesByDefault,
+    );
     this.appendBoolean(data, 'excludeUnchangedByDefault', defaults.excludeUnchangedByDefault);
     if (notes?.trim()) {
       data.append('notes', notes.trim());
@@ -69,17 +76,27 @@ export class PriceUpdateBatchService {
   }
 
   /** Updates global defaults. */
-  updateDefaults(id: number, request: PriceUpdateBatchDefaultsRequest): Observable<PriceUpdateBatchDetailDto> {
+  updateDefaults(
+    id: number,
+    request: PriceUpdateBatchDefaultsRequest,
+  ): Observable<PriceUpdateBatchDetailDto> {
     return this.http.patch<PriceUpdateBatchDetailDto>(`${this.url}/${id}/defaults`, request);
   }
 
   /** Applies defaults to all rows. */
   applyDefaultsToAll(id: number): Observable<PriceUpdateBatchDetailDto> {
-    return this.http.patch<PriceUpdateBatchDetailDto>(`${this.url}/${id}/apply-defaults-to-all`, {});
+    return this.http.patch<PriceUpdateBatchDetailDto>(
+      `${this.url}/${id}/apply-defaults-to-all`,
+      {},
+    );
   }
 
   /** Updates one preview row. */
-  updateItem(id: number, itemId: number, request: PriceUpdateBatchItemUpdateRequest): Observable<PriceUpdateBatchDetailDto> {
+  updateItem(
+    id: number,
+    itemId: number,
+    request: PriceUpdateBatchItemUpdateRequest,
+  ): Observable<PriceUpdateBatchDetailDto> {
     return this.http.patch<PriceUpdateBatchDetailDto>(`${this.url}/${id}/items/${itemId}`, request);
   }
 

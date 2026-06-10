@@ -28,10 +28,10 @@ sequenceDiagram
     FE->>BE: Validate and match rows
     BE->>DB: Match by supplier SKU, barcode, or name
     BE->>BE: Classify rows as CREATE, UPDATE, UNCHANGED, or REVIEW
-    BE->>BE: Calculate supplier variation and suggested sale prices
+    BE->>BE: Calculate supplier variation and sale prices from margin
     BE-->>FE: Preview with defaults applied
     U->>FE: Apply global defaults to all rows
-    U->>FE: Override individual rows if needed
+    U->>FE: Override margin or final sale price if needed
     U->>FE: Confirm application
     FE->>BE: Apply batch
     BE->>BE: @Transactional
@@ -55,8 +55,8 @@ sequenceDiagram
 
 | Status | Meaning | Required admin input |
 |---|---|---|
-| CREATE | Supplier row does not match an existing product | Product data review, initial profit margin, final sale price |
-| UPDATE | Existing product has cost or sale-price-relevant changes | Percentage of supplier variation to transfer, final sale price review |
+| CREATE | Supplier row does not match an existing product | Product data review, profit margin, final sale price |
+| UPDATE | Existing product has cost or sale-price-relevant changes | Margin and final sale price review |
 | UNCHANGED | Existing product has no relevant cost change | Usually no action |
 | REVIEW | Match is ambiguous or required data is missing | Link to an existing product, create as new, or exclude |
 | EXCLUDED | Admin chose not to apply this row | No persistence |
@@ -73,42 +73,16 @@ Default options should include:
 
 | Default | Applies to | Meaning |
 |---|---|---|
-| New product profit margin | CREATE rows | Margin used to calculate initial sale price |
-| Transfer percentage | UPDATE rows | Percentage of supplier increase/decrease transferred to sale price |
-| Rounding multiple | CREATE and UPDATE rows | Rounds final sale prices, for example to 10, 50, 100 |
+| Profit margin | CREATE and UPDATE rows | Margin used to calculate sale price from replacement cost |
 | Apply cost updates | UPDATE rows | Whether to update `supplier_products.current_cost` |
 | Apply sale price updates | CREATE and UPDATE rows | Whether to update `products.sale_price` |
 | Exclude unchanged rows | UNCHANGED rows | Keeps preview clean and avoids no-op writes |
 
 The admin can apply these defaults to all rows and then override any product individually.
 
-## Existing product pricing
+## Pricing formula
 
-For an existing product, the important question is how much of the supplier variation should be transferred to the sale price.
-
-```text
-cost_delta = new_cost - old_cost
-transferred_delta = cost_delta * transfer_percentage
-final_sale_price = old_sale_price + transferred_delta
-```
-
-Example:
-
-```text
-Old supplier cost: 5200
-New supplier cost: 5800
-Supplier increase: +600
-Current sale price: 8000
-Transfer percentage: 50%
-
-Final sale price = 8000 + 300 = 8300
-```
-
-This supports inflation scenarios where the business may transfer all, part, none, or even more than the supplier increase.
-
-## New product pricing
-
-For a new product there is no previous sale price or supplier variation. The admin must set a profit margin.
+Both existing and new products use the same margin-based pricing formula:
 
 ```text
 sale_price = replacement_cost / (1 - profit_margin)
@@ -119,8 +93,19 @@ Example:
 ```text
 Supplier cost: 4000
 Profit margin: 35%
-Suggested sale price = 4000 / (1 - 0.35) = 6153
-Rounded final sale price = 6200
+Final sale price = 4000 / (1 - 0.35) = 6153.85
+```
+
+If the admin edits the final sale price manually, the system derives the resulting margin:
+
+```text
+profit_margin = (1 - replacement_cost / final_sale_price) * 100
+```
+
+Supplier variation is still calculated for existing products, but it is informational only:
+
+```text
+supplier_variation = (new_cost - old_cost) / old_cost * 100
 ```
 
 ## Preview table
@@ -135,10 +120,9 @@ Recommended columns:
 | Supplier SKU/barcode | Matching and traceability |
 | Old cost | Current `supplier_products.current_cost` |
 | New cost | Cost from file/manual input |
-| Supplier variation | Increase/decrease amount and percentage |
+| Supplier variation | Increase/decrease percentage for existing products, informational only |
 | Current sale price | Current `products.sale_price` |
-| Transfer percentage | Per-row percentage applied to existing products |
-| New product margin | Per-row margin applied to new products |
+| Margin | Per-row target margin used to calculate sale price |
 | Suggested sale price | Calculated by system |
 | Final sale price | Editable value that will be persisted |
 | Apply | Whether this row will be applied |
@@ -150,8 +134,9 @@ Recommended columns:
 | Human approval | No supplier list is applied automatically without preview confirmation |
 | Manual and import in one screen | The same workflow supports one-product manual update and Excel/CSV batch import |
 | Product creation supported | Unmatched rows can be created as new products if the admin approves them |
-| Existing-product logic | Existing products use supplier variation transfer percentage |
-| New-product logic | New products use profit margin |
+| Margin-based pricing | Existing and new products use replacement cost plus target margin |
+| Price override | Editing final sale price derives the resulting margin |
+| Supplier variation | Existing-product supplier variation is informational and does not drive price calculation |
 | Global defaults | The admin can set defaults and apply them to all rows |
 | Per-row override | Any calculated value can be adjusted product by product before applying |
 | No stock impact | Batches never create lots or stock movements |
