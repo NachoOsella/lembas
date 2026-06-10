@@ -49,7 +49,6 @@ CREATE TABLE price_update_batches (
     status VARCHAR(30) NOT NULL DEFAULT 'DRAFT',
     source_file_name VARCHAR(255),
     default_new_product_margin_percentage DECIMAL(5, 2),
-    default_transfer_percentage DECIMAL(8, 3),
     default_rounding_multiple DECIMAL(12, 2),
     apply_cost_updates_by_default BOOLEAN DEFAULT true NOT NULL,
     apply_sale_price_updates_by_default BOOLEAN DEFAULT true NOT NULL,
@@ -65,7 +64,6 @@ CREATE TABLE price_update_batches (
     CONSTRAINT chk_price_update_batches_type CHECK (type IN ('SUPPLIER_FILE', 'PERCENTAGE_INCREASE', 'MANUAL_GRID', 'SINGLE_PRODUCT_MANUAL')),
     CONSTRAINT chk_price_update_batches_status CHECK (status IN ('DRAFT', 'VALIDATED', 'APPLIED', 'CANCELLED')),
     CONSTRAINT chk_price_update_batches_margin CHECK (default_new_product_margin_percentage IS NULL OR (default_new_product_margin_percentage >= 0 AND default_new_product_margin_percentage < 100)),
-    CONSTRAINT chk_price_update_batches_transfer CHECK (default_transfer_percentage IS NULL OR default_transfer_percentage >= 0),
     CONSTRAINT chk_price_update_batches_rounding CHECK (default_rounding_multiple IS NULL OR default_rounding_multiple > 0)
 );
 
@@ -80,7 +78,6 @@ CREATE TABLE price_update_batch_items (
     old_cost DECIMAL(12, 2),
     new_cost DECIMAL(12, 2),
     supplier_variation_percentage DECIMAL(8, 3),
-    transfer_percentage DECIMAL(8, 3),
     new_product_margin_percentage DECIMAL(5, 2),
     old_sale_price DECIMAL(12, 2),
     suggested_sale_price DECIMAL(12, 2),
@@ -97,7 +94,6 @@ CREATE TABLE price_update_batch_items (
     CONSTRAINT chk_price_update_batch_items_old_cost CHECK (old_cost IS NULL OR old_cost >= 0),
     CONSTRAINT chk_price_update_batch_items_new_cost CHECK (new_cost IS NULL OR new_cost >= 0),
     CONSTRAINT chk_price_update_batch_items_margin CHECK (new_product_margin_percentage IS NULL OR (new_product_margin_percentage >= 0 AND new_product_margin_percentage < 100)),
-    CONSTRAINT chk_price_update_batch_items_transfer CHECK (transfer_percentage IS NULL OR transfer_percentage >= 0),
     CONSTRAINT chk_price_update_batch_items_prices CHECK (
         (old_sale_price IS NULL OR old_sale_price >= 0)
         AND (suggested_sale_price IS NULL OR suggested_sale_price >= 0)

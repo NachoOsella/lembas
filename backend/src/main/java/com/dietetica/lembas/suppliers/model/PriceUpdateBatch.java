@@ -69,12 +69,6 @@ public class PriceUpdateBatch {
     @Column(name = "default_new_product_margin_percentage", precision = 5, scale = 2)
     private BigDecimal defaultNewProductMarginPercentage;
 
-    @Column(name = "default_transfer_percentage", precision = 8, scale = 3)
-    private BigDecimal defaultTransferPercentage;
-
-    @Column(name = "default_rounding_multiple", precision = 12, scale = 2)
-    private BigDecimal defaultRoundingMultiple;
-
     @Column(name = "apply_cost_updates_by_default", nullable = false)
     private boolean applyCostUpdatesByDefault = true;
 

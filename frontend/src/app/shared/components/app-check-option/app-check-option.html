@@ -1,0 +1,15 @@
+<label
+  class="app-check-option"
+  [class.app-check-option--compact]="compact()"
+  [class.app-check-option--checked]="value()"
+>
+  <p-checkbox
+    [inputId]="inputId()"
+    [name]="name()"
+    [binary]="true"
+    [ngModel]="value()"
+    (ngModelChange)="value.set($event)"
+    [disabled]="disabled()"
+  />
+  <span class="app-check-option__label"><ng-content /></span>
+</label>

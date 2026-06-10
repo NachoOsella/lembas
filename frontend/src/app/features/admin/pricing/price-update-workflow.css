@@ -1,9 +1,6 @@
 /* Pricing workflow page — Lembas design system aligned.
-   Follows: data-table shell, form-section, control-field, status-badge patterns.
-   Tokens: --color-primary (#2f8d72), --color-primary-dark (#075f36), --color-text (rgba(0,0,0,0.87)),
-           --color-text-muted (rgba(0,0,0,0.58)), --color-surface (#fff), --color-surface-warmest (#fffef9),
-           --color-mint-wash-subtle (#eef6f1), --color-mint-wash (#d7eadf), --color-border-warm (#e7e7e7),
-           --color-red (#c82014), --color-bark (#9a5b19). */
+   Uses shared app-data-table shell + table-toolbar__* classes for the
+   preview table, matching the convention used by every other admin page. */
 
 :host {
   display: block;
@@ -46,10 +43,9 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Text inputs (notes, manual fields)
+   Notes textarea
    --------------------------------------------------------------------------- */
 
-.pricing-input,
 .pricing-notes {
   width: 100%;
   border: 1px solid var(--color-input-border, rgba(0, 0, 0, 0.12));
@@ -60,22 +56,19 @@
   font-family: var(--font-sans);
   font-size: 0.85rem;
   letter-spacing: var(--tracking-tight, -0.01em);
-  transition: border-color 200ms ease, box-shadow 200ms ease;
-}
-
-.pricing-notes {
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
   resize: vertical;
   min-height: 3.2rem;
 }
 
-.pricing-input:focus,
 .pricing-notes:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 1px var(--color-primary);
   outline: 0;
 }
 
-.pricing-input::placeholder,
 .pricing-notes::placeholder {
   color: var(--color-overlay-black, rgba(0, 0, 0, 0.4));
 }
@@ -111,78 +104,38 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Preview section — data-table shell
+   Toolbar metadata line (extends shared table-toolbar__info)
    --------------------------------------------------------------------------- */
 
-.pricing-preview {
-  border: 1px solid rgba(7, 95, 54, 0.11);
-  border-radius: var(--radius-card, 12px);
-  background: var(--color-surface, #ffffff);
-  box-shadow: 0 0 0.5px rgba(0, 0, 0, 0.14), 0 1px 1px rgba(0, 0, 0, 0.24);
-  overflow: hidden;
-}
-
-.pricing-preview--empty {
-  text-align: center;
-  padding: var(--space-6);
-  color: var(--color-text-muted);
-}
-
-/* --- Toolbar (header with info + actions) --- */
-
-.pricing-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: var(--space-3);
-  background: var(--color-neutral-cool, #f9f9f9);
-  border-bottom: 1px solid rgba(7, 95, 54, 0.09);
-}
-
-.pricing-toolbar__info {
-  display: grid;
-  gap: 0.25rem;
-  min-width: 0;
-}
-
-.pricing-toolbar__kicker {
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--color-bark, #9a5b19);
-}
-
-.pricing-toolbar__title {
-  margin: 0;
-  color: var(--color-text);
-  font-family: var(--font-sans);
-  font-size: 1.05rem;
-  font-weight: 800;
-  letter-spacing: var(--tracking-tight, -0.01em);
-}
-
-.pricing-toolbar__meta {
+.batch-toolbar-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+  margin: 0;
   color: var(--color-text-muted);
   font-size: 0.78rem;
   font-weight: 500;
 }
 
-.pricing-toolbar__actions {
-  display: flex;
+:host ::ng-deep .app-data-table__toolbar .table-toolbar__actions {
   flex-wrap: wrap;
-  gap: var(--space-1);
-  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3, 1.6rem) !important;
+  min-width: 0;
 }
 
-/* --- Empty state --- */
+:host ::ng-deep .app-data-table__toolbar .table-toolbar__actions app-button {
+  flex: 0 0 auto;
+}
+
+:host ::ng-deep .app-data-table__toolbar .table-toolbar__actions > app-button + app-button {
+  margin-left: var(--space-2, 0.8rem);
+}
+
+/* ---------------------------------------------------------------------------
+   Empty state (no batch selected — outside app-data-table)
+   --------------------------------------------------------------------------- */
 
 .pricing-empty {
   display: grid;
@@ -190,6 +143,12 @@
   gap: var(--space-2);
   padding: var(--space-7) var(--space-4);
   text-align: center;
+  border: 1px solid rgba(7, 95, 54, 0.11);
+  border-radius: var(--radius-card, 12px);
+  background: var(--color-surface, #ffffff);
+  box-shadow:
+    0 0 0.5px rgba(0, 0, 0, 0.14),
+    0 1px 1px rgba(0, 0, 0, 0.24);
 }
 
 .pricing-empty__icon {
@@ -219,100 +178,8 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Table
+   Variation column (inside table body)
    --------------------------------------------------------------------------- */
-
-.table-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.pricing-table {
-  width: 100%;
-  min-width: 78rem;
-  border-collapse: collapse;
-}
-
-.pricing-table thead {
-  background: var(--color-mint-wash-subtle, #eef6f1);
-}
-
-.pricing-table th {
-  padding: 0.65rem 0.75rem;
-  color: rgba(18, 55, 42, 0.86);
-  font-family: var(--font-sans);
-  font-size: 0.74rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border-bottom: 1px solid rgba(7, 95, 54, 0.1);
-  text-align: left;
-  white-space: nowrap;
-}
-
-.pricing-table td {
-  padding: 0.65rem 0.75rem;
-  vertical-align: top;
-  border-bottom: 1px solid var(--color-border-warm, #e7e7e7);
-  font-size: 0.85rem;
-}
-
-.pricing-table tbody tr:hover {
-  background: rgba(47, 141, 114, 0.045);
-  box-shadow: inset 0.25rem 0 0 rgba(47, 141, 114, 0.75);
-}
-
-.pricing-table small {
-  display: block;
-  color: var(--color-text-muted);
-  margin-bottom: 0.2rem;
-  font-size: 0.76rem;
-  font-weight: 500;
-}
-
-.pricing-table strong {
-  font-weight: 800;
-  letter-spacing: var(--tracking-tight, -0.01em);
-}
-
-/* --- Inline table inputs --- */
-
-.pricing-table-input {
-  width: 100%;
-  border: 1px solid var(--color-input-border, rgba(0, 0, 0, 0.12));
-  border-radius: 10px;
-  padding: 0.45rem 0.6rem;
-  color: var(--color-text);
-  background: var(--color-surface-warmest, #fffef9);
-  font-family: var(--font-sans);
-  font-size: 0.82rem;
-  letter-spacing: var(--tracking-tight, -0.01em);
-  transition: border-color 200ms ease, box-shadow 200ms ease;
-}
-
-.pricing-table-input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 1px var(--color-primary);
-  outline: 0;
-}
-
-.pricing-table-input::placeholder {
-  color: var(--color-overlay-black, rgba(0, 0, 0, 0.35));
-}
-
-/* Tighter input-number inside table cells */
-.pricing-table :host ::ng-deep app-input-number .p-inputnumber,
-.pricing-table :host ::ng-deep .p-inputnumber {
-  width: 100%;
-}
-
-.pricing-table :host ::ng-deep .p-inputnumber-input {
-  border-radius: 10px;
-  font-size: 0.82rem;
-  padding: 0.45rem 0.6rem;
-}
-
-/* --- Variation column --- */
 
 .pricing-variation {
   font-family: var(--font-sans);
@@ -332,7 +199,9 @@
   color: var(--color-text-muted);
 }
 
-/* --- Row error --- */
+/* ---------------------------------------------------------------------------
+   Row-level error message
+   --------------------------------------------------------------------------- */
 
 .pricing-row-error {
   display: block;
@@ -342,17 +211,29 @@
   font-weight: 700;
 }
 
-/* --- Checkbox compact in table --- */
+/* ---------------------------------------------------------------------------
+   Inline checkbox group (inside table cells)
+   --------------------------------------------------------------------------- */
 
 .pricing-checks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.65rem;
+  display: grid;
+  gap: 0.35rem;
+  align-items: start;
+  justify-items: start;
 }
 
 /* ---------------------------------------------------------------------------
-   Paginator (footer)
+   Batch summary footer (outside app-data-table, visually attached to table)
    --------------------------------------------------------------------------- */
+
+.pricing-page > app-data-table {
+  margin-bottom: calc(-1 * var(--space-4));
+}
+
+:host ::ng-deep app-data-table .app-data-table-shell {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
 
 .pricing-paginator {
   display: flex;
@@ -360,7 +241,10 @@
   align-items: center;
   padding: var(--space-2) var(--space-3);
   background: var(--color-mint-wash-pale, #f6fbf7);
-  border-top: 1px solid rgba(7, 95, 54, 0.06);
+  border: 1px solid rgba(7, 95, 54, 0.11);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-card, 12px) var(--radius-card, 12px);
+  box-shadow: var(--shadow-card);
   font-size: 0.78rem;
   color: var(--color-text-muted);
 }
@@ -370,17 +254,203 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Responsive
+   Manual quick load actions
    --------------------------------------------------------------------------- */
 
-@media (max-width: 64rem) {
-  .pricing-toolbar {
-    flex-direction: column;
-    gap: var(--space-2);
+.pricing-actions--manual {
+  justify-content: space-between;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border-warm, #f0e6d3);
+}
+
+.pricing-actions__hint {
+  max-width: 42rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------------------
+   Pricing table density and responsive horizontal scroll
+   --------------------------------------------------------------------------- */
+
+.pricing-page,
+.pricing-page > app-data-table {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:host ::ng-deep app-data-table .app-data-table-shell,
+:host ::ng-deep app-data-table .app-data-table__scroll-area,
+:host ::ng-deep app-data-table .p-datatable,
+:host ::ng-deep app-data-table .p-datatable-wrapper,
+:host ::ng-deep app-data-table .p-datatable-table-container {
+  max-width: 100%;
+  min-width: 0;
+}
+
+:host ::ng-deep app-data-table .app-data-table__scroll-area,
+:host ::ng-deep app-data-table .p-datatable-wrapper,
+:host ::ng-deep app-data-table .p-datatable-table-container {
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+:host ::ng-deep .app-data-table .p-datatable-table {
+  width: 100%;
+  min-width: 88rem;
+  table-layout: fixed;
+}
+
+:host ::ng-deep .app-data-table .p-datatable-tbody > tr > td {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  vertical-align: middle;
+}
+
+.pricing-cell {
+  min-width: 0;
+}
+
+.pricing-cell--stacked {
+  display: grid;
+  gap: 0.45rem;
+}
+
+/* Disabled old-price inputs: compact, muted, dashed border */
+:host ::ng-deep .pricing-cell--stacked .p-inputnumber[disabled] .p-inputnumber-input {
+  min-height: 26px;
+  height: 26px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface-warm, #fefcf5);
+  border-style: dashed;
+  opacity: 1;
+}
+
+.pricing-cell--product {
+  min-width: 10rem;
+}
+
+:host ::ng-deep .pricing-cell .p-inputnumber,
+:host ::ng-deep .pricing-cell .p-inputnumber-input {
+  width: 100%;
+}
+
+:host ::ng-deep .pricing-cell .p-inputnumber-input {
+  min-height: 40px;
+  border-radius: var(--radius-pill, 50px);
+  background: var(--color-surface-warmest, #fffef9);
+}
+
+/* Normalize all input heights inside batch table rows */
+:host ::ng-deep .app-data-table .p-datatable-tbody app-input,
+:host ::ng-deep .app-data-table .p-datatable-tbody app-input-number,
+:host ::ng-deep .app-data-table .p-datatable-tbody .p-inputnumber {
+  min-height: 40px;
+}
+
+:host ::ng-deep .app-data-table .p-datatable-tbody .p-inputnumber-input {
+  min-height: 40px;
+  height: 40px;
+}
+
+.pricing-variation--up {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-pill, 50px);
+  color: var(--color-amber-text, #7a4f00);
+  background: var(--color-amber-tint, #fff4d8);
+  box-shadow: inset 0 0 0 1px rgba(217, 130, 43, 0.22);
+}
+
+.pricing-variation--down,
+.pricing-variation--neutral {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-pill, 50px);
+}
+
+.pricing-variation--down {
+  background: var(--color-mint-wash, #d7eadf);
+  box-shadow: inset 0 0 0 1px rgba(47, 141, 114, 0.18);
+}
+
+.pricing-variation--neutral {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 75rem) {
+  :host ::ng-deep .app-data-table .p-datatable-table {
+    min-width: 82rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .pricing-page {
+    gap: var(--space-3);
   }
 
-  .pricing-toolbar__actions {
+  .pricing-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-toggles,
+  .pricing-actions,
+  :host ::ng-deep .app-data-table__toolbar .table-toolbar__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  :host ::ng-deep .app-data-table__toolbar .table-toolbar__actions {
+    gap: var(--space-3, 1.6rem) !important;
     width: 100%;
-    justify-content: flex-start;
+  }
+
+  :host ::ng-deep .app-data-table__toolbar .table-toolbar__actions app-button {
+    width: 100%;
+  }
+
+  :host ::ng-deep .app-data-table__toolbar .table-toolbar__actions > app-button + app-button {
+    margin-top: var(--space-2, 0.8rem);
+    margin-left: 0;
+  }
+
+  .pricing-file-name {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .pricing-page > app-data-table {
+    margin-bottom: calc(-1 * var(--space-3));
+  }
+
+  :host ::ng-deep .app-data-table .p-datatable-table {
+    min-width: 58rem;
+  }
+
+  :host ::ng-deep .app-data-table .p-datatable-thead > tr > th,
+  :host ::ng-deep .app-data-table .p-datatable-tbody > tr > td {
+    padding: 0.65rem 0.75rem;
+  }
+
+  :host ::ng-deep .pricing-cell .p-inputnumber-input {
+    min-height: 38px;
+  }
+
+  .pricing-cell--stacked {
+    gap: 0.35rem;
+  }
+
+  .pricing-paginator {
+    padding: var(--space-2);
   }
 }

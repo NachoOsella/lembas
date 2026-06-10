@@ -9,7 +9,7 @@
 | 3 | `categories` | Catalog | Product categories, supports parent-child tree |
 | 4 | `products` | Catalog | Salable products with current sale price, barcode, and online status |
 | 5 | `product_sale_price_history` | Catalog | Dedicated history of product sale price changes |
-| 6 | `pricing_rules` | Catalog | Margin and rounding rules used to suggest sale prices |
+| 6 | `pricing_rules` | Catalog | Margin rules used to suggest sale prices |
 | 7 | `suppliers` | Suppliers | Companies that supply products |
 | 8 | `supplier_products` | Suppliers | Product-supplier association with current replacement cost |
 | 9 | `supplier_product_cost_history` | Suppliers | Dedicated history of supplier replacement cost changes |
@@ -82,7 +82,7 @@
 
 ### PricingRule
 
-- Defines target margin and rounding multiple for suggested sale prices
+- Defines target margin for suggested sale prices
 - Can apply globally, by category, or by product
 - Priority: product rule, category rule, default rule
 
@@ -109,7 +109,7 @@
 - Represents a reviewed supplier price and catalog update operation
 - Supports one-product manual update, uploaded supplier file, percentage increase, or manual grid
 - Can update existing products or create new products from unmatched supplier rows
-- Stores global defaults such as new-product margin, transfer percentage, rounding multiple, and default apply flags
+- Stores global defaults such as target margin and default apply flags
 - Does not affect stock or existing lot costs
 - Applies only after human confirmation
 
@@ -117,9 +117,9 @@
 
 - Represents one preview row from the manual update or supplier list import
 - Status can be CREATE, UPDATE, UNCHANGED, REVIEW, EXCLUDED, or ERROR
-- Existing products use `transfer_percentage` to decide how much supplier increase/decrease is transferred to the final sale price
-- New products use `new_product_margin_percentage` to calculate the initial sale price
-- The admin can override final sale price, margin, transfer percentage, and apply flags per row
+- Existing and new products use `new_product_margin_percentage` to calculate sale price from replacement cost
+- Supplier variation is informational for existing products and does not drive price calculation
+- The admin can override final sale price, margin, and apply flags per row
 
 ### PurchaseOrder
 

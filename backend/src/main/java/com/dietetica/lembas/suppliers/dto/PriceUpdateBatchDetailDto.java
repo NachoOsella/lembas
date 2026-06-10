@@ -16,8 +16,6 @@ public record PriceUpdateBatchDetailDto(
         PriceUpdateBatchStatus status,
         String sourceFileName,
         BigDecimal defaultNewProductMarginPercentage,
-        BigDecimal defaultTransferPercentage,
-        BigDecimal defaultRoundingMultiple,
         boolean applyCostUpdatesByDefault,
         boolean applySalePriceUpdatesByDefault,
         boolean excludeUnchangedByDefault,

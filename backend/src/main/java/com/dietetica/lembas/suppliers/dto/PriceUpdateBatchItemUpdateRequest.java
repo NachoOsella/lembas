@@ -14,7 +14,6 @@ public record PriceUpdateBatchItemUpdateRequest(
         @Size(max = 100) String barcode,
         @Size(max = 255) String productName,
         @DecimalMin(value = "0.00") @Digits(integer = 10, fraction = 2) BigDecimal newCost,
-        @DecimalMin(value = "0.00") @Digits(integer = 5, fraction = 3) BigDecimal transferPercentage,
         @DecimalMin(value = "0.00") @Digits(integer = 3, fraction = 2) BigDecimal newProductMarginPercentage,
         @DecimalMin(value = "0.00") @Digits(integer = 10, fraction = 2) BigDecimal finalSalePrice,
         Boolean applyCostUpdate,

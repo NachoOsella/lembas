@@ -201,8 +201,6 @@ public class PriceUpdateBatchService {
         batch.setStatus(PriceUpdateBatchStatus.DRAFT);
         batch.setSourceFileName(fileName);
         batch.setDefaultNewProductMarginPercentage(BigDecimal.valueOf(35));
-        batch.setDefaultTransferPercentage(BigDecimal.valueOf(100));
-        batch.setDefaultRoundingMultiple(BigDecimal.valueOf(100));
         batch.setNotes(blankToNull(notes));
         if (defaults != null) {
             applyDefaultsRequest(batch, defaults);
@@ -219,7 +217,6 @@ public class PriceUpdateBatchService {
         item.setNewCost(row.newCost());
         item.setApplyCostUpdate(batch.isApplyCostUpdatesByDefault());
         item.setApplySalePriceUpdate(batch.isApplySalePriceUpdatesByDefault());
-        item.setTransferPercentage(batch.getDefaultTransferPercentage());
         item.setNewProductMarginPercentage(batch.getDefaultNewProductMarginPercentage());
         if (row.hasError()) {
             item.setStatus(PriceUpdateBatchItemStatus.ERROR);
@@ -300,12 +297,6 @@ public class PriceUpdateBatchService {
             validateMargin(request.newProductMarginPercentage());
             batch.setDefaultNewProductMarginPercentage(request.newProductMarginPercentage());
         }
-        if (request.transferPercentage() != null) {
-            batch.setDefaultTransferPercentage(request.transferPercentage());
-        }
-        if (request.roundingMultiple() != null) {
-            batch.setDefaultRoundingMultiple(request.roundingMultiple());
-        }
         if (request.applyCostUpdatesByDefault() != null) {
             batch.setApplyCostUpdatesByDefault(request.applyCostUpdatesByDefault());
         }
@@ -337,16 +328,17 @@ public class PriceUpdateBatchService {
         if (request.newCost() != null) {
             item.setNewCost(request.newCost());
         }
-        if (request.transferPercentage() != null) {
-            item.setTransferPercentage(request.transferPercentage());
-        }
-        if (request.newProductMarginPercentage() != null) {
+        boolean marginExplicit = request.newProductMarginPercentage() != null;
+        if (marginExplicit) {
             validateMargin(request.newProductMarginPercentage());
             item.setNewProductMarginPercentage(request.newProductMarginPercentage());
         }
         boolean hasFinalOverride = request.finalSalePrice() != null;
         if (hasFinalOverride) {
             item.setFinalSalePrice(request.finalSalePrice());
+            if (!marginExplicit) {
+                calculationService.calculateReverseFromPrice(batch, item);
+            }
         }
         if (request.applyCostUpdate() != null) {
             item.setApplyCostUpdate(request.applyCostUpdate());
@@ -537,8 +529,6 @@ public class PriceUpdateBatchService {
                 batch.getStatus(),
                 batch.getSourceFileName(),
                 batch.getDefaultNewProductMarginPercentage(),
-                batch.getDefaultTransferPercentage(),
-                batch.getDefaultRoundingMultiple(),
                 batch.isApplyCostUpdatesByDefault(),
                 batch.isApplySalePriceUpdatesByDefault(),
                 batch.isExcludeUnchangedByDefault(),
@@ -563,7 +553,6 @@ public class PriceUpdateBatchService {
                 item.getOldCost(),
                 item.getNewCost(),
                 item.getSupplierVariationPercentage(),
-                item.getTransferPercentage(),
                 item.getNewProductMarginPercentage(),
                 item.getOldSalePrice(),
                 item.getSuggestedSalePrice(),

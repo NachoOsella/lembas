@@ -13,10 +13,8 @@ import java.math.RoundingMode;
 public class PriceUpdateCalculationService {
     private static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
     private static final BigDecimal DEFAULT_MARGIN = BigDecimal.valueOf(35);
-    private static final BigDecimal DEFAULT_TRANSFER = BigDecimal.valueOf(100);
-    private static final BigDecimal DEFAULT_ROUNDING = BigDecimal.valueOf(100);
 
-    /** Applies batch defaults and recalculates the row preview. */
+    /** Applies batch defaults and recalculates the row preview from cost and margin. */
     public void calculate(PriceUpdateBatch batch, PriceUpdateBatchItem item, boolean preserveFinalOverride) {
         if (item.getStatus() == PriceUpdateBatchItemStatus.ERROR || item.getStatus() == PriceUpdateBatchItemStatus.EXCLUDED) {
             return;
@@ -26,16 +24,19 @@ public class PriceUpdateCalculationService {
             item.setErrorMessage("New supplier cost is required");
             return;
         }
-        if (item.getProduct() == null && item.getStatus() != PriceUpdateBatchItemStatus.REVIEW) {
-            calculateNewProduct(batch, item, preserveFinalOverride);
-        } else if (item.getProduct() != null) {
-            calculateExistingProduct(batch, item, preserveFinalOverride);
+        if (item.getNewCost().compareTo(BigDecimal.ZERO) <= 0) {
+            item.setStatus(PriceUpdateBatchItemStatus.ERROR);
+            item.setErrorMessage("New supplier cost must be positive");
+            return;
         }
+        if (item.getProduct() != null) {
+            calculateSupplierVariation(item);
+        }
+        calculateFromMargin(batch, item, preserveFinalOverride);
     }
 
     /** Replaces row override fields with the batch defaults, then recalculates the row. */
     public void applyDefaults(PriceUpdateBatch batch, PriceUpdateBatchItem item) {
-        item.setTransferPercentage(defaultTransfer(batch));
         item.setNewProductMarginPercentage(defaultMargin(batch));
         item.setApplyCostUpdate(batch.isApplyCostUpdatesByDefault());
         item.setApplySalePriceUpdate(batch.isApplySalePriceUpdatesByDefault());
@@ -46,21 +47,42 @@ public class PriceUpdateCalculationService {
         calculate(batch, item, false);
     }
 
-    /** Rounds a positive price to the nearest configured multiple using HALF_UP semantics. */
-    public BigDecimal roundPrice(BigDecimal value, BigDecimal multiple) {
-        if (value == null) {
-            return null;
+    /** Derives margin from a manually entered final sale price. */
+    public void calculateReverseFromPrice(PriceUpdateBatch batch, PriceUpdateBatchItem item) {
+        if (item.getStatus() == PriceUpdateBatchItemStatus.ERROR
+                || item.getStatus() == PriceUpdateBatchItemStatus.EXCLUDED
+                || item.getFinalSalePrice() == null) {
+            return;
         }
-        BigDecimal normalizedMultiple = multiple == null || multiple.compareTo(BigDecimal.ZERO) <= 0 ? DEFAULT_ROUNDING : multiple;
-        return value.divide(normalizedMultiple, 0, RoundingMode.HALF_UP).multiply(normalizedMultiple).setScale(2, RoundingMode.HALF_UP);
+        calculateReverseMargin(item);
     }
 
-    /** Calculates sale price for an existing product from supplier cost variation. */
-    private void calculateExistingProduct(PriceUpdateBatch batch, PriceUpdateBatchItem item, boolean preserveFinalOverride) {
+    /** Calculates sale price from replacement cost and target margin for both new and existing products. */
+    private void calculateFromMargin(PriceUpdateBatch batch, PriceUpdateBatchItem item, boolean preserveFinalOverride) {
+        BigDecimal margin = item.getNewProductMarginPercentage() == null ? defaultMargin(batch) : item.getNewProductMarginPercentage();
+        item.setNewProductMarginPercentage(margin);
+        if (margin.compareTo(BigDecimal.ZERO) < 0 || margin.compareTo(ONE_HUNDRED) >= 0) {
+            item.setStatus(PriceUpdateBatchItemStatus.ERROR);
+            item.setErrorMessage("New product margin must be between 0 and 99.99");
+            return;
+        }
+        BigDecimal suggested = calculatePriceFromMargin(item.getNewCost(), margin);
+        item.setSuggestedSalePrice(suggested);
+        if (!preserveFinalOverride || item.getFinalSalePrice() == null) {
+            item.setFinalSalePrice(suggested);
+        }
+        if (item.getProduct() == null) {
+            item.setStatus(PriceUpdateBatchItemStatus.CREATE);
+        } else if (item.getStatus() != PriceUpdateBatchItemStatus.REVIEW) {
+            item.setStatus(item.getNewCost().compareTo(item.getOldCost()) == 0 ? PriceUpdateBatchItemStatus.UNCHANGED : PriceUpdateBatchItemStatus.UPDATE);
+        }
+    }
+
+    /** Calculates supplier cost variation for display only. */
+    private void calculateSupplierVariation(PriceUpdateBatchItem item) {
         BigDecimal oldCost = item.getOldCost();
         BigDecimal newCost = item.getNewCost();
-        BigDecimal oldSalePrice = item.getOldSalePrice();
-        if (oldCost == null || oldSalePrice == null) {
+        if (oldCost == null) {
             item.setStatus(PriceUpdateBatchItemStatus.REVIEW);
             item.setErrorMessage("Existing product is missing current cost or sale price");
             return;
@@ -71,51 +93,33 @@ public class PriceUpdateCalculationService {
                     .divide(oldCost, 3, RoundingMode.HALF_UP);
             item.setSupplierVariationPercentage(variation);
         }
-        BigDecimal transfer = item.getTransferPercentage() == null ? defaultTransfer(batch) : item.getTransferPercentage();
-        item.setTransferPercentage(transfer);
-        BigDecimal transferredDelta = newCost.subtract(oldCost)
-                .multiply(transfer)
-                .divide(ONE_HUNDRED, 2, RoundingMode.HALF_UP);
-        BigDecimal suggested = roundPrice(oldSalePrice.add(transferredDelta).max(BigDecimal.ZERO), defaultRounding(batch));
-        item.setSuggestedSalePrice(suggested);
-        if (!preserveFinalOverride || item.getFinalSalePrice() == null) {
-            item.setFinalSalePrice(suggested);
-        }
-        if (item.getStatus() != PriceUpdateBatchItemStatus.REVIEW) {
-            item.setStatus(newCost.compareTo(oldCost) == 0 ? PriceUpdateBatchItemStatus.UNCHANGED : PriceUpdateBatchItemStatus.UPDATE);
-        }
     }
 
-    /** Calculates initial sale price for a new product from replacement cost and margin. */
-    private void calculateNewProduct(PriceUpdateBatch batch, PriceUpdateBatchItem item, boolean preserveFinalOverride) {
-        BigDecimal margin = item.getNewProductMarginPercentage() == null ? defaultMargin(batch) : item.getNewProductMarginPercentage();
-        item.setNewProductMarginPercentage(margin);
-        if (margin.compareTo(ONE_HUNDRED) >= 0) {
-            item.setStatus(PriceUpdateBatchItemStatus.ERROR);
-            item.setErrorMessage("New product margin must be lower than 100");
+    /** Derives margin from the final sale price and replacement cost. */
+    private void calculateReverseMargin(PriceUpdateBatchItem item) {
+        BigDecimal cost = item.getNewCost();
+        BigDecimal price = item.getFinalSalePrice();
+        if (cost == null || price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
-        BigDecimal denominator = BigDecimal.ONE.subtract(margin.divide(ONE_HUNDRED, 6, RoundingMode.HALF_UP));
-        BigDecimal suggested = roundPrice(item.getNewCost().divide(denominator, 2, RoundingMode.HALF_UP), defaultRounding(batch));
-        item.setSuggestedSalePrice(suggested);
-        if (!preserveFinalOverride || item.getFinalSalePrice() == null) {
-            item.setFinalSalePrice(suggested);
+        BigDecimal margin = BigDecimal.ONE.subtract(cost.divide(price, 6, RoundingMode.HALF_UP)).multiply(ONE_HUNDRED);
+        if (margin.compareTo(BigDecimal.ZERO) < 0) {
+            margin = BigDecimal.ZERO;
         }
-        item.setStatus(PriceUpdateBatchItemStatus.CREATE);
+        if (margin.compareTo(ONE_HUNDRED) >= 0) {
+            return;
+        }
+        item.setNewProductMarginPercentage(margin);
+    }
+
+    /** Calculates sale price from replacement cost and target margin. price = cost / (1 - margin%). */
+    private BigDecimal calculatePriceFromMargin(BigDecimal cost, BigDecimal margin) {
+        BigDecimal denominator = BigDecimal.ONE.subtract(margin.divide(ONE_HUNDRED, 6, RoundingMode.HALF_UP));
+        return cost.divide(denominator, 2, RoundingMode.HALF_UP);
     }
 
     /** Returns the batch default margin or the MVP fallback. */
     private BigDecimal defaultMargin(PriceUpdateBatch batch) {
         return batch.getDefaultNewProductMarginPercentage() == null ? DEFAULT_MARGIN : batch.getDefaultNewProductMarginPercentage();
-    }
-
-    /** Returns the batch default transfer percentage or the MVP fallback. */
-    private BigDecimal defaultTransfer(PriceUpdateBatch batch) {
-        return batch.getDefaultTransferPercentage() == null ? DEFAULT_TRANSFER : batch.getDefaultTransferPercentage();
-    }
-
-    /** Returns the batch default rounding multiple or the MVP fallback. */
-    private BigDecimal defaultRounding(PriceUpdateBatch batch) {
-        return batch.getDefaultRoundingMultiple() == null ? DEFAULT_ROUNDING : batch.getDefaultRoundingMultiple();
     }
 }

@@ -16,7 +16,6 @@ public record PriceUpdateBatchItemDto(
         BigDecimal oldCost,
         BigDecimal newCost,
         BigDecimal supplierVariationPercentage,
-        BigDecimal transferPercentage,
         BigDecimal newProductMarginPercentage,
         BigDecimal oldSalePrice,
         BigDecimal suggestedSalePrice,

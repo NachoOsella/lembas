@@ -63,8 +63,6 @@ public class PriceUpdateBatchAdminController {
             @RequestParam Long supplierId,
             @RequestParam MultipartFile file,
             @RequestParam(required = false) BigDecimal newProductMarginPercentage,
-            @RequestParam(required = false) BigDecimal transferPercentage,
-            @RequestParam(required = false) BigDecimal roundingMultiple,
             @RequestParam(required = false) Boolean applyCostUpdatesByDefault,
             @RequestParam(required = false) Boolean applySalePriceUpdatesByDefault,
             @RequestParam(required = false) Boolean excludeUnchangedByDefault,
@@ -72,8 +70,6 @@ public class PriceUpdateBatchAdminController {
     ) {
         PriceUpdateBatchDefaultsRequest defaults = new PriceUpdateBatchDefaultsRequest(
                 newProductMarginPercentage,
-                transferPercentage,
-                roundingMultiple,
                 applyCostUpdatesByDefault,
                 applySalePriceUpdatesByDefault,
                 excludeUnchangedByDefault

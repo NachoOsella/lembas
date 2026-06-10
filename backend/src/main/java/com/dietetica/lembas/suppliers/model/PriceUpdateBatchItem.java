@@ -79,9 +79,6 @@ public class PriceUpdateBatchItem {
     @Column(name = "supplier_variation_percentage", precision = 8, scale = 3)
     private BigDecimal supplierVariationPercentage;
 
-    @Column(name = "transfer_percentage", precision = 8, scale = 3)
-    private BigDecimal transferPercentage;
-
     @Column(name = "new_product_margin_percentage", precision = 5, scale = 2)
     private BigDecimal newProductMarginPercentage;
 

@@ -116,7 +116,7 @@ CREATE TABLE pricing_rules (
     category_id BIGINT REFERENCES categories(id),
     product_id BIGINT REFERENCES products(id),
     target_margin_percentage DECIMAL(5,2) NOT NULL CHECK (target_margin_percentage >= 0 AND target_margin_percentage < 100),
-    rounding_multiple DECIMAL(12,2) NOT NULL DEFAULT 100 CHECK (rounding_multiple > 0),
+
     active BOOLEAN DEFAULT true,
     priority INT DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT now(),
@@ -271,8 +271,7 @@ CREATE TABLE price_update_batches (
     status VARCHAR(30) NOT NULL CHECK (status IN ('DRAFT','VALIDATED','APPLIED','CANCELLED')),
     source_file_name VARCHAR(255),
     default_new_product_margin_percentage DECIMAL(5,2),
-    default_transfer_percentage DECIMAL(8,3),
-    default_rounding_multiple DECIMAL(12,2),
+
     apply_cost_updates_by_default BOOLEAN DEFAULT true,
     apply_sale_price_updates_by_default BOOLEAN DEFAULT true,
     pricing_rule_id BIGINT REFERENCES pricing_rules(id),
@@ -294,7 +293,6 @@ CREATE TABLE price_update_batch_items (
     old_cost DECIMAL(12,2),
     new_cost DECIMAL(12,2),
     supplier_variation_percentage DECIMAL(8,3),
-    transfer_percentage DECIMAL(8,3),
     new_product_margin_percentage DECIMAL(5,2),
     old_sale_price DECIMAL(12,2),
     suggested_sale_price DECIMAL(12,2),

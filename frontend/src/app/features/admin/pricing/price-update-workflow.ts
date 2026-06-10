@@ -8,12 +8,15 @@ import { SupplierService } from '../../../core/services/supplier';
 import { ProductService } from '../../../core/services/product';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { getApiError } from '../../../shared/models/api-error';
-import { PriceUpdateBatchDetailDto, PriceUpdateBatchItemDto } from '../../../shared/models/price-update-batch';
+import {
+  PriceUpdateBatchDetailDto,
+  PriceUpdateBatchItemDto,
+} from '../../../shared/models/price-update-batch';
 import { ProductSummary } from '../../../shared/models/product';
 import { SupplierDto } from '../../../shared/models/supplier';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
-import { AppCheckbox } from '../../../shared/components/app-checkbox/app-checkbox';
+import { AppCheckOption } from '../../../shared/components/app-check-option/app-check-option';
 import { AppControlField } from '../../../shared/components/app-control-field/app-control-field';
 import { AppInput } from '../../../shared/components/app-input/app-input';
 import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
@@ -23,7 +26,10 @@ import { AppSelect } from '../../../shared/components/app-select/app-select';
 import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { FormSection } from '../../../shared/components/form-section/form-section';
-import { StatusBadge, StatusBadgeConfig } from '../../../shared/components/status-badge/status-badge';
+import {
+  StatusBadge,
+  StatusBadgeConfig,
+} from '../../../shared/components/status-badge/status-badge';
 
 interface Option<T> {
   readonly label: string;
@@ -42,14 +48,19 @@ const ITEM_STATUS_BADGES: Record<string, StatusBadgeConfig> = {
 
 /** Translates backend per-row error messages to Spanish. */
 const ERROR_MESSAGE_TRANSLATIONS: Record<string, string> = {
-  'Row must include SKU, barcode or product name': 'La fila debe incluir SKU, codigo de barras o nombre',
-  'New supplier cost is required and must be numeric': 'El costo es obligatorio y debe ser numerico',
+  'Row must include SKU, barcode or product name':
+    'La fila debe incluir SKU, codigo de barras o nombre',
+  'New supplier cost is required and must be numeric':
+    'El costo es obligatorio y debe ser numerico',
   'New supplier cost is required': 'El costo del proveedor es obligatorio',
   'Multiple products match this supplier row name': 'Multiples productos coinciden con este nombre',
-  'Product name is required to create a new product': 'El nombre es obligatorio para crear un producto nuevo',
-  'Matched product has no supplier association for this supplier': 'El producto no tiene asociacion con este proveedor',
+  'Product name is required to create a new product':
+    'El nombre es obligatorio para crear un producto nuevo',
+  'Matched product has no supplier association for this supplier':
+    'El producto no tiene asociacion con este proveedor',
   'New product margin must be lower than 100': 'El margen del producto nuevo debe ser menor a 100',
-  'Existing product is missing current cost or sale price': 'El producto existente no tiene costo o precio de venta',
+  'Existing product is missing current cost or sale price':
+    'El producto existente no tiene costo o precio de venta',
 };
 
 /** Status badge configuration for batch-level statuses. */
@@ -66,7 +77,6 @@ interface EditablePriceRow {
   barcode: string;
   productName: string;
   newCost: number | null;
-  transferPercentage: number | null;
   newProductMarginPercentage: number | null;
   finalSalePrice: number | null;
   applyCostUpdate: boolean;
@@ -86,7 +96,7 @@ interface PriceTableRow {
   selector: 'app-price-update-workflow',
   imports: [
     AppButton,
-    AppCheckbox,
+    AppCheckOption,
     AppControlField,
     AppDataTable,
     AppInput,
@@ -95,7 +105,6 @@ interface PriceTableRow {
     AppProductSelector,
     AppSelect,
     ConfirmDialog,
-    CurrencyPipe,
     DatePipe,
     ErrorAlert,
     FormSection,
@@ -124,8 +133,6 @@ export class PriceUpdateWorkflow {
 
   protected readonly supplierId = signal<number | null>(null);
   protected readonly defaultMargin = signal<number | null>(35);
-  protected readonly defaultTransfer = signal<number | null>(100);
-  protected readonly roundingMultiple = signal<number | null>(100);
   protected readonly applyCostUpdates = signal(true);
   protected readonly applySalePriceUpdates = signal(true);
   protected readonly excludeUnchanged = signal(true);
@@ -143,7 +150,12 @@ export class PriceUpdateWorkflow {
     if (!current || current.status === 'APPLIED' || current.status === 'CANCELLED') {
       return false;
     }
-    return !current.items.some((item) => item.status === 'REVIEW' || item.status === 'ERROR' || (item.status === 'CREATE' && !item.createProduct));
+    return !current.items.some(
+      (item) =>
+        item.status === 'REVIEW' ||
+        item.status === 'ERROR' ||
+        (item.status === 'CREATE' && !item.createProduct),
+    );
   });
 
   protected readonly hasBlockingItems = computed(() => {
@@ -166,25 +178,32 @@ export class PriceUpdateWorkflow {
   protected readonly tableRows = computed<PriceTableRow[]>(() => {
     const current = this.batch();
     if (!current) return [];
-    return current.items.map((item, index) => ({ item, row: this.rows()[index] }));
+    const rowsMap = new Map(this.rows().map((r) => [r.id, r]));
+    return current.items
+      .filter((item) => item.status !== 'EXCLUDED')
+      .map((item) => {
+        const row = rowsMap.get(item.id) ?? this.toEditableRow(item);
+        return { item, row };
+      });
   });
 
   protected readonly tableColumns: ColumnDef[] = [
-    { field: 'status', header: 'Estado', sortable: false },
-    { field: 'supplierProduct', header: 'Producto proveedor', sortable: false },
-    { field: 'match', header: 'Match', sortable: false },
-    { field: 'codes', header: 'SKU / barcode', sortable: false },
-    { field: 'cost', header: 'Costo', sortable: false },
-    { field: 'variation', header: 'Variacion', sortable: false },
-    { field: 'salePrice', header: 'Precio venta', sortable: false },
-    { field: 'overrides', header: 'Overrides', sortable: false },
-    { field: 'apply', header: 'Aplicar', sortable: false },
-    { field: 'actions', header: 'Acciones', sortable: false },
+    { field: 'status', header: 'Estado', sortable: false, width: '9rem' },
+    { field: 'supplierProduct', header: 'Producto proveedor', sortable: false, width: '13rem' },
+    { field: 'codes', header: 'SKU / barcode', sortable: false, width: '12rem' },
+    { field: 'cost', header: 'Costo', sortable: false, width: '11rem' },
+    { field: 'variation', header: 'Variacion', sortable: false, width: '8rem' },
+    { field: 'salePrice', header: 'Precio venta', sortable: false, width: '13rem' },
+    { field: 'margin', header: 'Margen', sortable: false, width: '10rem' },
+    { field: 'apply', header: 'Aplicar', sortable: false, width: '10rem' },
   ];
 
   protected readonly itemStatusBadges = ITEM_STATUS_BADGES;
   protected readonly batchStatusBadges = BATCH_STATUS_BADGES;
   protected readonly errorMessageTranslations = ERROR_MESSAGE_TRANSLATIONS;
+
+  /** Stable row identity for PrimeNG trackBy — prevents unnecessary DOM recreation. */
+  protected readonly priceRowTrackBy = (_index: number, item: PriceTableRow) => item.row.id;
 
   constructor() {
     this.loadLookups();
@@ -201,19 +220,27 @@ export class PriceUpdateWorkflow {
     }
   }
 
+  /** Updates the selected supplier and clears manual product data that depends on it. */
+  protected onSupplierChanged(supplierId: number | null): void {
+    if (this.supplierId() === supplierId) return;
+    this.supplierId.set(supplierId);
+    this.clearManualRow();
+  }
+
   /** Searches products by name or barcode for manual entry autocomplete. */
   protected onProductSearch(query: string): void {
-    if (query.length < 2) return;
+    if (!this.supplierId() || query.length < 2) return;
     this.products.listAdminProducts({ search: query, size: 10 }).subscribe({
       next: (page) => this.productSuggestions.set(page.content),
     });
   }
 
-  /** Populates manual fields when a product is selected from autocomplete. */
+  /** Stores the selected product and copies only technical identifiers when available. */
   protected onManualProductChange(product: ProductSummary | null): void {
-    if (product) {
-      this.manualBarcode.set(product.barcode ?? '');
-      this.manualProductName.set(product.name);
+    this.manualProduct.set(product);
+    if (!product) return;
+    if (product.barcode && !this.manualBarcode().trim()) {
+      this.manualBarcode.set(product.barcode);
     }
   }
 
@@ -251,7 +278,8 @@ export class PriceUpdateWorkflow {
           {
             supplierSku: this.blankToNull(this.manualSku()),
             barcode: this.blankToNull(this.manualBarcode()),
-            productName: this.blankToNull(this.manualProductName()),
+            productName:
+              this.blankToNull(this.manualProductName()) ?? this.manualProduct()?.name ?? null,
             newCost: this.manualCost(),
           },
         ],
@@ -284,19 +312,11 @@ export class PriceUpdateWorkflow {
     });
   }
 
-  /** Saves one edited preview row. */
-  protected saveRow(row: EditablePriceRow): void {
-    const current = this.batch();
-    if (!current) return;
-    this.saving.set(true);
-    this.batches
-      .updateItem(current.id, row.id, this.rowRequest(row))
-      .subscribe({
-        next: (batch) => this.setBatch(batch, 'Fila actualizada'),
-        error: (error) => this.handleError(error, 'No pudimos actualizar la fila.'),
-      });
-  }
-
+  /**
+   * Saves one edited preview row and merges the server response.
+   * Preserves unsaved edits on other rows while updating the saved row
+   * and batch metadata (status, suggested prices, etc.) from the server.
+   */
   /** Saves all editable preview rows sequentially. */
   protected saveAllRows(): void {
     const current = this.batch();
@@ -311,7 +331,11 @@ export class PriceUpdateWorkflow {
   protected excludeBlockingRows(): void {
     const current = this.batch();
     if (!current) return;
-    const blockingRows = this.rows().filter((row) => row.excluded === false && (this.getItemStatus(row.id) === 'REVIEW' || this.getItemStatus(row.id) === 'ERROR'));
+    const blockingRows = this.rows().filter(
+      (row) =>
+        row.excluded === false &&
+        (this.getItemStatus(row.id) === 'REVIEW' || this.getItemStatus(row.id) === 'ERROR'),
+    );
     if (blockingRows.length === 0) return;
     this.saving.set(true);
     this.excludeNextRow(current.id, blockingRows, 0);
@@ -321,7 +345,9 @@ export class PriceUpdateWorkflow {
   protected approveAllCreates(): void {
     const current = this.batch();
     if (!current) return;
-    const createRows = this.rows().filter((row) => this.getItemStatus(row.id) === 'CREATE' && !row.createProduct);
+    const createRows = this.rows().filter(
+      (row) => this.getItemStatus(row.id) === 'CREATE' && !row.createProduct,
+    );
     if (createRows.length === 0) return;
     createRows.forEach((row) => (row.createProduct = true));
     this.saving.set(true);
@@ -405,7 +431,6 @@ export class PriceUpdateWorkflow {
       barcode: this.blankToNull(row.barcode),
       productName: this.blankToNull(row.productName),
       newCost: row.newCost,
-      transferPercentage: row.transferPercentage,
       newProductMarginPercentage: row.newProductMarginPercentage,
       finalSalePrice: row.finalSalePrice,
       applyCostUpdate: row.applyCostUpdate,
@@ -431,15 +456,17 @@ export class PriceUpdateWorkflow {
   private setBatch(batch: PriceUpdateBatchDetailDto, successSummary: string): void {
     this.batch.set(batch);
     this.defaultMargin.set(batch.defaultNewProductMarginPercentage ?? 35);
-    this.defaultTransfer.set(batch.defaultTransferPercentage ?? 100);
-    this.roundingMultiple.set(batch.defaultRoundingMultiple ?? 100);
     this.applyCostUpdates.set(batch.applyCostUpdatesByDefault);
     this.applySalePriceUpdates.set(batch.applySalePriceUpdatesByDefault);
     this.excludeUnchanged.set(batch.excludeUnchangedByDefault);
     this.rows.set(batch.items.map((item) => this.toEditableRow(item)));
     this.saving.set(false);
     this.error.set('');
-    this.messages.add({ severity: 'success', summary: successSummary, detail: 'La operacion fue completada.' });
+    this.messages.add({
+      severity: 'success',
+      summary: successSummary,
+      detail: 'La operacion fue completada.',
+    });
   }
 
   /** Converts a backend row into local editable state. */
@@ -450,7 +477,6 @@ export class PriceUpdateWorkflow {
       barcode: item.barcode ?? '',
       productName: item.supplierProductName ?? item.productName ?? '',
       newCost: item.newCost ?? null,
-      transferPercentage: item.transferPercentage ?? null,
       newProductMarginPercentage: item.newProductMarginPercentage ?? null,
       finalSalePrice: item.finalSalePrice ?? null,
       applyCostUpdate: item.applyCostUpdate,
@@ -460,12 +486,15 @@ export class PriceUpdateWorkflow {
     };
   }
 
+  /**
+   * Merges a server-updated batch into local state.
+   * Preserves edits on unsaved rows; only refreshes the saved row and
+   * batch-level metadata (status, suggested prices, variation, etc.).
+   */
   /** Builds the current defaults request. */
   private defaults() {
     return {
       newProductMarginPercentage: this.defaultMargin(),
-      transferPercentage: this.defaultTransfer(),
-      roundingMultiple: this.roundingMultiple(),
       applyCostUpdatesByDefault: this.applyCostUpdates(),
       applySalePriceUpdatesByDefault: this.applySalePriceUpdates(),
       excludeUnchangedByDefault: this.excludeUnchanged(),
@@ -477,7 +506,73 @@ export class PriceUpdateWorkflow {
     this.saving.set(false);
     this.loading.set(false);
     const apiError = getApiError(error);
-    this.error.set(apiError ? this.errorMapping.getMessage(apiError.code, apiError.message || fallback) : fallback);
+    this.error.set(
+      apiError
+        ? this.errorMapping.getMessage(apiError.code, apiError.message || fallback)
+        : fallback,
+    );
+  }
+
+  // ---------------------------------------------------------------
+  // Local recalc: instant feedback when any pricing input changes
+  // ---------------------------------------------------------------
+
+  /** Handles margin changes and recalculates the final sale price. */
+  protected onNewProductMarginChanged(value: number | null, row: EditablePriceRow): void {
+    row.newProductMarginPercentage = value;
+    this.recalcFromMargin(row);
+    this.rows.update((r) => [...r]);
+  }
+
+  /** Handles final sale price changes and derives the resulting margin. */
+  protected onFinalPriceChanged(value: number | null, row: EditablePriceRow): void {
+    row.finalSalePrice = value;
+    this.deriveMargin(row);
+    this.rows.update((r) => [...r]);
+  }
+
+  /** Handles new cost changes and recalculates the final sale price from margin. */
+  protected onNewCostChanged(
+    value: number | null,
+    row: EditablePriceRow,
+    item: PriceUpdateBatchItemDto,
+  ): void {
+    row.newCost = value;
+    this.recalcFromMargin(row);
+    this.rows.update((r) => [...r]);
+  }
+
+  // ---------------------------------------------------------------
+  // Core recalculation: margin ↔ price
+  // ---------------------------------------------------------------
+
+  /** Recalculates sale price from cost and margin: price = cost / (1 - margin%). */
+  private recalcFromMargin(row: EditablePriceRow): void {
+    if (row.newCost == null) return;
+    const margin = row.newProductMarginPercentage ?? this.defaultMargin() ?? 35;
+    if (margin < 0 || margin >= 100) return;
+    const price = row.newCost / (1 - margin / 100);
+    row.finalSalePrice = price > 0 ? Math.round(price * 100) / 100 : 0;
+  }
+
+  /** Derives margin from the current price and cost: margin% = (1 - cost/price) * 100.
+   *  Clamped to zero — margin is never negative. */
+  private deriveMargin(row: EditablePriceRow): void {
+    const price = row.finalSalePrice;
+    const cost = row.newCost;
+    if (price == null || cost == null || price <= 0) return;
+    const margin = (1 - cost / price) * 100;
+    row.newProductMarginPercentage = Math.max(0, margin);
+  }
+
+  /** Clears manual row fields when the selected supplier changes. */
+  private clearManualRow(): void {
+    this.manualProduct.set(null);
+    this.productSuggestions.set([]);
+    this.manualSku.set('');
+    this.manualBarcode.set('');
+    this.manualProductName.set('');
+    this.manualCost.set(null);
   }
 
   /** Converts blank text into null before sending API requests. */

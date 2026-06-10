@@ -2,11 +2,13 @@
 
 ## 2026-06-09
 
-- `backend/src/main/resources/db/migration/V24__pricing_batches.sql`, `backend/src/main/java/com/dietetica/lembas/{suppliers,catalog}/` -- implementada base S2-US14: historial de precios de venta, reglas de pricing, batches de actualizacion de precios/catalogo, items con estados de preview, import CSV/XLSX, matching por SKU/barcode/nombre, calculos de margen/traslado/redondeo y apply transaccional con historiales sin tocar stock.
+- `backend/src/main/resources/db/migration/V24__pricing_batches.sql`, `backend/src/main/java/com/dietetica/lembas/{suppliers,catalog}/` -- implementada base S2-US14: historial de precios de venta, reglas de pricing, batches de actualizacion de precios/catalogo, items con estados de preview, import CSV/XLSX, matching por SKU/barcode/nombre, calculos de margen/redondeo y apply transaccional con historiales sin tocar stock.
 - `frontend/src/app/features/admin/pricing/`, `frontend/src/app/core/services/price-update-batch.ts`, `frontend/src/app/shared/models/price-update-batch.ts` -- agregada pantalla admin unificada para importar lista de proveedor o crear preview manual, editar defaults, aplicar defaults a todas las filas, sobrescribir filas y aplicar/cancelar batches.
 - `docs/05-api/api-guidelines.md` -- documentados codigos de error de price update batches.
 - `backend/src/main/java/com/dietetica/lembas/auth/`, `frontend/src/app/core/{services,interceptors,guards}/`, `frontend/src/app/features/admin/pricing/` -- reforzada auth con cookies JWT HttpOnly `SameSite=Strict`, refresh por cookie, logout server-side, hidratacion de sesion via `/api/auth/me`, ruta `/admin/receipts`, tabla de pricing basada en `app-data-table` y confirmacion compartida para aplicar batches.
 - `backend/src/main/java/com/dietetica/lembas/{auth,shared,suppliers}/`, `backend/src/main/resources/application.yml`, `docs/05-api/api-guidelines.md` -- aplicados fixes de review backend: logout revoca refresh token, filtro de Origin para metodos API inseguros, limites globales de paginacion/multipart, validacion de tamano de import de precios, codigos de error documentados y auditoria de usuario en price batches/historicos.
+- `frontend/src/app/features/admin/pricing/` -- ajustada pantalla de actualizacion de precios: rediseño de carga manual rapida, tabla con mejor espaciado/scroll horizontal, columnas legibles y badges de variacion mas visibles segun `frontend/DESING.md`.
+- `backend/src/main/java/com/dietetica/lembas/suppliers/`, `frontend/src/app/features/admin/pricing/`, `docs/04-processes/supplier-price-update-flow.md` -- eliminado el concepto de porcentaje de pase de pricing; precios de productos nuevos y existentes se calculan solo con costo, margen y redondeo, y editar precio final deriva margen.
 
 ## 2026-06-08
 

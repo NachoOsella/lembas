@@ -10,6 +10,7 @@ import { InputIcon } from 'primeng/inputicon';
   styleUrl: './app-input.css',
 })
 export class AppInput {
+  readonly inputId = input<string | null>(null);
   readonly type = input<string>('text');
   readonly placeholder = input<string>('');
   readonly disabled = input(false);
