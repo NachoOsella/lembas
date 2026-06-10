@@ -96,14 +96,12 @@
           <div class="grid sm:grid-cols-2 gap-4">
             <div class="field-group">
               <label for="firstName" class="register-label">Nombre</label>
-              <input
-                pInputText
+              <app-input
                 [formField]="form.firstName"
-                id="firstName"
+                inputId="firstName"
                 type="text"
                 autocomplete="given-name"
                 placeholder="Tu nombre"
-                class="w-full"
               />
               @if (form.firstName().touched() && form.firstName().errors().length) {
                 <p class="register-error" data-testid="firstName-error">
@@ -114,14 +112,12 @@
             </div>
             <div class="field-group">
               <label for="lastName" class="register-label">Apellido</label>
-              <input
-                pInputText
+              <app-input
                 [formField]="form.lastName"
-                id="lastName"
+                inputId="lastName"
                 type="text"
                 autocomplete="family-name"
                 placeholder="Tu apellido"
-                class="w-full"
               />
               @if (form.lastName().touched() && form.lastName().errors().length) {
                 <p class="register-error" data-testid="lastName-error">
@@ -136,16 +132,14 @@
           <div class="field-group">
             <label for="email" class="register-label">Email</label>
             <div class="relative">
-              <input
-                pInputText
+              <app-input
                 [formField]="form.email"
-                id="email"
+                inputId="email"
                 type="email"
                 autocomplete="email"
                 placeholder="tucorreo@ejemplo.com"
-                class="w-full pr-11"
+                suffixIcon="pi pi-at"
               />
-              <i class="pi pi-at register-field-icon" aria-hidden="true"></i>
             </div>
             @if (
               (form.email().touched() && form.email().errors().length) || showEmailRealtimeError()
@@ -162,14 +156,12 @@
             <div class="field-group">
               <label for="password" class="register-label">Contrasena</label>
               <div class="relative">
-                <input
-                  pInputText
+                <app-input
                   [formField]="form.password"
-                  id="password"
+                  inputId="password"
                   [type]="passwordVisible() ? 'text' : 'password'"
                   autocomplete="new-password"
                   placeholder="Min. 8 caracteres"
-                  class="w-full pr-11"
                 />
                 <app-password-toggle
                   [(visible)]="passwordVisible"
@@ -190,14 +182,12 @@
             <div class="field-group">
               <label for="confirmPassword" class="register-label">Confirmar</label>
               <div class="relative">
-                <input
-                  pInputText
+                <app-input
                   [formField]="form.confirmPassword"
-                  id="confirmPassword"
+                  inputId="confirmPassword"
                   [type]="confirmPasswordVisible() ? 'text' : 'password'"
                   autocomplete="new-password"
                   placeholder="Repetir"
-                  class="w-full pr-11"
                 />
                 <app-password-toggle
                   [(visible)]="confirmPasswordVisible"
@@ -223,16 +213,14 @@
               Telefono <span class="font-normal text-text-muted">(opcional)</span>
             </label>
             <div class="relative">
-              <input
-                pInputText
+              <app-input
                 [formField]="form.phone"
-                id="phone"
+                inputId="phone"
                 type="tel"
                 autocomplete="tel"
                 placeholder="+54 351 123 4567"
-                class="w-full pr-11"
+                suffixIcon="pi pi-phone"
               />
-              <i class="pi pi-phone register-field-icon" aria-hidden="true"></i>
             </div>
           </div>
 

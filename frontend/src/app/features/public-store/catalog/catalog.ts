@@ -6,6 +6,7 @@ import { Category, ProductSummary } from '../../../shared/models/product';
 import { ProductGridSkeleton } from '../../../shared/components/product-grid-skeleton/product-grid-skeleton';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
+import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { AppPagination } from '../../../shared/components/app-pagination/app-pagination';
 import {
@@ -23,6 +24,7 @@ const PAGE_SIZE = 20;
   imports: [
     EmptyState,
     ErrorAlert,
+    AppButton,
     AppEyebrow,
     AppPagination,
     ProductGrid,

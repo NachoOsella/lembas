@@ -1,6 +1,7 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 
 import { StoreCategory } from '../../../shared/models/category';
+import { AppInput } from '../../../shared/components/app-input/app-input';
 
 /**
  * Responsive category selector for the public catalog.
@@ -10,6 +11,7 @@ import { StoreCategory } from '../../../shared/models/category';
  */
 @Component({
   selector: 'app-category-nav',
+  imports: [AppInput],
   templateUrl: './category-nav.html',
   styleUrl: './category-nav.css',
 })

@@ -3,6 +3,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { Subject, filter, takeUntil } from 'rxjs';
 import { MenuItem } from 'primeng/api';
 import { AppMenu } from '../../../shared/components/app-menu/app-menu';
+import { AppButton } from '../../../shared/components/app-button/app-button';
 
 import { AuthService } from '../../../core/services/auth';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
@@ -50,7 +51,7 @@ const LABEL_MAP: Record<string, string> = {
 
 @Component({
   selector: 'app-admin-layout',
-  imports: [AppMenu, RouterLink, RouterLinkActive, RouterOutlet, AppToast],
+  imports: [AppMenu, AppButton, RouterLink, RouterLinkActive, RouterOutlet, AppToast],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css',
 })

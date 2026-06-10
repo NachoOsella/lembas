@@ -1,6 +1,5 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 
 import { PriceUpdateBatchService } from '../../../core/services/price-update-batch';
@@ -18,6 +17,7 @@ import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
 import { AppCheckOption } from '../../../shared/components/app-check-option/app-check-option';
 import { AppControlField } from '../../../shared/components/app-control-field/app-control-field';
+import { AppFormField } from '../../../shared/components/app-form-field/app-form-field';
 import { AppInput } from '../../../shared/components/app-input/app-input';
 import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
 import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
@@ -98,6 +98,7 @@ interface PriceTableRow {
     AppButton,
     AppCheckOption,
     AppControlField,
+    AppFormField,
     AppDataTable,
     AppInput,
     AppInputNumber,
@@ -108,7 +109,6 @@ interface PriceTableRow {
     DatePipe,
     ErrorAlert,
     FormSection,
-    FormsModule,
     StatusBadge,
   ],
   templateUrl: './price-update-workflow.html',

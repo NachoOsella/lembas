@@ -24,10 +24,6 @@
   min-width: 0;
 }
 
-.suppliers-toolbar {
-  min-width: min(24rem, 100%);
-}
-
 .supplier-name-cell {
   display: flex;
   align-items: center;

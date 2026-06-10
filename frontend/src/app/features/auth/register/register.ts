@@ -11,19 +11,19 @@ import {
 } from '@angular/forms/signals';
 import { HttpErrorResponse } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
-import { InputText } from 'primeng/inputtext';
 
 import { AuthService, RegisterRequest } from '../../../core/services/auth';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { getApiError } from '../../../shared/models/api-error';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
+import { AppInput } from '../../../shared/components/app-input/app-input';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
 import { PasswordToggle } from '../../../shared/components/password-toggle/password-toggle';
 
 @Component({
   selector: 'app-register',
-  imports: [ErrorAlert, AppToast, FormField, RouterLink, AppButton, InputText, PasswordToggle],
+  imports: [ErrorAlert, AppToast, FormField, RouterLink, AppInput, AppButton, PasswordToggle],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })

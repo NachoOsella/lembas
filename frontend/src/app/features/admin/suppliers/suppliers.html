@@ -40,13 +40,15 @@
           <p class="table-toolbar__kicker">Directorio</p>
           <h2 class="table-toolbar__title">Proveedores activos</h2>
         </div>
-        <div class="table-toolbar__actions suppliers-toolbar">
-          <app-search-bar
-            [(value)]="search"
-            placeholder="Buscar proveedor, CUIT o contacto..."
-            (search)="onSearch($event)"
-            (clear)="clearSearch()"
-          />
+        <div class="table-toolbar__actions">
+          <div class="table-toolbar__filters">
+            <app-search-bar
+              [(value)]="search"
+              placeholder="Buscar proveedor, CUIT o contacto..."
+              (search)="onSearch($event)"
+              (clear)="clearSearch()"
+            />
+          </div>
         </div>
       </ng-template>
 
@@ -119,12 +121,14 @@
           <h2 class="table-toolbar__title">Productos por proveedor</h2>
         </div>
         <div class="table-toolbar__actions">
-          <app-search-bar
-            [(value)]="productSearch"
-            placeholder="Buscar por producto, proveedor o SKU..."
-            (search)="onProductSearch($event)"
-            (clear)="clearProductSearch()"
-          />
+          <div class="table-toolbar__filters">
+            <app-search-bar
+              [(value)]="productSearch"
+              placeholder="Buscar por producto, proveedor o SKU..."
+              (search)="onProductSearch($event)"
+              (clear)="clearProductSearch()"
+            />
+          </div>
         </div>
       </ng-template>
 

@@ -1,10 +1,3 @@
-.movements-toolbar {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: 0.65rem;
-  width: 100%;
-}
-
 .movement-type-badge {
   display: inline-flex;
   align-items: center;

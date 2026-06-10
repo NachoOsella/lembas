@@ -61,17 +61,13 @@
       <app-check-option [(value)]="excludeUnchanged">Excluir filas sin cambios</app-check-option>
     </div>
 
-    <app-control-field label="Notas" forId="notes">
-      <textarea
-        id="notes"
-        class="pricing-notes"
-        rows="2"
-        [ngModel]="notes()"
-        (ngModelChange)="notes.set($event)"
-        name="notes"
-        placeholder="Notas opcionales para este lote"
-      ></textarea>
-    </app-control-field>
+    <app-form-field
+      label="Notas"
+      inputId="notes"
+      [multiline]="true"
+      [(value)]="notes"
+      placeholder="Notas opcionales para este lote"
+    />
 
     <div class="pricing-actions">
       <input

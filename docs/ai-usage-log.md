@@ -1,5 +1,9 @@
 # Registro de uso de IA
 
+## 2026-06-10
+
+- `frontend/src/app/shared/components/app-data-table/app-data-table.css` -- ajustado el layout compartido de filtros de tablas admin para apilarlos verticalmente con separacion, margen y contenedor visual consistente.
+
 ## 2026-06-09
 
 - `backend/src/main/resources/db/migration/V24__pricing_batches.sql`, `backend/src/main/java/com/dietetica/lembas/{suppliers,catalog}/` -- implementada base S2-US14: historial de precios de venta, reglas de pricing, batches de actualizacion de precios/catalogo, items con estados de preview, import CSV/XLSX, matching por SKU/barcode/nombre, calculos de margen/redondeo y apply transaccional con historiales sin tocar stock.

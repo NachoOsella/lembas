@@ -26,18 +26,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  flex-wrap: nowrap;
+  gap: 1.25rem;
   padding: 0.75rem var(--space-3, 1.6rem);
   border-bottom: 1px solid rgba(7, 95, 54, 0.09);
   background: var(--color-neutral-cool);
 }
 
 /* -- Toolbar info (kicker + title) --------------------------------- */
-.table-toolbar__info {
+.table-toolbar__info,
+:host ::ng-deep .table-toolbar__info {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 0.25rem;
+  max-width: min(28rem, 38%);
   min-width: 0;
 }
 
@@ -58,17 +61,44 @@
   letter-spacing: -0.045em;
 }
 
-/* -- Toolbar actions (search, filters) ----------------------------- */
-.table-toolbar__actions {
+/* -- Toolbar actions (search, filters, action buttons) ------------- */
+:host ::ng-deep .table-toolbar__actions {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
-  gap: 0.75rem;
-  min-width: min(100%, 25rem);
+  justify-content: flex-end;
+  gap: 0.85rem;
+  min-width: 0;
 }
 
-.table-toolbar__actions app-search-bar {
+/* Standardised filter group inside projected toolbars.
+   The ::ng-deep scope is required because toolbar content is projected with ng-content. */
+:host ::ng-deep .table-toolbar__filters {
+  display: flex;
   flex: 1 1 auto;
-  min-width: 12rem;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  width: 100%;
+  min-width: 0;
+  margin-block: 0.45rem;
+}
+
+:host ::ng-deep .table-toolbar__filters app-search-bar {
+  flex: 2 1 18rem;
+  min-width: 13rem;
+}
+
+:host ::ng-deep .table-toolbar__filters app-select {
+  flex: 1 1 10rem;
+  min-width: 8.75rem;
+}
+
+:host ::ng-deep .table-toolbar__filters > :not(app-search-bar):not(app-select) {
+  /* Extra custom controls (e.g. toggle switches) keep the same horizontal rhythm as filters. */
+  flex: 0 0 auto;
 }
 
 /* -- Table base ---------------------------------------------------- */
@@ -228,10 +258,16 @@
   .app-data-table__toolbar {
     align-items: stretch;
     flex-direction: column;
+    flex-wrap: nowrap;
     padding: 0.75rem;
   }
 
-  .table-toolbar__actions {
+  :host ::ng-deep .table-toolbar__info {
+    max-width: none;
+    width: 100%;
+  }
+
+  :host ::ng-deep .table-toolbar__actions {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
@@ -239,10 +275,23 @@
     min-width: 0;
   }
 
-  .table-toolbar__actions app-search-bar {
+  :host ::ng-deep .table-toolbar__actions app-search-bar {
     flex: 0 0 auto;
     width: 100%;
     min-width: 0;
+  }
+
+  :host ::ng-deep .table-toolbar__filters {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  :host ::ng-deep .table-toolbar__filters app-search-bar,
+  :host ::ng-deep .table-toolbar__filters app-select {
+    flex: 0 0 auto;
+    max-width: none;
+    width: 100%;
   }
 
   :host ::ng-deep .app-data-table {

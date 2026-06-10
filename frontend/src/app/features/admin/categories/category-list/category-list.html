@@ -31,12 +31,14 @@
           <h2 class="table-toolbar__title">Categorias disponibles</h2>
         </div>
         <div class="table-toolbar__actions">
-          <app-search-bar
-            [(value)]="searchQuery"
-            placeholder="Buscar por nombre o descripcion..."
-            (search)="onSearch($event)"
-            (clear)="onSearchClear()"
-          />
+          <div class="table-toolbar__filters">
+            <app-search-bar
+              [(value)]="searchQuery"
+              placeholder="Buscar por nombre o descripcion..."
+              (search)="onSearch($event)"
+              (clear)="onSearchClear()"
+            />
+          </div>
         </div>
       </ng-template>
 

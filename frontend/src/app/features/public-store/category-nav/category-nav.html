@@ -88,11 +88,10 @@
 
       <label class="catnav-modal__search" for="cat-search">
         <i class="pi pi-search" aria-hidden="true"></i>
-        <input
-          id="cat-search"
+        <app-input
+          inputId="cat-search"
           type="search"
-          [value]="searchTerm()"
-          (input)="searchTerm.set($any($event.target).value)"
+          [(value)]="searchTerm"
           placeholder="Buscar categoría..."
           autocomplete="off"
         />

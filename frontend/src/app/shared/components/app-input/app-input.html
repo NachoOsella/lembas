@@ -1,8 +1,71 @@
+<!--
+  app-input -- shared input wrapper
+  Supports two modes:
+    1. Signal forms: provide formField input from @angular/forms/signals
+    2. Model binding: use [(value)] for two-way binding
+-->
 @if (prefixIcon() || suffixIcon()) {
   <p-iconField [iconPosition]="suffixIcon() ? 'right' : 'left'">
     @if (prefixIcon()) {
       <p-inputIcon [styleClass]="prefixIcon()" />
     }
+
+    @if (formField(); as ff) {
+      <input
+        pInputText
+        [formField]="ff"
+        [id]="inputId()"
+        [type]="type()"
+        [placeholder]="placeholder()"
+        [class]="inputClass()"
+        [attr.autocomplete]="autocomplete()"
+        [attr.aria-label]="ariaLabel()"
+        [attr.data-testid]="testId()"
+        (keydown)="onKeydown($event)"
+        (blur)="onBlur()"
+        (focus)="onFocus()"
+      />
+    } @else {
+      <input
+        pInputText
+        [id]="inputId()"
+        [type]="type()"
+        [placeholder]="placeholder()"
+        [disabled]="disabled()"
+        [readonly]="readonly()"
+        [value]="value()"
+        [class]="inputClass()"
+        [attr.autocomplete]="autocomplete()"
+        [attr.aria-label]="ariaLabel()"
+        [attr.data-testid]="testId()"
+        (input)="onInput($event)"
+        (keydown)="onKeydown($event)"
+        (blur)="onBlur()"
+        (focus)="onFocus()"
+      />
+    }
+
+    @if (suffixIcon()) {
+      <p-inputIcon [styleClass]="suffixIcon()" />
+    }
+  </p-iconField>
+} @else {
+  @if (formField(); as ff) {
+    <input
+      pInputText
+      [formField]="ff"
+      [id]="inputId()"
+      [type]="type()"
+      [placeholder]="placeholder()"
+      [class]="inputClass()"
+      [attr.autocomplete]="autocomplete()"
+      [attr.aria-label]="ariaLabel()"
+      [attr.data-testid]="testId()"
+      (keydown)="onKeydown($event)"
+      (blur)="onBlur()"
+      (focus)="onFocus()"
+    />
+  } @else {
     <input
       pInputText
       [id]="inputId()"
@@ -12,6 +75,7 @@
       [readonly]="readonly()"
       [value]="value()"
       [class]="inputClass()"
+      [attr.autocomplete]="autocomplete()"
       [attr.aria-label]="ariaLabel()"
       [attr.data-testid]="testId()"
       (input)="onInput($event)"
@@ -19,25 +83,5 @@
       (blur)="onBlur()"
       (focus)="onFocus()"
     />
-    @if (suffixIcon()) {
-      <p-inputIcon [styleClass]="suffixIcon()" />
-    }
-  </p-iconField>
-} @else {
-  <input
-    pInputText
-    [id]="inputId()"
-    [type]="type()"
-    [placeholder]="placeholder()"
-    [disabled]="disabled()"
-    [readonly]="readonly()"
-    [value]="value()"
-    [class]="inputClass()"
-    [attr.aria-label]="ariaLabel()"
-    [attr.data-testid]="testId()"
-    (input)="onInput($event)"
-    (keydown)="onKeydown($event)"
-    (blur)="onBlur()"
-    (focus)="onFocus()"
-  />
+  }
 }

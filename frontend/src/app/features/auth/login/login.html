@@ -106,18 +106,14 @@
           <!-- Email -->
           <div class="field-group">
             <label for="email" class="login-label">Email</label>
-            <div class="relative">
-              <input
-                pInputText
-                [formField]="form.email"
-                id="email"
-                type="email"
-                autocomplete="email"
-                placeholder="tucorreo@ejemplo.com"
-                class="w-full pr-11"
-              />
-              <i class="pi pi-at login-field-icon" aria-hidden="true"></i>
-            </div>
+            <app-input
+              [formField]="form.email"
+              inputId="email"
+              type="email"
+              autocomplete="email"
+              placeholder="tucorreo@ejemplo.com"
+              suffixIcon="pi pi-at"
+            />
             @if (
               (form.email().touched() && form.email().errors().length) || showEmailRealtimeError()
             ) {
@@ -132,14 +128,12 @@
           <div class="field-group">
             <label for="password" class="login-label">Contrasena</label>
             <div class="relative">
-              <input
-                pInputText
+              <app-input
                 [formField]="form.password"
-                id="password"
+                inputId="password"
                 [type]="passwordVisible() ? 'text' : 'password'"
                 autocomplete="current-password"
                 placeholder="Tu contrasena"
-                class="w-full pr-11"
               />
               <app-password-toggle
                 [(visible)]="passwordVisible"

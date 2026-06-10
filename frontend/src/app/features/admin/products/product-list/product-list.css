@@ -16,13 +16,6 @@
   text-align: left;
 }
 
-.products-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: flex-end;
-}
-
 .product-name-cell {
   display: flex;
   align-items: center;
@@ -46,17 +39,4 @@
   background: var(--color-canvas);
 }
 
-:host ::ng-deep .products-filters__select.p-select {
-  border-radius: 999px;
-}
 
-@media (max-width: 48rem) {
-  .products-filters {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .products-filters__select {
-    width: 100% !important;
-  }
-}
