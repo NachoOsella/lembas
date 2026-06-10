@@ -32,26 +32,28 @@
         <p class="table-toolbar__kicker">Trazabilidad</p>
         <h2 class="table-toolbar__title">Movimientos</h2>
       </div>
-      <div class="table-toolbar__actions movements-toolbar">
-        <app-search-bar
-          placeholder="Buscar producto..."
-          [value]="searchTerm()"
-          (search)="onSearch($event)"
-          (clear)="onSearch('')"
-        />
-        <app-select
-          [value]="typeFilter()"
-          (valueChange)="typeFilter.set($event); onFilterChange()"
-          [options]="typeFilterOptions()"
-          placeholder="Todos los tipos"
-        />
-        <app-select
-          [value]="branchFilter()"
-          (valueChange)="branchFilter.set($event); onFilterChange()"
-          [options]="branchOptions()"
-          placeholder="Todas las sucursales"
-          [showClear]="true"
-        />
+      <div class="table-toolbar__actions">
+        <div class="table-toolbar__filters">
+          <app-search-bar
+            placeholder="Buscar producto..."
+            [value]="searchTerm()"
+            (search)="onSearch($event)"
+            (clear)="onSearch('')"
+          />
+          <app-select
+            [value]="typeFilter()"
+            (valueChange)="typeFilter.set($event); onFilterChange()"
+            [options]="typeFilterOptions()"
+            placeholder="Todos los tipos"
+          />
+          <app-select
+            [value]="branchFilter()"
+            (valueChange)="branchFilter.set($event); onFilterChange()"
+            [options]="branchOptions()"
+            placeholder="Todas las sucursales"
+            [showClear]="true"
+          />
+        </div>
       </div>
     </ng-template>
 

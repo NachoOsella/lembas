@@ -35,31 +35,33 @@
         <p class="table-toolbar__kicker">Compras a proveedores</p>
         <h2 class="table-toolbar__title">Ordenes registradas</h2>
       </div>
-      <div class="table-toolbar__actions purchase-orders-toolbar">
-        <app-select
-          [value]="supplierFilter()"
-          (valueChange)="supplierFilter.set($event); applyFilters()"
-          [options]="supplierOptions()"
-          placeholder="Proveedor"
-          [showClear]="true"
-          filterPlaceholder="Buscar proveedor..."
-        />
-        <app-select
-          [value]="branchFilter()"
-          (valueChange)="branchFilter.set($event); applyFilters()"
-          [options]="branchOptions()"
-          placeholder="Sucursal"
-          [showClear]="true"
-          filterPlaceholder="Buscar sucursal..."
-        />
-        <app-select
-          [value]="statusFilter()"
-          (valueChange)="statusFilter.set($event); applyFilters()"
-          [options]="statusOptions"
-          placeholder="Estado"
-          [showClear]="true"
-          filterPlaceholder="Buscar estado..."
-        />
+      <div class="table-toolbar__actions">
+        <div class="table-toolbar__filters">
+          <app-select
+            [value]="supplierFilter()"
+            (valueChange)="supplierFilter.set($event); applyFilters()"
+            [options]="supplierOptions()"
+            placeholder="Proveedor"
+            [showClear]="true"
+            filterPlaceholder="Buscar proveedor..."
+          />
+          <app-select
+            [value]="branchFilter()"
+            (valueChange)="branchFilter.set($event); applyFilters()"
+            [options]="branchOptions()"
+            placeholder="Sucursal"
+            [showClear]="true"
+            filterPlaceholder="Buscar sucursal..."
+          />
+          <app-select
+            [value]="statusFilter()"
+            (valueChange)="statusFilter.set($event); applyFilters()"
+            [options]="statusOptions"
+            placeholder="Estado"
+            [showClear]="true"
+            filterPlaceholder="Buscar estado..."
+          />
+        </div>
       </div>
     </ng-template>
 

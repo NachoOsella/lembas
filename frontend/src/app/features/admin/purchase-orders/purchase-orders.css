@@ -7,16 +7,6 @@
   gap: var(--space-4);
 }
 
-.purchase-orders-toolbar {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(10rem, 1fr));
-  width: min(100%, 42rem);
-}
-
-.purchase-orders-toolbar app-select {
-  min-width: 0;
-}
-
 .table-actions {
   display: flex;
   flex-wrap: wrap;

@@ -37,25 +37,25 @@
           <p class="table-toolbar__kicker">Catalogo comercial</p>
           <h2 class="table-toolbar__title">Productos disponibles</h2>
         </div>
-        <div class="table-toolbar__actions products-filters">
-          <app-search-bar
-            [(value)]="searchQuery"
-            placeholder="Buscar por nombre o barcode..."
-            (search)="onSearch($event)"
-            (clear)="onSearchClear()"
-          />
-          <app-select
-            [options]="categoryOptions()"
-            [(value)]="categoryId"
-            class="products-filters__select"
-            (valueChange)="onFilterChange()"
-          />
-          <app-select
-            [options]="statusOptions"
-            [(value)]="onlineStatus"
-            class="products-filters__select"
-            (valueChange)="onFilterChange()"
-          />
+        <div class="table-toolbar__actions">
+          <div class="table-toolbar__filters">
+            <app-search-bar
+              [(value)]="searchQuery"
+              placeholder="Buscar por nombre o barcode..."
+              (search)="onSearch($event)"
+              (clear)="onSearchClear()"
+            />
+            <app-select
+              [options]="categoryOptions()"
+              [(value)]="categoryId"
+              (valueChange)="onFilterChange()"
+            />
+            <app-select
+              [options]="statusOptions"
+              [(value)]="onlineStatus"
+              (valueChange)="onFilterChange()"
+            />
+          </div>
         </div>
       </ng-template>
 
