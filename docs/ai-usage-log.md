@@ -1,5 +1,13 @@
 # Registro de uso de IA
 
+## 2026-06-11
+
+- `backend/src/test/java/com/dietetica/lembas/suppliers/service/PriceUpdateImportServiceTest.java` -- 16 tests: validacion de archivo, parsing CSV con alias de headers, errores de fila, coma decimal, limite de filas, parsing XLSX.
+- `backend/src/test/java/com/dietetica/lembas/suppliers/service/PriceUpdateBatchServiceTest.java` -- 24 tests: createManual, importFile, list, get, updateDefaults, applyDefaultsToAll, updateItem, validate, apply (existente + nuevo producto), cancel, errores de estado/busqueda.
+- `backend/src/test/java/com/dietetica/lembas/suppliers/web/PriceUpdateBatchAdminControllerTest.java` -- 13 tests: list con/sin filtros, get, createManual, importFile, updateDefaults, updateItem, applyDefaultsToAll, validate, apply, cancel, y acceso no autorizado/rol incorrecto.
+- `frontend/src/app/core/services/price-update-batch.spec.ts` -- 10 tests del service HTTP: list con filtros, createManual, importFile con/sin opcionales, get, updateDefaults, applyDefaultsToAll, updateItem, validate, apply, cancel.
+- `frontend/src/app/features/admin/pricing/price-update-workflow.spec.ts` -- 26 tests del componente: carga de suppliers, importacion, manual, defaults, apply defaults to all, apply, cancel, canApply computed, save all rows, exclude blocking, approve creates, confirm dialog, margin/price recalc local.
+
 ## 2026-06-10
 
 - `frontend/src/app/shared/components/app-data-table/app-data-table.css` -- ajustado el layout compartido de filtros de tablas admin para apilarlos verticalmente con separacion, margen y contenedor visual consistente.
