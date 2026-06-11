@@ -122,7 +122,7 @@ describe('AdminLayout', () => {
   it('Should_renderUserMenuTrigger_when_authenticated', () => {
     setup(adminUser);
 
-    const trigger = fixture.nativeElement.querySelector('.admin__user-menu-btn');
+    const trigger = fixture.nativeElement.querySelector('[aria-label="Abrir menu de usuario"]');
     expect(trigger).toBeTruthy();
     expect(trigger.getAttribute('aria-label')).toBe('Abrir menu de usuario');
   });
