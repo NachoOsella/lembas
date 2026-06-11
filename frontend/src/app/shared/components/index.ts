@@ -1,5 +1,6 @@
 export * from './app-badge/app-badge';
 export * from './app-breadcrumb/app-breadcrumb';
+export * from './app-carousel/app-carousel';
 export * from './app-button/app-button';
 export * from './app-card-banner/app-card-banner';
 export * from './app-checkbox/app-checkbox';

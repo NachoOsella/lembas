@@ -1,0 +1,25 @@
+<div class="app-carousel" [class.app-carousel--has-header]="hasHeader()">
+  @if (hasHeader()) {
+    <div class="app-carousel__header">
+      <h3 class="app-carousel__header-text">{{ headerText() }}</h3>
+    </div>
+  }
+
+  <p-carousel
+    [value]="value()"
+    [numVisible]="numVisible()"
+    [numScroll]="numScroll()"
+    [circular]="circular()"
+    [autoplayInterval]="autoplayInterval()"
+    [showIndicators]="showIndicators()"
+    [showNavigators]="showNavigators()"
+    [orientation]="orientation()"
+    [verticalViewPortHeight]="verticalViewPortHeight()"
+    [responsiveOptions]="responsiveOptions()"
+    (onPage)="onPageChange($event)"
+  >
+    <ng-template #item let-item>
+      <ng-container *ngTemplateOutlet="itemTemplate()!; context: { $implicit: item }" />
+    </ng-template>
+  </p-carousel>
+</div>

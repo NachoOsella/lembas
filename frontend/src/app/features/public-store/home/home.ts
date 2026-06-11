@@ -2,7 +2,10 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { CatalogService } from '../../../core/services/catalog';
+import { CarouselResponsiveOptions } from 'primeng/carousel';
+
 import { AppButton } from '../../../shared/components/app-button/app-button';
+import { AppCarousel } from '../../../shared/components/app-carousel/app-carousel';
 import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { CardBanner } from '../../../shared/components/app-card-banner/app-card-banner';
 import { ProductGridSkeleton } from '../../../shared/components/product-grid-skeleton/product-grid-skeleton';
@@ -15,6 +18,7 @@ import { ProductSummary } from '../../../shared/models/product';
   imports: [
     RouterLink,
     AppButton,
+    AppCarousel,
     AppEyebrow,
     CardBanner,
     ProductGridSkeleton,
@@ -226,25 +230,25 @@ import { ProductSummary } from '../../../shared/models/product';
             </div>
           } @else if (featuredProducts().length > 0) {
             <div
-              class="home-marquee home-surface-reveal rounded-xl border border-[rgba(7,95,54,0.08)] bg-white p-5 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.24)]"
-              aria-label="Productos recomendados en movimiento"
+              class="home-surface-reveal rounded-xl border border-[rgba(7,95,54,0.08)] bg-white p-5 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.24)]"
             >
-              <div class="home-marquee__track">
-                @for (product of featuredProducts(); track 'a-' + product.id) {
+              <app-carousel
+                [value]="featuredProducts()"
+                [numVisible]="5"
+                [numScroll]="1"
+                [circular]="true"
+                [autoplayInterval]="3000"
+                [showIndicators]="true"
+                [showNavigators]="true"
+                [responsiveOptions]="carouselResponsiveOptions"
+              >
+                <ng-template #item let-product>
                   <app-store-product-card
                     [product]="product"
                     density="compact"
-                    cardClass="home-product-card"
                   />
-                }
-                @for (product of featuredProducts(); track 'b-' + product.id) {
-                  <app-store-product-card
-                    [product]="product"
-                    density="compact"
-                    cardClass="home-product-card"
-                  />
-                }
-              </div>
+                </ng-template>
+              </app-carousel>
             </div>
           }
         </section>
@@ -430,6 +434,14 @@ export class Home implements OnInit {
 
   protected readonly featuredProducts = signal<ProductSummary[]>([]);
   protected readonly featuredLoading = signal(true);
+
+  /** Responsive breakpoints for the featured products carousel. */
+  protected readonly carouselResponsiveOptions: CarouselResponsiveOptions[] = [
+    { breakpoint: '1280px', numVisible: 4, numScroll: 1 },
+    { breakpoint: '1024px', numVisible: 3, numScroll: 1 },
+    { breakpoint: '640px', numVisible: 2, numScroll: 1 },
+    { breakpoint: '480px', numVisible: 1, numScroll: 1 },
+  ];
 
   // ---------------------------------------------------------------------------
   // Benefits
