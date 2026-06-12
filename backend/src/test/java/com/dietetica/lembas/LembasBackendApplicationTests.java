@@ -7,6 +7,7 @@ import com.dietetica.lembas.inventory.repository.StockLotRepository;
 import com.dietetica.lembas.inventory.repository.StockMovementRepository;
 import com.dietetica.lembas.orders.repository.OrderItemRepository;
 import com.dietetica.lembas.orders.repository.OrderRepository;
+import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.suppliers.repository.PurchaseOrderRepository;
 import com.dietetica.lembas.suppliers.repository.PurchaseReceiptItemRepository;
@@ -78,6 +79,10 @@ class LembasBackendApplicationTests {
     /** Provides the order items repository collaborator while JPA repositories are disabled. */
     @MockitoBean
     private OrderItemRepository orderItemRepository;
+
+    /** Provides the payments repository collaborator while JPA repositories are disabled. */
+    @MockitoBean
+    private PaymentRepository paymentRepository;
 
     /** Provides supplier repository collaborators while JPA repositories are disabled. */
     @MockitoBean

@@ -1,5 +1,6 @@
 package com.dietetica.lembas.orders.model;
 
+import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.users.model.User;
 import jakarta.persistence.CascadeType;
@@ -151,6 +152,11 @@ public class Order {
     @OrderBy("id ASC")
     private List<OrderItem> items = new ArrayList<>();
 
+    /** Payments associated with the order. Owned by the order lifecycle. */
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC")
+    private List<Payment> payments = new ArrayList<>();
+
     /** Initializes audit timestamps and sane defaults before first persistence. */
     @PrePersist
     void onCreate() {
@@ -191,6 +197,20 @@ public class Order {
         items.clear();
         if (newItems != null) {
             newItems.forEach(this::addItem);
+        }
+    }
+
+    /** Adds a payment while keeping the bidirectional association consistent. */
+    public void addPayment(Payment payment) {
+        payment.setOrder(this);
+        payments.add(payment);
+    }
+
+    /** Replaces all payments while preserving orphan removal semantics. */
+    public void replacePayments(List<Payment> newPayments) {
+        payments.clear();
+        if (newPayments != null) {
+            newPayments.forEach(this::addPayment);
         }
     }
 }

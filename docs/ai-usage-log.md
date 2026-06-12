@@ -8,6 +8,7 @@
 - `backend/src/test/java/com/dietetica/lembas/orders/` -- 24 tests nuevos: 11 de integracion JPA con Testcontainers cubriendo todas las constraints ONLINE/POS, 2 de repositorio, 3 de entidad, 4 de mapper y 4 del generador. Smoke test del backend actualizado con `@MockitoBean` para los nuevos repositorios.
 - `docs/03-architecture/database-design.md`, `docs/05-api/dto-conventions.md` -- actualizada documentacion: tabla de migraciones con V25, nota explicando el desplazamiento V5->V25, y seccion de DTOs de ordenes con campos clave y reglas de snapshots.
 - Review follow-up S2-US06 -- se corrigio exposicion de costos quitando `costPriceSnapshot` del DTO compartido de items, se hizo `orders.branch_id` obligatorio en migracion/entidad, y se agrego validacion para impedir persistir ordenes sin items. Tests backend actualizados y suite completa verde.
+- `backend/src/main/resources/db/migration/V26__payments.sql`, `backend/src/main/java/com/dietetica/lembas/payments/`, `backend/src/main/java/com/dietetica/lembas/orders/model/Order.java` -- implementada base S2-US07 (LEMBAS-56): tabla `payments`, enums `PaymentProvider`/`PaymentMethod`/`PaymentStatus`, entidad JPA `Payment`, repositorio, servicio base de consultas, relacion `Order -> payments`, constraints de proveedor/metodo/status/monto y tests con Testcontainers.
 
 ## 2026-06-11
 

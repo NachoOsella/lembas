@@ -163,6 +163,31 @@ historical views stay stable when catalog data changes later. Cost snapshots are
 stored in the database for margin reports, but they must only be exposed through
 explicit admin/reporting DTOs and never through customer order responses.
 
+## Payment DTOs
+
+S2-US07 creates the persistence/service base only; public payment endpoints are
+implemented by later Mercado Pago, POS, and cash stories. When exposed through an
+API boundary, payment DTOs should keep provider metadata sanitized and must not
+include secrets, raw webhook bodies, or full provider payloads.
+
+```java
+public record PaymentDto(
+    Long id,
+    Long orderId,
+    PaymentProvider provider,
+    PaymentMethod method,
+    PaymentStatus status,
+    BigDecimal amount,
+    String currency,
+    String providerPaymentId,
+    String providerPreferenceId,
+    String externalReference,
+    OffsetDateTime approvedAt,
+    OffsetDateTime createdAt,
+    OffsetDateTime updatedAt
+) {}
+```
+
 ## Paginated response
 
 ```java
