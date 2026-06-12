@@ -37,8 +37,11 @@ PostgreSQL 16
 | V22__price_history.sql | product_sale_price_history |
 | V23__purchasing.sql | purchase_orders, purchase_order_items, purchase_receipts, purchase_receipt_items |
 | V24__pricing_batches.sql | pricing_rules, price_update_batches, price_update_batch_items |
+| V25__orders.sql | orders, order_items, order_number_seq, FK from stock_movements.order_id |
 
 Migration numbers after V18 can be adjusted to the current database history when implementing. Existing deployed migration numbers must never be reused.
+
+Note: `V5__orders.sql` shown in the original plan was shifted to `V25__orders.sql` because the project had already applied migrations up to `V24` by the time S2-US06 was implemented.
 
 ## Key tables
 
@@ -315,7 +318,7 @@ CREATE TABLE orders (
     order_number VARCHAR(50) UNIQUE NOT NULL,
     type VARCHAR(20) NOT NULL CHECK (type IN ('POS','ONLINE')),
     status VARCHAR(30) NOT NULL CHECK (status IN ('PENDING_PAYMENT','PAID','PREPARING','READY','DELIVERED','CANCELLED','PAYMENT_FAILED','STOCK_CONFLICT')),
-    branch_id BIGINT REFERENCES branches(id),
+    branch_id BIGINT NOT NULL REFERENCES branches(id),
     customer_user_id BIGINT REFERENCES users(id),
     created_by_user_id BIGINT REFERENCES users(id),
     customer_name_snapshot VARCHAR(255),
@@ -437,7 +440,7 @@ CREATE TABLE audit_logs (
 | stock_lots | initial_quantity > 0, quantity_available >= 0 | Valid physical stock |
 | stock_lots | unit_cost >= 0 | Valid frozen lot cost |
 | order_items | quantity > 0, unit_price >= 0, subtotal_amount >= 0 | Consistency |
-| orders | total >= 0, order_number UNIQUE | Consistency |
+| orders | branch_id NOT NULL, total >= 0, order_number UNIQUE | Consistency |
 | payments | amount > 0 | Positive amount |
 | cash_sessions | Only one OPEN per branch | Register integrity, enforced by application logic or partial index |
 | suppliers | cuit UNIQUE | Unique CUIT |
