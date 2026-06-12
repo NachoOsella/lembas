@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { PageResponse } from '../../shared/models/page';
 import { Category, ProductSummary } from '../../shared/models/product';
+import { StoreBranchSelectionService } from './store-branch-selection';
 
 /**
  * Public store catalog service.
@@ -16,6 +17,7 @@ import { Category, ProductSummary } from '../../shared/models/product';
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
   private readonly http = inject(HttpClient);
+  private readonly branchSelection = inject(StoreBranchSelectionService);
   private readonly categoriesUrl = '/api/store/categories';
   private readonly productsUrl = '/api/store/products';
   private readonly featuredUrl = '/api/store/products/featured';
@@ -38,7 +40,7 @@ export class CatalogService {
    * @param size       page size
    * @returns an observable emitting the paginated response
    *
-   * TODO: Add branchId once the inventory module exposes branch-level stock availability.
+   * Includes the selected pickup branch when available so backend stock availability can be branch-scoped.
    */
   getProducts(
     query?: string,
@@ -54,6 +56,7 @@ export class CatalogService {
     if (categoryId != null) {
       params = params.set('categoryId', categoryId);
     }
+    params = this.withSelectedBranch(params);
     return this.http.get<PageResponse<ProductSummary>>(this.productsUrl, { params });
   }
 
@@ -66,7 +69,9 @@ export class CatalogService {
    * @returns an observable emitting the paginated response
    */
   getFeaturedProducts(): Observable<PageResponse<ProductSummary>> {
-    return this.http.get<PageResponse<ProductSummary>>(this.featuredUrl);
+    return this.http.get<PageResponse<ProductSummary>>(this.featuredUrl, {
+      params: this.withSelectedBranch(new HttpParams()),
+    });
   }
 
   /**
@@ -75,10 +80,12 @@ export class CatalogService {
    * @param id the product ID
    * @returns an observable emitting the product detail
    *
-   * TODO: Add branchId once the inventory module exposes branch-level stock availability.
+   * Includes the selected pickup branch when available so detail stock can be branch-scoped.
    */
   getProductDetail(id: number): Observable<ProductSummary> {
-    return this.http.get<ProductSummary>(`${this.productsUrl}/${id}`);
+    return this.http.get<ProductSummary>(`${this.productsUrl}/${id}`, {
+      params: this.withSelectedBranch(new HttpParams()),
+    });
   }
 
   /**
@@ -89,6 +96,14 @@ export class CatalogService {
    * @returns an observable emitting the paginated response
    */
   getRelatedProducts(productId: number): Observable<PageResponse<ProductSummary>> {
-    return this.http.get<PageResponse<ProductSummary>>(`${this.productsUrl}/${productId}/related`);
+    return this.http.get<PageResponse<ProductSummary>>(`${this.productsUrl}/${productId}/related`, {
+      params: this.withSelectedBranch(new HttpParams()),
+    });
+  }
+
+  /** Adds the selected pickup branch id to stock-sensitive store requests. */
+  private withSelectedBranch(params: HttpParams): HttpParams {
+    const branchId = this.branchSelection.selectedBranchId();
+    return branchId == null ? params : params.set('branchId', branchId);
   }
 }

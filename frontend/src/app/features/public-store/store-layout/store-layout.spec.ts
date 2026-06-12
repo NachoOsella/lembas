@@ -1,10 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { signal, WritableSignal } from '@angular/core';
+import { computed, signal, WritableSignal } from '@angular/core';
+import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import { StoreLayout } from './store-layout';
 import { AuthService, AuthUser } from '../../../core/services/auth';
+import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
 
 describe('StoreLayout', () => {
   let component: StoreLayout;
@@ -13,6 +15,7 @@ describe('StoreLayout', () => {
   let currentUserSignal: WritableSignal<AuthUser | null>;
   let isAuthenticatedSignal: any;
   let mockAuthService: Partial<AuthService>;
+  let mockBranchSelection: Partial<StoreBranchSelectionService>;
 
   const customerUser: AuthUser = {
     id: 1,
@@ -34,12 +37,29 @@ describe('StoreLayout', () => {
       logout: vi.fn(),
     };
 
+    const branchesSignal = signal([{ id: 1, name: 'Centro', address: 'Av. Siempre Viva 123' }]);
+    const selectedBranchIdSignal = signal<number | null>(1);
+    const loadingSignal = signal(false);
+    const errorSignal = signal(false);
+    mockBranchSelection = {
+      branches: branchesSignal,
+      selectedBranchId: selectedBranchIdSignal,
+      loading: loadingSignal,
+      error: errorSignal,
+      selectedBranch: computed(() =>
+        branchesSignal().find((branch) => branch.id === selectedBranchIdSignal()) ?? null,
+      ),
+      loadBranches: vi.fn().mockReturnValue(of(branchesSignal())),
+      selectBranch: vi.fn((branchId: number | null) => selectedBranchIdSignal.set(branchId)),
+    } as Partial<StoreBranchSelectionService>;
+
     TestBed.configureTestingModule({
       imports: [StoreLayout],
       providers: [
         provideRouter([]),
         MessageService,
         { provide: AuthService, useValue: mockAuthService },
+        { provide: StoreBranchSelectionService, useValue: mockBranchSelection },
       ],
     }).compileComponents();
 
@@ -69,6 +89,18 @@ describe('StoreLayout', () => {
     setup(false);
     const footer = fixture.nativeElement.querySelector('app-store-footer');
     expect(footer).toBeTruthy();
+  });
+
+  it('should load public branches on init', () => {
+    setup(false);
+    expect(mockBranchSelection.loadBranches).toHaveBeenCalledTimes(1);
+  });
+
+  it('should pass the selected pickup branch to the store nav', () => {
+    setup(false);
+    const nav = fixture.nativeElement.querySelector('app-store-nav');
+    expect(nav).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Centro - Av. Siempre Viva 123');
   });
 
   it('should call logout() and navigate to /store', async () => {

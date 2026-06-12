@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { CatalogService } from '../../../core/services/catalog';
+import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
 import { Category, ProductSummary } from '../../../shared/models/product';
 import { ProductGridSkeleton } from '../../../shared/components/product-grid-skeleton/product-grid-skeleton';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
@@ -37,6 +38,7 @@ const PAGE_SIZE = 20;
 })
 export class Catalog implements OnInit {
   private readonly catalogService = inject(CatalogService);
+  private readonly branchSelection = inject(StoreBranchSelectionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -75,6 +77,9 @@ export class Catalog implements OnInit {
   /** True when the initial load has completed, to distinguish "no products" from "not loaded yet". */
   protected readonly initialLoadDone = signal(false);
 
+  /** Last branch id used to load product availability. */
+  private previousBranchId: number | null = this.branchSelection.selectedBranchId();
+
   /** Derived empty-state description. */
   protected readonly emptyDescription = computed(() => {
     const query = this.searchQuery().trim();
@@ -97,6 +102,19 @@ export class Catalog implements OnInit {
     if (id == null) return null;
     return this.categories().find((c) => c.id === id)?.name ?? null;
   });
+
+  constructor() {
+    effect(() => {
+      const branchId = this.branchSelection.selectedBranchId();
+      if (!this.categoriesReady() || branchId === this.previousBranchId) {
+        return;
+      }
+
+      this.previousBranchId = branchId;
+      this.first.set(0);
+      this.loadProducts();
+    });
+  }
 
   // ---------------------------------------------------------------------------
   // Lifecycle

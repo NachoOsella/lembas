@@ -1,10 +1,11 @@
 import { ViewportScroller } from '@angular/common';
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 
 import { Cart } from '../../../core/services/cart';
 import { CatalogService } from '../../../core/services/catalog';
+import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
 import { ProductSummary } from '../../../shared/models/product';
 import { AppBadge } from '../../../shared/components/app-badge/app-badge';
 import { AppBreadcrumb } from '../../../shared/components/app-breadcrumb/app-breadcrumb';
@@ -33,6 +34,7 @@ import { QuantityStepper } from '../../../shared/components/quantity-stepper/qua
 })
 export class ProductDetail implements OnInit {
   private readonly catalogService = inject(CatalogService);
+  private readonly branchSelection = inject(StoreBranchSelectionService);
   private readonly cartService = inject(Cart);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -42,6 +44,12 @@ export class ProductDetail implements OnInit {
   protected readonly loading = signal(true);
   protected readonly error = signal(false);
   protected readonly quantity = signal(1);
+
+  /** Current product route id, reused when branch selection changes. */
+  private readonly currentProductId = signal<number | null>(null);
+
+  /** Last branch id used to load detail stock availability. */
+  private previousBranchId: number | null = this.branchSelection.selectedBranchId();
 
   /** Temporary feedback state after adding to cart. */
   protected readonly justAdded = signal(false);
@@ -55,6 +63,19 @@ export class ProductDetail implements OnInit {
   /** Category link for the related section header (null for featured fallback). */
   protected readonly relatedLink = signal<{ categoryId: number } | null>(null);
 
+  constructor() {
+    effect(() => {
+      const branchId = this.branchSelection.selectedBranchId();
+      const productId = this.currentProductId();
+      if (!productId || branchId === this.previousBranchId) {
+        return;
+      }
+
+      this.previousBranchId = branchId;
+      this.loadProduct(productId);
+    });
+  }
+
   ngOnInit(): void {
     // Subscribe to paramMap so the component reacts when navigating between
     // different products (same route pattern, different :id param).
@@ -66,6 +87,7 @@ export class ProductDetail implements OnInit {
         return;
       }
       this.quantity.set(1);
+      this.currentProductId.set(id);
       this.loadProduct(id);
       this.viewportScroller.scrollToPosition([0, 0]);
     });

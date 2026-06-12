@@ -1,8 +1,10 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { CatalogService } from '../../../core/services/catalog';
+import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
 import { ProductSummary } from '../../../shared/models/product';
 import { Home } from './home';
 
@@ -48,7 +50,11 @@ describe('Home', () => {
 
     await TestBed.configureTestingModule({
       imports: [Home],
-      providers: [provideRouter([]), { provide: CatalogService, useValue: catalogService }],
+      providers: [
+        provideRouter([]),
+        { provide: CatalogService, useValue: catalogService },
+        { provide: StoreBranchSelectionService, useValue: { selectedBranchId: signal(null) } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Home);
@@ -81,7 +87,11 @@ describe('Home', () => {
 
     await TestBed.configureTestingModule({
       imports: [Home],
-      providers: [provideRouter([]), { provide: CatalogService, useValue: catalogService }],
+      providers: [
+        provideRouter([]),
+        { provide: CatalogService, useValue: catalogService },
+        { provide: StoreBranchSelectionService, useValue: { selectedBranchId: signal(null) } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Home);
