@@ -271,5 +271,15 @@ describe('errorInterceptor', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/store/error/500']);
       expect(messageService.add).not.toHaveBeenCalled();
     });
+
+    it('should let public branch selector handle branch loading server errors locally', async () => {
+      const branchRequest = new HttpRequest('GET', '/api/store/branches');
+      const error = new HttpErrorResponse({ status: 500, error: {} });
+
+      await captureError(branchRequest, error);
+
+      expect(router.navigate).not.toHaveBeenCalled();
+      expect(messageService.add).not.toHaveBeenCalled();
+    });
   });
 });
