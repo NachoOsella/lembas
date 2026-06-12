@@ -24,8 +24,8 @@ PostgreSQL 16
 |---|---|
 | V1__core.sql | branches, users |
 | V2__catalog.sql | categories, products |
-| V5__orders.sql | orders, order_items |
-| V6__payments.sql | payments |
+| V5__orders.sql | orders, order_items (planned; implemented as V25 in current schema history) |
+| V6__payments.sql | payments (planned; implemented as V26 in current schema history) |
 | V7__cash.sql | cash_sessions, cash_movements |
 | V8__optional_promotions.sql | product_promotions |
 | V9__audit.sql | audit_logs |
@@ -38,10 +38,11 @@ PostgreSQL 16
 | V23__purchasing.sql | purchase_orders, purchase_order_items, purchase_receipts, purchase_receipt_items |
 | V24__pricing_batches.sql | pricing_rules, price_update_batches, price_update_batch_items |
 | V25__orders.sql | orders, order_items, order_number_seq, FK from stock_movements.order_id |
+| V26__payments.sql | payments |
 
 Migration numbers after V18 can be adjusted to the current database history when implementing. Existing deployed migration numbers must never be reused.
 
-Note: `V5__orders.sql` shown in the original plan was shifted to `V25__orders.sql` because the project had already applied migrations up to `V24` by the time S2-US06 was implemented.
+Note: `V5__orders.sql` shown in the original plan was shifted to `V25__orders.sql` because the project had already applied migrations up to `V24` by the time S2-US06 was implemented. Likewise, the planned `V6__payments.sql` is implemented as `V26__payments.sql`.
 
 ## Key tables
 
@@ -359,7 +360,7 @@ CREATE TABLE order_items (
 CREATE TABLE payments (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT REFERENCES orders(id) NOT NULL,
-    cash_session_id BIGINT REFERENCES cash_sessions(id),
+    cash_session_id BIGINT,
     provider VARCHAR(50) NOT NULL CHECK (provider IN ('MERCADO_PAGO','MANUAL','BANK','CARD_TERMINAL')),
     method VARCHAR(50) NOT NULL CHECK (method IN ('CHECKOUT_PRO','CASH','QR','TRANSFER','DEBIT_CARD','CREDIT_CARD','OTHER')),
     status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING','APPROVED','REJECTED','CANCELLED','REFUNDED','EXPIRED','IN_PROCESS')),
@@ -374,6 +375,10 @@ CREATE TABLE payments (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 ```
+
+`cash_session_id` is intentionally stored as a scalar reference in `V26__payments.sql`
+until the cash module creates `cash_sessions`. The FK should be added by the cash
+migration once that table exists.
 
 ### Cash register
 
