@@ -102,7 +102,9 @@
             <!-- Stock status -->
             <div class="mb-6">
               @if (isOutOfStock()) {
-                <app-badge tone="danger" icon="pi pi-times-circle">Sin stock disponible</app-badge>
+                <app-badge tone="danger" icon="pi pi-times-circle">
+                  Sin stock en esta sucursal
+                </app-badge>
               } @else if (isLowStock()) {
                 <app-badge tone="warning" icon="pi pi-exclamation-circle">
                   Ultimas {{ p.availableStock }} unidades
@@ -132,9 +134,16 @@
                 size="lg"
                 (click)="addToCart()"
               >
-                {{ isOutOfStock() ? 'Sin stock' : justAdded() ? 'Agregado' : 'Agregar al pedido' }}
+                {{ isOutOfStock() ? 'Sin stock en esta sucursal' : justAdded() ? 'Agregado' : 'Agregar al pedido' }}
               </app-button>
             </div>
+
+            @if (isOutOfStock()) {
+              <p class="mt-3 max-w-md text-sm font-medium text-red-700">
+                Este producto sigue publicado, pero no está disponible para la sucursal de retiro
+                seleccionada. Podés cambiar de sucursal para consultar otra disponibilidad.
+              </p>
+            }
 
             <!-- Trust signals -->
             <div class="mt-8 flex flex-col gap-3">

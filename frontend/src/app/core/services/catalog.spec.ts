@@ -2,17 +2,20 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 
+import { StoreBranchSelectionService } from './store-branch-selection';
 import { CatalogService } from './catalog';
 
 describe('CatalogService', () => {
   let service: CatalogService;
   let httpMock: HttpTestingController;
+  let branchSelection: StoreBranchSelectionService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [CatalogService, provideHttpClient(), provideHttpClientTesting()],
     });
     service = TestBed.inject(CatalogService);
+    branchSelection = TestBed.inject(StoreBranchSelectionService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
@@ -101,6 +104,16 @@ describe('CatalogService', () => {
     req.flush({ content: [], totalElements: 0 });
   });
 
+  it('should include selected branchId in product queries', () => {
+    branchSelection.selectedBranchId.set(7);
+
+    service.getProducts(undefined, undefined, 0, 20).subscribe();
+
+    const req = httpMock.expectOne((r) => r.url === '/api/store/products');
+    expect(req.request.params.get('branchId')).toBe('7');
+    req.flush({ content: [], totalElements: 0 });
+  });
+
   // --- getFeaturedProducts ---
 
   it('should GET /api/store/products/featured', () => {
@@ -120,7 +133,7 @@ describe('CatalogService', () => {
       expect(res.content[0].name).toBe('Featured');
     });
 
-    const req = httpMock.expectOne('/api/store/products/featured');
+    const req = httpMock.expectOne((r) => r.url === '/api/store/products/featured');
     expect(req.request.method).toBe('GET');
     req.flush(mockResponse);
   });
@@ -141,7 +154,7 @@ describe('CatalogService', () => {
       expect(p.name).toBe('Granola');
     });
 
-    const req = httpMock.expectOne('/api/store/products/42');
+    const req = httpMock.expectOne((r) => r.url === '/api/store/products/42');
     expect(req.request.method).toBe('GET');
     req.flush(mockProduct);
   });
@@ -168,7 +181,7 @@ describe('CatalogService', () => {
       expect(res.content[0].name).toBe('Related A');
     });
 
-    const req = httpMock.expectOne('/api/store/products/42/related');
+    const req = httpMock.expectOne((r) => r.url === '/api/store/products/42/related');
     expect(req.request.method).toBe('GET');
     req.flush(mockResponse);
   });

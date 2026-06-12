@@ -36,6 +36,10 @@ GET /api/store/products/{id}?branchId=
 
 GET /api/store/categories
   Response: [ { id, name, productCount } ]
+
+GET /api/store/branches
+  Response: [ { id, name, address, phone, active } ]
+  Notes:    Active pickup branches. Used by the public store branch selector.
 ```
 
 ## Customer (role CUSTOMER)

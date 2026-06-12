@@ -4,6 +4,7 @@ import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 import { AppButton } from '../app-button/app-button';
 import { AppSearchBar } from '../app-search-bar/app-search-bar';
+import { AppSelect } from '../app-select/app-select';
 
 /** Brand display configuration. */
 export interface StoreBrandConfig {
@@ -16,7 +17,7 @@ export interface StoreBrandConfig {
 @Component({
   selector: 'app-store-nav',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, MenuModule, AppButton, AppSearchBar],
+  imports: [RouterLink, RouterLinkActive, MenuModule, AppButton, AppSearchBar, AppSelect],
   templateUrl: './app-store-nav.html',
   styleUrl: './app-store-nav.css',
 })
@@ -39,11 +40,32 @@ export class AppStoreNav {
   /** Whether to show the search bar (default true). */
   readonly showSearch = input(true);
 
+  /** Branch options shown in the compact pickup selector. */
+  readonly branchOptions = input<readonly { label: string; value: number }[]>([]);
+
+  /** Current selected pickup branch id. */
+  readonly selectedBranchId = input<number | null>(null);
+
+  /** Human-readable selected pickup branch label. */
+  readonly selectedBranchLabel = input('Elegí sucursal');
+
+  /** Whether branch options are currently loading. */
+  readonly branchesLoading = input(false);
+
+  /** Whether branch options failed to load. */
+  readonly branchesError = input(false);
+
+  /** Whether more than one branch is available and a dropdown should be shown. */
+  readonly showBranchDropdown = input(false);
+
   /** Placeholder text for the search bar. */
   readonly searchPlaceholder = input('Buscar productos...');
 
   /** Emitted when the user submits a search query. */
   readonly searchQuery = output<string>();
+
+  /** Emitted when the user changes the pickup branch. */
+  readonly branchChange = output<number | null>();
 
   /** Emitted when the user clicks "Cerrar sesión" or triggers logout. */
   readonly logout = output<void>();

@@ -48,6 +48,42 @@ describe('AppStoreNav', () => {
     expect(searchBars.length).toBe(0);
   });
 
+  it('should show selected branch label when there is a single branch', () => {
+    fixture.componentRef.setInput('selectedBranchLabel', 'Centro');
+    fixture.componentRef.setInput('showBranchDropdown', false);
+    fixture.detectChanges();
+
+    const branch = fixture.nativeElement.querySelector('.app-store-nav__branch');
+    expect(branch).toBeTruthy();
+    expect(branch.textContent).toContain('Centro');
+  });
+
+  it('should show compact branch dropdown when multiple branches exist', () => {
+    fixture.componentRef.setInput('branchOptions', [
+      { label: 'Centro', value: 1 },
+      { label: 'Nueva Cordoba', value: 2 },
+    ]);
+    fixture.componentRef.setInput('selectedBranchId', 1);
+    fixture.componentRef.setInput('showBranchDropdown', true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-select')).toBeTruthy();
+  });
+
+  it('should show loading branch label while branches load', () => {
+    fixture.componentRef.setInput('branchesLoading', true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Cargando...');
+  });
+
+  it('should show branch error label when branches fail', () => {
+    fixture.componentRef.setInput('branchesError', true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Sucursal no disponible');
+  });
+
   it('should show login and register when not logged in', () => {
     fixture.componentRef.setInput('isLoggedIn', false);
     fixture.detectChanges();

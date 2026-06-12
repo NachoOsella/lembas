@@ -5,7 +5,12 @@ import { MessageService } from 'primeng/api';
 import { catchError, throwError } from 'rxjs';
 
 /** API paths whose errors are handled directly by their owning forms. */
-const FORM_OWNED_AUTH_PATHS = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh'];
+const COMPONENT_OWNED_ERROR_PATHS = [
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/refresh',
+  '/api/store/branches',
+];
 
 /** Time window used to collapse identical infrastructure error toasts. */
 const DUPLICATE_TOAST_WINDOW_MS = 1500;
@@ -14,8 +19,8 @@ const DUPLICATE_TOAST_WINDOW_MS = 1500;
 const lastToastByService = new WeakMap<MessageService, { key: string; timestamp: number }>();
 
 /** Returns true when a request error should be translated by the page/component. */
-function isFormOwnedRequest(url: string): boolean {
-  return FORM_OWNED_AUTH_PATHS.some((path) => url.startsWith(path));
+function isComponentOwnedRequest(url: string): boolean {
+  return COMPONENT_OWNED_ERROR_PATHS.some((path) => url.startsWith(path));
 }
 
 /** Returns true when the user is currently in the public store section. */
@@ -55,7 +60,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      const handledByComponent = isFormOwnedRequest(req.url);
+      const handledByComponent = isComponentOwnedRequest(req.url);
 
       switch (error.status) {
         case 0:
@@ -102,7 +107,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
         default:
           // Only unexpected server failures are global. 4xx business errors stay local.
-          if (error.status >= 500) {
+          if (error.status >= 500 && !handledByComponent) {
             if (isStoreContext(router)) {
               router.navigate(['/store/error/500']);
             } else {

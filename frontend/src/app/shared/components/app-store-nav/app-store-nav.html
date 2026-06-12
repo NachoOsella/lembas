@@ -41,6 +41,30 @@
 
     <!-- Actions (right) -->
     <div class="app-store-nav__actions">
+      <div class="app-store-nav__branch" aria-label="Sucursal de retiro">
+        <i class="pi pi-map-marker app-store-nav__branch-icon" aria-hidden="true"></i>
+        @if (branchesLoading()) {
+          <span class="app-store-nav__branch-label">Cargando...</span>
+        } @else if (branchesError()) {
+          <span class="app-store-nav__branch-label app-store-nav__branch-label--error">
+            Sucursal no disponible
+          </span>
+        } @else if (showBranchDropdown()) {
+          <app-select
+            inputId="store-nav-branch-selector"
+            name="storeNavBranch"
+            placeholder="Sucursal"
+            [options]="branchOptions()"
+            [filter]="false"
+            [showClear]="false"
+            [value]="selectedBranchId()"
+            (valueChange)="branchChange.emit($event)"
+          />
+        } @else {
+          <span class="app-store-nav__branch-label">{{ selectedBranchLabel() }}</span>
+        }
+      </div>
+
       @if (isLoggedIn()) {
         <span class="app-store-nav__user-name">{{ userDisplayName() }}</span>
         <button

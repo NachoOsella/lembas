@@ -115,6 +115,65 @@
   gap: 0.75rem;
 }
 
+.app-store-nav__branch {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 16rem;
+  min-height: 2.375rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(47, 141, 114, 0.22);
+  background: rgba(47, 141, 114, 0.05);
+  padding: 0.25rem 0.6rem;
+  color: var(--color-primary-dark);
+}
+
+@media (min-width: 1024px) {
+  .app-store-nav__branch {
+    display: flex;
+  }
+}
+
+.app-store-nav__branch-icon {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  color: var(--color-primary);
+}
+
+.app-store-nav__branch-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.app-store-nav__branch-label--error {
+  color: var(--color-red);
+}
+
+:host ::ng-deep .app-store-nav__branch .p-select {
+  min-width: 8.5rem;
+  max-width: 13rem;
+  height: 2rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+:host ::ng-deep .app-store-nav__branch .p-select-label {
+  padding: 0.35rem 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+:host ::ng-deep .app-store-nav__branch .p-select-dropdown {
+  width: 1.6rem;
+  color: var(--color-primary);
+}
+
 .app-store-nav__user-name {
   display: none;
   font-size: 0.875rem;

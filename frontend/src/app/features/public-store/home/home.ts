@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { CatalogService } from '../../../core/services/catalog';
+import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
 import { CarouselResponsiveOptions } from 'primeng/carousel';
 
 import { AppButton } from '../../../shared/components/app-button/app-button';
@@ -431,9 +432,13 @@ import { ProductSummary } from '../../../shared/models/product';
 })
 export class Home implements OnInit {
   private readonly catalogService = inject(CatalogService);
+  private readonly branchSelection = inject(StoreBranchSelectionService);
 
   protected readonly featuredProducts = signal<ProductSummary[]>([]);
   protected readonly featuredLoading = signal(true);
+
+  /** Last branch id used to load featured stock availability. */
+  private previousBranchId: number | null = this.branchSelection.selectedBranchId();
 
   /** Responsive breakpoints for the featured products carousel. */
   protected readonly carouselResponsiveOptions: CarouselResponsiveOptions[] = [
@@ -507,7 +512,25 @@ export class Home implements OnInit {
     },
   ];
 
+  constructor() {
+    effect(() => {
+      const branchId = this.branchSelection.selectedBranchId();
+      if (branchId === this.previousBranchId) {
+        return;
+      }
+
+      this.previousBranchId = branchId;
+      this.loadFeaturedProducts();
+    });
+  }
+
   ngOnInit(): void {
+    this.loadFeaturedProducts();
+  }
+
+  /** Loads featured products using the current pickup branch selection. */
+  private loadFeaturedProducts(): void {
+    this.featuredLoading.set(true);
     this.catalogService.getFeaturedProducts().subscribe({
       next: (res) => {
         this.featuredProducts.set(res.content);

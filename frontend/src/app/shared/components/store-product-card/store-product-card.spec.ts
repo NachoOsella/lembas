@@ -102,12 +102,13 @@ describe('StoreProductCard', () => {
     expect(badge.textContent).toContain('3 uds');
   });
 
-  it('should show out-of-stock badge when stock is 0', async () => {
+  it('should show branch-specific out-of-stock badge when stock is 0', async () => {
     create(PRODUCT_OUT_OF_STOCK);
     await fixture.whenStable();
     const badge = fixture.nativeElement.querySelector('.store-product-card__stock--out');
     expect(badge).toBeTruthy();
-    expect(badge.textContent).toContain('Sin stock');
+    expect(badge.textContent).toContain('Sin stock en esta sucursal');
+    expect(fixture.nativeElement.textContent).toContain('Disponible solo si cambiás de sucursal');
   });
 
   it('should not show stock badge when availableStock is undefined', async () => {
@@ -193,7 +194,7 @@ describe('StoreProductCard', () => {
     expect(article.classList.contains('store-product-card--compact')).toBe(true);
   });
 
-  it('should not show stock badge in compact mode', async () => {
+  it('should not show low-stock badge in compact mode', async () => {
     TestBed.configureTestingModule({
       imports: [StoreProductCard],
       providers: [provideRouter([])],
@@ -207,5 +208,22 @@ describe('StoreProductCard', () => {
 
     const badge = fixture.nativeElement.querySelector('.store-product-card__stock');
     expect(badge).toBeNull();
+  });
+
+  it('should show out-of-stock badge even in compact mode', async () => {
+    TestBed.configureTestingModule({
+      imports: [StoreProductCard],
+      providers: [provideRouter([])],
+    });
+
+    fixture = TestBed.createComponent(StoreProductCard);
+    fixture.componentRef.setInput('product', PRODUCT_OUT_OF_STOCK);
+    fixture.componentRef.setInput('density', 'compact');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const badge = fixture.nativeElement.querySelector('.store-product-card__stock--out');
+    expect(badge).toBeTruthy();
+    expect(badge.textContent).toContain('Sin stock en esta sucursal');
   });
 });

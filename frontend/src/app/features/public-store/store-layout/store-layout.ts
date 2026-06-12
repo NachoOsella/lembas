@@ -1,9 +1,10 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 
 import { AuthService } from '../../../core/services/auth';
 import { Cart } from '../../../core/services/cart';
+import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
 import {
   AppStoreNav,
   StoreBrandConfig,
@@ -12,7 +13,6 @@ import {
   AppStoreFooter,
   StoreFooterLink,
 } from '../../../shared/components/app-store-footer/app-store-footer';
-
 @Component({
   selector: 'app-store-layout',
   imports: [RouterOutlet, AppStoreNav, AppStoreFooter],
@@ -20,12 +20,33 @@ import {
   styleUrl: './store-layout.css',
 })
 /** Public store shell: delegates nav and footer to generic components. */
-export class StoreLayout {
+export class StoreLayout implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly cart = inject(Cart);
+  protected readonly branchSelection = inject(StoreBranchSelectionService);
 
   protected readonly cartItemsCount = computed(() => this.cart.totalItems());
+
+  /** Options shown in the pickup branch selector. */
+  protected readonly branchOptions = computed(() =>
+    this.branchSelection.branches().map((branch) => ({
+      label: branch.address ? `${branch.name} - ${branch.address}` : branch.name,
+      value: branch.id,
+    })),
+  );
+
+  /** Whether the navigation should show the compact branch dropdown. */
+  protected readonly showBranchDropdown = computed(
+    () => !this.branchSelection.loading() && !this.branchSelection.error() && this.branchSelection.branches().length > 1,
+  );
+
+  /** Label shown when the selector is collapsed or when there is only one branch. */
+  protected readonly selectedBranchLabel = computed(() => {
+    const selected = this.branchSelection.selectedBranch();
+    if (!selected) return 'Elegí sucursal de retiro';
+    return selected.address ? `${selected.name} - ${selected.address}` : selected.name;
+  });
 
   /** Whether a user is currently logged in. */
   protected readonly isLoggedIn = computed(() => this.auth.isAuthenticated());
@@ -81,6 +102,19 @@ export class StoreLayout {
 
   /** Pickup label that introduces the city marker. */
   protected readonly footerPickupLabel = 'Retiro en sucursal';
+
+  ngOnInit(): void {
+    this.branchSelection.loadBranches().subscribe({
+      error: () => {
+        // State is handled in the service; the layout keeps rendering the store.
+      },
+    });
+  }
+
+  /** Updates the selected pickup branch from the public selector. */
+  protected onBranchChange(branchId: number | null): void {
+    this.branchSelection.selectBranch(branchId);
+  }
 
   /** Navigate to store catalog with the submitted search query parameter. */
   onSearch(query: string): void {

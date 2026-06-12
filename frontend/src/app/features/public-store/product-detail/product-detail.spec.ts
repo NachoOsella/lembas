@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
@@ -9,6 +10,7 @@ import { MessageService } from 'primeng/api';
 
 import { ProductDetail } from './product-detail';
 import { CatalogService } from '../../../core/services/catalog';
+import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
 import { ProductSummary } from '../../../shared/models/product';
 
 const MOCK_PRODUCT: ProductSummary = {
@@ -87,6 +89,7 @@ describe('ProductDetail', () => {
         MessageService,
         { provide: ActivatedRoute, useValue: setupActivatedRoute(routeId) },
         { provide: CatalogService, useValue: setupCatalogService(product) },
+        { provide: StoreBranchSelectionService, useValue: { selectedBranchId: signal(null) } },
       ],
     }).compileComponents();
 
@@ -160,6 +163,7 @@ describe('ProductDetail', () => {
             getFeaturedProducts: vi.fn().mockReturnValue(of(EMPTY_PRODUCT_PAGE)),
           },
         },
+        { provide: StoreBranchSelectionService, useValue: { selectedBranchId: signal(null) } },
       ],
     });
 
@@ -185,10 +189,11 @@ describe('ProductDetail', () => {
     expect(text).toContain('Ultimas 3 unidades');
   });
 
-  it('should show out-of-stock message when stock is 0', async () => {
+  it('should show branch-specific out-of-stock message when stock is 0', async () => {
     await configure(MOCK_PRODUCT_OUT_OF_STOCK);
     const text = fixture.nativeElement.textContent ?? '';
-    expect(text).toContain('Sin stock disponible');
+    expect(text).toContain('Sin stock en esta sucursal');
+    expect(text).toContain('no está disponible para la sucursal de retiro seleccionada');
   });
 
   it('should show generic availability when availableStock is undefined', async () => {
@@ -205,10 +210,10 @@ describe('ProductDetail', () => {
     expect(text).toContain('Agregar al pedido');
   });
 
-  it('should show "Sin stock" button text when out of stock', async () => {
+  it('should show branch-specific disabled button text when out of stock', async () => {
     await configure(MOCK_PRODUCT_OUT_OF_STOCK);
     const text = fixture.nativeElement.textContent ?? '';
-    expect(text).toContain('Sin stock');
+    expect(text).toContain('Sin stock en esta sucursal');
   });
 
   it('should call addToCart method on button click', async () => {
