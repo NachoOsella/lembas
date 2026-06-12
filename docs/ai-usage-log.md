@@ -1,5 +1,14 @@
 # Registro de uso de IA
 
+## 2026-06-12
+
+- `backend/src/main/resources/db/migration/V25__orders.sql` -- implementada S2-US06 (LEMBAS-45): migracion con tablas `orders` y `order_items`, secuencia `order_number_seq`, constraints DB para reglas ONLINE/POS (customer/employee requeridos, status POS restringido a PAID/CANCELLED, importes no negativos, items con cantidad > 0, snapshots obligatorios) y FK final de `stock_movements.order_id` a `orders`. Subtasks LEMBAS-244, LEMBAS-249.
+- `backend/src/main/java/com/dietetica/lembas/orders/{model,repository,dto,service}/` -- enums `OrderType`/`OrderStatus`/`FulfillmentType`, entidades JPA `Order` y `OrderItem` con snapshots y cascade delete, repositorios con `existsByOrderNumber`/`findByOrderNumber`/`findWithItemsById`, DTOs `OrderSummaryDto`/`OrderDetailDto`/`OrderItemDto` y mapper manual `OrderMapper` (LEMBAS-245, LEMBAS-246, LEMBAS-248).
+- `backend/src/main/java/com/dietetica/lembas/orders/service/OrderNumberGenerator.java` -- generador de numeros de orden human-readable (`ON-YYYYMMDD-NNNNNN` / `POS-YYYYMMDD-NNNNNN`) usando `nextval('order_number_seq')` para evitar colisiones bajo concurrencia (LEMBAS-247).
+- `backend/src/test/java/com/dietetica/lembas/orders/` -- 24 tests nuevos: 11 de integracion JPA con Testcontainers cubriendo todas las constraints ONLINE/POS, 2 de repositorio, 3 de entidad, 4 de mapper y 4 del generador. Smoke test del backend actualizado con `@MockitoBean` para los nuevos repositorios.
+- `docs/03-architecture/database-design.md`, `docs/05-api/dto-conventions.md` -- actualizada documentacion: tabla de migraciones con V25, nota explicando el desplazamiento V5->V25, y seccion de DTOs de ordenes con campos clave y reglas de snapshots.
+- Review follow-up S2-US06 -- se corrigio exposicion de costos quitando `costPriceSnapshot` del DTO compartido de items, se hizo `orders.branch_id` obligatorio en migracion/entidad, y se agrego validacion para impedir persistir ordenes sin items. Tests backend actualizados y suite completa verde.
+
 ## 2026-06-11
 
 - `backend/src/test/java/com/dietetica/lembas/suppliers/service/PriceUpdateImportServiceTest.java` -- 16 tests: validacion de archivo, parsing CSV con alias de headers, errores de fila, coma decimal, limite de filas, parsing XLSX.
