@@ -1,0 +1,16 @@
+:host {
+  display: block;
+}
+
+.checkout-page {
+  font-family: var(--font-sans);
+  letter-spacing: var(--tracking-tight);
+}
+
+.checkout-page app-button.block {
+  display: block;
+}
+
+.checkout-page app-button.block .app-button {
+  width: 100%;
+}

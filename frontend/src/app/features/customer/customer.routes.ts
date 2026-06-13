@@ -1,11 +1,13 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '../../core/guards/auth-guard';
 import { customerGuard } from '../../core/guards/customer-guard';
+import { StoreLayout } from '../public-store/store-layout/store-layout';
 
 export default [
   {
     path: '',
     canActivate: [authGuard, customerGuard],
+    component: StoreLayout,
     children: [
       {
         path: 'profile',
