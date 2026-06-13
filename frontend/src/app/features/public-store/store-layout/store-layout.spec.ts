@@ -35,6 +35,7 @@ describe('StoreLayout', () => {
       currentUser: currentUserSignal,
       isAuthenticated: isAuthenticatedSignal,
       logout: vi.fn(),
+      ensureSession: vi.fn().mockReturnValue(of(true)),
     };
 
     const branchesSignal = signal([{ id: 1, name: 'Centro', address: 'Av. Siempre Viva 123' }]);

@@ -103,7 +103,11 @@ export class StoreLayout implements OnInit {
   /** Pickup label that introduces the city marker. */
   protected readonly footerPickupLabel = 'Retiro en sucursal';
 
-  ngOnInit(): void {
+    ngOnInit(): void {
+    // Hydrate auth state from HttpOnly cookies so the nav shows login/register
+    // or user info correctly before the first render completes.
+    this.auth.ensureSession().subscribe();
+
     this.branchSelection.loadBranches().subscribe({
       error: () => {
         // State is handled in the service; the layout keeps rendering the store.
