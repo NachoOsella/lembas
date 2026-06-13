@@ -23,41 +23,41 @@ public class ProductStoreController {
         this.productService = productService;
     }
 
-    /**
-     * Returns products published in the public online store.
-     *
-     * TODO: Add branch-level stock availability when the inventory module exposes
-     * stock lots by branch. Until then, the public catalog intentionally avoids
-     * accepting a branchId parameter to prevent a misleading stock contract.
-     */
+    /** Returns products published in the public online store with branch-level stock availability. */
     @GetMapping
     public PageResponse<ProductSummaryDto> list(
             @RequestParam(name = "q", required = false) String search,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long branchId,
             @PageableDefault(size = 20, sort = "name") Pageable pageable
     ) {
-        return PageResponse.from(productService.listStoreProducts(search, categoryId, pageable));
+        if (branchId == null) {
+            return PageResponse.from(productService.listStoreProducts(search, categoryId, pageable));
+        }
+        return PageResponse.from(productService.listStoreProducts(search, categoryId, branchId, pageable));
     }
 
-    /**
-     * Returns a published product detail for the public online store.
-     *
-     * TODO: Include branch-level available stock once inventory is implemented.
-     */
+    /** Returns a published product detail for the public online store. */
     @GetMapping("/{id}")
-    public ProductDetailDto detail(@PathVariable Long id) {
-        return productService.getStoreProductDetail(id);
+    public ProductDetailDto detail(@PathVariable Long id, @RequestParam(required = false) Long branchId) {
+        return branchId == null
+                ? productService.getStoreProductDetail(id)
+                : productService.getStoreProductDetail(id, branchId);
     }
 
     /** Returns 15 random published products for the home page featured section. */
     @GetMapping("/featured")
-    public PageResponse<ProductSummaryDto> featured() {
-        return PageResponse.from(productService.listRandomPublishedProducts());
+    public PageResponse<ProductSummaryDto> featured(@RequestParam(required = false) Long branchId) {
+        return branchId == null
+                ? PageResponse.from(productService.listRandomPublishedProducts())
+                : PageResponse.from(productService.listRandomPublishedProducts(branchId));
     }
 
     /** Returns random published products from the same category, excluding the current product. */
     @GetMapping("/{id}/related")
-    public PageResponse<ProductSummaryDto> related(@PathVariable Long id) {
-        return PageResponse.from(productService.listRandomRelatedProducts(id));
+    public PageResponse<ProductSummaryDto> related(@PathVariable Long id, @RequestParam(required = false) Long branchId) {
+        return branchId == null
+                ? PageResponse.from(productService.listRandomRelatedProducts(id))
+                : PageResponse.from(productService.listRandomRelatedProducts(id, branchId));
     }
 }
