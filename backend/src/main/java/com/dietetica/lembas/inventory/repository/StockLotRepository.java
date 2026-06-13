@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +30,20 @@ public interface StockLotRepository extends JpaRepository<StockLot, Long> {
             """)
     BigDecimal calculateAvailableQuantity(
             @Param("productId") Long productId,
+            @Param("branchId") Long branchId
+    );
+
+    /** Calculates available stock for many products at one branch, grouped by product. */
+    @Query("""
+            select l.product.id, coalesce(sum(l.quantityAvailable), 0)
+            from StockLot l
+            where l.product.id in :productIds
+              and l.branch.id = :branchId
+              and l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
+            group by l.product.id
+            """)
+    List<Object[]> calculateAvailableQuantityByProductIds(
+            @Param("productIds") Collection<Long> productIds,
             @Param("branchId") Long branchId
     );
 

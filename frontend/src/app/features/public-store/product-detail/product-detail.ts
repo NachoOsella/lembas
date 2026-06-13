@@ -165,6 +165,12 @@ export class ProductDetail implements OnInit {
     setTimeout(() => this.justAdded.set(false), 2000);
   }
 
+  /** Maximum quantity allowed based on available stock. */
+  protected readonly maxQuantity = computed(() => {
+    const stock = this.product()?.availableStock;
+    return stock != null ? Math.max(1, Math.floor(stock)) : 99;
+  });
+
   /** Whether the product is out of stock. */
   protected readonly isOutOfStock = computed(() => this.product()?.availableStock === 0);
 

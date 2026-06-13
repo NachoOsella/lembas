@@ -10,6 +10,9 @@ import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
 import com.dietetica.lembas.catalog.repository.CategoryRepository;
 import com.dietetica.lembas.catalog.repository.ProductRepository;
 import com.dietetica.lembas.catalog.repository.ProductSalePriceHistoryRepository;
+import com.dietetica.lembas.inventory.repository.StockLotRepository;
+import com.dietetica.lembas.shared.branch.model.Branch;
+import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.domain.Page;
@@ -21,7 +24,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /** Application service for admin product catalog management. */
 @Service
@@ -30,15 +37,21 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductSalePriceHistoryRepository salePriceHistoryRepository;
+    private final StockLotRepository stockLotRepository;
+    private final BranchRepository branchRepository;
 
     public ProductService(
             ProductRepository productRepository,
             CategoryRepository categoryRepository,
-            ObjectProvider<ProductSalePriceHistoryRepository> salePriceHistoryRepository
+            ObjectProvider<ProductSalePriceHistoryRepository> salePriceHistoryRepository,
+            StockLotRepository stockLotRepository,
+            BranchRepository branchRepository
     ) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.salePriceHistoryRepository = salePriceHistoryRepository == null ? null : salePriceHistoryRepository.getIfAvailable();
+        this.stockLotRepository = stockLotRepository;
+        this.branchRepository = branchRepository;
     }
 
     /** Lists active products with optional table filters. */
@@ -124,29 +137,54 @@ public class ProductService {
     // Public store methods
     // ---------------------------------------------------------------------------
 
-    /** Returns 15 random published products for the home page featured section. */
+    /** Returns 15 random published products without branch availability for legacy callers. */
     @Transactional(readOnly = true)
     public Page<ProductSummaryDto> listRandomPublishedProducts() {
-        // TODO: Replace random selection with metric-based ranking (views, sales, recency)
-        //       once analytics events are captured in the products table.
         var products = productRepository.findRandomPublishedProducts(PageRequest.of(0, 15));
         var dtos = products.stream().map(this::toSummaryDto).toList();
         return new org.springframework.data.domain.PageImpl<>(dtos);
     }
 
-    /** Lists products visible in the public online store. */
+    /** Returns 15 random published products for the home page featured section. */
+    @Transactional(readOnly = true)
+    public Page<ProductSummaryDto> listRandomPublishedProducts(Long branchId) {
+        Long resolvedBranchId = resolveStoreBranchId(branchId);
+        // TODO: Replace random selection with metric-based ranking (views, sales, recency)
+        //       once analytics events are captured in the products table.
+        var products = productRepository.findRandomPublishedProducts(PageRequest.of(0, 15));
+        Map<Long, BigDecimal> availability = availabilityByProduct(products, resolvedBranchId);
+        var dtos = products.stream()
+                .map(product -> toSummaryDto(product, availability.getOrDefault(product.getId(), BigDecimal.ZERO)))
+                .toList();
+        return new org.springframework.data.domain.PageImpl<>(dtos);
+    }
+
+    /** Lists products visible in the public online store without branch availability for legacy callers. */
     @Transactional(readOnly = true)
     public Page<ProductSummaryDto> listStoreProducts(String search, Long categoryId, Pageable pageable) {
         String normalizedSearch = search == null || search.isBlank() ? null : search.trim().toLowerCase(Locale.ROOT);
         Pageable sortedPageable = pageable.getSort().isUnsorted()
                 ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("name").ascending())
                 : pageable;
-
         return productRepository.searchStoreProducts(normalizedSearch, categoryId, sortedPageable)
                 .map(this::toSummaryDto);
     }
 
-    /** Returns a product visible in the public online store. */
+    /** Lists products visible in the public online store with real branch availability. */
+    @Transactional(readOnly = true)
+    public Page<ProductSummaryDto> listStoreProducts(String search, Long categoryId, Long branchId, Pageable pageable) {
+        Long resolvedBranchId = resolveStoreBranchId(branchId);
+        String normalizedSearch = search == null || search.isBlank() ? null : search.trim().toLowerCase(Locale.ROOT);
+        Pageable sortedPageable = pageable.getSort().isUnsorted()
+                ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("name").ascending())
+                : pageable;
+
+        Page<Product> products = productRepository.searchStoreProducts(normalizedSearch, categoryId, sortedPageable);
+        Map<Long, BigDecimal> availability = availabilityByProduct(products.getContent(), resolvedBranchId);
+        return products.map(product -> toSummaryDto(product, availability.getOrDefault(product.getId(), BigDecimal.ZERO)));
+    }
+
+    /** Returns a product visible in the public online store without branch availability for legacy callers. */
     @Transactional(readOnly = true)
     public ProductDetailDto getStoreProductDetail(Long id) {
         Product product = productRepository.findByIdAndActiveTrueAndOnlineStatus(id, ProductOnlineStatus.PUBLISHED)
@@ -154,16 +192,42 @@ public class ProductService {
         return toDetailDto(product);
     }
 
-    /** Returns random published products from the same category, excluding the current product. */
+    /** Returns a product visible in the public online store with branch availability. */
+    @Transactional(readOnly = true)
+    public ProductDetailDto getStoreProductDetail(Long id, Long branchId) {
+        Long resolvedBranchId = resolveStoreBranchId(branchId);
+        Product product = productRepository.findByIdAndActiveTrueAndOnlineStatus(id, ProductOnlineStatus.PUBLISHED)
+                .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
+        BigDecimal availableStock = stockLotRepository.calculateAvailableQuantity(product.getId(), resolvedBranchId);
+        return toDetailDto(product, availableStock);
+    }
+
+    /** Returns random published products from the same category without availability for legacy callers. */
     @Transactional(readOnly = true)
     public Page<ProductSummaryDto> listRandomRelatedProducts(Long productId) {
         Product product = productRepository.findByIdAndActiveTrueAndOnlineStatus(
                         productId, ProductOnlineStatus.PUBLISHED)
                 .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
         Long categoryId = product.getCategory().getId();
+        var products = productRepository.findRandomRelatedProducts(categoryId, productId, PageRequest.of(0, 6));
+        var dtos = products.stream().map(this::toSummaryDto).toList();
+        return new org.springframework.data.domain.PageImpl<>(dtos);
+    }
+
+    /** Returns random published products from the same category, excluding the current product. */
+    @Transactional(readOnly = true)
+    public Page<ProductSummaryDto> listRandomRelatedProducts(Long productId, Long branchId) {
+        Long resolvedBranchId = resolveStoreBranchId(branchId);
+        Product product = productRepository.findByIdAndActiveTrueAndOnlineStatus(
+                        productId, ProductOnlineStatus.PUBLISHED)
+                .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
+        Long categoryId = product.getCategory().getId();
         var products = productRepository.findRandomRelatedProducts(
                 categoryId, productId, PageRequest.of(0, 6));
-        var dtos = products.stream().map(this::toSummaryDto).toList();
+        Map<Long, BigDecimal> availability = availabilityByProduct(products, resolvedBranchId);
+        var dtos = products.stream()
+                .map(related -> toSummaryDto(related, availability.getOrDefault(related.getId(), BigDecimal.ZERO)))
+                .toList();
         return new org.springframework.data.domain.PageImpl<>(dtos);
     }
 
@@ -222,13 +286,45 @@ public class ProductService {
                 .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
     }
 
+    /** Resolves the branch used by public stock availability, defaulting to the first active branch. */
+    private Long resolveStoreBranchId(Long branchId) {
+        if (branchId != null) {
+            if (!branchRepository.existsByIdAndActiveTrue(branchId)) {
+                throw new DomainException("BRANCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Branch not found");
+            }
+            return branchId;
+        }
+        return branchRepository.findByActiveTrueOrderByNameAsc().stream()
+                .findFirst()
+                .map(Branch::getId)
+                .orElseThrow(() -> new DomainException("BRANCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Branch not found"));
+    }
+
+    /** Loads branch availability for a page of products using one grouped stock query. */
+    private Map<Long, BigDecimal> availabilityByProduct(List<Product> products, Long branchId) {
+        if (products.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> productIds = products.stream().map(Product::getId).toList();
+        return stockLotRepository.calculateAvailableQuantityByProductIds(productIds, branchId).stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (BigDecimal) row[1]
+                ));
+    }
+
     /** Normalizes optional text fields before persistence. */
     private String normalizeBlank(String value) {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
-    /** Maps an entity into a table row DTO. */
+    /** Maps an entity into a table row DTO without public stock information. */
     private ProductSummaryDto toSummaryDto(Product product) {
+        return toSummaryDto(product, null);
+    }
+
+    /** Maps an entity into a public-store table row DTO with branch availability. */
+    private ProductSummaryDto toSummaryDto(Product product, BigDecimal availableStock) {
         return new ProductSummaryDto(
                 product.getId(),
                 product.getName(),
@@ -239,12 +335,18 @@ public class ProductService {
                 product.getSalePrice(),
                 product.getMinimumStock(),
                 product.getImageUrl(),
-                product.getOnlineStatus()
+                product.getOnlineStatus(),
+                availableStock
         );
     }
 
-    /** Maps an entity into the edit/detail DTO. */
+    /** Maps an entity into the edit/detail DTO without public stock information. */
     private ProductDetailDto toDetailDto(Product product) {
+        return toDetailDto(product, null);
+    }
+
+    /** Maps an entity into the public-store detail DTO with branch availability. */
+    private ProductDetailDto toDetailDto(Product product, BigDecimal availableStock) {
         return new ProductDetailDto(
                 product.getId(),
                 product.getName(),
@@ -256,7 +358,8 @@ public class ProductService {
                 product.getSalePrice(),
                 product.getMinimumStock(),
                 product.getImageUrl(),
-                product.getOnlineStatus()
+                product.getOnlineStatus(),
+                availableStock
         );
     }
 }

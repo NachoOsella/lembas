@@ -16,6 +16,23 @@ public record ProductDetailDto(
         BigDecimal salePrice,
         Integer minimumStock,
         String imageUrl,
-        ProductOnlineStatus onlineStatus
+        ProductOnlineStatus onlineStatus,
+        BigDecimal availableStock
 ) {
+    /** Backwards-compatible constructor for admin DTOs without public stock data. */
+    public ProductDetailDto(
+            Long id,
+            String name,
+            String description,
+            String brandName,
+            String barcode,
+            Long categoryId,
+            String categoryName,
+            BigDecimal salePrice,
+            Integer minimumStock,
+            String imageUrl,
+            ProductOnlineStatus onlineStatus
+    ) {
+        this(id, name, description, brandName, barcode, categoryId, categoryName, salePrice, minimumStock, imageUrl, onlineStatus, null);
+    }
 }
