@@ -28,7 +28,7 @@ GET /api/auth/me
 ```
 GET /api/store/products?q=&categoryId=&branchId=&page=&size=
   Response: PaginatedResponse<ProductSummaryDto>
-  Notes:    Only onlineStatus=PUBLISHED. Filters by branch stock availability.
+  Notes:    Only onlineStatus=PUBLISHED. When branchId is present, returns availableStock calculated from active stock_lots for that branch.
 
 GET /api/store/products/{id}?branchId=
   Response: ProductDetailDto
@@ -53,9 +53,10 @@ PATCH /api/customer/profile
   Response: { id, firstName, lastName, email, phone }
 
 POST /api/customer/orders
-  Request:  { items: [ { productId, quantity } ], paymentMethod: "MERCADO_PAGO" }
+  Request:  { branchId, items: [ { productId, quantity } ], notes? }
   Response: OrderCreatedDto { id, orderNumber, status: "PENDING_PAYMENT", total } (201)
-  Errors:   INSUFFICIENT_STOCK (409), PRODUCT_NOT_FOUND (404)
+  Notes:    Creates an ONLINE pickup order and a PENDING Mercado Pago payment. It validates stock but does not reserve or deduct stock.
+  Errors:   INSUFFICIENT_STOCK (409), PRODUCT_NOT_FOUND (404), BRANCH_NOT_FOUND (404)
 
 GET /api/customer/orders
   Response: [ OrderSummaryDto ]
