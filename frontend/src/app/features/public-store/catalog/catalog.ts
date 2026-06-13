@@ -2,6 +2,7 @@ import { Component, OnInit, computed, effect, inject, signal } from '@angular/co
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { CatalogService } from '../../../core/services/catalog';
+import { Cart } from '../../../core/services/cart';
 import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
 import { Category, ProductSummary } from '../../../shared/models/product';
 import { ProductGridSkeleton } from '../../../shared/components/product-grid-skeleton/product-grid-skeleton';
@@ -38,6 +39,7 @@ const PAGE_SIZE = 20;
 })
 export class Catalog implements OnInit {
   private readonly catalogService = inject(CatalogService);
+  private readonly cart = inject(Cart);
   private readonly branchSelection = inject(StoreBranchSelectionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -266,7 +268,7 @@ export class Catalog implements OnInit {
   // Cart integration
   // ---------------------------------------------------------------------------
   protected onAddToCart(event: ProductGridAddToCartEvent): void {
-    // Toast removed - public store does not use toasts
+    this.cart.addItem(event.product, event.quantity);
   }
 
   // ---------------------------------------------------------------------------
