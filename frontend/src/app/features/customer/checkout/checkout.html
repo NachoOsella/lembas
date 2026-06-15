@@ -3,10 +3,13 @@
     <!-- Header -->
     <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div class="min-w-0">
-        <app-eyebrow color="green">Checkout</app-eyebrow>
-        <h1 class="mt-1.5 text-3xl font-semibold tracking-tight text-text sm:text-4xl">Tu carrito</h1>
+        <app-eyebrow color="bark">Checkout</app-eyebrow>
+        <h1 class="mt-1.5 text-3xl font-semibold tracking-tight text-text sm:text-4xl">
+          Tu carrito
+        </h1>
         <p class="mt-2 text-base text-text-muted">
-          Retirás en <strong class="font-semibold text-text">{{ branchLabel() }}</strong>.
+          Retirás en <strong class="font-semibold text-text">{{ branchLabel() }}</strong
+          >.
         </p>
       </div>
       <app-button variant="secondary" icon="pi pi-arrow-left" (click)="continueShopping()">
@@ -16,18 +19,29 @@
 
     <!-- Success -->
     @if (createdOrder(); as order) {
-      <div class="rounded-xl border border-primary/10 bg-white p-8 shadow-card sm:p-10" data-testid="checkout-success">
+      <div
+        class="rounded-xl border border-primary/10 bg-white p-8 shadow-card sm:p-10"
+        data-testid="checkout-success"
+      >
         <div class="flex items-start gap-5">
-          <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary">
+          <span
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
+          >
             <i class="pi pi-check text-2xl"></i>
           </span>
           <div class="min-w-0 flex-1">
-            <h2 class="text-2xl font-semibold tracking-tight text-text">Pedido {{ order.orderNumber }} creado</h2>
-            <p class="mt-2 text-base text-text-muted">Guardamos tu pedido. El pago se confirmará con Mercado Pago.</p>
+            <h2 class="text-2xl font-semibold tracking-tight text-text">
+              Pedido {{ order.orderNumber }} creado
+            </h2>
+            <p class="mt-2 text-base text-text-muted">
+              Guardamos tu pedido. El pago se confirmará con Mercado Pago.
+            </p>
             <div class="mt-6 grid gap-4 sm:grid-cols-2">
               <div class="rounded-lg bg-surface-warm p-4">
                 <dt class="text-xs font-bold uppercase tracking-wider text-text-muted">Total</dt>
-                <dd class="mt-1 text-2xl font-semibold text-text">{{ formatCurrency(order.total) }}</dd>
+                <dd class="mt-1 text-2xl font-semibold text-text">
+                  {{ formatCurrency(order.total) }}
+                </dd>
               </div>
               <div class="rounded-lg bg-mint-wash/40 p-4">
                 <dt class="text-xs font-bold uppercase tracking-wider text-text-muted">Estado</dt>
@@ -35,8 +49,12 @@
               </div>
             </div>
             <div class="mt-8 flex flex-wrap gap-3">
-              <app-button variant="primary" icon="pi pi-credit-card" [disabled]="true">Continuar al pago</app-button>
-              <app-button variant="secondary" icon="pi pi-receipt" routerLink="/customer/orders">Ver mis pedidos</app-button>
+              <app-button variant="primary" icon="pi pi-credit-card" [disabled]="true"
+                >Continuar al pago</app-button
+              >
+              <app-button variant="secondary" icon="pi pi-receipt" routerLink="/customer/orders"
+                >Ver mis pedidos</app-button
+              >
             </div>
           </div>
         </div>
@@ -45,7 +63,9 @@
 
     <!-- Empty -->
     @if (cart.isEmpty() && !createdOrder()) {
-      <div class="rounded-xl border border-dashed border-primary/20 bg-white p-10 text-center shadow-card sm:p-14">
+      <div
+        class="rounded-xl border border-dashed border-primary/20 bg-white p-10 text-center shadow-card sm:p-14"
+      >
         <app-empty-state
           icon="pi pi-shopping-bag"
           title="Tu carrito está vacío"
@@ -65,9 +85,15 @@
             <div class="rounded-xl bg-white p-5 shadow-card sm:p-6" data-testid="checkout-line">
               <div class="flex gap-5">
                 <!-- Image -->
-                <div class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-warm sm:h-28 sm:w-28">
+                <div
+                  class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-warm sm:h-28 sm:w-28"
+                >
                   @if (item.imageUrl) {
-                    <img [src]="item.imageUrl" [alt]="item.name" class="h-full w-full object-cover" />
+                    <img
+                      [src]="item.imageUrl"
+                      [alt]="item.name"
+                      class="h-full w-full object-cover"
+                    />
                   } @else {
                     <i class="pi pi-image text-3xl text-primary/30"></i>
                   }
@@ -78,7 +104,9 @@
                   <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
                       <h2 class="text-lg font-semibold text-text">{{ item.name }}</h2>
-                      <p class="mt-1 text-base text-text-muted">{{ formatCurrency(item.price) }} por unidad</p>
+                      <p class="mt-1 text-base text-text-muted">
+                        {{ formatCurrency(item.price) }} por unidad
+                      </p>
                     </div>
                     <span class="shrink-0 text-xl font-semibold text-text">
                       {{ formatCurrency(item.price * item.quantity) }}
@@ -88,12 +116,16 @@
                   <div class="mt-auto flex items-center justify-between pt-4">
                     <div>
                       @if (item.availableStock != null && item.availableStock <= 5) {
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-tint px-3 py-1 text-sm font-semibold text-amber-text">
+                        <span
+                          class="inline-flex items-center gap-1.5 rounded-full bg-amber-tint px-3 py-1 text-sm font-semibold text-amber-text"
+                        >
                           <i class="pi pi-exclamation-circle text-xs"></i>
                           Stock: {{ item.availableStock }}
                         </span>
                       } @else if (item.availableStock != null) {
-                        <span class="text-sm text-text-muted">Stock disponible: {{ item.availableStock }}</span>
+                        <span class="text-sm text-text-muted"
+                          >Stock disponible: {{ item.availableStock }}</span
+                        >
                       }
                     </div>
 
@@ -142,7 +174,10 @@
               <div class="border-t border-border-warm pt-4">
                 <div class="flex items-baseline justify-between">
                   <dt class="text-lg font-semibold text-text">Total</dt>
-                  <dd class="text-right text-3xl font-bold tracking-tight text-text" data-testid="checkout-total">
+                  <dd
+                    class="text-right text-3xl font-bold tracking-tight text-text"
+                    data-testid="checkout-total"
+                  >
                     {{ formatCurrency(cart.total()) }}
                   </dd>
                 </div>
@@ -153,11 +188,15 @@
           <!-- Delivery -->
           <div class="rounded-xl bg-white p-5 shadow-card">
             <div class="flex items-center gap-4">
-              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary">
+              <span
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
+              >
                 <i class="pi pi-map-marker"></i>
               </span>
               <div class="min-w-0 flex-1">
-                <p class="text-xs font-bold uppercase tracking-wider text-text-muted">Retiro en local</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-text-muted">
+                  Retiro en local
+                </p>
                 <p class="mt-0.5 text-sm font-semibold text-text">{{ branchLabel() }}</p>
               </div>
               <i class="pi pi-check-circle text-xl text-primary"></i>
@@ -167,11 +206,15 @@
           <!-- Payment -->
           <div class="rounded-xl bg-white p-5 shadow-card">
             <div class="flex items-center gap-4">
-              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary">
+              <span
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
+              >
                 <i class="pi pi-credit-card"></i>
               </span>
               <div class="min-w-0 flex-1">
-                <p class="text-xs font-bold uppercase tracking-wider text-text-muted">Método de pago</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-text-muted">
+                  Método de pago
+                </p>
                 <p class="mt-0.5 text-sm font-semibold text-text">Mercado Pago</p>
               </div>
               <i class="pi pi-check-circle text-xl text-primary"></i>
@@ -182,7 +225,9 @@
           @if (hasCustomerData()) {
             <div class="rounded-xl bg-white p-5 shadow-card">
               <div class="flex items-center gap-4">
-                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary">
+                <span
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
+                >
                   <i class="pi pi-user"></i>
                 </span>
                 <div class="min-w-0 flex-1">
@@ -195,7 +240,7 @@
           }
 
           @if (errorMessage(); as message) {
-            <p-message class="block" severity="error" [text]="message" />
+            <app-error-alert variant="inline" [title]="''" [message]="message" />
           }
 
           <app-button
@@ -210,7 +255,9 @@
           </app-button>
 
           @if (branchMissing()) {
-            <p class="text-center text-sm text-text-muted">Elegí una sucursal de retiro en el menú superior.</p>
+            <p class="text-center text-sm text-text-muted">
+              Elegí una sucursal de retiro en el menú superior.
+            </p>
           }
         </aside>
       </div>

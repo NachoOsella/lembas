@@ -1,7 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { MessageModule } from 'primeng/message';
 
 import { AuthService } from '../../../core/services/auth';
 import { Cart, CartItem } from '../../../core/services/cart';
@@ -10,18 +9,12 @@ import { StoreBranchSelectionService } from '../../../core/services/store-branch
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
+import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { QuantityStepper } from '../../../shared/components/quantity-stepper/quantity-stepper';
 
 @Component({
   selector: 'app-checkout',
-  imports: [
-    RouterLink,
-    AppButton,
-    AppEyebrow,
-    EmptyState,
-    QuantityStepper,
-    MessageModule,
-  ],
+  imports: [RouterLink, AppButton, AppEyebrow, EmptyState, ErrorAlert, QuantityStepper],
   templateUrl: './checkout.html',
   styleUrl: './checkout.css',
 })
@@ -71,9 +64,7 @@ export class Checkout {
     if (code === 'ACCESS_DENIED') {
       return 'Necesitás iniciar sesión como cliente para confirmar el pedido.';
     }
-    return code
-      ? 'No pudimos crear el pedido. Intentá nuevamente en unos segundos.'
-      : null;
+    return code ? 'No pudimos crear el pedido. Intentá nuevamente en unos segundos.' : null;
   });
 
   /** Whether the user data is available for display. */

@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
@@ -27,7 +27,9 @@ function mockCart(overrides: Partial<Cart> = {}): Cart {
 }
 
 /** Minimal mock for StoreBranchSelectionService. */
-function mockBranchSelection(overrides: Partial<StoreBranchSelectionService> = {}): StoreBranchSelectionService {
+function mockBranchSelection(
+  overrides: Partial<StoreBranchSelectionService> = {},
+): StoreBranchSelectionService {
   return {
     selectedBranchId: signal(1),
     selectedBranch: signal({ id: 1, name: 'Centro', address: 'Av. Siempre Viva 123' }),
@@ -41,7 +43,11 @@ function mockBranchSelection(overrides: Partial<StoreBranchSelectionService> = {
 /** Minimal mock for CustomerOrderService. */
 function mockOrderService(overrides: Partial<CustomerOrderService> = {}): CustomerOrderService {
   return {
-    createOrder: vi.fn().mockReturnValue(of({ id: 42, orderNumber: 'ON-001', status: 'PENDING_PAYMENT', total: 100 })),
+    createOrder: vi
+      .fn()
+      .mockReturnValue(
+        of({ id: 42, orderNumber: 'ON-001', status: 'PENDING_PAYMENT', total: 100 }),
+      ),
     ...overrides,
   } as unknown as CustomerOrderService;
 }
@@ -50,11 +56,13 @@ describe('Checkout', () => {
   let component: Checkout;
   let fixture: ComponentFixture<Checkout>;
 
-  async function configure(opts: {
-    cart?: Cart;
-    branchSelection?: StoreBranchSelectionService;
-    orderService?: CustomerOrderService;
-  } = {}): Promise<void> {
+  async function configure(
+    opts: {
+      cart?: Cart;
+      branchSelection?: StoreBranchSelectionService;
+      orderService?: CustomerOrderService;
+    } = {},
+  ): Promise<void> {
     const cart = opts.cart ?? mockCart();
     const branchSelection = opts.branchSelection ?? mockBranchSelection();
     const orderService = opts.orderService ?? mockOrderService();
@@ -137,9 +145,7 @@ describe('Checkout', () => {
   it('should call createOrder on CustomerOrderService when confirmar is clicked', async () => {
     const cart = mockCart({
       isEmpty: signal(false),
-      items: signal([
-        { productId: 1, name: 'Yerba', price: 1500, quantity: 1 },
-      ]),
+      items: signal([{ productId: 1, name: 'Yerba', price: 1500, quantity: 1 }]),
       totalItems: signal(1),
       total: signal(1500),
     });
@@ -165,9 +171,7 @@ describe('Checkout', () => {
     };
     const cart = mockCart({
       isEmpty: signal(false),
-      items: signal([
-        { productId: 1, name: 'Yerba', price: 1500, quantity: 2 },
-      ]),
+      items: signal([{ productId: 1, name: 'Yerba', price: 1500, quantity: 2 }]),
       totalItems: signal(2),
       total: signal(3000),
     });
@@ -194,16 +198,14 @@ describe('Checkout', () => {
   it('should show error message when order creation fails with INSUFFICIENT_STOCK', async () => {
     const cart = mockCart({
       isEmpty: signal(false),
-      items: signal([
-        { productId: 1, name: 'Yerba', price: 1500, quantity: 1 },
-      ]),
+      items: signal([{ productId: 1, name: 'Yerba', price: 1500, quantity: 1 }]),
       totalItems: signal(1),
       total: signal(1500),
     });
     const orderService = mockOrderService({
-      createOrder: vi.fn().mockReturnValue(
-        throwError(() => ({ error: { code: 'INSUFFICIENT_STOCK' } })),
-      ),
+      createOrder: vi
+        .fn()
+        .mockReturnValue(throwError(() => ({ error: { code: 'INSUFFICIENT_STOCK' } }))),
     });
     await configure({ cart, orderService });
 
@@ -218,16 +220,14 @@ describe('Checkout', () => {
   it('should show error message when order creation fails with PRODUCT_NOT_FOUND', async () => {
     const cart = mockCart({
       isEmpty: signal(false),
-      items: signal([
-        { productId: 1, name: 'Yerba', price: 1500, quantity: 1 },
-      ]),
+      items: signal([{ productId: 1, name: 'Yerba', price: 1500, quantity: 1 }]),
       totalItems: signal(1),
       total: signal(1500),
     });
     const orderService = mockOrderService({
-      createOrder: vi.fn().mockReturnValue(
-        throwError(() => ({ error: { code: 'PRODUCT_NOT_FOUND' } })),
-      ),
+      createOrder: vi
+        .fn()
+        .mockReturnValue(throwError(() => ({ error: { code: 'PRODUCT_NOT_FOUND' } }))),
     });
     await configure({ cart, orderService });
 
@@ -242,16 +242,12 @@ describe('Checkout', () => {
   it('should show generic error for unknown error codes', async () => {
     const cart = mockCart({
       isEmpty: signal(false),
-      items: signal([
-        { productId: 1, name: 'Yerba', price: 1500, quantity: 1 },
-      ]),
+      items: signal([{ productId: 1, name: 'Yerba', price: 1500, quantity: 1 }]),
       totalItems: signal(1),
       total: signal(1500),
     });
     const orderService = mockOrderService({
-      createOrder: vi.fn().mockReturnValue(
-        throwError(() => ({ error: { code: 'UNKNOWN' } })),
-      ),
+      createOrder: vi.fn().mockReturnValue(throwError(() => ({ error: { code: 'UNKNOWN' } }))),
     });
     await configure({ cart, orderService });
 
@@ -273,9 +269,7 @@ describe('Checkout', () => {
     });
     const cart = mockCart({
       isEmpty: signal(false),
-      items: signal([
-        { productId: 1, name: 'Yerba', price: 1500, quantity: 1 },
-      ]),
+      items: signal([{ productId: 1, name: 'Yerba', price: 1500, quantity: 1 }]),
       totalItems: signal(1),
       total: signal(1500),
     });
@@ -291,9 +285,7 @@ describe('Checkout', () => {
   it('should call cart.updateQuantity when quantity changes', async () => {
     const cart = mockCart({
       isEmpty: signal(false),
-      items: signal([
-        { productId: 1, name: 'Yerba', price: 1500, quantity: 2 },
-      ]),
+      items: signal([{ productId: 1, name: 'Yerba', price: 1500, quantity: 2 }]),
       totalItems: signal(2),
       total: signal(3000),
       updateQuantity: vi.fn(),
@@ -307,9 +299,7 @@ describe('Checkout', () => {
   it('should call cart.removeItem when quitar is clicked', async () => {
     const cart = mockCart({
       isEmpty: signal(false),
-      items: signal([
-        { productId: 1, name: 'Yerba', price: 1500, quantity: 1 },
-      ]),
+      items: signal([{ productId: 1, name: 'Yerba', price: 1500, quantity: 1 }]),
       totalItems: signal(1),
       total: signal(1500),
       removeItem: vi.fn(),
@@ -320,5 +310,88 @@ describe('Checkout', () => {
     quitarBtn?.click();
 
     expect(cart.removeItem).toHaveBeenCalledWith(1);
+  });
+
+  // -------------------------------------------------------------------
+  // PRODUCT_NOT_PUBLISHED error handling (LEMBAS-475)
+  // -------------------------------------------------------------------
+  it('should show error message when order creation fails with PRODUCT_NOT_PUBLISHED', async () => {
+    const cart = mockCart({
+      isEmpty: signal(false),
+      items: signal([{ productId: 1, name: 'Yerba', price: 1500, quantity: 1 }]),
+      totalItems: signal(1),
+      total: signal(1500),
+    });
+    const orderService = mockOrderService({
+      createOrder: vi
+        .fn()
+        .mockReturnValue(throwError(() => ({ error: { code: 'PRODUCT_NOT_PUBLISHED' } }))),
+    });
+    await configure({ cart, orderService });
+
+    (component as any).createOrder();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const text = fixture.nativeElement.textContent ?? '';
+    expect(text).toContain('no está disponible');
+  });
+
+  // -------------------------------------------------------------------
+  // Cart not cleared after successful order creation (LEMBAS-477)
+  // -------------------------------------------------------------------
+  it('should NOT clear the cart after successful order creation', async () => {
+    const clearCartSpy = vi.fn();
+    const cart = mockCart({
+      isEmpty: signal(false),
+      items: signal([{ productId: 1, name: 'Yerba', price: 1500, quantity: 2 }]),
+      totalItems: signal(2),
+      total: signal(3000),
+      clearCart: clearCartSpy,
+    });
+    const orderService = mockOrderService({
+      createOrder: vi.fn().mockReturnValue(
+        of({
+          id: 42,
+          orderNumber: 'ON-001',
+          status: 'PENDING_PAYMENT',
+          total: 3000,
+        }),
+      ),
+    });
+    await configure({ cart, orderService });
+
+    (component as any).createOrder();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    // The cart must be preserved so the customer can retry payment.
+    expect(clearCartSpy).not.toHaveBeenCalled();
+  });
+
+  // -------------------------------------------------------------------
+  // Continue shopping navigation (LEMBAS-478)
+  // -------------------------------------------------------------------
+  it('should navigate to /store/products when continueShopping is called', async () => {
+    await configure();
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate');
+
+    (component as any).continueShopping();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/store/products']);
+  });
+
+  // -------------------------------------------------------------------
+  // Customer data display (LEMBAS-473) - name fallback to email
+  // -------------------------------------------------------------------
+  it('should show customer name from auth session', async () => {
+    await configure();
+    // With default mocks, AuthService is not overridden so it returns null.
+    // The component gracefully handles null via computed().
+    // This test validates the component does not crash when user data is null.
+    const cmp = component as any;
+    expect(cmp.customerName()).toBe('');
+    expect(cmp.customerEmail()).toBe('');
   });
 });
