@@ -1,5 +1,9 @@
 # Registro de uso de IA
 
+## 2026-06-15
+
+- `frontend/src/app/features/customer/order-detail/` -- ajustada la seccion de seguimiento del detalle de pedido con timeline vertical simple, estados done/current/upcoming/alert y estilos sobrios alineados a `frontend/DESING.md`. Build frontend verde.
+
 ## 2026-06-12
 
 - `backend/src/main/java/com/dietetica/lembas/catalog/`, `backend/src/main/java/com/dietetica/lembas/orders/`, `frontend/src/app/core/services/{cart,customer-order}.ts`, `frontend/src/app/features/{public-store,customer}/` -- implementadas las user stories Jira en In Progress: disponibilidad real por sucursal cuando se envia `branchId`, carrito local con signals/localStorage y checkout que crea orden ONLINE `PENDING_PAYMENT` sin reservar stock. Documentacion de endpoints actualizada y tests/build verdes.
