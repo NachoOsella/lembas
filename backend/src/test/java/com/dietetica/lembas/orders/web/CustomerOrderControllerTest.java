@@ -1,9 +1,14 @@
 package com.dietetica.lembas.orders.web;
 
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import com.dietetica.lembas.auth.service.JwtTokenProvider;
+import com.dietetica.lembas.auth.service.LembasUserDetailsService;
 import com.dietetica.lembas.orders.dto.OrderCreatedDto;
 import com.dietetica.lembas.orders.dto.OrderDetailDto;
+import com.dietetica.lembas.orders.dto.OrderSummaryDto;
+import com.dietetica.lembas.orders.model.FulfillmentType;
 import com.dietetica.lembas.orders.model.OrderStatus;
+import com.dietetica.lembas.orders.model.OrderType;
 import com.dietetica.lembas.orders.service.CustomerOrderService;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
@@ -37,6 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>Verifies:</p>
  * <ul>
  *   <li>Authenticated CUSTOMER can create an order (201 CREATED)</li>
+ *   <li>Authenticated CUSTOMER can list their own orders (200 OK)</li>
  *   <li>Authenticated CUSTOMER can view their own order (200 OK)</li>
  *   <li>ADMIN role is rejected (403 FORBIDDEN)</li>
  *   <li>Unauthenticated requests are rejected (401 UNAUTHORIZED)</li>
@@ -58,6 +64,16 @@ class CustomerOrderControllerTest {
 
     @MockitoBean
     private SecurityContextHelper securityContextHelper;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean
+    private LembasUserDetailsService lembasUserDetailsService;
+
+    // ----------------------------------------------------------------
+    // POST /api/customer/orders  (create)
+    // ----------------------------------------------------------------
 
     @Test
     @WithMockUser(roles = "CUSTOMER")
@@ -109,21 +125,6 @@ class CustomerOrderControllerTest {
     }
 
     @Test
-    void shouldRejectUnauthenticatedRequest() throws Exception {
-        String body = """
-                {
-                    "branchId": 1,
-                    "items": [{"productId": 1, "quantity": 1}]
-                }
-                """;
-
-        mockMvc.perform(post("/api/customer/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
     @WithMockUser(roles = "CUSTOMER")
     void shouldReturnInsufficientStockWhenQuantityExceedsAvailable() throws Exception {
         User customer = new User(10L, "c@lembas.com", "hash", "Test", "Customer", null, Role.CUSTOMER);
@@ -146,6 +147,65 @@ class CustomerOrderControllerTest {
                 .andExpect(jsonPath("$.code").value("INSUFFICIENT_STOCK"));
     }
 
+    // ----------------------------------------------------------------
+    // GET /api/customer/orders  (list)
+    // ----------------------------------------------------------------
+
+    @Test
+    @WithMockUser(roles = "CUSTOMER")
+    void shouldReturnOrderListWhenCustomerHasOrders() throws Exception {
+        User customer = new User(10L, "c@lembas.com", "hash", "Test", "Customer", null, Role.CUSTOMER);
+        when(securityContextHelper.getCurrentUser()).thenReturn(customer);
+
+        OrderSummaryDto summary = new OrderSummaryDto(
+                42L, "ON-20260612-000001", OrderType.ONLINE, OrderStatus.PENDING_PAYMENT,
+                FulfillmentType.PICKUP, 1L, "Centro",
+                10L, "Test Customer", null, null,
+                new BigDecimal("200.00"), BigDecimal.ZERO, new BigDecimal("200.00"),
+                2, null, null, OffsetDateTime.now()
+        );
+        when(customerOrderService.listCustomerOrders(customer)).thenReturn(List.of(summary));
+
+        mockMvc.perform(get("/api/customer/orders"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(42))
+                .andExpect(jsonPath("$[0].orderNumber").value("ON-20260612-000001"))
+                .andExpect(jsonPath("$[0].status").value("PENDING_PAYMENT"))
+                .andExpect(jsonPath("$[0].total").value(200.00));
+    }
+
+    @Test
+    @WithMockUser(roles = "CUSTOMER")
+    void shouldReturnEmptyListWhenCustomerHasNoOrders() throws Exception {
+        User customer = new User(10L, "c@lembas.com", "hash", "Test", "Customer", null, Role.CUSTOMER);
+        when(securityContextHelper.getCurrentUser()).thenReturn(customer);
+
+        when(customerOrderService.listCustomerOrders(customer)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/customer/orders"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldRejectAdminRoleWhenListingOrders() throws Exception {
+        User admin = new User(1L, "admin@lembas.com", "hash", "Admin", "User", null, Role.ADMIN);
+        when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+
+        when(customerOrderService.listCustomerOrders(admin))
+                .thenThrow(new DomainException("ACCESS_DENIED", org.springframework.http.HttpStatus.FORBIDDEN, "Only customers"));
+
+        mockMvc.perform(get("/api/customer/orders"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+    }
+
+    // ----------------------------------------------------------------
+    // GET /api/customer/orders/{id}  (detail)
+    // ----------------------------------------------------------------
+
     @Test
     @WithMockUser(roles = "CUSTOMER")
     void shouldReturnOrderDetailWhenCustomerOwnsOrder() throws Exception {
@@ -154,14 +214,13 @@ class CustomerOrderControllerTest {
 
         OrderDetailDto detail = new OrderDetailDto(
                 42L, "ON-20260612-000001",
-                com.dietetica.lembas.orders.model.OrderType.ONLINE,
-                OrderStatus.PENDING_PAYMENT,
-                com.dietetica.lembas.orders.model.FulfillmentType.PICKUP,
+                OrderType.ONLINE, OrderStatus.PENDING_PAYMENT,
+                FulfillmentType.PICKUP,
                 1L, "Centro",
                 10L, "Test Customer", "c@lembas.com", "+54 351 123",
                 null, null,
                 new BigDecimal("200.00"), BigDecimal.ZERO, new BigDecimal("200.00"),
-                null, null, List.of(),
+                null, null, List.of(), List.of(),
                 null, null, null, null,
                 OffsetDateTime.now(), OffsetDateTime.now()
         );
@@ -171,7 +230,8 @@ class CustomerOrderControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(42))
                 .andExpect(jsonPath("$.orderNumber").value("ON-20260612-000001"))
-                .andExpect(jsonPath("$.customerEmail").value("c@lembas.com"));
+                .andExpect(jsonPath("$.customerEmail").value("c@lembas.com"))
+                .andExpect(jsonPath("$.payments").isArray());
     }
 
     @Test

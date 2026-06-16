@@ -5,6 +5,8 @@ import com.dietetica.lembas.orders.dto.OrderItemDto;
 import com.dietetica.lembas.orders.dto.OrderSummaryDto;
 import com.dietetica.lembas.orders.model.Order;
 import com.dietetica.lembas.orders.model.OrderItem;
+import com.dietetica.lembas.payments.dto.PaymentSummaryDto;
+import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.users.model.User;
 import org.springframework.stereotype.Component;
@@ -49,6 +51,9 @@ class OrderMapper {
         List<OrderItemDto> items = order.getItems() == null
                 ? List.of()
                 : order.getItems().stream().map(this::toItemDto).toList();
+        List<PaymentSummaryDto> payments = order.getPayments() == null
+                ? List.of()
+                : order.getPayments().stream().map(this::toPaymentSummaryDto).toList();
         return new OrderDetailDto(
                 order.getId(),
                 order.getOrderNumber(),
@@ -69,6 +74,7 @@ class OrderMapper {
                 order.getNotes(),
                 order.getCancellationReason(),
                 items,
+                payments,
                 order.getPaidAt(),
                 order.getPreparedAt(),
                 order.getDeliveredAt(),
@@ -90,6 +96,19 @@ class OrderMapper {
                 item.getUnitPrice(),
                 item.getDiscountAmount(),
                 item.getSubtotalAmount()
+        );
+    }
+
+    /** Maps a payment entity to a lightweight summary for order detail. */
+    private PaymentSummaryDto toPaymentSummaryDto(Payment payment) {
+        return new PaymentSummaryDto(
+                payment.getId(),
+                payment.getProvider(),
+                payment.getMethod(),
+                payment.getStatus(),
+                payment.getAmount(),
+                payment.getApprovedAt(),
+                payment.getCreatedAt()
         );
     }
 

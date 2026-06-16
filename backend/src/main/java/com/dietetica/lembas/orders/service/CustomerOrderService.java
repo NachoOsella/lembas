@@ -8,6 +8,7 @@ import com.dietetica.lembas.orders.dto.CreateOnlineOrderItemRequest;
 import com.dietetica.lembas.orders.dto.CreateOnlineOrderRequest;
 import com.dietetica.lembas.orders.dto.OrderCreatedDto;
 import com.dietetica.lembas.orders.dto.OrderDetailDto;
+import com.dietetica.lembas.orders.dto.OrderSummaryDto;
 import com.dietetica.lembas.orders.model.FulfillmentType;
 import com.dietetica.lembas.orders.model.Order;
 import com.dietetica.lembas.orders.model.OrderItem;
@@ -108,6 +109,16 @@ public class CustomerOrderService {
                         && candidate.getCustomerUser().getId().equals(customer.getId()))
                 .orElseThrow(() -> new DomainException("ORDER_NOT_FOUND", HttpStatus.NOT_FOUND, "Order not found"));
         return orderMapper.toDetailDto(order);
+    }
+
+    /** Returns the authenticated customer's own orders, newest first. */
+    @Transactional(readOnly = true)
+    public List<OrderSummaryDto> listCustomerOrders(User customer) {
+        validateCustomer(customer);
+        return orderRepository.findByCustomerUserIdOrderByCreatedAtDesc(customer.getId())
+                .stream()
+                .map(orderMapper::toSummaryDto)
+                .toList();
     }
 
     /** Coalesces duplicated product lines while preserving first-seen ordering. */

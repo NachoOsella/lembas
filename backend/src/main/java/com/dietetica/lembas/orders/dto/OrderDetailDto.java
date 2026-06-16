@@ -3,6 +3,7 @@ package com.dietetica.lembas.orders.dto;
 import com.dietetica.lembas.orders.model.FulfillmentType;
 import com.dietetica.lembas.orders.model.OrderStatus;
 import com.dietetica.lembas.orders.model.OrderType;
+import com.dietetica.lembas.payments.dto.PaymentSummaryDto;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -29,6 +30,7 @@ public record OrderDetailDto(
         String notes,
         String cancellationReason,
         List<OrderItemDto> items,
+        List<PaymentSummaryDto> payments,
         OffsetDateTime paidAt,
         OffsetDateTime preparedAt,
         OffsetDateTime deliveredAt,

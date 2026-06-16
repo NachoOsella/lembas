@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 /** Repository for the unified {@link Order} aggregate. */
@@ -22,4 +23,7 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @EntityGraph(attributePaths = {"branch", "customerUser", "createdByUser", "items", "items.product"})
     @Query("select o from Order o where o.id = :id")
     Optional<Order> findWithItemsById(@Param("id") Long id);
+
+    /** Lists a customer's orders by creation date, newest first. */
+    List<Order> findByCustomerUserIdOrderByCreatedAtDesc(Long customerUserId);
 }
