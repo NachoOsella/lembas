@@ -1,1 +1,142 @@
-<p>orders works!</p>
+<section class="min-h-screen bg-canvas py-10 text-text sm:py-14">
+  <div class="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
+    <!-- Header -->
+    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div class="min-w-0">
+        <app-eyebrow color="bark">Mis pedidos</app-eyebrow>
+        <h1 class="mt-1.5 text-3xl font-semibold tracking-tight text-text sm:text-4xl">
+          Historial de compras
+        </h1>
+      </div>
+      <app-button variant="secondary" icon="pi pi-arrow-left" (click)="goToStore()">
+        Seguir comprando
+      </app-button>
+    </header>
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="flex justify-center py-20">
+        <app-loading-spinner />
+      </div>
+    }
+
+    <!-- Error -->
+    @else if (error()) {
+      <div class="mx-auto max-w-lg">
+        <app-error-alert
+          title="No pudimos cargar tus pedidos"
+          message="Intentá nuevamente en unos segundos."
+        />
+        <div class="mt-6 text-center">
+          <app-button variant="secondary" icon="pi pi-refresh" (click)="loadOrders()">
+            Reintentar
+          </app-button>
+        </div>
+      </div>
+    }
+
+    <!-- Empty -->
+    @else if (orders().length === 0) {
+      <app-empty-state
+        icon="pi pi-receipt"
+        title="Aun no tenes pedidos"
+        description="Cuando hagas tu primer pedido, va a aparecer aca."
+        actionLabel="Ir a la tienda"
+        (action)="goToStore()"
+      />
+    }
+
+    <!-- Data table (desktop) -->
+    @else {
+      <div class="hidden sm:block">
+        <app-data-table
+          [data]="orders()"
+          [columns]="columns"
+          [paginated]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[5, 10, 20]"
+          sortField="createdAt"
+          [sortOrder]="-1"
+          emptyTitle="No tenes pedidos"
+          emptyDescription="Cuando hagas tu primer pedido, va a aparecer aca."
+        >
+          <ng-template #body let-order let-columns="columns">
+            <tr (click)="viewOrder(order.id)" class="cursor-pointer">
+              <td>
+                <span class="text-sm font-semibold text-primary">{{ order.orderNumber }}</span>
+              </td>
+              <td class="text-sm text-text-muted">{{ formatDate(order.createdAt) }}</td>
+              <td>
+                <span
+                  class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider"
+                  [class]="
+                    statusSeverity(order.status) === 'success'
+                      ? 'bg-mint-wash text-primary'
+                      : statusSeverity(order.status) === 'danger'
+                        ? 'bg-red-50 text-red'
+                        : statusSeverity(order.status) === 'warn'
+                          ? 'bg-amber-tint text-amber-text'
+                          : 'bg-surface-warm text-text-muted'
+                  "
+                >
+                  {{ statusLabel(order.status) }}
+                </span>
+              </td>
+              <td class="text-right text-base font-semibold text-text">
+                {{ formatCurrency(order.total) }}
+              </td>
+              <td class="text-center">
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center rounded-full p-2 text-text-muted transition-colors hover:bg-mint-wash hover:text-primary"
+                  [attr.aria-label]="'Ver pedido ' + order.orderNumber"
+                >
+                  <i class="pi pi-eye"></i>
+                </button>
+              </td>
+            </tr>
+          </ng-template>
+        </app-data-table>
+      </div>
+
+      <!-- Mobile card list -->
+      <div class="space-y-4 sm:hidden">
+        @for (order of orders(); track order.id) {
+          <div
+            class="rounded-xl bg-white p-5 shadow-card"
+            (click)="viewOrder(order.id)"
+            role="button"
+            [attr.aria-label]="'Ver pedido ' + order.orderNumber"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <span class="text-sm font-semibold text-primary">{{ order.orderNumber }}</span>
+              <span
+                class="inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider"
+                [class]="
+                  statusSeverity(order.status) === 'success'
+                    ? 'bg-mint-wash text-primary'
+                    : statusSeverity(order.status) === 'danger'
+                      ? 'bg-red-50 text-red'
+                      : statusSeverity(order.status) === 'warn'
+                        ? 'bg-amber-tint text-amber-text'
+                        : 'bg-surface-warm text-text-muted'
+                "
+              >
+                {{ statusLabel(order.status) }}
+              </span>
+            </div>
+            <div class="mt-4 flex items-end justify-between gap-3">
+              <div class="min-w-0 text-sm">
+                <p class="text-text-muted">{{ formatDate(order.createdAt) }}</p>
+                <p class="mt-0.5 font-semibold text-text">{{ order.branchName }}</p>
+              </div>
+              <span class="shrink-0 text-base font-semibold text-text">
+                {{ formatCurrency(order.total) }}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>

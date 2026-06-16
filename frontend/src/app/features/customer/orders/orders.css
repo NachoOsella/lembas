@@ -1,0 +1,4 @@
+/* Extra spacing for the orders list page. */
+:host {
+  display: block;
+}

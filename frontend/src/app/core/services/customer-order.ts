@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { OrderDetail, OrderSummary } from '../../shared/models/order';
+
 /** Request line used to create an online order from the local cart. */
 export interface CreateOnlineOrderItemRequest {
   readonly productId: number;
@@ -31,5 +33,15 @@ export class CustomerOrderService {
   /** Creates an online order without clearing the local cart. */
   createOrder(request: CreateOnlineOrderRequest): Observable<OrderCreated> {
     return this.http.post<OrderCreated>(this.ordersUrl, request);
+  }
+
+  /** Returns the authenticated customer's own orders, newest first. */
+  getOrders(): Observable<OrderSummary[]> {
+    return this.http.get<OrderSummary[]>(this.ordersUrl);
+  }
+
+  /** Returns full detail for one customer-owned order. */
+  getOrder(id: number): Observable<OrderDetail> {
+    return this.http.get<OrderDetail>(`${this.ordersUrl}/${id}`);
   }
 }
