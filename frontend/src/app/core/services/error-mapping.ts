@@ -86,21 +86,26 @@ export class ErrorMappingService {
     PURCHASE_ORDER_NOT_FOUND: 'La orden de compra solicitada no fue encontrada.',
     PURCHASE_ORDER_INVALID_STATE: 'La orden de compra ya no permite esa operacion.',
     PURCHASE_ORDER_EMPTY: 'La orden de compra debe tener al menos un item.',
-    PURCHASE_ORDER_SUPPLIER_PRODUCT_INVALID: 'El producto no esta asociado al proveedor seleccionado.',
-    PURCHASE_RECEIPT_INVALID_STATE: 'Solo se pueden recepcionar ordenes enviadas o parcialmente recibidas.',
+    PURCHASE_ORDER_SUPPLIER_PRODUCT_INVALID:
+      'El producto no esta asociado al proveedor seleccionado.',
+    PURCHASE_RECEIPT_INVALID_STATE:
+      'Solo se pueden recepcionar ordenes enviadas o parcialmente recibidas.',
     PURCHASE_RECEIPT_ITEM_INVALID: 'Un item de la recepcion no pertenece a la orden seleccionada.',
     PURCHASE_RECEIPT_ITEM_DUPLICATED: 'Hay items duplicados en la recepcion.',
-    PURCHASE_RECEIPT_OVER_RECEIVED: 'La cantidad recibida supera la cantidad pendiente de la orden.',
+    PURCHASE_RECEIPT_OVER_RECEIVED:
+      'La cantidad recibida supera la cantidad pendiente de la orden.',
 
     // Price update batch errors
     PRICE_BATCH_NOT_FOUND: 'El lote de precios no fue encontrado.',
     PRICE_BATCH_INVALID_STATE: 'El lote ya no permite esta operacion.',
-    PRICE_BATCH_HAS_UNRESOLVED_ITEMS: 'Resuelve filas en revision, con error o productos nuevos sin aprobar antes de aplicar.',
+    PRICE_BATCH_HAS_UNRESOLVED_ITEMS:
+      'Resuelve filas en revision, con error o productos nuevos sin aprobar antes de aplicar.',
     PRICE_BATCH_ITEM_INVALID: 'Una fila del lote tiene datos invalidos.',
     PRICE_BATCH_ITEM_NOT_FOUND: 'La fila del lote no fue encontrada.',
     PRICE_BATCH_FILE_EMPTY: 'El archivo del proveedor esta vacio.',
     PRICE_BATCH_FILE_UNSUPPORTED: 'Solo se admiten archivos CSV o XLSX validos.',
-    PRICE_BATCH_REQUIRED_COLUMNS_MISSING: 'El archivo debe incluir costo y al menos un identificador de producto.',
+    PRICE_BATCH_REQUIRED_COLUMNS_MISSING:
+      'El archivo debe incluir costo y al menos un identificador de producto.',
 
     // Database errors
     DATA_INTEGRITY_VIOLATION: 'Los datos ingresados conflictan con información existente.',
@@ -115,13 +120,20 @@ export class ErrorMappingService {
     ORDER_INVALID_STATE: 'No se puede realizar esta operación en el estado actual del pedido.',
 
     // Payment errors
-    ORDER_NOT_PAYABLE: 'Este pedido ya no acepta un pago online. Podes iniciar uno nuevo desde el catalogo.',
-    MP_PREFERENCE_REJECTED: 'Mercado Pago rechazo la solicitud de pago. Intenta nuevamente en unos minutos.',
-    MP_UNAUTHORIZED: 'Mercado Pago rechazo nuestras credenciales. Contactanos para que lo solucionemos.',
-    MP_UPSTREAM_ERROR: 'Mercado Pago no respondio correctamente. Intenta nuevamente en unos minutos.',
-    MP_UNREACHABLE: 'No pudimos comunicarnos con Mercado Pago. Verifica tu conexion e intenta nuevamente.',
-    MP_NOT_FOUND: 'La preferencia de pago ya no existe. Te llevamos al detalle del pedido para reintentarlo.',
-    MP_INVALID_RESPONSE: 'Mercado Pago devolvio una respuesta invalida. Contactanos con tu numero de pedido.',
+    ORDER_NOT_PAYABLE:
+      'Este pedido ya no acepta un pago online. Podes iniciar uno nuevo desde el catalogo.',
+    MP_PREFERENCE_REJECTED:
+      'Mercado Pago rechazo la solicitud de pago. Intenta nuevamente en unos minutos.',
+    MP_UNAUTHORIZED:
+      'Mercado Pago rechazo nuestras credenciales. Contactanos para que lo solucionemos.',
+    MP_UPSTREAM_ERROR:
+      'Mercado Pago no respondio correctamente. Intenta nuevamente en unos minutos.',
+    MP_UNREACHABLE:
+      'No pudimos comunicarnos con Mercado Pago. Verifica tu conexion e intenta nuevamente.',
+    MP_NOT_FOUND:
+      'La preferencia de pago ya no existe. Te llevamos al detalle del pedido para reintentarlo.',
+    MP_INVALID_RESPONSE:
+      'Mercado Pago devolvio una respuesta invalida. Contactanos con tu numero de pedido.',
     MP_INVALID_AMOUNT: 'El monto del pedido no es valido para iniciar un pago.',
     WEBHOOK_SIGNATURE_INVALID: 'No pudimos validar la notificacion de Mercado Pago.',
 

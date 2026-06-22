@@ -246,7 +246,9 @@
               [loading]="paying()"
               (click)="goToPayment()"
             >
-              {{ order()?.status === 'PAYMENT_FAILED' ? 'Reintentar pago' : 'Pagar con Mercado Pago' }}
+              {{
+                order()?.status === 'PAYMENT_FAILED' ? 'Reintentar pago' : 'Pagar con Mercado Pago'
+              }}
             </app-button>
           }
         </aside>

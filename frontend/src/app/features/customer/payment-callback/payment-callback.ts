@@ -90,7 +90,7 @@ export class PaymentCallback implements OnInit {
       error: (err: unknown) => {
         this.phase.set('error');
         this.errorCode.set(
-          (err as { error?: { code?: string } } | null)?.error?.code ?? 'INTERNAL_ERROR'
+          (err as { error?: { code?: string } } | null)?.error?.code ?? 'INTERNAL_ERROR',
         );
       },
     });

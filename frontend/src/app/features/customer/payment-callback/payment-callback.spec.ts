@@ -85,13 +85,14 @@ describe('PaymentCallback', () => {
 
   it('should show error state when orderId query param is missing', async () => {
     await configure(null);
-    expect((fixture.componentInstance as unknown as { phase: () => string }).phase()).toBe(
-      'error',
-    );
+    expect((fixture.componentInstance as unknown as { phase: () => string }).phase()).toBe('error');
   });
 
   it('should transition to success when the order is PAID', async () => {
-    await configure('42', orderServiceMock({ getOrder: vi.fn().mockReturnValue(of(detail({ status: 'PAID' }))) }));
+    await configure(
+      '42',
+      orderServiceMock({ getOrder: vi.fn().mockReturnValue(of(detail({ status: 'PAID' }))) }),
+    );
     expect((fixture.componentInstance as unknown as { phase: () => string }).phase()).toBe(
       'success',
     );
@@ -144,9 +145,7 @@ describe('PaymentCallback', () => {
       '42',
       orderServiceMock({ getOrder: vi.fn().mockReturnValue(throwError(() => new Error('boom'))) }),
     );
-    expect((fixture.componentInstance as unknown as { phase: () => string }).phase()).toBe(
-      'error',
-    );
+    expect((fixture.componentInstance as unknown as { phase: () => string }).phase()).toBe('error');
   });
 
   it('should navigate to /customer/orders when backToOrders is called', async () => {

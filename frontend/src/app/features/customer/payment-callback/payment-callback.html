@@ -32,15 +32,15 @@
           </h1>
           @if (order(); as o) {
             <p class="mt-3 text-sm text-text-muted sm:text-base">
-              Tu pedido <span class="font-semibold text-text">{{ o.orderNumber }}</span> fue
-              pagado correctamente por <span class="font-semibold text-text">{{
-                formatDate(o.paidAt)
-              }}</span>.
+              Tu pedido <span class="font-semibold text-text">{{ o.orderNumber }}</span> fue pagado
+              correctamente por
+              <span class="font-semibold text-text">{{ formatDate(o.paidAt) }}</span
+              >.
             </p>
             <p class="mt-1 text-sm text-text-muted sm:text-base">
-              Lo prepararemos en la sucursal <span class="font-semibold text-text">{{
-                o.branchName
-              }}</span> y te avisaremos cuando este listo para retirar.
+              Lo prepararemos en la sucursal
+              <span class="font-semibold text-text">{{ o.branchName }}</span> y te avisaremos cuando
+              este listo para retirar.
             </p>
           } @else {
             <p class="mt-3 text-sm text-text-muted">
@@ -116,8 +116,8 @@
             Tu pago esta siendo procesado
           </h1>
           <p class="mt-3 text-sm text-text-muted sm:text-base">
-            La notificacion de Mercado Pago todavia no impacto en nuestro sistema. Te avisaremos
-            por email cuando se acredite.
+            La notificacion de Mercado Pago todavia no impacto en nuestro sistema. Te avisaremos por
+            email cuando se acredite.
           </p>
           <div class="mt-8 flex flex-col gap-3 sm:flex-row">
             <app-button variant="primary" icon="pi pi-list" (click)="backToOrders()">
