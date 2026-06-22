@@ -9,9 +9,9 @@
 #   docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml up -d
 #   docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml logs -f ngrok
 #
-# The first log line includes the public https://<random>.ngrok-free.app URL.
+# The first log line includes the public https://<random>.ngrok-free.dev URL.
 # Copy that URL into the Mercado Pago webhook configuration as
-#   https://<random>.ngrok-free.app/api/webhooks/mercadopago
+#   https://<random>.ngrok-free.dev/api/webhooks/mercadopago
 #
 # The authtoken is intentionally NOT declared here: docker compose only
 # interpolates ${VAR} in compose files, not in bind-mounted config files,
@@ -23,7 +23,8 @@ version: "2"
 tunnels:
   backend:
     proto: http
-    addr: backend
+    addr: backend:8080
     schemes:
       - https
+    inspect: true
     host_header: rewrite
