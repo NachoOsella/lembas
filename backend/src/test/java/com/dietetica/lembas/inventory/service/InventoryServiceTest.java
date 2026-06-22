@@ -14,6 +14,7 @@ import com.dietetica.lembas.inventory.dto.StockMovementDto;
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import com.dietetica.lembas.inventory.repository.StockLotRepository;
 import com.dietetica.lembas.inventory.repository.StockMovementRepository;
+import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
@@ -60,6 +61,9 @@ class InventoryServiceTest {
     private BranchRepository branchRepository;
 
     @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
     private FefoStockDeductionPolicy fefoPolicy;
 
     @Mock
@@ -76,6 +80,7 @@ class InventoryServiceTest {
                 stockMovementRepository,
                 productRepository,
                 branchRepository,
+                orderRepository,
                 fefoPolicy,
                 securityContextHelper,
                 clock
