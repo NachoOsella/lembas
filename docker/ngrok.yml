@@ -23,7 +23,9 @@ version: "2"
 tunnels:
   backend:
     proto: http
-    addr: backend:8080
+    # Point at the Nginx web container so Angular SPA routes work.
+    # The backend API is reached via /api/* through nginx's proxy_pass.
+    addr: web:8080
     schemes:
       - https
     inspect: true
