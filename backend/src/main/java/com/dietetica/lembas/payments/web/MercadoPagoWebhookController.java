@@ -54,7 +54,9 @@ public class MercadoPagoWebhookController {
             @RequestBody MercadoPagoWebhookPayload payload
     ) {
         try {
-            String dataId = payload.data() != null ? payload.data().id() : payload.id();
+            String dataId = (payload.data() != null && payload.data().id() != null)
+                    ? payload.data().id()
+                    : payload.id();
             signatureValidator.validate(xSignature, xRequestId, dataId);
         } catch (DomainException ex) {
             log.warn("Rejected Mercado Pago webhook: {}", ex.getMessage());
