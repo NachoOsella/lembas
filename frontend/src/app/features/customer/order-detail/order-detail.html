@@ -243,9 +243,10 @@
               class="w-full"
               variant="primary"
               icon="pi pi-credit-card"
+              [loading]="paying()"
               (click)="goToPayment()"
             >
-              Ir al pago
+              {{ order()?.status === 'PAYMENT_FAILED' ? 'Reintentar pago' : 'Pagar con Mercado Pago' }}
             </app-button>
           }
         </aside>

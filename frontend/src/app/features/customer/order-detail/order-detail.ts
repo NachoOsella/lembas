@@ -1,7 +1,10 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
 
+import { CustomerCheckoutService } from '../../../core/services/customer-checkout';
 import { CustomerOrderService } from '../../../core/services/customer-order';
+import { ErrorMappingService } from '../../../core/services/error-mapping';
 import {
   OrderDetail as OrderDetailData,
   OrderStatus,
@@ -42,10 +45,14 @@ export class OrderDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(CustomerOrderService);
+  private readonly checkoutService = inject(CustomerCheckoutService);
+  private readonly errorMapping = inject(ErrorMappingService);
+  private readonly messageService = inject(MessageService);
 
   protected readonly loading = signal(true);
   protected readonly errorCode = signal<string | null>(null);
   protected readonly order = signal<OrderDetailData | null>(null);
+  protected readonly paying = signal(false);
 
   /** Whether the order is in a state that allows the customer to initiate payment. */
   protected readonly canPay = computed(() => this.order()?.status === 'PENDING_PAYMENT');
@@ -187,12 +194,39 @@ export class OrderDetail implements OnInit {
     });
   }
 
-  /** Navigates to the Mercado Pago checkout flow (placeholder until S3-US05). */
+  /** Navigates to the Mercado Pago checkout flow. */
   protected goToPayment(): void {
-    // In S3-US05, this will call POST /api/customer/orders/{id}/checkout/mp
-    // and redirect to the Mercado Pago init point.
-    // For now it navigates to a customer orders list with a toast explaining it's coming soon.
-    this.router.navigate(['/customer/orders']);
+    const current = this.order();
+    if (!current || this.paying()) {
+      return;
+    }
+    if (current.status !== 'PENDING_PAYMENT' && current.status !== 'PAYMENT_FAILED') {
+      return;
+    }
+    this.paying.set(true);
+    this.checkoutService.createPreference(current.id).subscribe({
+      next: (response) => {
+        if (response.initPoint) {
+          window.location.href = response.initPoint;
+          return;
+        }
+        this.paying.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo iniciar el pago',
+          detail: 'Mercado Pago no devolvio una URL de redireccion.',
+        });
+      },
+      error: (err: unknown) => {
+        this.paying.set(false);
+        const code = (err as { error?: { code?: string } } | null)?.error?.code;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo iniciar el pago',
+          detail: this.errorMapping.getMessage(code ?? 'INTERNAL_ERROR'),
+        });
+      },
+    });
   }
 
   /** Navigates back to the customer orders list. */
