@@ -86,13 +86,27 @@ public class MercadoPagoWebhookProcessor {
                         "PAYMENT_NOT_FOUND",
                         HttpStatus.NOT_FOUND,
                         "Payment not found for provider id " + paymentId));
-        if (statusMapper.isTerminal(payment.getStatus())) {
-            log.info("Skipping already-terminal payment {} (status={})", payment.getId(), payment.getStatus());
+        if (shouldSkipAsAlreadyProcessed(payment.getStatus(), newStatus)) {
+            log.info("Skipping already-processed payment {} (current={}, new={})",
+                    payment.getId(), payment.getStatus(), newStatus);
             return Optional.of(payment.getId());
         }
         applyPaymentState(payment, newStatus, providerState);
         applyOrderEffect(payment, newStatus);
         return Optional.of(payment.getId());
+    }
+
+    /**
+     * Returns true when the local payment is already in a terminal state that
+     * matches the incoming status, so reprocessing the same event would be a
+     * no-op. Forward transitions such as APPROVED -> REFUNDED are still
+     * applied because they reflect a new business event from the provider.
+     */
+    private boolean shouldSkipAsAlreadyProcessed(PaymentStatus current, PaymentStatus incoming) {
+        if (!statusMapper.isTerminal(current)) {
+            return false;
+        }
+        return current == incoming;
     }
 
     /** Extracts the provider payment id from a payload, preferring the nested data block. */
