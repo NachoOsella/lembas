@@ -1,8 +1,11 @@
 # Registro de uso de IA
 
-## 2026-06-15
+## 2026-06-22
 
-- `frontend/src/app/features/customer/order-detail/` -- ajustada la seccion de seguimiento del detalle de pedido con timeline vertical simple, estados done/current/upcoming/alert y estilos sobrios alineados a `frontend/DESING.md`. Build frontend verde.
+- `backend/src/main/java/com/dietetica/lembas/payments/{gateway,service,web,dto}/`, `backend/src/main/java/com/dietetica/lembas/inventory/service/InventoryService.java` -- implementadas LEMBAS-37/38/39/44 (S3-US01..04): `PaymentGateway` + `FakePaymentGateway` + `MercadoPagoGateway` con `RestClient` y retries 5xx, `PreferenceService` idempotente que reutiliza preferencias PENDING, `WebhookSignatureValidator` con HMAC-SHA256 y comparacion constant-time, `WebhookToPaymentStatusMapper`, `MercadoPagoWebhookProcessor` idempotente con transiciones APPROVED->REFUNDED permitidas, `MercadoPagoWebhookController` publico, `CustomerPaymentController`, `InventoryService.deductForOnlineOrder` con FEFO/lock pesimista/StockMovement ONLINE_SALE, `InventoryStockDeductionAdapter` como puente pagos<->inventario. +5 archivos de config (`application.yml`), migracion V26 ya estaba. 65 tests nuevos (unit + WebMvcTest) y suite completa backend verde.
+- `frontend/src/app/core/services/{customer-checkout,error-mapping}.ts`, `frontend/src/app/features/customer/payment-callback/`, `frontend/src/app/features/customer/order-detail/`, `frontend/src/app/features/customer/customer.routes.ts` -- implementada LEMBAS-36 (S3-US05): `CustomerCheckoutService` (HTTP pass-through al endpoint de preferencia), boton "Pagar con Mercado Pago" con loading y reintento en `OrderDetail` (con fallback a "Reintentar pago" para PAYMENT_FAILED), nueva ruta `/customer/payment/callback` con `PaymentCallback` que hace polling cada 3s hasta 10 intentos y mapea status a fases (success/failure/stock_conflict/pending/error), toasts via `MessageService` + `ErrorMappingService` con codigos MP_*/ORDER_NOT_PAYABLE/STOCK_CONFLICT. 10 tests nuevos (3 service + 7 page) y suite completa frontend verde.
+
+## 2026-06-15
 
 ## 2026-06-12
 
