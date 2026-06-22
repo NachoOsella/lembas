@@ -1,6 +1,8 @@
 package com.dietetica.lembas.payments.service;
 
 import com.dietetica.lembas.shared.exception.DomainException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +25,8 @@ import java.util.HexFormat;
  */
 @Component
 public class WebhookSignatureValidator {
+
+    private static final Logger log = LoggerFactory.getLogger(WebhookSignatureValidator.class);
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
 
@@ -47,6 +51,8 @@ public class WebhookSignatureValidator {
         }
         String ts = extractPart(xSignature, "ts");
         String v1 = extractPart(xSignature, "v1");
+        log.warn("SIGNATURE_DEBUG rawHeader=[{}] ts=[{}] v1=[{}] requestId=[{}] dataId=[{}]",
+                xSignature, ts, v1, xRequestId, dataId);
         if (ts == null || v1 == null) {
             throw new DomainException("WEBHOOK_SIGNATURE_INVALID", HttpStatus.UNAUTHORIZED,
                     "Webhook signature is missing ts or v1 components");
@@ -55,6 +61,7 @@ public class WebhookSignatureValidator {
                 + "&request_id=" + (xRequestId == null ? "" : xRequestId)
                 + "&ts=" + ts;
         String expected = hmacSha256(properties.webhookSecret(), manifest);
+        log.warn("SIGNATURE_DEBUG manifest=[{}] expected=[{}]", manifest, expected);
         if (!constantTimeEquals(expected, v1)) {
             throw new DomainException("WEBHOOK_SIGNATURE_INVALID", HttpStatus.UNAUTHORIZED,
                     "Webhook signature does not match");
