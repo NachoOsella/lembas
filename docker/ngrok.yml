@@ -22,4 +22,3 @@ tunnels:
     schemes:
       - https
     host_header: rewrite
-    bind_tls: true
