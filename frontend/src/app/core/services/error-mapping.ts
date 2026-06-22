@@ -114,6 +114,17 @@ export class ErrorMappingService {
     // Order errors
     ORDER_INVALID_STATE: 'No se puede realizar esta operación en el estado actual del pedido.',
 
+    // Payment errors
+    ORDER_NOT_PAYABLE: 'Este pedido ya no acepta un pago online. Podes iniciar uno nuevo desde el catalogo.',
+    MP_PREFERENCE_REJECTED: 'Mercado Pago rechazo la solicitud de pago. Intenta nuevamente en unos minutos.',
+    MP_UNAUTHORIZED: 'Mercado Pago rechazo nuestras credenciales. Contactanos para que lo solucionemos.',
+    MP_UPSTREAM_ERROR: 'Mercado Pago no respondio correctamente. Intenta nuevamente en unos minutos.',
+    MP_UNREACHABLE: 'No pudimos comunicarnos con Mercado Pago. Verifica tu conexion e intenta nuevamente.',
+    MP_NOT_FOUND: 'La preferencia de pago ya no existe. Te llevamos al detalle del pedido para reintentarlo.',
+    MP_INVALID_RESPONSE: 'Mercado Pago devolvio una respuesta invalida. Contactanos con tu numero de pedido.',
+    MP_INVALID_AMOUNT: 'El monto del pedido no es valido para iniciar un pago.',
+    WEBHOOK_SIGNATURE_INVALID: 'No pudimos validar la notificacion de Mercado Pago.',
+
     // Generic errors
     NOT_FOUND: 'El recurso solicitado no fue encontrado.',
     INTERNAL_ERROR: 'Ocurrió un error inesperado. Intente nuevamente más tarde.',
