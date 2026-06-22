@@ -16,6 +16,9 @@ import com.dietetica.lembas.inventory.model.StockMovement;
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import com.dietetica.lembas.inventory.repository.StockLotRepository;
 import com.dietetica.lembas.inventory.repository.StockMovementRepository;
+import com.dietetica.lembas.orders.model.Order;
+import com.dietetica.lembas.orders.model.OrderItem;
+import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
@@ -56,6 +59,7 @@ public class InventoryService {
     private final StockMovementRepository stockMovementRepository;
     private final ProductRepository productRepository;
     private final BranchRepository branchRepository;
+    private final OrderRepository orderRepository;
     private final FefoStockDeductionPolicy fefoPolicy;
     private final SecurityContextHelper securityContextHelper;
     private final Clock clock;
@@ -65,6 +69,7 @@ public class InventoryService {
             StockMovementRepository stockMovementRepository,
             ProductRepository productRepository,
             BranchRepository branchRepository,
+            OrderRepository orderRepository,
             FefoStockDeductionPolicy fefoPolicy,
             SecurityContextHelper securityContextHelper,
             Clock clock
@@ -73,6 +78,7 @@ public class InventoryService {
         this.stockMovementRepository = stockMovementRepository;
         this.productRepository = productRepository;
         this.branchRepository = branchRepository;
+        this.orderRepository = orderRepository;
         this.fefoPolicy = fefoPolicy;
         this.securityContextHelper = securityContextHelper;
         this.clock = clock;
@@ -163,18 +169,80 @@ public class InventoryService {
     /**
      * Deducts stock for all items of an online order using the FEFO policy.
      *
-     * <p>Used by the payments webhook when a Mercado Pago payment is approved.
-     * Implementation lives in FASE 4 (LEMBAS-44) and currently throws
-     * {@code DomainException("STOCK_CONFLICT")} when invoked so the webhook
-     * processor can be tested end-to-end before the real FEFO logic is wired
-     * in.</p>
+     * <p>Triggered by the Mercado Pago webhook when a payment is approved. The
+     * order aggregate is loaded with its items, each line is deducted through
+     * the FEFO policy in a single transaction, and stock movements are recorded
+     * with {@code referenceType = "ORDER"} so the audit trail can be replayed
+     * from the order id. Any shortage raises {@code STOCK_CONFLICT} so the
+     * caller can mark the order accordingly and contact the customer.</p>
      */
     @Transactional
     public void deductForOnlineOrder(Long orderId) {
-        throw new com.dietetica.lembas.shared.exception.DomainException(
-                "STOCK_CONFLICT",
-                org.springframework.http.HttpStatus.CONFLICT,
-                "FEFO deduction for online orders is not yet implemented");
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new DomainException("ORDER_NOT_FOUND", HttpStatus.NOT_FOUND, "Order not found"));
+        Long branchId = order.getBranch() == null ? null : order.getBranch().getId();
+        if (branchId == null) {
+            throw new DomainException("BRANCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Order has no branch");
+        }
+        for (OrderItem item : order.getItems()) {
+            deductForOnlineOrderItem(order, item, branchId);
+        }
+        stockLotRepository.flush();
+    }
+
+    /**
+     * Deducts one order line using the FEFO policy and records a traceable
+     * stock movement linked to the order. Fails fast with {@code STOCK_CONFLICT}
+     * if available stock is insufficient.
+     */
+    private void deductForOnlineOrderItem(Order order, OrderItem item, Long branchId) {
+        Long productId = item.getProduct() == null ? null : item.getProduct().getId();
+        if (productId == null) {
+            throw new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND,
+                    "Order item has no product reference");
+        }
+        BigDecimal required = item.getQuantity();
+        if (required == null || required.signum() <= 0) {
+            return;
+        }
+        Product product = productRepository.findByIdAndActiveTrue(productId)
+                .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND,
+                        "Product not found for order item"));
+        Branch branch = order.getBranch();
+        if (branch == null) {
+            throw new DomainException("BRANCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Order has no branch");
+        }
+
+        List<StockLot> lots = stockLotRepository.findAvailableLotsForUpdate(productId, branchId);
+        DeductionPlan plan = fefoPolicy.plan(lots, required);
+        for (DeductionEntry entry : plan.entries()) {
+            StockLot lot = stockLotRepository.findById(entry.stockLotId())
+                    .orElseThrow(() -> new DomainException("STOCK_LOT_NOT_FOUND", HttpStatus.NOT_FOUND, "Stock lot not found"));
+            BigDecimal updated = entry.lotAvailableAfter();
+            lot.setQuantityAvailable(updated);
+            if (updated.compareTo(BigDecimal.ZERO) == 0) {
+                lot.setStatus(StockLotStatus.DEPLETED);
+            }
+            stockMovementRepository.save(onlineSaleMovement(lot, product, branch, order, item, entry.quantityToDeduct()));
+        }
+    }
+
+    /** Builds the stock movement generated by an online sale deduction linked to an order. */
+    private StockMovement onlineSaleMovement(StockLot lot, Product product, Branch branch, Order order,
+                                              OrderItem item, BigDecimal quantity) {
+        StockMovement movement = new StockMovement();
+        movement.setStockLot(lot);
+        movement.setProduct(product);
+        movement.setBranch(branch);
+        movement.setType(StockMovementType.ONLINE_SALE);
+        movement.setQuantity(quantity.negate());
+        movement.setUnitCostSnapshot(lot.getUnitCost());
+        movement.setReferenceType("ORDER");
+        movement.setReferenceId(order.getId());
+        movement.setOrderId(order.getId());
+        movement.setReason("Online order " + order.getOrderNumber()
+                + " line " + (item.getId() == null ? "" : item.getId()));
+        return movement;
     }
 
     /**
