@@ -161,6 +161,23 @@ public class InventoryService {
     }
 
     /**
+     * Deducts stock for all items of an online order using the FEFO policy.
+     *
+     * <p>Used by the payments webhook when a Mercado Pago payment is approved.
+     * Implementation lives in FASE 4 (LEMBAS-44) and currently throws
+     * {@code DomainException("STOCK_CONFLICT")} when invoked so the webhook
+     * processor can be tested end-to-end before the real FEFO logic is wired
+     * in.</p>
+     */
+    @Transactional
+    public void deductForOnlineOrder(Long orderId) {
+        throw new com.dietetica.lembas.shared.exception.DomainException(
+                "STOCK_CONFLICT",
+                org.springframework.http.HttpStatus.CONFLICT,
+                "FEFO deduction for online orders is not yet implemented");
+    }
+
+    /**
      * Applies a manual stock adjustment and records a traceable movement.
      *
      * <p>Positive quantity increases stock on the specified lot or creates a new lot.
