@@ -41,12 +41,17 @@ app:
     jwt-secret: ${JWT_SECRET:change-me-to-at-least-256-bits-before-running-outside-local-dev}
     jwt-expiration: 24h
     allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:8080}
+  payments:
+    gateway: ${PAYMENTS_GATEWAY:fake}
   mercado-pago:
-    access-token: ${MP_ACCESS_TOKEN:}
-    webhook-secret: ${MP_WEBHOOK_SECRET:}
+    access-token: ${MP_ACCESS_TOKEN:dev-fake-token}
+    webhook-secret: ${MP_WEBHOOK_SECRET:dev-fake-secret}
+    base-url: ${MP_BASE_URL:https://api.mercadopago.com}
     success-url: ${MP_SUCCESS_URL:http://localhost:4200/customer/payment/callback}
     failure-url: ${MP_FAILURE_URL:http://localhost:4200/customer/payment/callback}
     pending-url: ${MP_PENDING_URL:http://localhost:4200/customer/payment/callback}
+    notification-url: ${MP_NOTIFICATION_URL:http://localhost:8080/api/webhooks/mercadopago}
+    timeout-ms: ${MP_TIMEOUT_MS:5000}
   business:
     name: ${BUSINESS_NAME:Dietetica Lembas}
     address: ${BUSINESS_ADDRESS:}
