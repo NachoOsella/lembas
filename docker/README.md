@@ -5,6 +5,10 @@ This directory contains the Docker Compose deployment files for Dietetica Lembas
 ## Files
 
 - `compose.yml`: PostgreSQL 16, Spring Boot backend, and Nginx web stack.
+- `mp-sandbox.override.yml`: Optional override that adds an ngrok tunnel so
+  Mercado Pago can deliver webhooks against a local checkout during sandbox
+  testing. Activated with `-f mp-sandbox.override.yml` (see below).
+- `ngrok.yml`: ngrok tunnel configuration read by the override.
 - `backend.Dockerfile`: Java 21 multi-stage backend image with Maven cache and non-root runtime user.
 - `frontend.Dockerfile`: Angular production build served by unprivileged Nginx.
 - `nginx.conf`: Reverse proxy for `/api`, Swagger/OpenAPI, uploads, and Angular routes.
@@ -46,6 +50,71 @@ docker compose --env-file .env exec db pg_dump -U lembas lembas > backup.sql
 # Restore a database backup
 docker compose --env-file .env exec -T db psql -U lembas lembas < backup.sql
 ```
+
+## Mercado Pago sandbox testing (ngrok override)
+
+The default stack runs entirely on `localhost`, which is not reachable from
+Mercado Pago's servers. To exercise the real Checkout Pro flow and have MP
+deliver webhooks against a local checkout, activate the `mp-sandbox.override.yml`
+on top of the main stack. The override starts an ngrok container that
+tunnels the backend service to a public `https://<random>.ngrok-free.app` URL.
+
+### One-time setup
+
+1. Create a free ngrok account: <https://dashboard.ngrok.com/signup>.
+2. Copy your authtoken from <https://dashboard.ngrok.com/get-started/your-authtoken>.
+3. In `docker/.env` set:
+   ```bash
+   NGROK_AUTHTOKEN=<your-authtoken>
+   PAYMENTS_GATEWAY=mercadopago
+   MP_ACCESS_TOKEN=TEST-...   # from the Mercado Pago Developers panel, "Pruebas" tab
+   MP_WEBHOOK_SECRET=<a-strong-shared-secret>
+   MP_NOTIFICATION_URL=http://placeholder.invalid/api/webhooks/mercadopago  # replaced below
+   ```
+
+### Start the stack with the override
+
+```bash
+cd docker
+docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml up -d --build
+```
+
+The `ngrok` container is marked as unhealthy until it has a live tunnel.
+Inspect it to obtain the public URL:
+
+```bash
+docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml logs ngrok
+# Look for a line like:
+#   msg="started tunnel" object-url="https://abc123.ngrok-free.app"
+```
+
+You can also browse <http://localhost:4040> for the ngrok web inspection
+UI (the request log is helpful when debugging webhook signatures).
+
+### Wire the URL back into Mercado Pago
+
+1. Copy the public URL printed by ngrok (e.g. `https://abc123.ngrok-free.app`).
+2. In the Mercado Pago Developers panel, register the webhook with the same
+   `MP_WEBHOOK_SECRET` you set above, pointing at:
+   ```
+   https://abc123.ngrok-free.app/api/webhooks/mercadopago
+   ```
+3. Update `MP_NOTIFICATION_URL` in `docker/.env` to the same value, then
+   restart the backend:
+   ```bash
+   docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml up -d --force-recreate backend
+   ```
+4. Use the test card numbers from the Mercado Pago panel to drive a
+   checkout end-to-end.
+
+### Tear down the override
+
+```bash
+docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml down
+```
+
+The override is additive: the main `docker compose --env-file .env up`
+workflow is unaffected.
 
 ## Database migrations (Flyway)
 
@@ -140,5 +209,10 @@ The `.env` file at `docker/.env` controls all configuration. Key variables:
 | `JWT_SECRET` | *(required)* | 256-bit+ secret for JWT signing |
 | `SPRING_PROFILES_ACTIVE` | `prod` | Active Spring profile |
 | `WEB_PORT` | `80` | Public HTTP port |
-| `MP_ACCESS_TOKEN` | *(optional)* | Mercado Pago API credentials |
-| `MP_WEBHOOK_SECRET` | *(optional)* | Mercado Pago webhook signing secret |
+| `PAYMENTS_GATEWAY` | `fake` | `fake` (in-memory) or `mercadopago` (real HTTP) |
+| `MP_ACCESS_TOKEN` | *(blank)* | Required when `PAYMENTS_GATEWAY=mercadopago` |
+| `MP_WEBHOOK_SECRET` | *(blank)* | Required when `PAYMENTS_GATEWAY=mercadopago` |
+| `MP_NOTIFICATION_URL` | `http://localhost:8080/api/webhooks/mercadopago` | Public URL MP POSTs to |
+| `MP_SUCCESS_URL` / `MP_FAILURE_URL` / `MP_PENDING_URL` | `http://localhost/customer/payment/callback` | Customer redirect targets |
+| `NGROK_AUTHTOKEN` | *(blank)* | Required to enable the `mp-sandbox.override.yml` override |
+| `NGROK_WEB_PORT` | `4040` | Local port for the ngrok inspection UI |

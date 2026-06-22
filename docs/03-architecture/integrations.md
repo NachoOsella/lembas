@@ -37,11 +37,36 @@ This keeps the backend simpler while still keeping the external API calls locali
 
 | Environment variable | Description |
 |---|---|
-| MP_ACCESS_TOKEN | Mercado Pago access token (sandbox or production) |
-| MP_WEBHOOK_SECRET | Secret for webhook signature verification |
-| MP_SUCCESS_URL | Redirect URL after successful payment |
-| MP_FAILURE_URL | Redirect URL after failed payment |
-| MP_PENDING_URL | Redirect URL for pending payment |
+| `PAYMENTS_GATEWAY` | `fake` (default, in-memory) or `mercadopago` (real HTTP) |
+| `MP_ACCESS_TOKEN` | Mercado Pago access token (sandbox or production) |
+| `MP_WEBHOOK_SECRET` | Secret for webhook signature verification |
+| `MP_NOTIFICATION_URL` | Public URL MP POSTs webhook notifications to |
+| `MP_SUCCESS_URL` | Redirect URL after successful payment |
+| `MP_FAILURE_URL` | Redirect URL after failed payment |
+| `MP_PENDING_URL` | Redirect URL for pending payment |
+
+The `accessToken` and `webhookSecret` are not required at startup when
+`PAYMENTS_GATEWAY=fake`. Switching to `mercadopago` makes them mandatory
+and the application fails fast at boot if they are blank.
+
+### Local sandbox testing with ngrok
+
+Mercado Pago cannot reach a `localhost` webhook URL, so local sandbox
+testing needs a public tunnel. The repo ships an opt-in Docker override
+(`docker/mp-sandbox.override.yml`) that adds an `ngrok/ngrok:3` service
+on top of the main stack. The override is activated with:
+
+```bash
+cd docker
+docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml up -d
+docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml logs ngrok
+```
+
+The public URL printed in the ngrok logs (for example
+`https://abc123.ngrok-free.app`) is registered in the Mercado Pago panel
+as the webhook URL, and the same value is set in `MP_NOTIFICATION_URL` so
+the backend can verify webhook signatures. See `docker/README.md` for the
+full step-by-step.
 
 ## Image storage
 
