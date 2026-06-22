@@ -70,13 +70,23 @@ public class PreferenceService {
 
         Payment existing = findOpenPayment(order);
         if (existing != null && existing.getProviderPreferenceId() != null) {
-            log.info("Reusing pending preference for order {} (payment {})",
-                    orderId, existing.getId());
-            return new CreatePreferenceResponse(
-                    existing.getId(),
-                    existing.getProviderPreferenceId(),
-                    existing.getMetadata() == null ? properties.successUrl() : extractInitPoint(existing.getMetadata())
-            );
+            if (isFakeGatewayPreference(existing.getProviderPreferenceId())) {
+                // The existing pending payment was created by the FakePaymentGateway.
+                // Cancel it so a fresh real preference is created below.
+                log.info("Cancelling stale fake preference for order {} (payment {})",
+                        orderId, existing.getId());
+                existing.setStatus(PaymentStatus.CANCELLED);
+                paymentRepository.save(existing);
+                existing = null;
+            } else {
+                log.info("Reusing pending preference for order {} (payment {})",
+                        orderId, existing.getId());
+                return new CreatePreferenceResponse(
+                        existing.getId(),
+                        existing.getProviderPreferenceId(),
+                        existing.getMetadata() == null ? properties.successUrl() : extractInitPoint(existing.getMetadata())
+                );
+            }
         }
 
         Payment payment = existing != null ? existing : buildPendingPayment(order);
@@ -209,5 +219,15 @@ public class PreferenceService {
             return "";
         }
         return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    /**
+     * Returns true when the supplied preference id is a synthetic one generated
+     * by the {@link FakePaymentGateway}. Real Mercado Pago preference ids are
+     * numeric strings (e.g. {@code "1234567890"}), while fake ones start with
+     * {@code "fake-"}.
+     */
+    private static boolean isFakeGatewayPreference(String providerPreferenceId) {
+        return providerPreferenceId != null && providerPreferenceId.startsWith("fake-");
     }
 }

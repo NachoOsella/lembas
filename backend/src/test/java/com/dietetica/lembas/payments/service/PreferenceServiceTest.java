@@ -102,18 +102,47 @@ class PreferenceServiceTest {
         existing.setMethod(PaymentMethod.CHECKOUT_PRO);
         existing.setStatus(PaymentStatus.PENDING);
         existing.setAmount(order.getTotal());
-        existing.setProviderPreferenceId("PREF-EXISTING");
-        existing.setMetadata("{\"initPoint\":\"https://init/PREF-EXISTING\"}");
+        existing.setProviderPreferenceId("1234567890");
+        existing.setMetadata("{\"initPoint\":\"https://init/1234567890\"}");
 
         when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(paymentRepository.findByOrderIdOrderByIdAsc(order.getId())).thenReturn(List.of(existing));
 
         CreatePreferenceResponse response = service.createPreference(order.getId(), customer);
 
-        assertThat(response.preferenceId()).isEqualTo("PREF-EXISTING");
-        assertThat(response.initPoint()).isEqualTo("https://init/PREF-EXISTING");
+        assertThat(response.preferenceId()).isEqualTo("1234567890");
+        assertThat(response.initPoint()).isEqualTo("https://init/1234567890");
         verify(paymentGateway, never()).createPreference(any());
         verify(paymentRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldCancelStaleFakePreferenceAndCreateNewRealOne() {
+        User customer = customer(10L);
+        Order order = orderForCustomer(customer, OrderStatus.PENDING_PAYMENT, OrderType.ONLINE);
+        // Simulate a pending payment left behind by the FakePaymentGateway.
+        Payment stale = new Payment();
+        stale.setId(8L);
+        stale.setOrder(order);
+        stale.setProvider(PaymentProvider.MERCADO_PAGO);
+        stale.setMethod(PaymentMethod.CHECKOUT_PRO);
+        stale.setStatus(PaymentStatus.PENDING);
+        stale.setAmount(order.getTotal());
+        stale.setProviderPreferenceId("fake-deadbeef-1234");
+
+        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(paymentRepository.findByOrderIdOrderByIdAsc(order.getId())).thenReturn(List.of(stale));
+        when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(paymentGateway.createPreference(any())).thenReturn(
+                new PaymentPreferenceResult("MP-REAL-1", "https://init/MP-REAL-1", null));
+
+        CreatePreferenceResponse response = service.createPreference(order.getId(), customer);
+
+        // The stale payment was cancelled and a new one was created.
+        assertThat(stale.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+        assertThat(response.preferenceId()).isEqualTo("MP-REAL-1");
+        assertThat(response.initPoint()).isEqualTo("https://init/MP-REAL-1");
+        verify(paymentGateway, times(1)).createPreference(any());
     }
 
     @Test
