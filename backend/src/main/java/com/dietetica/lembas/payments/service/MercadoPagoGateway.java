@@ -112,7 +112,9 @@ public class MercadoPagoGateway implements PaymentGateway {
                 "failure", command.failureUrl(),
                 "pending", command.pendingUrl()
         ));
-        body.put("auto_return", "approved");
+        // auto_return requires back_urls.success to be HTTPS. It is omitted here
+        // because the callback URLs use plain HTTP (localhost). The customer can
+        // still return to the store manually after payment.
         body.put("items", command.items().stream().map(this::toItem).toList());
         if (command.customerEmail() != null && !command.customerEmail().isBlank()) {
             body.put("payer", Map.of("email", command.customerEmail()));
