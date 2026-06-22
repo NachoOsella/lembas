@@ -209,12 +209,17 @@ export class PriceUpdateWorkflow {
     this.loadLookups();
   }
 
-  /** Stores the selected supplier file and triggers import immediately. */
+  /** Stores the selected supplier file and triggers import immediately when a supplier is selected. */
   protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
-    this.fileToImport.set(file);
     input.value = '';
+    if (!this.supplierId()) {
+      this.fileToImport.set(null);
+      this.error.set('Selecciona un proveedor antes de importar el archivo.');
+      return;
+    }
+    this.fileToImport.set(file);
     if (file) {
       this.importFile();
     }

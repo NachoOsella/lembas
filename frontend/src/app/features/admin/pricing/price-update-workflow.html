@@ -78,7 +78,12 @@
         class="pricing-file-input"
         hidden
       />
-      <app-button type="button" icon="pi pi-upload" [loading]="saving()" (click)="fileInput.click()"
+      <app-button
+        type="button"
+        icon="pi pi-upload"
+        [disabled]="!supplierId()"
+        [loading]="saving()"
+        (click)="fileInput.click()"
         >Importar CSV/XLSX</app-button
       >
       @if (fileToImport()) {

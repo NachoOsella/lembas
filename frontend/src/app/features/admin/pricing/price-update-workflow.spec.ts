@@ -156,6 +156,18 @@ describe('PriceUpdateWorkflow', () => {
     expect(cmp.error()).toBeTruthy();
   });
 
+  it('should ignore file selection when supplier is missing', () => {
+    const input = document.createElement('input');
+    const file = new File(['sku,nombre,costo\n'], 'prices.csv', { type: 'text/csv' });
+    Object.defineProperty(input, 'files', { value: [file] });
+
+    cmp.onFileSelected({ target: input } as unknown as Event);
+
+    expect(batchService.importFile).not.toHaveBeenCalled();
+    expect(cmp.fileToImport()).toBeNull();
+    expect(cmp.error()).toContain('proveedor');
+  });
+
   it('should import a file and set batch preview', () => {
     const batch = sampleBatch(1);
     batchService.importFile.mockReturnValue(of(batch));
