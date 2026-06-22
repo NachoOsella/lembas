@@ -43,19 +43,50 @@ public class MercadoPagoConfiguration {
         String baseUrl = properties.baseUrl() == null || properties.baseUrl().isBlank()
                 ? DEFAULT_BASE_URL
                 : properties.baseUrl();
-        return RestClient.builder()
+        RestClient.Builder builder = RestClient.builder()
                 .baseUrl(baseUrl)
-                .defaultHeader("Authorization", "Bearer " + properties.accessToken())
                 .defaultHeader("Content-Type", "application/json")
                 .defaultHeader("Accept", "application/json")
-                .requestFactory(factory)
-                .build();
+                .requestFactory(factory);
+        // Only attach a bearer token when one is configured; the fake gateway
+        // does not use the rest client and several test profiles leave the
+        // property blank on purpose.
+        if (properties.accessToken() != null && !properties.accessToken().isBlank()) {
+            builder.defaultHeader("Authorization", "Bearer " + properties.accessToken());
+        }
+        return builder.build();
     }
 
     /** Returns the configured gateway mode, defaulting to {@code fake} for safety. */
     @Bean
     public GatewayMode gatewayMode(@Value("${" + GATEWAY_PROPERTY + ":fake}") String mode) {
         return GatewayMode.from(mode);
+    }
+
+    /**
+     * Validates that the credentials required by the real Mercado Pago gateway
+     * are present whenever {@code app.payments.gateway=mercadopago} is set.
+     * Fails fast at bean construction so production misconfigurations do not
+     * surface only at the first checkout attempt.
+     */
+    @Bean
+    public MercadoPagoCredentialsGuard mercadoPagoCredentialsGuard(
+            MercadoPagoProperties properties, GatewayMode mode) {
+        if (mode == GatewayMode.MERCADO_PAGO) {
+            if (properties.accessToken() == null || properties.accessToken().isBlank()) {
+                throw new IllegalStateException(
+                        "app.mercado-pago.access-token must be set when app.payments.gateway=mercadopago");
+            }
+            if (properties.webhookSecret() == null || properties.webhookSecret().isBlank()) {
+                throw new IllegalStateException(
+                        "app.mercado-pago.webhook-secret must be set when app.payments.gateway=mercadopago");
+            }
+        }
+        return new MercadoPagoCredentialsGuard();
+    }
+
+    /** Marker bean returned when the Mercado Pago credentials check passes. */
+    public static final class MercadoPagoCredentialsGuard {
     }
 
     /** Available gateway implementations. */

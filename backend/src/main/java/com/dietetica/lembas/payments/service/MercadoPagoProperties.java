@@ -9,19 +9,24 @@ import org.springframework.validation.annotation.Validated;
  * Configuration properties for the Mercado Pago gateway.
  *
  * <p>Bound from the {@code app.mercado-pago.*} prefix and validated on startup.
- * Sensible defaults are provided so the application boots in dev with a fake
- * token, but production deployments must override {@code accessToken} and
- * {@code webhookSecret} via environment variables.</p>
+ * The {@code accessToken} and {@code webhookSecret} are intentionally not
+ * {@code @NotBlank}: the application boots with the in-memory
+ * {@code FakePaymentGateway} when they are empty, which is the expected
+ * behaviour for local development and the default {@code dev}/{@code test}
+ * profiles. Production deployments that switch to the real Mercado Pago
+ * gateway must override both values via environment variables; the
+ * {@link MercadoPagoConfiguration} performs a runtime check at bean
+ * construction time so misconfigurations fail fast.</p>
  */
 @ConfigurationProperties(prefix = "app.mercado-pago")
 @Validated
 public record MercadoPagoProperties(
 
-        /** Provider access token. Empty value falls back to the fake gateway. */
-        @NotBlank String accessToken,
+        /** Provider access token. Empty value is allowed; the real gateway validates at startup. */
+        String accessToken,
 
-        /** Shared secret used to verify webhook signatures (HMAC-SHA256). */
-        @NotBlank String webhookSecret,
+        /** Shared secret used to verify webhook signatures (HMAC-SHA256). Empty value is allowed. */
+        String webhookSecret,
 
         /** Override for the Mercado Pago REST base URL. Useful for sandbox or mocks. */
         String baseUrl,
