@@ -36,6 +36,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75.0 -XX:+UseContainerSupport}
+      # Gateway mode: fake (in-memory) or mercadopago (real HTTP).
+      PAYMENTS_GATEWAY: ${PAYMENTS_GATEWAY:-fake}
       # Required when SPRING_PROFILES_ACTIVE=prod and MercadoPago integration is enabled.
       MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
       # Required when SPRING_PROFILES_ACTIVE=prod and MercadoPago webhooks are enabled.

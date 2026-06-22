@@ -14,6 +14,11 @@
 # so the same value is the MP_NOTIFICATION_URL on the backend.
 
 services:
+  backend:
+    environment:
+      # Switch the payment gateway to the real Mercado Pago.
+      PAYMENTS_GATEWAY: ${PAYMENTS_GATEWAY:-fake}
+
   ngrok:
     image: ngrok/ngrok:3
     container_name: lembas-ngrok
