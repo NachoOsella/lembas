@@ -1,0 +1,145 @@
+<section class="min-h-screen bg-canvas py-10 text-text sm:py-14">
+  <div class="mx-auto w-full max-w-[720px] px-4 sm:px-6 lg:px-8">
+    <app-eyebrow color="bark">Pago con Mercado Pago</app-eyebrow>
+
+    @switch (phase()) {
+      @case ('loading') {
+        <div class="mt-8 rounded-xl bg-white p-8 text-center shadow-card sm:p-10">
+          <app-loading-spinner class="mx-auto" />
+          <h1 class="mt-6 text-2xl font-semibold tracking-tight text-text sm:text-3xl">
+            Estamos confirmando tu pago
+          </h1>
+          <p class="mt-3 text-sm text-text-muted sm:text-base">
+            Aguardamos la notificacion de Mercado Pago. Esto puede demorar unos segundos.
+          </p>
+          @if (order(); as o) {
+            <p class="mt-2 text-xs uppercase tracking-wider text-text-muted">
+              Pedido {{ o.orderNumber }} &middot; intento {{ attemptsLabel() }}
+            </p>
+          }
+        </div>
+      }
+
+      @case ('success') {
+        <div class="mt-8 rounded-xl bg-white p-8 shadow-card sm:p-10">
+          <span
+            class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-mint-wash text-primary"
+          >
+            <i class="pi pi-check text-2xl" aria-hidden="true"></i>
+          </span>
+          <h1 class="mt-5 text-2xl font-semibold tracking-tight text-text sm:text-3xl">
+            Pago confirmado
+          </h1>
+          @if (order(); as o) {
+            <p class="mt-3 text-sm text-text-muted sm:text-base">
+              Tu pedido <span class="font-semibold text-text">{{ o.orderNumber }}</span> fue
+              pagado correctamente por <span class="font-semibold text-text">{{
+                formatDate(o.paidAt)
+              }}</span>.
+            </p>
+            <p class="mt-1 text-sm text-text-muted sm:text-base">
+              Lo prepararemos en la sucursal <span class="font-semibold text-text">{{
+                o.branchName
+              }}</span> y te avisaremos cuando este listo para retirar.
+            </p>
+          } @else {
+            <p class="mt-3 text-sm text-text-muted">
+              Tu pago fue acreditado. Podes ver el detalle en tus pedidos.
+            </p>
+          }
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <app-button variant="primary" icon="pi pi-eye" (click)="viewOrder()">
+              Ver detalle del pedido
+            </app-button>
+            <app-button variant="secondary" icon="pi pi-list" (click)="backToOrders()">
+              Volver a mis pedidos
+            </app-button>
+          </div>
+        </div>
+      }
+
+      @case ('failure') {
+        <div class="mt-8 rounded-xl bg-white p-8 shadow-card sm:p-10">
+          <span
+            class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-amber-tint text-amber-text"
+          >
+            <i class="pi pi-exclamation-triangle text-2xl" aria-hidden="true"></i>
+          </span>
+          <h1 class="mt-5 text-2xl font-semibold tracking-tight text-text sm:text-3xl">
+            No pudimos confirmar el pago
+          </h1>
+          <p class="mt-3 text-sm text-text-muted sm:text-base">
+            El pago fue rechazado o cancelado. Podes intentar nuevamente con otro medio de pago.
+          </p>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <app-button variant="primary" icon="pi pi-refresh" (click)="retryPayment()">
+              Reintentar pago
+            </app-button>
+            <app-button variant="secondary" icon="pi pi-list" (click)="backToOrders()">
+              Ver mis pedidos
+            </app-button>
+          </div>
+        </div>
+      }
+
+      @case ('stock_conflict') {
+        <div class="mt-8 rounded-xl bg-white p-8 shadow-card sm:p-10">
+          <span
+            class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red"
+          >
+            <i class="pi pi-times-circle text-2xl" aria-hidden="true"></i>
+          </span>
+          <h1 class="mt-5 text-2xl font-semibold tracking-tight text-text sm:text-3xl">
+            Pago acreditado, pero no hay stock suficiente
+          </h1>
+          <p class="mt-3 text-sm text-text-muted sm:text-base">
+            Tu pago fue recibido correctamente, pero no pudimos apartar todo el stock para tu
+            pedido. Por favor, contactanos por WhatsApp al local para coordinar la entrega o el
+            reintegro correspondiente.
+          </p>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <app-button variant="secondary" icon="pi pi-list" (click)="backToOrders()">
+              Ver mis pedidos
+            </app-button>
+          </div>
+        </div>
+      }
+
+      @case ('pending') {
+        <div class="mt-8 rounded-xl bg-white p-8 shadow-card sm:p-10">
+          <span
+            class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-surface-warm text-text-muted"
+          >
+            <i class="pi pi-clock text-2xl" aria-hidden="true"></i>
+          </span>
+          <h1 class="mt-5 text-2xl font-semibold tracking-tight text-text sm:text-3xl">
+            Tu pago esta siendo procesado
+          </h1>
+          <p class="mt-3 text-sm text-text-muted sm:text-base">
+            La notificacion de Mercado Pago todavia no impacto en nuestro sistema. Te avisaremos
+            por email cuando se acredite.
+          </p>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <app-button variant="primary" icon="pi pi-list" (click)="backToOrders()">
+              Ver mis pedidos
+            </app-button>
+          </div>
+        </div>
+      }
+
+      @case ('error') {
+        <div class="mt-8 rounded-xl bg-white p-8 shadow-card sm:p-10">
+          <app-error-alert [message]="errorMessage() ?? 'Ocurrio un error inesperado.'" />
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+            <app-button variant="primary" icon="pi pi-refresh" (click)="retry()">
+              Reintentar
+            </app-button>
+            <app-button variant="secondary" icon="pi pi-list" (click)="backToOrders()">
+              Volver a mis pedidos
+            </app-button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</section>

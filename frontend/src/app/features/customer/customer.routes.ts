@@ -26,6 +26,11 @@ export default [
         loadComponent: () => import('./checkout/checkout').then((m) => m.Checkout),
       },
       {
+        path: 'payment/callback',
+        loadComponent: () =>
+          import('./payment-callback/payment-callback').then((m) => m.PaymentCallback),
+      },
+      {
         path: '**',
         redirectTo: 'orders',
       },
