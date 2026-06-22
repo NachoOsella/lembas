@@ -3,9 +3,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
 
 import { OrderDetail } from './order-detail';
+import { CustomerCheckoutService } from '../../../core/services/customer-checkout';
 import { CustomerOrderService } from '../../../core/services/customer-order';
 import { OrderDetail as OrderDetailData } from '../../../shared/models/order';
 
@@ -61,6 +63,15 @@ function mockOrderService(overrides: Partial<CustomerOrderService> = {}): Custom
   } as unknown as CustomerOrderService;
 }
 
+/** Minimal mock for CustomerCheckoutService. */
+function mockCheckoutService(): CustomerCheckoutService {
+  return {
+    createPreference: vi.fn().mockReturnValue(
+      of({ paymentId: 99, preferenceId: 'PREF-1', initPoint: 'https://init/PREF-1' }),
+    ),
+  } as unknown as CustomerCheckoutService;
+}
+
 /** Minimal mock for ActivatedRoute with paramMap. */
 function mockRoute(id: string): ActivatedRoute {
   return {
@@ -90,7 +101,9 @@ describe('OrderDetail', () => {
         provideHttpClientTesting(),
         provideRouter([]),
         { provide: CustomerOrderService, useValue: orderService },
+        { provide: CustomerCheckoutService, useValue: mockCheckoutService() },
         { provide: ActivatedRoute, useValue: route },
+        { provide: MessageService, useValue: { add: vi.fn() } },
       ],
     }).compileComponents();
 
@@ -144,7 +157,7 @@ describe('OrderDetail', () => {
     await configure();
 
     const text = fixture.nativeElement.textContent ?? '';
-    expect(text).toContain('Ir al pago');
+    expect(text).toContain('Pagar con Mercado Pago');
   });
 
   it('should not show payment button for PAID status', async () => {
@@ -154,7 +167,7 @@ describe('OrderDetail', () => {
     await configure({ orderService: svc });
 
     const text = fixture.nativeElement.textContent ?? '';
-    expect(text).not.toContain('Ir al pago');
+    expect(text).not.toContain('Pagar con Mercado Pago');
   });
 
   it('should show cancellation reason when present', async () => {
