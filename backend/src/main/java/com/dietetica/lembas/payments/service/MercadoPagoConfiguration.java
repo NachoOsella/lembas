@@ -47,6 +47,7 @@ public class MercadoPagoConfiguration {
                 .baseUrl(baseUrl)
                 .defaultHeader("Content-Type", "application/json")
                 .defaultHeader("Accept", "application/json")
+                .defaultHeader("User-Agent", "Lembas/1.0 (Checkout Pro)")
                 .requestFactory(factory);
         // Only attach a bearer token when one is configured; the fake gateway
         // does not use the rest client and several test profiles leave the
