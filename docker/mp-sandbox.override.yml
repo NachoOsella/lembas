@@ -1,0 +1,42 @@
+# Optional override that exposes the backend to the public internet via ngrok
+# so Mercado Pago can deliver real webhook notifications against a local
+# checkout during sandbox testing.
+#
+# Activate it on top of the main stack with:
+#   cd docker
+#   docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml up -d
+#
+# Public URL of the tunnel is shown in the ngrok container logs:
+#   docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml logs ngrok
+#
+# Copy that URL into the Mercado Pago webhook configuration as
+#   https://<random>.ngrok-free.app/api/webhooks/mercadopago
+# so the same value is the MP_NOTIFICATION_URL on the backend.
+
+services:
+  ngrok:
+    image: ngrok/ngrok:3
+    container_name: lembas-ngrok
+    restart: unless-stopped
+    command:
+      - "start"
+      - "--config"
+      - "/etc/ngrok/ngrok.yml"
+      - "backend"
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:?NGROK_AUTHTOKEN is required to enable the mp-sandbox override}
+    volumes:
+      - ./ngrok.yml:/etc/ngrok/ngrok.yml:ro
+    ports:
+      # ngrok's local web inspection UI (http://localhost:4040) for inspecting
+      # replayed traffic. Comment out if you do not need it.
+      - "${NGROK_WEB_PORT:-4040}:4040"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4040/api/tunnels | grep -q 'public_url'"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s

@@ -1,0 +1,25 @@
+# ngrok tunnel configuration for Mercado Pago sandbox testing.
+#
+# Used by `docker/mp-sandbox.override.yml` to expose the backend to the
+# public internet so Mercado Pago can deliver webhook notifications
+# against a local checkout.
+#
+# Start with:
+#   cd docker
+#   docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml up -d
+#   docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml logs -f ngrok
+#
+# The first log line includes the public https://<random>.ngrok-free.app URL.
+# Copy that URL into the Mercado Pago webhook configuration as
+#   https://<random>.ngrok-free.app/api/webhooks/mercadopago
+
+version: "2"
+authtoken: ${NGROK_AUTHTOKEN}
+tunnels:
+  backend:
+    proto: http
+    addr: backend
+    schemes:
+      - https
+    host_header: rewrite
+    bind_tls: true
