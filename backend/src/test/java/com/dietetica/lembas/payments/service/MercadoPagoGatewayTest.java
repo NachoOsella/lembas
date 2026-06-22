@@ -173,7 +173,7 @@ class MercadoPagoGatewayTest {
     void shouldRejectZeroAmount() {
         CreatePreferenceCommand cmd = new CreatePreferenceCommand(
                 1L, "ON-1", BigDecimal.ZERO, "ARS", "c@lembas.com",
-                List.of(), "https://ok", "https://fail", "https://pending", "ext-1", "idemp-0");
+                List.of(), "https://ok", "https://fail", "https://pending", "https://notify", "ext-1", "idemp-0");
 
         assertThatThrownBy(() -> gateway.createPreference(cmd))
                 .isInstanceOf(DomainException.class);
@@ -183,7 +183,7 @@ class MercadoPagoGatewayTest {
     void shouldRejectBlankIdempotencyKey() {
         CreatePreferenceCommand cmd = new CreatePreferenceCommand(
                 1L, "ON-1", new BigDecimal("100.00"), "ARS", "c@lembas.com",
-                List.of(), "https://ok", "https://fail", "https://pending", "ext-1", " ");
+                List.of(), "https://ok", "https://fail", "https://pending", "https://notify", "ext-1", " ");
 
         assertThatThrownBy(() -> gateway.createPreference(cmd))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -205,6 +205,7 @@ class MercadoPagoGatewayTest {
                 "https://success",
                 "https://failure",
                 "https://pending",
+                "https://notify",
                 "ON-20260612-000042",
                 idempotencyKey
         );

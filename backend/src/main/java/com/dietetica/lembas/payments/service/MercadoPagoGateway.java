@@ -105,7 +105,8 @@ public class MercadoPagoGateway implements PaymentGateway {
     private Map<String, Object> buildRequestBody(CreatePreferenceCommand command) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("external_reference", command.externalReference());
-        body.put("notification_url", ""); // wired by the webhook controller in production
+        body.put("notification_url", command.notificationUrl() == null || command.notificationUrl().isBlank()
+                ? command.successUrl() : command.notificationUrl());
         body.put("back_urls", Map.of(
                 "success", command.successUrl(),
                 "failure", command.failureUrl(),

@@ -173,6 +173,7 @@ public class PreferenceService {
                 properties.successUrl(),
                 properties.failureUrl(),
                 properties.pendingUrl(),
+                properties.notificationUrl(),
                 order.getOrderNumber(),
                 "order-" + order.getId() + "-payment-" + payment.getId()
         );

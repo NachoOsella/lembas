@@ -105,6 +105,7 @@ class FakePaymentGatewayTest {
                 "https://ok",
                 "https://fail",
                 "https://pending",
+                "https://notify",
                 "ext-1",
                 " "
         );
@@ -129,6 +130,7 @@ class FakePaymentGatewayTest {
                 "https://success",
                 "https://failure",
                 "https://pending",
+                "https://notify",
                 "ON-20260612-000042",
                 idempotencyKey
         );

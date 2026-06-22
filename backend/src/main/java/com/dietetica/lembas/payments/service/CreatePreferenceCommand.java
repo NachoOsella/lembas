@@ -31,6 +31,7 @@ public record CreatePreferenceCommand(
         String successUrl,
         String failureUrl,
         String pendingUrl,
+        String notificationUrl,
         String externalReference,
         String idempotencyKey
 ) {
