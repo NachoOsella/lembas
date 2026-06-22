@@ -12,9 +12,14 @@
 # The first log line includes the public https://<random>.ngrok-free.app URL.
 # Copy that URL into the Mercado Pago webhook configuration as
 #   https://<random>.ngrok-free.app/api/webhooks/mercadopago
+#
+# The authtoken is intentionally NOT declared here: docker compose only
+# interpolates ${VAR} in compose files, not in bind-mounted config files,
+# so a literal ${NGROK_AUTHTOKEN} would reach ngrok as-is. The
+# mp-sandbox.override.yml injects the token via the NGROK_AUTHTOKEN
+# environment variable, which ngrok reads directly.
 
 version: "2"
-authtoken: ${NGROK_AUTHTOKEN}
 tunnels:
   backend:
     proto: http
