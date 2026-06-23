@@ -4,6 +4,7 @@ import { MessageService } from 'primeng/api';
 
 import { AuthService } from '../../../core/services/auth';
 import { Cart, CartItem } from '../../../core/services/cart';
+import { CustomerCheckoutService } from '../../../core/services/customer-checkout';
 import { CustomerOrderService, OrderCreated } from '../../../core/services/customer-order';
 import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
 import { AppButton } from '../../../shared/components/app-button/app-button';
@@ -21,6 +22,7 @@ import { QuantityStepper } from '../../../shared/components/quantity-stepper/qua
 export class Checkout {
   protected readonly cart = inject(Cart);
   private readonly customerOrderService = inject(CustomerOrderService);
+  private readonly customerCheckout = inject(CustomerCheckoutService);
   protected readonly branchSelection = inject(StoreBranchSelectionService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -70,6 +72,9 @@ export class Checkout {
   /** Whether the user data is available for display. */
   protected readonly hasCustomerData = computed(() => this.auth.currentUser() != null);
 
+  /** True while creating a preference to redirect the customer to MP. */
+  protected readonly redirecting = signal(false);
+
   /** Whether there is no branch selected to fulfill the order. */
   protected readonly branchMissing = computed(
     () => this.branchSelection.selectedBranchId() == null,
@@ -90,7 +95,7 @@ export class Checkout {
     this.cart.removeItem(productId);
   }
 
-  /** Creates the pending order. The cart is intentionally kept until payment succeeds. */
+  /** Creates the pending order and clears the cart so the customer can start a new one. */
   protected createOrder(): void {
     if (this.branchMissing() || this.cart.isEmpty()) {
       this.errorCode.set(this.branchMissing() ? 'BRANCH_NOT_FOUND' : 'EMPTY_CART');
@@ -111,6 +116,7 @@ export class Checkout {
       .subscribe({
         next: (order) => {
           this.createdOrder.set(order);
+          this.cart.clearCart();
           this.submitting.set(false);
           this.toast.add({
             severity: 'success',
@@ -124,6 +130,30 @@ export class Checkout {
           this.submitting.set(false);
         },
       });
+  }
+
+  /**
+   * Creates a Checkout Pro preference for the order and redirects the customer
+   * to the Mercado Pago hosted checkout. Stores the order id in sessionStorage
+   * so the payment callback can retrieve it after the redirect.
+   */
+  protected goToPayment(): void {
+    const order = this.createdOrder();
+    if (!order) return;
+
+    this.redirecting.set(true);
+    this.errorCode.set(null);
+
+    this.customerCheckout.createPreference(order.id).subscribe({
+      next: (preference) => {
+        sessionStorage.setItem('pendingOrderId', String(order.id));
+        window.location.href = preference.initPoint;
+      },
+      error: (error) => {
+        this.errorCode.set(error?.error?.code ?? 'PAYMENT_PREFERENCE_FAILED');
+        this.redirecting.set(false);
+      },
+    });
   }
 
   /** Formats a numeric value as Argentine Pesos. */

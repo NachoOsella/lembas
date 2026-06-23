@@ -97,6 +97,54 @@ class MercadoPagoWebhookProcessorTest {
     }
 
     @Test
+    void shouldMatchPendingPaymentByExternalReferenceWhenProviderPaymentIdIsNew() {
+        Order order = newOrder();
+        Payment payment = pendingPayment(order);
+        payment.setExternalReference(order.getOrderNumber());
+
+        when(paymentGateway.findPayment("PAY-EXT")).thenReturn(Optional.of(
+                new GatewayPaymentLookup("PAY-EXT", "approved", new BigDecimal("1500.00"), "ARS",
+                        Map.of("external_reference", order.getOrderNumber()))));
+        when(paymentRepository.findByProviderPaymentId("PAY-EXT")).thenReturn(Optional.empty());
+        when(paymentRepository.findFirstByExternalReferenceOrderByIdAsc(order.getOrderNumber()))
+                .thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Optional<Long> result = processor.process(payload("payment", "PAY-EXT", "PAY-EXT"));
+
+        assertThat(result).contains(payment.getId());
+        assertThat(payment.getProviderPaymentId()).isEqualTo("PAY-EXT");
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.APPROVED);
+        verify(applier).markPaidAndDeductStock(order);
+    }
+
+    @Test
+    void shouldMatchHistoricalPendingPaymentByOrderNumberWhenExternalReferenceWasNotStored() {
+        Order order = newOrder();
+        Payment payment = pendingPayment(order);
+
+        when(paymentGateway.findPayment("PAY-OLD")).thenReturn(Optional.of(
+                new GatewayPaymentLookup("PAY-OLD", "approved", new BigDecimal("1500.00"), "ARS",
+                        Map.of("external_reference", order.getOrderNumber()))));
+        when(paymentRepository.findByProviderPaymentId("PAY-OLD")).thenReturn(Optional.empty());
+        when(paymentRepository.findFirstByExternalReferenceOrderByIdAsc(order.getOrderNumber()))
+                .thenReturn(Optional.empty());
+        when(paymentRepository.findFirstByOrderOrderNumberAndStatusInOrderByIdAsc(
+                order.getOrderNumber(), List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                .thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Optional<Long> result = processor.process(payload("payment", "PAY-OLD", "PAY-OLD"));
+
+        assertThat(result).contains(payment.getId());
+        assertThat(payment.getExternalReference()).isEqualTo(order.getOrderNumber());
+        assertThat(payment.getProviderPaymentId()).isEqualTo("PAY-OLD");
+        verify(applier).markPaidAndDeductStock(order);
+    }
+
+    @Test
     void shouldMarkPaymentFailedWhenProviderRejects() {
         Order order = newOrder();
         Payment payment = pendingPayment(order);

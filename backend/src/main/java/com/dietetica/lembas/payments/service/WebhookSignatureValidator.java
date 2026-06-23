@@ -72,7 +72,18 @@ public class WebhookSignatureValidator {
         }
         String manifest = buildManifest(dataId, xRequestId, ts);
         String expected = hmacSha256(properties.webhookSecret(), manifest);
+        var log = org.slf4j.LoggerFactory.getLogger(WebhookSignatureValidator.class);
+        // Always log the short prefix of the expected/received HMACs so we can
+        // compare a working simulation against a failing real notification
+        // without leaking the full digests. Prefixes (8 hex chars) are enough
+        // to spot a full mismatch in production logs.
+        log.info("WEBHOOK_VALIDATE dataId=[{}] ts=[{}] manifest=[{}] expectedPrefix=[{}] receivedPrefix=[{}]",
+                dataId, ts, manifest,
+                expected == null ? "null" : expected.substring(0, Math.min(8, expected.length())),
+                v1 == null ? "null" : v1.substring(0, Math.min(8, v1.length())));
         if (!constantTimeEquals(expected, v1)) {
+            log.warn("WEBHOOK_FAIL dataId=[{}] requestId=[{}] ts=[{}] manifest=[{}] expectedHMAC=[{}] receivedV1=[{}]",
+                    dataId, xRequestId, ts, manifest, expected, v1);
             throw new DomainException("WEBHOOK_SIGNATURE_INVALID", HttpStatus.UNAUTHORIZED,
                     "Webhook signature does not match");
         }

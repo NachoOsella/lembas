@@ -49,9 +49,14 @@
               </div>
             </div>
             <div class="mt-8 flex flex-wrap gap-3">
-              <app-button variant="primary" icon="pi pi-credit-card" [disabled]="true"
-                >Continuar al pago</app-button
+              <app-button
+                variant="primary"
+                icon="pi pi-credit-card"
+                [loading]="redirecting()"
+                (click)="goToPayment()"
               >
+                Continuar al pago
+              </app-button>
               <app-button variant="secondary" icon="pi pi-receipt" routerLink="/customer/orders"
                 >Ver mis pedidos</app-button
               >

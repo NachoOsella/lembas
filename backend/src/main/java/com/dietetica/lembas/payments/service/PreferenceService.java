@@ -68,32 +68,20 @@ public class PreferenceService {
         Order order = loadCustomerOrder(orderId, customer);
         validatePayable(order);
 
-        Payment existing = findOpenPayment(order);
-        if (existing != null && existing.getProviderPreferenceId() != null) {
-            if (isFakeGatewayPreference(existing.getProviderPreferenceId())) {
-                // The existing pending payment was created by the FakePaymentGateway.
-                // Cancel it so a fresh real preference is created below.
-                log.info("Cancelling stale fake preference for order {} (payment {})",
-                        orderId, existing.getId());
-                existing.setStatus(PaymentStatus.CANCELLED);
-                paymentRepository.save(existing);
-                existing = null;
-            } else {
-                log.info("Reusing pending preference for order {} (payment {})",
-                        orderId, existing.getId());
-                return new CreatePreferenceResponse(
-                        existing.getId(),
-                        existing.getProviderPreferenceId(),
-                        existing.getMetadata() == null ? properties.successUrl() : extractInitPoint(existing.getMetadata())
-                );
-            }
-        }
+        // Cancel any existing pending payment so every "Continuar al pago" click
+        // gets a fresh preference. MP Checkout Pro preferences are single-use:
+        // reusing a cancelled/expired one produces a generic error screen.
+        cancelOpenPayments(order);
 
-        Payment payment = existing != null ? existing : buildPendingPayment(order);
+        Payment payment = buildPendingPayment(order);
         CreatePreferenceCommand command = buildCommand(order, payment);
+        payment.setExternalReference(command.externalReference());
         PaymentPreferenceResult result = paymentGateway.createPreference(command);
         payment.setProviderPreferenceId(result.preferenceId());
+        // Prefer production init point; sandbox is the fallback.
         String initPoint = result.initPoint() != null ? result.initPoint() : result.sandboxInitPoint();
+        log.info("Preference created: id={} initPoint={} sandbox={} selected={}",
+                result.preferenceId(), result.initPoint(), result.sandboxInitPoint(), initPoint);
         payment.setMetadata(sanitizeMetadata(command.externalReference(), result.preferenceId(), initPoint));
         Payment saved = paymentRepository.save(payment);
         return new CreatePreferenceResponse(saved.getId(), result.preferenceId(), initPoint);
@@ -130,17 +118,18 @@ public class PreferenceService {
         }
     }
 
-    /** Returns the open Mercado Pago payment for the order, or null when none exists yet. */
-    private Payment findOpenPayment(Order order) {
+    /** Cancels all open Mercado Pago payments for the order so a fresh preference can be created. */
+    private void cancelOpenPayments(Order order) {
         List<Payment> payments = paymentRepository.findByOrderIdOrderByIdAsc(order.getId());
         for (Payment payment : payments) {
             if (payment.getProvider() == PaymentProvider.MERCADO_PAGO
                     && (payment.getStatus() == PaymentStatus.PENDING
                         || payment.getStatus() == PaymentStatus.IN_PROCESS)) {
-                return payment;
+                log.info("Cancelling stale payment {} for order {}", payment.getId(), order.getId());
+                payment.setStatus(PaymentStatus.CANCELLED);
+                paymentRepository.save(payment);
             }
         }
-        return null;
     }
 
     /** Builds the initial pending payment row for a freshly created order. */
@@ -163,6 +152,7 @@ public class PreferenceService {
         String email = order.getCustomerEmailSnapshot() == null
                 ? order.getCustomerUser() == null ? null : order.getCustomerUser().getEmail()
                 : order.getCustomerEmailSnapshot();
+        String orderIdParam = "orderId=" + order.getId();
         return new CreatePreferenceCommand(
                 order.getId(),
                 order.getOrderNumber(),
@@ -170,10 +160,10 @@ public class PreferenceService {
                 order.getTotal() == null ? "ARS" : "ARS",
                 email,
                 items,
-                properties.successUrl(),
-                properties.failureUrl(),
-                properties.pendingUrl(),
-                properties.notificationUrl(),
+                appendQueryParam(properties.successUrl(), orderIdParam),
+                appendQueryParam(properties.failureUrl(), orderIdParam),
+                appendQueryParam(properties.pendingUrl(), orderIdParam),
+                null,  // notification_url is NOT set so MP uses the panel URL
                 order.getOrderNumber(),
                 "order-" + order.getId() + "-payment-" + payment.getId()
         );
@@ -214,6 +204,14 @@ public class PreferenceService {
         return end < 0 ? properties.successUrl() : metadata.substring(start, end);
     }
 
+    /** Appends a query parameter to a URL, preserving any existing query string. */
+    private static String appendQueryParam(String url, String param) {
+        if (url == null || url.isBlank()) {
+            return url;
+        }
+        return url.contains("?") ? url + "&" + param : url + "?" + param;
+    }
+
     /** Escapes characters that would break the embedded JSON metadata string. */
     private static String escape(String value) {
         if (value == null) {
@@ -222,13 +220,4 @@ public class PreferenceService {
         return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
-    /**
-     * Returns true when the supplied preference id is a synthetic one generated
-     * by the {@link FakePaymentGateway}. Real Mercado Pago preference ids are
-     * numeric strings (e.g. {@code "1234567890"}), while fake ones start with
-     * {@code "fake-"}.
-     */
-    private static boolean isFakeGatewayPreference(String providerPreferenceId) {
-        return providerPreferenceId != null && providerPreferenceId.startsWith("fake-");
-    }
 }

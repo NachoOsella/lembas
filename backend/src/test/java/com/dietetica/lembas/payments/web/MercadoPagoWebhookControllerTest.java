@@ -96,6 +96,38 @@ class MercadoPagoWebhookControllerTest {
     }
 
     @Test
+    void shouldAcceptLegacyIpnPaymentWithoutWebhookSignatureValidation() throws Exception {
+        when(processor.process(any())).thenReturn(Optional.of(1L));
+
+        mockMvc.perform(post("/api/webhooks/mercadopago?id=164559101305&topic=payment")
+                        .header("x-signature", "ts=1782174452,v1=legacy-ipn-signature")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"resource": "164559101305", "topic": "payment"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.received").value(true))
+                .andExpect(jsonPath("$.source").value("ipn"));
+        verify(processor).process(any(MercadoPagoWebhookPayload.class));
+    }
+
+    @Test
+    void shouldAcceptLegacyIpnMerchantOrderWithoutWebhookSignatureValidation() throws Exception {
+        when(processor.process(any())).thenReturn(Optional.of(1L));
+
+        mockMvc.perform(post("/api/webhooks/mercadopago?id=42074945691&topic=merchant_order")
+                        .header("x-signature", "ts=1782177709,v1=33bde3ddf4d07495df5416234336f6e1f21ee4eb94bcc31d5020fb8d7584e620")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"resource": "42074945691", "topic": "merchant_order"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.received").value(true))
+                .andExpect(jsonPath("$.source").value("ipn"));
+        verify(processor).process(any(MercadoPagoWebhookPayload.class));
+    }
+
+    @Test
     void shouldReturn401WhenSignatureIsInvalid() throws Exception {
         mockMvc.perform(post("/api/webhooks/mercadopago?data.id=12345")
                         .header("x-signature", "ts=1700000000,v1=deadbeef")

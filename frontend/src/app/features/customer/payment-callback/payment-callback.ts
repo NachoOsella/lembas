@@ -61,12 +61,15 @@ export class PaymentCallback implements OnInit {
   });
 
   ngOnInit(): void {
-    const orderId = Number(this.route.snapshot.queryParamMap.get('orderId'));
+    const orderId =
+      Number(this.route.snapshot.queryParamMap.get('orderId')) ||
+      Number(sessionStorage.getItem('pendingOrderId'));
     if (!orderId) {
       this.phase.set('error');
       this.errorCode.set('ORDER_NOT_FOUND');
       return;
     }
+    sessionStorage.removeItem('pendingOrderId');
     this.pollOrder(orderId, 1);
   }
 
