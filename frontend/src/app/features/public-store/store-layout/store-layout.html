@@ -24,5 +24,55 @@
     <router-outlet />
   </main>
 
+  <!-- Cart preview dialog: public, no login required to browse -->
+  <p-dialog
+    [(visible)]="cartVisible"
+    header="Tu carrito"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '420px' }"
+    (onHide)="cartVisible.set(false)"
+  >
+    @if (cart.isEmpty()) {
+      <div class="flex flex-col items-center gap-3 py-8 text-center">
+        <i class="pi pi-shopping-bag text-4xl text-text-muted"></i>
+        <p class="text-text-muted">Tu carrito esta vacio</p>
+      </div>
+    } @else {
+      <div class="flex flex-col gap-4">
+        @for (item of cart.items(); track item.productId) {
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-text truncate">{{ item.name }}</p>
+              <p class="text-sm text-text-muted">
+                {{ item.quantity }} x {{ formatCurrency(item.price) }}
+              </p>
+            </div>
+            <p class="font-semibold text-text shrink-0">
+              {{ formatCurrency(item.price * item.quantity) }}
+            </p>
+          </div>
+        }
+        <hr class="border-border-warm" />
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-text">Total</span>
+          <span class="text-xl font-bold text-text">{{ formatCurrency(cart.total()) }}</span>
+        </div>
+      </div>
+    }
+    <div class="mt-6 flex flex-col gap-2">
+      <button
+        pButton
+        label="Confirmar pedido"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        class="w-full"
+        [disabled]="cart.isEmpty()"
+        (click)="goToCheckout()"
+      ></button>
+    </div>
+  </p-dialog>
+
   <app-store-footer [links]="footerLinks" [copyright]="copyright" />
 </div>

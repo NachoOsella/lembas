@@ -1,6 +1,8 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { Dialog } from 'primeng/dialog';
 
 import { AuthService } from '../../../core/services/auth';
 import { Cart } from '../../../core/services/cart';
@@ -13,9 +15,10 @@ import {
   AppStoreFooter,
   StoreFooterLink,
 } from '../../../shared/components/app-store-footer/app-store-footer';
+import { QuantityStepper } from '../../../shared/components/quantity-stepper/quantity-stepper';
 @Component({
   selector: 'app-store-layout',
-  imports: [RouterOutlet, AppStoreNav, AppStoreFooter],
+  imports: [RouterOutlet, AppStoreNav, AppStoreFooter, Dialog, ButtonModule, QuantityStepper],
   templateUrl: './store-layout.html',
   styleUrl: './store-layout.css',
 })
@@ -23,8 +26,11 @@ import {
 export class StoreLayout implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly cart = inject(Cart);
+  protected readonly cart = inject(Cart);
   protected readonly branchSelection = inject(StoreBranchSelectionService);
+
+  /** Cart dialog visibility. */
+  protected readonly cartVisible = signal(false);
 
   protected readonly cartItemsCount = computed(() => this.cart.totalItems());
 
@@ -135,9 +141,25 @@ export class StoreLayout implements OnInit {
     }
   }
 
-  /** Navigate to the cart/checkout page. */
+  /** Toggles the cart dialog so any visitor can review items before logging in. */
   goToCart(): void {
+    this.cartVisible.set(true);
+  }
+
+  /** Navigate to checkout; auth guard will redirect to login if not authenticated. */
+  goToCheckout(): void {
+    this.cartVisible.set(false);
     this.router.navigate(['/customer/checkout']);
+  }
+
+  /** Formats a value as Argentine Pesos. */
+  protected formatCurrency(value: number): string {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
   }
 
   /** Logs out the current user and navigates to the store home page. */
