@@ -1,5 +1,0 @@
-/* Payment-callback page mirrors the rest of the customer section: rounded card on
-   the warm canvas, generous padding, and consistent text hierarchy. */
-:host {
-  display: block;
-}

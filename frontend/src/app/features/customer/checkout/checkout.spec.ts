@@ -338,9 +338,9 @@ describe('Checkout', () => {
   });
 
   // -------------------------------------------------------------------
-  // Cart not cleared after successful order creation (LEMBAS-477)
+  // Cart cleared after successful order creation
   // -------------------------------------------------------------------
-  it('should NOT clear the cart after successful order creation', async () => {
+  it('should clear the cart after successful order creation', async () => {
     const clearCartSpy = vi.fn();
     const cart = mockCart({
       isEmpty: signal(false),
@@ -365,8 +365,9 @@ describe('Checkout', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    // The cart must be preserved so the customer can retry payment.
-    expect(clearCartSpy).not.toHaveBeenCalled();
+    // The cart is cleared so the customer starts a fresh session after
+    // initiating a payment. The order still owns its own line items.
+    expect(clearCartSpy).toHaveBeenCalled();
   });
 
   // -------------------------------------------------------------------

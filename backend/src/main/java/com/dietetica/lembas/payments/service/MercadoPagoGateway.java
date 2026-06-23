@@ -1,5 +1,6 @@
 package com.dietetica.lembas.payments.service;
 
+import com.dietetica.lembas.payments.PaymentErrorCodes;
 import com.dietetica.lembas.payments.gateway.PaymentGateway;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -94,7 +95,7 @@ public class MercadoPagoGateway implements PaymentGateway {
         );
         String preferenceId = preference.getId();
         if (preferenceId == null) {
-            throw new DomainException("MP_INVALID_RESPONSE",
+            throw new DomainException(PaymentErrorCodes.MP_INVALID_RESPONSE,
                     "Mercado Pago returned no preference id");
         }
         return new PaymentPreferenceResult(
@@ -160,7 +161,7 @@ public class MercadoPagoGateway implements PaymentGateway {
                     "fetch payment " + id
             );
         } catch (DomainException ex) {
-            if ("MP_NOT_FOUND".equals(ex.getCode())) {
+            if (PaymentErrorCodes.MP_NOT_FOUND.equals(ex.getCode())) {
                 return Optional.empty();
             }
             throw ex;
@@ -168,9 +169,11 @@ public class MercadoPagoGateway implements PaymentGateway {
         if (payment == null || payment.getId() == null) {
             return Optional.empty();
         }
-        // Build metadata from SDK fields directly (Jackson convertValue does not
-        // work reliably with the SDK's Payment resource). The webhook processor
-        // uses external_reference to match the local Payment record.
+        // Build metadata from SDK fields directly: Jackson convertValue does
+        // not work reliably with the SDK's typed resources, and Payment does
+        // not expose a getPreferenceId() in the 2.4.0 SDK. external_reference
+        // is the only field the webhook processor needs to match the local
+        // Payment record.
         Map<String, Object> metadata = new HashMap<>();
         if (payment.getExternalReference() != null) {
             metadata.put("external_reference", payment.getExternalReference());
@@ -231,56 +234,6 @@ public class MercadoPagoGateway implements PaymentGateway {
         return result;
     }
 
-    /**
-     * Adds the MP flag that makes preference-level notifications use Webhooks
-     * instead of legacy IPN. IPN requests arrive as {@code ?id=...&topic=...}
-     * and cannot be validated with the Webhooks secret signature.
-     */
-    private static String forceWebhookNotifications(String notificationUrl, String fallbackUrl) {
-        String url = notificationUrl == null || notificationUrl.isBlank() ? fallbackUrl : notificationUrl;
-        if (url.contains("source_news=")) {
-            return url;
-        }
-        String separator = url.contains("?") ? "&" : "?";
-        return url + separator + "source_news=webhooks";
-    }
-
-    // ------------------------------------------------------------------
-    // Metadata sanitization
-    // ------------------------------------------------------------------
-
-    /**
-     * Serializes the SDK resource to a plain map and strips fields that may
-     * contain card data, tokens, or other provider secrets. Returns a defensive
-     * copy so the SDK's typed object is not retained.
-     */
-    private Map<String, Object> sanitizeMetadata(Object sdkResource) {
-        Map<String, Object> raw;
-        try {
-            raw = objectMapper.convertValue(sdkResource, new TypeReference<Map<String, Object>>() {});
-        } catch (IllegalArgumentException ex) {
-            log.warn("Could not convert {} to metadata map: {}", sdkResource.getClass().getSimpleName(),
-                    ex.getMessage());
-            return Map.of();
-        }
-        if (raw == null) {
-            return Map.of();
-        }
-        Map<String, Object> safe = new HashMap<>(raw.size());
-        for (Map.Entry<String, Object> entry : raw.entrySet()) {
-            String key = entry.getKey();
-            if (key == null) {
-                continue;
-            }
-            String lower = key.toLowerCase();
-            if (lower.contains("card") || lower.contains("token") || lower.contains("secret")) {
-                continue;
-            }
-            safe.put(key, entry.getValue());
-        }
-        return safe;
-    }
-
     // ------------------------------------------------------------------
     // Request options helpers
     // ------------------------------------------------------------------
@@ -313,7 +266,7 @@ public class MercadoPagoGateway implements PaymentGateway {
             throw new IllegalArgumentException("CreatePreferenceCommand must not be null");
         }
         if (command.amount() == null || command.amount().signum() <= 0) {
-            throw new DomainException("MP_INVALID_AMOUNT", "Order amount must be positive");
+            throw new DomainException(PaymentErrorCodes.MP_INVALID_AMOUNT, "Order amount must be positive");
         }
         if (command.idempotencyKey() == null || command.idempotencyKey().isBlank()) {
             throw new IllegalArgumentException("idempotencyKey is required");
@@ -348,7 +301,7 @@ public class MercadoPagoGateway implements PaymentGateway {
             } catch (MPApiException ex) {
                 int status = ex.getStatusCode();
                 if (status >= 500) {
-                    last = new DomainException("MP_UPSTREAM_ERROR", HttpStatus.BAD_GATEWAY,
+                    last = new DomainException(PaymentErrorCodes.MP_UPSTREAM_ERROR, HttpStatus.BAD_GATEWAY,
                             "Mercado Pago upstream error: " + status);
                     log.warn("Mercado Pago server error attempt={} op={} status={}",
                             attempt, description, status);
@@ -357,13 +310,13 @@ public class MercadoPagoGateway implements PaymentGateway {
                     throw translateApiError(ex, description);
                 }
             } catch (MPException ex) {
-                last = new DomainException("MP_UPSTREAM_ERROR", HttpStatus.BAD_GATEWAY,
+                last = new DomainException(PaymentErrorCodes.MP_UPSTREAM_ERROR, HttpStatus.BAD_GATEWAY,
                         "Mercado Pago upstream error: " + ex.getMessage());
                 log.warn("Mercado Pago error attempt={} op={} cause={}",
                         attempt, description, ex.getMessage());
             } catch (Exception ex) {
                 // Network/IO failure wrapped by the SDK or a generic SDK error.
-                last = new DomainException("MP_UNREACHABLE", HttpStatus.BAD_GATEWAY,
+                last = new DomainException(PaymentErrorCodes.MP_UNREACHABLE, HttpStatus.BAD_GATEWAY,
                         "Mercado Pago is not reachable");
                 log.warn("Mercado Pago unreachable attempt={} op={} cause={}",
                         attempt, description, ex.getMessage());
@@ -378,14 +331,14 @@ public class MercadoPagoGateway implements PaymentGateway {
     private DomainException translateApiError(MPApiException ex, String description) {
         int status = ex.getStatusCode();
         if (status == 401 || status == 403) {
-            return new DomainException("MP_UNAUTHORIZED", HttpStatus.BAD_GATEWAY,
+            return new DomainException(PaymentErrorCodes.MP_UNAUTHORIZED, HttpStatus.BAD_GATEWAY,
                     "Mercado Pago rejected the credentials");
         }
         if (status == 404) {
-            return new DomainException("MP_NOT_FOUND", HttpStatus.BAD_GATEWAY,
+            return new DomainException(PaymentErrorCodes.MP_NOT_FOUND, HttpStatus.BAD_GATEWAY,
                     "Mercado Pago resource not found: " + description);
         }
-        return new DomainException("MP_PREFERENCE_REJECTED", HttpStatus.BAD_GATEWAY,
+        return new DomainException(PaymentErrorCodes.MP_PREFERENCE_REJECTED, HttpStatus.BAD_GATEWAY,
                 "Mercado Pago rejected the request: " + status);
     }
 

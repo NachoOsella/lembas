@@ -15,6 +15,7 @@ import com.dietetica.lembas.payments.model.PaymentStatus;
 import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.exception.DomainException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -56,7 +57,9 @@ class MercadoPagoWebhookProcessorTest {
         paymentGateway = mock(PaymentGateway.class);
         mapper = new WebhookToPaymentStatusMapper();
         applier = mock(WebhookOrderEffectApplier.class);
-        processor = new MercadoPagoWebhookProcessor(paymentRepository, orderRepository, paymentGateway, mapper, applier);
+        WebhookMetadataSerializer metadataSerializer = new WebhookMetadataSerializer(new ObjectMapper());
+        processor = new MercadoPagoWebhookProcessor(
+                paymentRepository, orderRepository, paymentGateway, mapper, applier, metadataSerializer);
     }
 
     @Test

@@ -20,6 +20,7 @@ export * from './app-product-selector/app-product-selector';
 export * from './app-search-bar/app-search-bar';
 export * from './app-section-card/app-section-card';
 export * from './app-select/app-select';
+export * from './severity-pill/severity-pill';
 export * from './app-stat-card/app-stat-card';
 export * from './app-store-footer/app-store-footer';
 export * from './app-store-nav/app-store-nav';

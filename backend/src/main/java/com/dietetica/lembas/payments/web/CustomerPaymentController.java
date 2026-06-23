@@ -3,7 +3,7 @@ package com.dietetica.lembas.payments.web;
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import com.dietetica.lembas.payments.dto.CreatePreferenceResponse;
 import com.dietetica.lembas.payments.dto.PaymentSummaryDto;
-import com.dietetica.lembas.payments.service.PaymentService;
+import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.payments.service.PreferenceService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,16 +24,16 @@ import java.util.List;
 public class CustomerPaymentController {
 
     private final PreferenceService preferenceService;
-    private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
     private final SecurityContextHelper securityContextHelper;
 
     public CustomerPaymentController(
             PreferenceService preferenceService,
-            PaymentService paymentService,
+            PaymentRepository paymentRepository,
             SecurityContextHelper securityContextHelper
     ) {
         this.preferenceService = preferenceService;
-        this.paymentService = paymentService;
+        this.paymentRepository = paymentRepository;
         this.securityContextHelper = securityContextHelper;
     }
 
@@ -47,16 +47,19 @@ public class CustomerPaymentController {
         return preferenceService.createPreference(orderId, securityContextHelper.getCurrentUser());
     }
 
-    /** Returns the payment attempts recorded for the order. */
+    /**
+     * Returns the payment attempts recorded for the order.
+     *
+     * <p>Ownership is enforced at the query level: the JPA finder joins on the
+     * order's customer user id, so payments for someone else's order are
+     * simply not returned. The {@code findById} call distinguishes "no
+     * payments yet" (an empty list) from "wrong owner" (404).</p>
+     */
     @GetMapping
     public List<PaymentSummaryDto> list(@PathVariable Long orderId) {
-        // Ownership is enforced by the service: only the authenticated customer
-        // can read payments for an order they own.
         Long customerId = securityContextHelper.getCurrentUser().getId();
-        return paymentService.findByOrderId(orderId).stream()
-                .filter(payment -> payment.getOrder() != null
-                        && payment.getOrder().getCustomerUser() != null
-                        && customerId.equals(payment.getOrder().getCustomerUser().getId()))
+        return paymentRepository.findByOrderIdAndOrderCustomerUserIdOrderByIdAsc(orderId, customerId)
+                .stream()
                 .map(this::toDto)
                 .toList();
     }

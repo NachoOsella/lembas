@@ -1,6 +1,7 @@
 package com.dietetica.lembas.payments.web;
 
 import com.dietetica.lembas.payments.dto.MercadoPagoWebhookPayload;
+import com.dietetica.lembas.payments.service.IpnTopics;
 import com.dietetica.lembas.payments.service.MercadoPagoWebhookProcessor;
 import com.dietetica.lembas.payments.service.WebhookSignatureValidator;
 import com.dietetica.lembas.shared.exception.DomainException;
@@ -67,20 +68,12 @@ public class MercadoPagoWebhookController {
             @RequestParam(name = "topic", required = false) String legacyTopic,
             @RequestBody(required = false) MercadoPagoWebhookPayload payload
     ) {
-        // Debug entry-point log: prints the raw inbound state of the request so
-        // that a future 401 can be triaged without needing to reproduce it. The
-        // x-signature value is never logged (only the length) to avoid leaking
-        // HMACs into the log stream.
-        log.info("MP webhook received uri={} method={} origin={} data.id={} legacy.id={} legacy.topic={} x-request-id={} sig.len={} user-agent={}",
+        // The x-signature value is never logged; only its length, so a leaked
+        // log line never contains a usable HMAC.
+        log.debug("MP webhook received uri={} data.id={} legacy.id={} legacy.topic={} sig.len={}",
                 httpRequest.getRequestURI(),
-                httpRequest.getMethod(),
-                httpRequest.getHeader("Origin"),
-                dataId,
-                legacyId,
-                legacyTopic,
-                xRequestId,
-                xSignature == null ? 0 : xSignature.length(),
-                httpRequest.getHeader("User-Agent"));
+                dataId, legacyId, legacyTopic,
+                xSignature == null ? 0 : xSignature.length());
 
         if (isLegacyPaymentIpn(dataId, legacyId, legacyTopic)) {
             processSafely(new MercadoPagoWebhookPayload(
@@ -111,25 +104,22 @@ public class MercadoPagoWebhookController {
     private static boolean isLegacyPaymentIpn(String dataId, String legacyId, String legacyTopic) {
         return (dataId == null || dataId.isBlank())
                 && legacyId != null && !legacyId.isBlank()
-                && isKnownIpnTopic(legacyTopic);
+                && IpnTopics.isKnown(legacyTopic);
     }
 
-    /** Known IPN topics from Mercado Pago that signal payment/order events. */
-    private static boolean isKnownIpnTopic(String topic) {
-        if (topic == null) {
-            return false;
-        }
-        return topic.equalsIgnoreCase("payment")
-                || topic.equalsIgnoreCase("merchant_order")
-                || topic.equalsIgnoreCase("topic_merchant_order_wh");
-    }
-
-    /** Logs processing failures but acknowledges MP so notifications are not retried forever. */
+    /**
+     * Logs processing failures but acknowledges MP so notifications are not retried forever.
+     *
+     * <p>Persistent failures (DB down, missing payment) should also be surfaced
+     * via metrics/alerts in addition to this error log; otherwise legitimate
+     * notifications can be silently lost in the log stream.</p>
+     */
     private void processSafely(MercadoPagoWebhookPayload payload) {
         try {
             processor.process(payload);
         } catch (RuntimeException ex) {
-            log.error("Failed to process Mercado Pago webhook", ex);
+            log.error("Failed to process Mercado Pago webhook (type={}, data.id={})",
+                    payload.type(), payload.data() == null ? null : payload.data().id(), ex);
         }
     }
 }

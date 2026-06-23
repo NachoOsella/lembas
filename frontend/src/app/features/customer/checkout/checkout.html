@@ -40,7 +40,7 @@
               <div class="rounded-lg bg-surface-warm p-4">
                 <dt class="text-xs font-bold uppercase tracking-wider text-text-muted">Total</dt>
                 <dd class="mt-1 text-2xl font-semibold text-text">
-                  {{ formatCurrency(order.total) }}
+                  {{ order.total | currencyAr }}
                 </dd>
               </div>
               <div class="rounded-lg bg-mint-wash/40 p-4">
@@ -110,11 +110,11 @@
                     <div class="min-w-0">
                       <h2 class="text-lg font-semibold text-text">{{ item.name }}</h2>
                       <p class="mt-1 text-base text-text-muted">
-                        {{ formatCurrency(item.price) }} por unidad
+                        {{ item.price | currencyAr }} por unidad
                       </p>
                     </div>
                     <span class="shrink-0 text-xl font-semibold text-text">
-                      {{ formatCurrency(item.price * item.quantity) }}
+                      {{ (item.price * item.quantity) | currencyAr }}
                     </span>
                   </div>
 
@@ -173,7 +173,7 @@
               </div>
               <div class="flex items-center justify-between text-base">
                 <dt class="text-text-muted">Subtotal</dt>
-                <dd class="font-semibold text-text">{{ formatCurrency(cart.total()) }}</dd>
+                <dd class="font-semibold text-text">{{ cart.total() | currencyAr }}</dd>
               </div>
               <div class="flex items-center justify-between text-base">
                 <dt class="text-text-muted">Envío</dt>
@@ -186,7 +186,7 @@
                     class="text-right text-3xl font-bold tracking-tight text-text"
                     data-testid="checkout-total"
                   >
-                    {{ formatCurrency(cart.total()) }}
+                    {{ cart.total() | currencyAr }}
                   </dd>
                 </div>
               </div>

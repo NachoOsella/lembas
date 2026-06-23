@@ -1,10 +1,13 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
 import { CustomerCheckoutService } from '../../../core/services/customer-checkout';
 import { CustomerOrderService } from '../../../core/services/customer-order';
+import { CurrencyArPipe } from '../../../core/pipes/currency-ar.pipe';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
+import { ShortDateArPipe } from '../../../core/pipes/short-date-ar.pipe';
 import {
   OrderDetail as OrderDetailData,
   OrderStatus,
@@ -12,11 +15,14 @@ import {
   orderStatusSeverity,
   paymentStatusLabel,
   paymentStatusSeverity,
+  PaymentMethod,
+  PaymentStatus,
 } from '../../../shared/models/order';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
+import { SeverityPill, SeverityPillTone } from '../../../shared/components/severity-pill/severity-pill';
 
 /** Visual state for one step in the order journey. */
 type TimelineStepState = 'done' | 'current' | 'upcoming' | 'alert';
@@ -37,9 +43,16 @@ interface TimelineStep {
  */
 @Component({
   selector: 'app-order-detail',
-  imports: [AppButton, AppEyebrow, ErrorAlert, LoadingSpinner],
+  imports: [
+    AppButton,
+    AppEyebrow,
+    ErrorAlert,
+    LoadingSpinner,
+    SeverityPill,
+    CurrencyArPipe,
+    ShortDateArPipe,
+  ],
   templateUrl: './order-detail.html',
-  styleUrl: './order-detail.css',
 })
 export class OrderDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -48,6 +61,7 @@ export class OrderDetail implements OnInit {
   private readonly checkoutService = inject(CustomerCheckoutService);
   private readonly errorMapping = inject(ErrorMappingService);
   private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly loading = signal(true);
   protected readonly errorCode = signal<string | null>(null);
@@ -55,7 +69,10 @@ export class OrderDetail implements OnInit {
   protected readonly paying = signal(false);
 
   /** Whether the order is in a state that allows the customer to initiate payment. */
-  protected readonly canPay = computed(() => this.order()?.status === 'PENDING_PAYMENT');
+  protected readonly canPay = computed(() => {
+    const status = this.order()?.status;
+    return status === 'PENDING_PAYMENT' || status === 'PAYMENT_FAILED';
+  });
 
   /** Human-readable error message derived from the backend error code. */
   protected readonly errorMessage = computed(() => {
@@ -169,29 +186,38 @@ export class OrderDetail implements OnInit {
   }
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!id) {
-      this.errorCode.set('ORDER_NOT_FOUND');
-      this.loading.set(false);
-      return;
-    }
-    this.loadOrder(id);
+    // Subscribe to the paramMap observable so navigating from /customer/orders/1
+    // to /customer/orders/2 (without unmounting the component) reloads the
+    // detail automatically.
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const id = Number(params.get('id'));
+        if (!id) {
+          this.errorCode.set('ORDER_NOT_FOUND');
+          this.loading.set(false);
+          return;
+        }
+        this.loadOrder(id);
+      });
   }
 
   /** Fetches the order detail from the backend. */
   private loadOrder(id: number): void {
     this.loading.set(true);
     this.errorCode.set(null);
-    this.service.getOrder(id).subscribe({
-      next: (data) => {
-        this.order.set(data);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.errorCode.set(err?.error?.code ?? 'UNKNOWN');
-        this.loading.set(false);
-      },
-    });
+    this.service.getOrder(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.order.set(data);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.errorCode.set(err?.error?.code ?? 'UNKNOWN');
+          this.loading.set(false);
+        },
+      });
   }
 
   /** Navigates to the Mercado Pago checkout flow. */
@@ -204,29 +230,31 @@ export class OrderDetail implements OnInit {
       return;
     }
     this.paying.set(true);
-    this.checkoutService.createPreference(current.id).subscribe({
-      next: (response) => {
-        if (response.initPoint) {
-          window.location.href = response.initPoint;
-          return;
-        }
-        this.paying.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'No se pudo iniciar el pago',
-          detail: 'Mercado Pago no devolvio una URL de redireccion.',
-        });
-      },
-      error: (err: unknown) => {
-        this.paying.set(false);
-        const code = (err as { error?: { code?: string } } | null)?.error?.code;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'No se pudo iniciar el pago',
-          detail: this.errorMapping.getMessage(code ?? 'INTERNAL_ERROR'),
-        });
-      },
-    });
+    this.checkoutService.createPreference(current.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          if (response.initPoint) {
+            window.location.href = response.initPoint;
+            return;
+          }
+          this.paying.set(false);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'No se pudo iniciar el pago',
+            detail: 'Mercado Pago no devolvio una URL de redireccion.',
+          });
+        },
+        error: (err: unknown) => {
+          this.paying.set(false);
+          const code = (err as { error?: { code?: string } } | null)?.error?.code;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'No se pudo iniciar el pago',
+            detail: this.errorMapping.getMessage(code ?? 'INTERNAL_ERROR'),
+          });
+        },
+      });
   }
 
   /** Navigates back to the customer orders list. */
@@ -234,49 +262,44 @@ export class OrderDetail implements OnInit {
     this.router.navigate(['/customer/orders']);
   }
 
-  /** Formats a number as Argentine Pesos. */
-  protected formatCurrency(value: number): string {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  }
-
-  /** Formats an ISO date string as a locale-aware short date/time. */
-  protected formatDate(iso: string | null): string {
-    if (!iso) return '---';
-    try {
-      return new Date(iso).toLocaleDateString('es-AR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return iso;
-    }
-  }
-
   /** Returns a human-readable label for the given order status. */
   protected statusLabel(status: OrderStatus): string {
     return orderStatusLabel(status);
   }
 
-  /** Returns a PrimeNG severity key for order status badge colouring. */
-  protected statusSeverity(status: OrderStatus): string {
-    return orderStatusSeverity(status);
+  /** Maps the PrimeNG-style order status severity to the severity-pill tone vocabulary. */
+  protected orderStatusTone(status: OrderStatus): SeverityPillTone {
+    return primeNgToTone(orderStatusSeverity(status));
   }
 
   /** Returns a human-readable label for a payment status. */
-  protected paymentLabel(status: string): string {
-    return paymentStatusLabel(status as any);
+  protected paymentStatusLabel(status: PaymentStatus | string): string {
+    return paymentStatusLabel(status as PaymentStatus);
   }
 
-  /** Returns a PrimeNG severity key for payment status badge colouring. */
-  protected paymentSeverity(status: string): string {
-    return paymentStatusSeverity(status as any);
+  /** Returns the severity-pill tone for a payment status. */
+  protected paymentStatusTone(status: PaymentStatus | string): SeverityPillTone {
+    return primeNgToTone(paymentStatusSeverity(status as PaymentStatus));
+  }
+
+  /** Returns a human-readable label for a payment method. */
+  protected paymentMethodLabel(method: PaymentMethod | string): string {
+    return method === 'CHECKOUT_PRO' ? 'Mercado Pago' : String(method);
+  }
+}
+
+/** Maps the PrimeNG severity keys emitted by the order/payment mappers to the severity-pill tones. */
+function primeNgToTone(severity: string | undefined): SeverityPillTone {
+  switch (severity) {
+    case 'success':
+      return 'success';
+    case 'warn':
+    case 'warning':
+      return 'warn';
+    case 'danger':
+    case 'error':
+      return 'danger';
+    default:
+      return 'neutral';
   }
 }

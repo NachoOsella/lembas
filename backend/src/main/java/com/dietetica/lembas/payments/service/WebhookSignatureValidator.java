@@ -1,6 +1,9 @@
 package com.dietetica.lembas.payments.service;
 
+import com.dietetica.lembas.payments.PaymentErrorCodes;
 import com.dietetica.lembas.shared.exception.DomainException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -43,6 +46,8 @@ import java.util.HexFormat;
 @Component
 public class WebhookSignatureValidator {
 
+    private static final Logger log = LoggerFactory.getLogger(WebhookSignatureValidator.class);
+
     private static final String HMAC_ALGORITHM = "HmacSHA256";
 
     private final MercadoPagoProperties properties;
@@ -61,30 +66,23 @@ public class WebhookSignatureValidator {
      */
     public void validate(String xSignature, String xRequestId, String dataId) {
         if (xSignature == null || xSignature.isBlank()) {
-            throw new DomainException("WEBHOOK_SIGNATURE_INVALID", HttpStatus.UNAUTHORIZED,
+            throw new DomainException(PaymentErrorCodes.WEBHOOK_SIGNATURE_INVALID, HttpStatus.UNAUTHORIZED,
                     "Missing webhook signature");
         }
         String ts = extractPart(xSignature, "ts");
         String v1 = extractPart(xSignature, "v1");
         if (ts == null || v1 == null) {
-            throw new DomainException("WEBHOOK_SIGNATURE_INVALID", HttpStatus.UNAUTHORIZED,
+            throw new DomainException(PaymentErrorCodes.WEBHOOK_SIGNATURE_INVALID, HttpStatus.UNAUTHORIZED,
                     "Webhook signature is missing ts or v1 components");
         }
         String manifest = buildManifest(dataId, xRequestId, ts);
         String expected = hmacSha256(properties.webhookSecret(), manifest);
-        var log = org.slf4j.LoggerFactory.getLogger(WebhookSignatureValidator.class);
-        // Always log the short prefix of the expected/received HMACs so we can
-        // compare a working simulation against a failing real notification
-        // without leaking the full digests. Prefixes (8 hex chars) are enough
-        // to spot a full mismatch in production logs.
-        log.info("WEBHOOK_VALIDATE dataId=[{}] ts=[{}] manifest=[{}] expectedPrefix=[{}] receivedPrefix=[{}]",
-                dataId, ts, manifest,
-                expected == null ? "null" : expected.substring(0, Math.min(8, expected.length())),
-                v1 == null ? "null" : v1.substring(0, Math.min(8, v1.length())));
+        // Debug-level diagnostic for triaging signature mismatches without
+        // emitting HMAC digests in production logs.
+        log.debug("WEBHOOK_VALIDATE dataId=[{}] ts=[{}] manifest=[{}]", dataId, ts, manifest);
         if (!constantTimeEquals(expected, v1)) {
-            log.warn("WEBHOOK_FAIL dataId=[{}] requestId=[{}] ts=[{}] manifest=[{}] expectedHMAC=[{}] receivedV1=[{}]",
-                    dataId, xRequestId, ts, manifest, expected, v1);
-            throw new DomainException("WEBHOOK_SIGNATURE_INVALID", HttpStatus.UNAUTHORIZED,
+            log.warn("Webhook signature mismatch: dataId=[{}] ts=[{}]", dataId, ts);
+            throw new DomainException(PaymentErrorCodes.WEBHOOK_SIGNATURE_INVALID, HttpStatus.UNAUTHORIZED,
                     "Webhook signature does not match");
         }
     }

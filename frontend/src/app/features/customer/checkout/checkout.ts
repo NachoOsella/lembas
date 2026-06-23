@@ -4,6 +4,7 @@ import { MessageService } from 'primeng/api';
 
 import { AuthService } from '../../../core/services/auth';
 import { Cart, CartItem } from '../../../core/services/cart';
+import { CurrencyArPipe } from '../../../core/pipes/currency-ar.pipe';
 import { CustomerCheckoutService } from '../../../core/services/customer-checkout';
 import { CustomerOrderService, OrderCreated } from '../../../core/services/customer-order';
 import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
@@ -15,7 +16,7 @@ import { QuantityStepper } from '../../../shared/components/quantity-stepper/qua
 
 @Component({
   selector: 'app-checkout',
-  imports: [RouterLink, AppButton, AppEyebrow, EmptyState, ErrorAlert, QuantityStepper],
+  imports: [RouterLink, AppButton, AppEyebrow, EmptyState, ErrorAlert, QuantityStepper, CurrencyArPipe],
   templateUrl: './checkout.html',
   styleUrl: './checkout.css',
 })
@@ -154,16 +155,6 @@ export class Checkout {
         this.redirecting.set(false);
       },
     });
-  }
-
-  /** Formats a numeric value as Argentine Pesos. */
-  protected formatCurrency(value: number): string {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
   }
 
   /** Navigates back to the catalog while preserving the local cart. */

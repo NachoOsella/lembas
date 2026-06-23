@@ -1,10 +1,10 @@
 import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
-import { of, throwError } from 'rxjs';
+import { BehaviorSubject, of, throwError } from 'rxjs';
 
 import { OrderDetail } from './order-detail';
 import { CustomerCheckoutService } from '../../../core/services/customer-checkout';
@@ -72,14 +72,14 @@ function mockCheckoutService(): CustomerCheckoutService {
   } as unknown as CustomerCheckoutService;
 }
 
-/** Minimal mock for ActivatedRoute with paramMap. */
+/** Minimal mock for ActivatedRoute with a paramMap observable. */
 function mockRoute(id: string): ActivatedRoute {
+  const params$ = new BehaviorSubject(convertToParamMap({ id }));
   return {
     snapshot: {
-      paramMap: {
-        get: (key: string) => (key === 'id' ? id : null),
-      },
+      paramMap: convertToParamMap({ id }),
     },
+    paramMap: params$.asObservable(),
   } as unknown as ActivatedRoute;
 }
 

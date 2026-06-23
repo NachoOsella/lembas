@@ -15,13 +15,17 @@ import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Use cases for creating a hosted-checkout preference for an order.
@@ -42,17 +46,20 @@ public class PreferenceService {
     private final PaymentRepository paymentRepository;
     private final PaymentGateway paymentGateway;
     private final MercadoPagoProperties properties;
+    private final ObjectMapper objectMapper;
 
     public PreferenceService(
             OrderRepository orderRepository,
             PaymentRepository paymentRepository,
             PaymentGateway paymentGateway,
-            MercadoPagoProperties properties
+            MercadoPagoProperties properties,
+            ObjectMapper objectMapper
     ) {
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
         this.paymentGateway = paymentGateway;
         this.properties = properties;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -68,9 +75,11 @@ public class PreferenceService {
         Order order = loadCustomerOrder(orderId, customer);
         validatePayable(order);
 
-        // Cancel any existing pending payment so every "Continuar al pago" click
-        // gets a fresh preference. MP Checkout Pro preferences are single-use:
-        // reusing a cancelled/expired one produces a generic error screen.
+        // Cancel any existing open Mercado Pago payment so every "Continuar al
+        // pago" click gets a fresh preference. MP Checkout Pro preferences are
+        // single-use: reusing a cancelled/expired one produces a generic error
+        // screen on the provider side. When the order has no open payment
+        // this query returns an empty list and the loop is a no-op.
         cancelOpenPayments(order);
 
         Payment payment = buildPendingPayment(order);
@@ -78,11 +87,12 @@ public class PreferenceService {
         payment.setExternalReference(command.externalReference());
         PaymentPreferenceResult result = paymentGateway.createPreference(command);
         payment.setProviderPreferenceId(result.preferenceId());
-        // Prefer production init point; sandbox is the fallback.
+        // Prefer production init point; sandbox is the fallback so dev/test
+        // environments still receive a usable redirect.
         String initPoint = result.initPoint() != null ? result.initPoint() : result.sandboxInitPoint();
-        log.info("Preference created: id={} initPoint={} sandbox={} selected={}",
+        log.debug("Preference created: id={} initPoint={} sandbox={} selected={}",
                 result.preferenceId(), result.initPoint(), result.sandboxInitPoint(), initPoint);
-        payment.setMetadata(sanitizeMetadata(command.externalReference(), result.preferenceId(), initPoint));
+        payment.setMetadata(buildMetadata(command.externalReference(), result.preferenceId(), initPoint));
         Payment saved = paymentRepository.save(payment);
         return new CreatePreferenceResponse(saved.getId(), result.preferenceId(), initPoint);
     }
@@ -120,15 +130,15 @@ public class PreferenceService {
 
     /** Cancels all open Mercado Pago payments for the order so a fresh preference can be created. */
     private void cancelOpenPayments(Order order) {
-        List<Payment> payments = paymentRepository.findByOrderIdOrderByIdAsc(order.getId());
-        for (Payment payment : payments) {
-            if (payment.getProvider() == PaymentProvider.MERCADO_PAGO
-                    && (payment.getStatus() == PaymentStatus.PENDING
-                        || payment.getStatus() == PaymentStatus.IN_PROCESS)) {
-                log.info("Cancelling stale payment {} for order {}", payment.getId(), order.getId());
-                payment.setStatus(PaymentStatus.CANCELLED);
-                paymentRepository.save(payment);
-            }
+        List<Payment> open = paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(
+                order.getId(),
+                PaymentProvider.MERCADO_PAGO,
+                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)
+        );
+        for (Payment payment : open) {
+            log.info("Cancelling stale payment {} for order {}", payment.getId(), order.getId());
+            payment.setStatus(PaymentStatus.CANCELLED);
+            paymentRepository.save(payment);
         }
     }
 
@@ -149,15 +159,15 @@ public class PreferenceService {
         List<CreatePreferenceCommand.PreferenceItem> items = order.getItems().stream()
                 .map(this::toItem)
                 .toList();
-        String email = order.getCustomerEmailSnapshot() == null
-                ? order.getCustomerUser() == null ? null : order.getCustomerUser().getEmail()
-                : order.getCustomerEmailSnapshot();
+        String email = order.getCustomerEmailSnapshot() != null
+                ? order.getCustomerEmailSnapshot()
+                : order.getCustomerUser() == null ? null : order.getCustomerUser().getEmail();
         String orderIdParam = "orderId=" + order.getId();
         return new CreatePreferenceCommand(
                 order.getId(),
                 order.getOrderNumber(),
                 order.getTotal(),
-                order.getTotal() == null ? "ARS" : "ARS",
+                "ARS",
                 email,
                 items,
                 appendQueryParam(properties.successUrl(), orderIdParam),
@@ -184,24 +194,16 @@ public class PreferenceService {
      * processor and the customer callback. Keeps the column lean and avoids
      * persisting any provider-internal data that could leak.
      */
-    private String sanitizeMetadata(String externalReference, String preferenceId, String initPoint) {
-        return "{\"externalReference\":\"" + escape(externalReference) + "\","
-                + "\"preferenceId\":\"" + escape(preferenceId) + "\","
-                + "\"initPoint\":\"" + escape(initPoint) + "\"}";
-    }
-
-    /** Extracts the init point from a previously stored metadata JSON. */
-    private String extractInitPoint(String metadata) {
-        if (metadata == null || metadata.isBlank()) {
-            return properties.successUrl();
+    private String buildMetadata(String externalReference, String preferenceId, String initPoint) {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        metadata.put("externalReference", externalReference);
+        metadata.put("preferenceId", preferenceId);
+        metadata.put("initPoint", initPoint);
+        try {
+            return objectMapper.writeValueAsString(metadata);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Failed to serialize preference metadata", ex);
         }
-        int idx = metadata.indexOf("\"initPoint\":\"");
-        if (idx < 0) {
-            return properties.successUrl();
-        }
-        int start = idx + "\"initPoint\":\"".length();
-        int end = metadata.indexOf("\"", start);
-        return end < 0 ? properties.successUrl() : metadata.substring(start, end);
     }
 
     /** Appends a query parameter to a URL, preserving any existing query string. */
@@ -210,14 +212,6 @@ public class PreferenceService {
             return url;
         }
         return url.contains("?") ? url + "&" + param : url + "?" + param;
-    }
-
-    /** Escapes characters that would break the embedded JSON metadata string. */
-    private static String escape(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
 }

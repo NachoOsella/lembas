@@ -42,26 +42,15 @@
             class="mb-8 border-b border-border-warm pb-6 text-sm sm:flex sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-3 sm:text-base"
           >
             <div class="grid gap-2 sm:contents">
-              <span
-                class="inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider"
-                [class]="
-                  statusSeverity(o.status) === 'success'
-                    ? 'bg-mint-wash text-primary'
-                    : statusSeverity(o.status) === 'danger'
-                      ? 'bg-red-50 text-red'
-                      : statusSeverity(o.status) === 'warn'
-                        ? 'bg-amber-tint text-amber-text'
-                        : 'bg-surface-warm text-text-muted'
-                "
-              >
+              <app-severity-pill [tone]="orderStatusTone(o.status)">
                 {{ statusLabel(o.status) }}
-              </span>
+              </app-severity-pill>
 
               <span class="hidden h-5 w-px bg-border-warm sm:block"></span>
 
               <span>
                 <span class="text-text-muted">Total</span>
-                <span class="ml-1 font-semibold text-text">{{ formatCurrency(o.total) }}</span>
+                <span class="ml-1 font-semibold text-text">{{ o.total | currencyAr }}</span>
               </span>
 
               <span class="hidden h-5 w-px bg-border-warm sm:block"></span>
@@ -74,7 +63,7 @@
               <span class="hidden h-5 w-px bg-border-warm sm:block"></span>
 
               <span class="text-text-muted">
-                {{ formatDate(o.createdAt) }}
+                {{ o.createdAt | shortDateAr }}
               </span>
             </div>
           </div>
@@ -90,11 +79,11 @@
                   <div class="min-w-0">
                     <p class="text-base font-semibold text-text">{{ item.productName }}</p>
                     <p class="mt-1 text-sm text-text-muted">
-                      {{ item.quantity }} x {{ formatCurrency(item.unitPrice) }}
+                      {{ item.quantity }} x {{ item.unitPrice | currencyAr }}
                     </p>
                   </div>
                   <span class="text-base font-semibold text-text">
-                    {{ formatCurrency(item.subtotalAmount) }}
+                    {{ item.subtotalAmount | currencyAr }}
                   </span>
                 </div>
               }
@@ -104,17 +93,17 @@
             <dl class="mt-6 space-y-2 border-t border-border-warm pt-5">
               <div class="flex items-center justify-between text-sm">
                 <dt class="text-text-muted">Subtotal</dt>
-                <dd class="font-semibold text-text">{{ formatCurrency(o.subtotal) }}</dd>
+                <dd class="font-semibold text-text">{{ o.subtotal | currencyAr }}</dd>
               </div>
               @if (o.discountTotal > 0) {
                 <div class="flex items-center justify-between text-sm">
                   <dt class="text-text-muted">Descuento</dt>
-                  <dd class="font-semibold text-red">-{{ formatCurrency(o.discountTotal) }}</dd>
+                  <dd class="font-semibold text-red">-{{ o.discountTotal | currencyAr }}</dd>
                 </div>
               }
               <div class="flex items-baseline justify-between border-t border-border-warm pt-3">
                 <dt class="text-base font-semibold text-text">Total</dt>
-                <dd class="text-xl font-bold text-text">{{ formatCurrency(o.total) }}</dd>
+                <dd class="text-xl font-bold text-text">{{ o.total | currencyAr }}</dd>
               </div>
             </dl>
           </div>
@@ -149,7 +138,7 @@
                       <p class="tracking-step-label">{{ step.label }}</p>
                       <p class="tracking-step-date">
                         @if (step.date) {
-                          {{ formatDate(step.date) }}
+                          {{ step.date | shortDateAr }}
                         } @else if (step.state === 'current') {
                           En curso
                         } @else if (step.state === 'upcoming') {
@@ -180,32 +169,17 @@
                   <div class="mt-3 space-y-2">
                     <div class="flex items-center justify-between text-sm">
                       <span class="text-text-muted">Metodo</span>
-                      <span class="font-semibold text-text">{{
-                        paymentLabel(payment.method)
-                      }}</span>
+                      <span class="font-semibold text-text">{{ paymentMethodLabel(payment.method) }}</span>
                     </div>
                     <div class="flex items-center justify-between text-sm">
                       <span class="text-text-muted">Estado</span>
-                      <span
-                        class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wider"
-                        [class]="
-                          paymentSeverity(payment.status) === 'success'
-                            ? 'bg-mint-wash text-primary'
-                            : paymentSeverity(payment.status) === 'danger'
-                              ? 'bg-red-50 text-red'
-                              : paymentSeverity(payment.status) === 'warn'
-                                ? 'bg-amber-tint text-amber-text'
-                                : 'bg-surface-warm text-text-muted'
-                        "
-                      >
-                        {{ paymentLabel(payment.status) }}
-                      </span>
+                      <app-severity-pill [tone]="paymentStatusTone(payment.status)">
+                        {{ paymentStatusLabel(payment.status) }}
+                      </app-severity-pill>
                     </div>
                     <div class="flex items-center justify-between text-sm">
                       <span class="text-text-muted">Monto</span>
-                      <span class="font-semibold text-text">{{
-                        formatCurrency(payment.amount)
-                      }}</span>
+                      <span class="font-semibold text-text">{{ payment.amount | currencyAr }}</span>
                     </div>
                   </div>
                 }
@@ -228,7 +202,7 @@
 
             <!-- Cancellation reason -->
             @if (o.cancellationReason) {
-              <div class="mt-5 rounded-lg bg-red-50 p-4">
+              <div class="mt-5 rounded-lg bg-red-tint p-4">
                 <p class="text-xs font-bold uppercase tracking-wider text-red">
                   Motivo de cancelacion
                 </p>
@@ -237,7 +211,7 @@
             }
           </div>
 
-          <!-- Pay button (LEMBAS-493) -->
+          <!-- Pay button -->
           @if (canPay()) {
             <app-button
               class="w-full"

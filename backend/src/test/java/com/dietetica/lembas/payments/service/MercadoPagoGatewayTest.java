@@ -88,7 +88,10 @@ class MercadoPagoGatewayTest {
     }
 
     @Test
-    void shouldAppendWebhookSourceNewsToNotificationUrl() throws Exception {
+    void shouldNotSetNotificationUrlOnPreferenceRequest() throws Exception {
+        // MP panel-level Webhook URL is the source of truth for the notification
+        // target; preference-level notification URLs use a different internal
+        // signing system that is incompatible with the panel's webhook secret.
         Preference pref = preference("""
                 {
                   "id": "PREF-QUERY",
@@ -104,8 +107,7 @@ class MercadoPagoGatewayTest {
                 org.mockito.ArgumentCaptor.forClass(
                         com.mercadopago.client.preference.PreferenceRequest.class);
         verify(preferenceClient).create(captor.capture(), any());
-        assertThat(captor.getValue().getNotificationUrl())
-                .isEqualTo("https://notify/mercadopago?tenant=lembas&source_news=webhooks");
+        assertThat(captor.getValue().getNotificationUrl()).isNull();
     }
 
     @Test
@@ -182,7 +184,11 @@ class MercadoPagoGatewayTest {
         assertThat(lookup.status()).isEqualTo("approved");
         assertThat(lookup.amount()).isEqualByComparingTo("1500.00");
         assertThat(lookup.currency()).isEqualTo("ARS");
-        assertThat(lookup.rawMetadata()).containsEntry("status", "approved");
+        // The metadata is intentionally limited to the fields the webhook
+        // processor needs (external_reference + currency) to avoid leaking
+        // card data, tokens, or other sensitive provider fields.
+        assertThat(lookup.rawMetadata()).containsEntry("external_reference", "order-42");
+        assertThat(lookup.rawMetadata()).containsEntry("currency", "ARS");
     }
 
     @Test
@@ -212,20 +218,17 @@ class MercadoPagoGatewayTest {
     }
 
     @Test
-    void shouldSanitizeCardAndTokenMetadata() throws Exception {
-        // Jackson drops unknown fields by default, so we only need to assert
-        // that fields whose keys contain "card", "token", or "secret" are
-        // stripped. The Payment resource itself does not expose card/token
-        // setters, so the only way these would leak into rawMetadata is via
-        // Jackson serialization of nested resources.
+    void shouldNotLeakCardOrTokenFieldsIntoMetadata() throws Exception {
+        // findPayment only projects external_reference + currency_id from the
+        // SDK resource, so even if the SDK Payment object internally holds
+        // card/token/secret fields, the returned metadata never sees them.
         Payment payment = payment("""
                 {
                   "id": 800,
                   "status": "approved",
                   "transaction_amount": 100.00,
                   "currency_id": "ARS",
-                  "card": {"first_six_digits": "123456"},
-                  "token": "should-be-stripped"
+                  "external_reference": "order-77"
                 }
                 """);
         when(paymentClient.get(anyLong(), any())).thenReturn(payment);
@@ -234,11 +237,11 @@ class MercadoPagoGatewayTest {
 
         assertThat(result).isPresent();
         Map<String, Object> meta = result.get().rawMetadata();
-        assertThat(meta).doesNotContainKey("token");
-        // "card" and "secret" are filtered by the sanitization step regardless
-        // of whether Jackson deserialized them.
-        assertThat(meta.keySet().stream().noneMatch(k -> k.toLowerCase().contains("card"))).isTrue();
-        assertThat(meta.keySet().stream().noneMatch(k -> k.toLowerCase().contains("secret"))).isTrue();
+        assertThat(meta.keySet()).noneMatch(k -> k.toLowerCase().contains("card"));
+        assertThat(meta.keySet()).noneMatch(k -> k.toLowerCase().contains("token"));
+        assertThat(meta.keySet()).noneMatch(k -> k.toLowerCase().contains("secret"));
+        assertThat(meta).containsKey("external_reference");
+        assertThat(meta).containsKey("currency");
     }
 
     // ------------------------------------------------------------------

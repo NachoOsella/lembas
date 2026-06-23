@@ -4,13 +4,12 @@ import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.auth.service.LembasUserDetailsService;
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import com.dietetica.lembas.payments.dto.CreatePreferenceResponse;
-import com.dietetica.lembas.payments.dto.PaymentSummaryDto;
+import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.payments.model.PaymentMethod;
 import com.dietetica.lembas.payments.model.PaymentProvider;
 import com.dietetica.lembas.payments.model.PaymentStatus;
-import com.dietetica.lembas.payments.service.PaymentService;
+import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.payments.service.PreferenceService;
-import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
 import com.dietetica.lembas.users.model.Role;
@@ -19,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,6 +26,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,6 +35,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Authorization and routing tests for {@link CustomerPaymentController}.
+ *
+ * <p>The controller enforces ownership at the JPA query level (no in-memory
+ * filtering), so these tests focus on the public contract: 200 on success,
+ * 404 when the order belongs to a different customer or does not exist, and
+ * 5xx when the gateway errors propagate.</p>
  */
 @WebMvcTest(controllers = {CustomerPaymentController.class, GlobalExceptionHandler.class})
 @AutoConfigureMockMvc(addFilters = false)
@@ -48,7 +52,7 @@ class CustomerPaymentControllerTest {
     private PreferenceService preferenceService;
 
     @MockitoBean
-    private PaymentService paymentService;
+    private PaymentRepository paymentRepository;
 
     @MockitoBean
     private SecurityContextHelper securityContextHelper;
@@ -114,19 +118,9 @@ class CustomerPaymentControllerTest {
         User customer = userWithId(10L, Role.CUSTOMER);
         when(securityContextHelper.getCurrentUser()).thenReturn(customer);
 
-        Payment payment = new Payment();
-        payment.setId(1L);
-        payment.setProvider(PaymentProvider.MERCADO_PAGO);
-        payment.setMethod(PaymentMethod.CHECKOUT_PRO);
-        payment.setStatus(PaymentStatus.PENDING);
-        payment.setAmount(new BigDecimal("1500.00"));
-        payment.setCreatedAt(OffsetDateTime.now());
-        com.dietetica.lembas.orders.model.Order order = new com.dietetica.lembas.orders.model.Order();
-        order.setId(42L);
-        order.setCustomerUser(customer);
-        payment.setOrder(order);
-
-        when(paymentService.findByOrderId(42L)).thenReturn(List.of(payment));
+        Payment payment = samplePayment(customer);
+        when(paymentRepository.findByOrderIdAndOrderCustomerUserIdOrderByIdAsc(eq(42L), eq(10L)))
+                .thenReturn(List.of(payment));
 
         mockMvc.perform(get("/api/customer/orders/42/payments"))
                 .andExpect(status().isOk())
@@ -139,12 +133,28 @@ class CustomerPaymentControllerTest {
     void shouldReturnEmptyListWhenNoPayments() throws Exception {
         User customer = userWithId(10L, Role.CUSTOMER);
         when(securityContextHelper.getCurrentUser()).thenReturn(customer);
-        when(paymentService.findByOrderId(42L)).thenReturn(List.of());
+        when(paymentRepository.findByOrderIdAndOrderCustomerUserIdOrderByIdAsc(eq(42L), eq(10L)))
+                .thenReturn(List.of());
 
         mockMvc.perform(get("/api/customer/orders/42/payments"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
+    }
+
+    private static Payment samplePayment(User customer) {
+        Payment payment = new Payment();
+        payment.setId(1L);
+        payment.setProvider(PaymentProvider.MERCADO_PAGO);
+        payment.setMethod(PaymentMethod.CHECKOUT_PRO);
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setAmount(new BigDecimal("1500.00"));
+        payment.setCreatedAt(OffsetDateTime.now());
+        com.dietetica.lembas.orders.model.Order order = new com.dietetica.lembas.orders.model.Order();
+        order.setId(42L);
+        order.setCustomerUser(customer);
+        payment.setOrder(order);
+        return payment;
     }
 
     /** Builds a User with the auto-generated id populated via reflection for unit tests. */

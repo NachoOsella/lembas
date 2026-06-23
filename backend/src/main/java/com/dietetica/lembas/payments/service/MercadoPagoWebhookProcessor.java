@@ -47,19 +47,22 @@ public class MercadoPagoWebhookProcessor {
     private final PaymentGateway paymentGateway;
     private final WebhookToPaymentStatusMapper statusMapper;
     private final WebhookOrderEffectApplier orderEffectApplier;
+    private final WebhookMetadataSerializer metadataSerializer;
 
     public MercadoPagoWebhookProcessor(
             PaymentRepository paymentRepository,
             OrderRepository orderRepository,
             PaymentGateway paymentGateway,
             WebhookToPaymentStatusMapper statusMapper,
-            WebhookOrderEffectApplier orderEffectApplier
+            WebhookOrderEffectApplier orderEffectApplier,
+            WebhookMetadataSerializer metadataSerializer
     ) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.paymentGateway = paymentGateway;
         this.statusMapper = statusMapper;
         this.orderEffectApplier = orderEffectApplier;
+        this.metadataSerializer = metadataSerializer;
     }
 
     /**
@@ -77,7 +80,7 @@ public class MercadoPagoWebhookProcessor {
         Optional<GatewayPaymentLookup> lookup = paymentGateway.findPayment(paymentId);
         if (lookup.isEmpty() && isMerchantOrderNotification(payload)
                 && paymentGateway instanceof MercadoPagoGateway mpGateway) {
-            log.info("Payment {} not found directly; trying merchant_order lookup", paymentId);
+            log.debug("Payment {} not found directly; trying merchant_order lookup", paymentId);
             lookup = mpGateway.findPaymentByMerchantOrderId(paymentId);
         }
         if (lookup.isEmpty()) {
@@ -95,6 +98,13 @@ public class MercadoPagoWebhookProcessor {
             log.info("Skipping already-processed payment {} (current={}, new={})",
                     payment.getId(), payment.getStatus(), newStatus);
             return Optional.of(payment.getId());
+        }
+        // Attach the provider payment id to the local row only when the row
+        // was matched by external_reference (i.e. the local id was missing).
+        // Rows matched directly by providerPaymentId already carry the id.
+        if (payment.getProviderPaymentId() == null) {
+            String externalReference = metadataValue(providerState, "external_reference");
+            attachProviderIdentifiers(payment, paymentId, externalReference);
         }
         applyPaymentState(payment, newStatus, providerState);
         applyOrderEffect(payment, newStatus);
@@ -127,24 +137,31 @@ public class MercadoPagoWebhookProcessor {
         return payload.id();
     }
 
-    /** Returns the matching {@link Payment} by provider id, preference id, or external reference. */
+    /**
+     * Locates the local {@link Payment} matching the provider state.
+     *
+     * <p>Tries four strategies in order: (1) by {@code providerPaymentId},
+     * (2) by {@code providerPreferenceId} when the provider metadata carries
+     * it, (3) by stored {@code externalReference}, and (4) as a last resort
+     * by the order number on a still-open payment (covers historical rows
+     * created before {@code externalReference} was persisted).</p>
+     *
+     * <p>The first three are pure lookups. The fourth and any successful match
+     * that requires attaching the provider payment id is the caller's job:
+     * see {@link #attachProviderIdentifiers}.</p>
+     */
     private Optional<Payment> findPayment(String paymentId, GatewayPaymentLookup lookup) {
-        log.info("findPayment: paymentId={} metadata={}", paymentId, lookup.rawMetadata());
         Optional<Payment> byProviderId = paymentRepository.findByProviderPaymentId(paymentId);
         if (byProviderId.isPresent()) {
             return byProviderId;
         }
         if (lookup.rawMetadata() == null) {
-            log.warn("findPayment: rawMetadata is null for paymentId={}", paymentId);
             return Optional.empty();
         }
         String preferenceId = metadataValue(lookup, "preference_id");
-        log.info("findPayment: preferenceId='{}' externalReference='{}'",
-                preferenceId, metadataValue(lookup, "external_reference"));
         if (preferenceId != null) {
             Optional<Payment> byPreference = paymentRepository.findFirstByProviderPreferenceIdOrderByIdAsc(preferenceId);
             if (byPreference.isPresent()) {
-                byPreference.get().setProviderPaymentId(paymentId);
                 return byPreference;
             }
         }
@@ -155,18 +172,24 @@ public class MercadoPagoWebhookProcessor {
         Optional<Payment> byStoredExternalReference =
                 paymentRepository.findFirstByExternalReferenceOrderByIdAsc(externalReference);
         if (byStoredExternalReference.isPresent()) {
-            byStoredExternalReference.get().setProviderPaymentId(paymentId);
             return byStoredExternalReference;
         }
-        Optional<Payment> byOrderNumber = paymentRepository.findFirstByOrderOrderNumberAndStatusInOrderByIdAsc(
+        return paymentRepository.findFirstByOrderOrderNumberAndStatusInOrderByIdAsc(
                 externalReference,
                 List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)
         );
-        byOrderNumber.ifPresent(payment -> {
-            payment.setProviderPaymentId(paymentId);
+    }
+
+    /**
+     * Attaches the provider-side identifiers discovered during {@link #findPayment}
+     * to a freshly-matched payment row. Centralised here so the match function
+     * itself can stay a pure lookup.
+     */
+    private void attachProviderIdentifiers(Payment payment, String paymentId, String externalReference) {
+        payment.setProviderPaymentId(paymentId);
+        if (externalReference != null && payment.getExternalReference() == null) {
             payment.setExternalReference(externalReference);
-        });
-        return byOrderNumber;
+        }
     }
 
     /** Returns a non-blank metadata value from the sanitized provider payload. */
@@ -183,9 +206,8 @@ public class MercadoPagoWebhookProcessor {
         payment.setStatus(newStatus);
         if (newStatus == PaymentStatus.APPROVED) {
             payment.setApprovedAt(OffsetDateTime.now());
-            payment.setProviderPaymentId(providerState.providerPaymentId());
         }
-        payment.setMetadata(WebhookMetadataSerializer.serialize(payment, providerState));
+        payment.setMetadata(metadataSerializer.serialize(payment, providerState));
         paymentRepository.save(payment);
     }
 
@@ -208,7 +230,6 @@ public class MercadoPagoWebhookProcessor {
 
     /** Returns true for IPN webhooks that reference a merchant_order instead of a payment. */
     private static boolean isMerchantOrderNotification(MercadoPagoWebhookPayload payload) {
-        return payload != null && payload.type() != null
-                && payload.type().toLowerCase().contains("merchant_order");
+        return payload != null && IpnTopics.isMerchantOrder(payload.type());
     }
 }

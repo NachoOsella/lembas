@@ -1,6 +1,7 @@
 package com.dietetica.lembas.payments.repository;
 
 import com.dietetica.lembas.payments.model.Payment;
+import com.dietetica.lembas.payments.model.PaymentProvider;
 import com.dietetica.lembas.payments.model.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -16,6 +17,20 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     /** Finds payments for an order filtered by lifecycle status. */
     List<Payment> findByOrderIdAndStatusOrderByIdAsc(Long orderId, PaymentStatus status);
+
+    /**
+     * Finds open payments for an order and provider in stable insertion order.
+     * Used by the preference service to cancel stale payments before creating
+     * a fresh provider preference.
+     */
+    List<Payment> findByOrderIdAndProviderAndStatusInOrderByIdAsc(
+            Long orderId,
+            PaymentProvider provider,
+            Collection<PaymentStatus> statuses
+    );
+
+    /** Finds payments owned by one customer for a given order, newest first. */
+    List<Payment> findByOrderIdAndOrderCustomerUserIdOrderByIdAsc(Long orderId, Long customerUserId);
 
     /** Finds a payment by provider-side payment id. */
     Optional<Payment> findByProviderPaymentId(String providerPaymentId);

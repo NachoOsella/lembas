@@ -17,6 +17,7 @@ import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -63,7 +64,8 @@ class PreferenceServiceTest {
         orderRepository = mock(OrderRepository.class);
         paymentRepository = mock(PaymentRepository.class);
         paymentGateway = mock(PaymentGateway.class);
-        service = new PreferenceService(orderRepository, paymentRepository, paymentGateway, properties);
+        service = new PreferenceService(
+                orderRepository, paymentRepository, paymentGateway, properties, new ObjectMapper());
     }
 
     @Test
@@ -71,7 +73,10 @@ class PreferenceServiceTest {
         User customer = customer(10L);
         Order order = orderForCustomer(customer, OrderStatus.PENDING_PAYMENT, OrderType.ONLINE);
         when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
-        when(paymentRepository.findByOrderIdOrderByIdAsc(order.getId())).thenReturn(List.of());
+        when(paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(
+                order.getId(), PaymentProvider.MERCADO_PAGO,
+                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                .thenReturn(List.of());
         when(paymentGateway.createPreference(any())).thenReturn(
                 new PaymentPreferenceResult("PREF-1", "https://init/PREF-1", "https://sandbox/PREF-1"));
         when(paymentRepository.save(any())).thenAnswer(invocation -> {
@@ -92,7 +97,11 @@ class PreferenceServiceTest {
     }
 
     @Test
-    void shouldReuseExistingPendingPreferenceWithoutCallingGateway() {
+    void shouldCancelExistingPendingPaymentAndCreateFreshPreference() {
+        // MP Checkout Pro preferences are single-use, so every "Continuar al
+        // pago" click must cancel any open payment and ask the gateway for a
+        // new preference. The previous preference id is intentionally
+        // discarded -- reusing it would produce a generic MP error screen.
         User customer = customer(10L);
         Order order = orderForCustomer(customer, OrderStatus.PENDING_PAYMENT, OrderType.ONLINE);
         Payment existing = new Payment();
@@ -106,14 +115,26 @@ class PreferenceServiceTest {
         existing.setMetadata("{\"initPoint\":\"https://init/1234567890\"}");
 
         when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
-        when(paymentRepository.findByOrderIdOrderByIdAsc(order.getId())).thenReturn(List.of(existing));
+        when(paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(
+                order.getId(), PaymentProvider.MERCADO_PAGO,
+                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                .thenReturn(List.of(existing));
+        when(paymentRepository.save(any())).thenAnswer(inv -> {
+            Payment p = inv.getArgument(0);
+            if (p.getId() == null) {
+                p.setId(99L);
+            }
+            return p;
+        });
+        when(paymentGateway.createPreference(any())).thenReturn(
+                new PaymentPreferenceResult("NEW-PREF", "https://init/NEW-PREF", null));
 
         CreatePreferenceResponse response = service.createPreference(order.getId(), customer);
 
-        assertThat(response.preferenceId()).isEqualTo("1234567890");
-        assertThat(response.initPoint()).isEqualTo("https://init/1234567890");
-        verify(paymentGateway, never()).createPreference(any());
-        verify(paymentRepository, never()).save(any());
+        assertThat(existing.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+        assertThat(response.preferenceId()).isEqualTo("NEW-PREF");
+        assertThat(response.initPoint()).isEqualTo("https://init/NEW-PREF");
+        verify(paymentGateway).createPreference(any());
     }
 
     @Test
@@ -131,7 +152,10 @@ class PreferenceServiceTest {
         stale.setProviderPreferenceId("fake-deadbeef-1234");
 
         when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
-        when(paymentRepository.findByOrderIdOrderByIdAsc(order.getId())).thenReturn(List.of(stale));
+        when(paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(
+                order.getId(), PaymentProvider.MERCADO_PAGO,
+                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                .thenReturn(List.of(stale));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(paymentGateway.createPreference(any())).thenReturn(
                 new PaymentPreferenceResult("MP-REAL-1", "https://init/MP-REAL-1", null));
@@ -203,14 +227,20 @@ class PreferenceServiceTest {
         User customer = customer(10L);
         Order order = orderForCustomer(customer, OrderStatus.PENDING_PAYMENT, OrderType.ONLINE);
         when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
-        when(paymentRepository.findByOrderIdOrderByIdAsc(order.getId())).thenReturn(List.of());
+        when(paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(
+                order.getId(), PaymentProvider.MERCADO_PAGO,
+                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                .thenReturn(List.of());
         when(paymentGateway.createPreference(any())).thenThrow(
                 new DomainException("MP_PREFERENCE_REJECTED", "rejected"));
 
         assertThatThrownBy(() -> service.createPreference(order.getId(), customer))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("rejected");
-        verify(paymentRepository, times(1)).findByOrderIdOrderByIdAsc(order.getId());
+        verify(paymentRepository, times(1))
+                .findByOrderIdAndProviderAndStatusInOrderByIdAsc(
+                        order.getId(), PaymentProvider.MERCADO_PAGO,
+                        List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS));
     }
 
     @Test
@@ -218,7 +248,10 @@ class PreferenceServiceTest {
         User customer = customer(10L);
         Order order = orderForCustomer(customer, OrderStatus.PENDING_PAYMENT, OrderType.ONLINE);
         when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
-        when(paymentRepository.findByOrderIdOrderByIdAsc(order.getId())).thenReturn(List.of());
+        when(paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(
+                order.getId(), PaymentProvider.MERCADO_PAGO,
+                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                .thenReturn(List.of());
         when(paymentGateway.createPreference(any())).thenReturn(
                 new PaymentPreferenceResult("PREF-2", null, "https://sandbox/PREF-2"));
         when(paymentRepository.save(any())).thenAnswer(invocation -> {

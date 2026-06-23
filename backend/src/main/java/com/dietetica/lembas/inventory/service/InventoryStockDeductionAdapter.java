@@ -2,6 +2,9 @@ package com.dietetica.lembas.inventory.service;
 
 import com.dietetica.lembas.orders.model.Order;
 import com.dietetica.lembas.payments.service.StockDeductionGateway;
+import com.dietetica.lembas.shared.exception.DomainException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +23,8 @@ import org.springframework.stereotype.Component;
 @Primary
 public class InventoryStockDeductionAdapter implements StockDeductionGateway {
 
+    private static final Logger log = LoggerFactory.getLogger(InventoryStockDeductionAdapter.class);
+
     private final InventoryService inventoryService;
 
     public InventoryStockDeductionAdapter(InventoryService inventoryService) {
@@ -35,10 +40,16 @@ public class InventoryStockDeductionAdapter implements StockDeductionGateway {
         try {
             inventoryService.deductForOnlineOrder(order.getId());
             return true;
-        } catch (RuntimeException ex) {
+        } catch (DomainException ex) {
             // FEFO policy throws DomainException(StockConflict) on insufficient stock;
-            // any other failure is treated as a deduction failure so the caller can
-            // mark the order as STOCK_CONFLICT and contact the customer.
+            // expected outcome -- the caller will mark the order as STOCK_CONFLICT.
+            log.info("FEFO deduction for order {} reported {}: {}",
+                    order.getId(), ex.getCode(), ex.getMessage());
+            return false;
+        } catch (RuntimeException ex) {
+            // Anything else is unexpected and would otherwise be silently
+            // turned into a STOCK_CONFLICT. Log loudly so it can be triaged.
+            log.error("Unexpected failure during FEFO deduction for order {}", order.getId(), ex);
             return false;
         }
     }

@@ -4,8 +4,6 @@ import com.dietetica.lembas.payments.gateway.PaymentGateway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -104,21 +102,6 @@ public class FakePaymentGateway implements PaymentGateway {
         updateStatus(preferenceId, REJECTED_STATUS);
     }
 
-    /** Test/developer hook that lists the items a preference was created with, for assertions. */
-    public List<CreatePreferenceCommand.PreferenceItem> itemsFor(String preferenceId) {
-        GatewayPaymentLookup lookup = store.get(preferenceId);
-        if (lookup == null) {
-            return List.of();
-        }
-        Object raw = lookup.rawMetadata().get("items");
-        if (raw instanceof List<?> list) {
-            return list.stream()
-                    .map(item -> (CreatePreferenceCommand.PreferenceItem) item)
-                    .toList();
-        }
-        return List.of();
-    }
-
     private void updateStatus(String preferenceId, String newStatus) {
         GatewayPaymentLookup previous = store.get(preferenceId);
         if (previous == null) {
@@ -136,26 +119,5 @@ public class FakePaymentGateway implements PaymentGateway {
     private PaymentPreferenceResult buildResult(String preferenceId) {
         String initPoint = SANDBOX_HOST + "/checkout?pref=" + preferenceId;
         return new PaymentPreferenceResult(preferenceId, initPoint, initPoint);
-    }
-
-    /**
-     * Default configuration class that allows the fake gateway to be activated
-     * even when no other configuration is in place. Ensures a {@code BigDecimal}
-     * converter is available for the generated metadata without leaking it to
-     * production profiles.
-     */
-    @Configuration
-    @ConditionalOnProperty(
-            name = MercadoPagoConfiguration.GATEWAY_PROPERTY,
-            havingValue = "fake",
-            matchIfMissing = true
-    )
-    static class FakeGatewaySupport {
-
-        /** Re-exposes the {@code BigDecimal} constant so tests can import it. */
-        @Bean
-        BigDecimal fakeCurrencyAmount() {
-            return BigDecimal.ZERO;
-        }
     }
 }

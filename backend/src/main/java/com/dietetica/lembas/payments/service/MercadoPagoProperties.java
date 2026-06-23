@@ -1,5 +1,6 @@
 package com.dietetica.lembas.payments.service;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -44,6 +45,6 @@ public record MercadoPagoProperties(
         @NotBlank String notificationUrl,
 
         /** Maximum time, in milliseconds, to wait for a Mercado Pago HTTP response. */
-        @Min(100) long timeoutMs
+        @Min(100) @Max(Integer.MAX_VALUE) long timeoutMs
 ) {
 }

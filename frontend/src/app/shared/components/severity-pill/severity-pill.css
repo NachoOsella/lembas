@@ -1,0 +1,2 @@
+/* The pill has no component-specific overrides: the colour classes come from
+   the design-system tokens referenced by the computed `classes()` signal. */

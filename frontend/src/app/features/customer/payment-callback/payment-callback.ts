@@ -1,15 +1,11 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
 
 import { CustomerOrderService } from '../../../core/services/customer-order';
+import { ShortDateArPipe } from '../../../core/pipes/short-date-ar.pipe';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
-import {
-  OrderDetail,
-  OrderStatus,
-  paymentStatusLabel,
-  paymentStatusSeverity,
-} from '../../../shared/models/order';
+import { OrderDetail, OrderStatus } from '../../../shared/models/order';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
@@ -17,6 +13,9 @@ import { LoadingSpinner } from '../../../shared/components/loading-spinner/loadi
 
 /** Phase reported by the callback page after the polling loop. */
 type CallbackPhase = 'loading' | 'pending' | 'success' | 'failure' | 'stock_conflict' | 'error';
+
+/** Key persisted in sessionStorage by the checkout when it kicks off the MP redirect. */
+const PENDING_ORDER_KEY = 'pendingOrderId';
 
 /**
  * Polls the backend for the order status after the customer is redirected back
@@ -29,16 +28,15 @@ type CallbackPhase = 'loading' | 'pending' | 'success' | 'failure' | 'stock_conf
  */
 @Component({
   selector: 'app-payment-callback',
-  imports: [AppButton, AppEyebrow, ErrorAlert, LoadingSpinner],
+  imports: [AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ShortDateArPipe],
   templateUrl: './payment-callback.html',
-  styleUrl: './payment-callback.css',
 })
 export class PaymentCallback implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly orderService = inject(CustomerOrderService);
   private readonly errorMapping = inject(ErrorMappingService);
-  private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Maximum number of polling attempts before falling back to 'pending'. */
   private static readonly MAX_ATTEMPTS = 10;
@@ -61,48 +59,58 @@ export class PaymentCallback implements OnInit {
   });
 
   ngOnInit(): void {
-    const orderId =
-      Number(this.route.snapshot.queryParamMap.get('orderId')) ||
-      Number(sessionStorage.getItem('pendingOrderId'));
-    if (!orderId) {
+    // Prefer the query parameter (set by MP via the success/failure URL
+    // configured on the preference). Fall back to sessionStorage so retries
+    // triggered after the user already consumed the redirect still work.
+    const fromQuery = Number(this.route.snapshot.queryParamMap.get('orderId'));
+    const fromSession = Number(sessionStorage.getItem(PENDING_ORDER_KEY));
+    const orderId = Number.isFinite(fromQuery) && fromQuery > 0
+        ? fromQuery
+        : Number.isFinite(fromSession) && fromSession > 0
+            ? fromSession
+            : NaN;
+    sessionStorage.removeItem(PENDING_ORDER_KEY);
+    if (!Number.isFinite(orderId)) {
       this.phase.set('error');
       this.errorCode.set('ORDER_NOT_FOUND');
       return;
     }
-    sessionStorage.removeItem('pendingOrderId');
     this.pollOrder(orderId, 1);
   }
 
   /** Polls the order detail until it reaches a terminal status or the budget is exhausted. */
   private pollOrder(orderId: number, attempt: number): void {
     this.attempts.set(attempt);
-    this.orderService.getOrder(orderId).subscribe({
-      next: (order) => {
-        this.order.set(order);
-        const phase = mapStatusToPhase(order.status);
-        if (phase !== 'loading') {
-          this.phase.set(phase);
-          return;
-        }
-        if (attempt >= PaymentCallback.MAX_ATTEMPTS) {
-          this.phase.set('pending');
-          return;
-        }
-        setTimeout(() => this.pollOrder(orderId, attempt + 1), PaymentCallback.POLL_INTERVAL_MS);
-      },
-      error: (err: unknown) => {
-        this.phase.set('error');
-        this.errorCode.set(
-          (err as { error?: { code?: string } } | null)?.error?.code ?? 'INTERNAL_ERROR',
-        );
-      },
-    });
+    this.orderService.getOrder(orderId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (order) => {
+          this.order.set(order);
+          const phase = mapStatusToPhase(order.status);
+          if (phase !== 'loading') {
+            this.phase.set(phase);
+            return;
+          }
+          if (attempt >= PaymentCallback.MAX_ATTEMPTS) {
+            this.phase.set('pending');
+            return;
+          }
+          setTimeout(() => this.pollOrder(orderId, attempt + 1), PaymentCallback.POLL_INTERVAL_MS);
+        },
+        error: (err: unknown) => {
+          this.phase.set('error');
+          this.errorCode.set(
+            (err as { error?: { code?: string } } | null)?.error?.code ?? 'INTERNAL_ERROR',
+          );
+        },
+      });
   }
 
   /** Resumes polling after the user retries from a transient error. */
   protected retry(): void {
-    const orderId = Number(this.route.snapshot.queryParamMap.get('orderId'));
-    if (!orderId) {
+    const fromQuery = Number(this.route.snapshot.queryParamMap.get('orderId'));
+    const orderId = Number.isFinite(fromQuery) && fromQuery > 0 ? fromQuery : NaN;
+    if (!Number.isFinite(orderId)) {
       this.phase.set('error');
       this.errorCode.set('ORDER_NOT_FOUND');
       return;
@@ -127,7 +135,7 @@ export class PaymentCallback implements OnInit {
     this.backToOrders();
   }
 
-  /** Resumes the payment flow by re-issuing the preference for the order. */
+  /** Resumes the payment flow by routing the user back to the order detail page. */
   protected retryPayment(): void {
     const orderId = this.order()?.id;
     if (orderId) {
@@ -136,39 +144,12 @@ export class PaymentCallback implements OnInit {
       this.backToOrders();
     }
   }
-
-  /** Formats an ISO timestamp for the headline. */
-  protected formatDate(iso: string | null): string {
-    if (!iso) return '---';
-    try {
-      return new Date(iso).toLocaleDateString('es-AR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return iso;
-    }
-  }
-
-  /** Returns the human-readable payment status label for a payment entry. */
-  protected paymentLabel(status: string): string {
-    return paymentStatusLabel(status as never);
-  }
-
-  /** Returns the PrimeNG severity key for a payment status badge. */
-  protected paymentSeverity(status: string): string {
-    return paymentStatusSeverity(status as never);
-  }
 }
 
 /** Maps an OrderStatus to a page phase; the order detail is the source of truth. */
 function mapStatusToPhase(status: OrderStatus): CallbackPhase {
   switch (status) {
     case 'PAID':
-      return 'success';
     case 'PREPARING':
     case 'READY':
     case 'DELIVERED':
