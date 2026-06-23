@@ -55,13 +55,14 @@ class MercadoPagoGatewayTest {
         preferenceClient = mock(PreferenceClient.class);
         paymentClient = mock(PaymentClient.class);
         merchantOrderClient = mock(MerchantOrderClient.class);
+        MercadoPagoPreferenceMapper mapper = new MercadoPagoPreferenceMapper();
         MPRequestOptions options = MPRequestOptions.builder()
                 .connectionTimeout(2000)
                 .connectionRequestTimeout(2000)
                 .socketTimeout(2000)
                 .build();
         gateway = new MercadoPagoGateway(
-                preferenceClient, paymentClient, merchantOrderClient, options);
+                preferenceClient, paymentClient, merchantOrderClient, mapper, options);
     }
 
     // ------------------------------------------------------------------

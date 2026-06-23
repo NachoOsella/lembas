@@ -7,6 +7,7 @@ import com.dietetica.lembas.orders.model.OrderType;
 import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.payments.dto.CreatePreferenceResponse;
 import com.dietetica.lembas.payments.gateway.PaymentGateway;
+import com.dietetica.lembas.payments.PaymentErrorCodes;
 import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.payments.model.PaymentMethod;
 import com.dietetica.lembas.payments.model.PaymentProvider;
@@ -63,7 +64,11 @@ public class PreferenceService {
     }
 
     /**
-     * Creates or returns the active preference for the given order.
+     * Creates a fresh Mercado Pago preference for the given order.
+     *
+     * <p>Idempotent for the user: any previously open Mercado Pago payments
+     * are cancelled before creating the new one, guaranteeing a single-use
+     * preference that will not produce the provider's generic error screen.</p>
      *
      * @param orderId  internal order id
      * @param customer the authenticated customer
@@ -71,61 +76,53 @@ public class PreferenceService {
      */
     @Transactional
     public CreatePreferenceResponse createPreference(Long orderId, User customer) {
-        validateCustomer(customer);
-        Order order = loadCustomerOrder(orderId, customer);
-        validatePayable(order);
-
-        // Cancel any existing open Mercado Pago payment so every "Continuar al
-        // pago" click gets a fresh preference. MP Checkout Pro preferences are
-        // single-use: reusing a cancelled/expired one produces a generic error
-        // screen on the provider side. When the order has no open payment
-        // this query returns an empty list and the loop is a no-op.
+        Order order = loadAndValidateOrder(orderId, customer);
         cancelOpenPayments(order);
-
         Payment payment = buildPendingPayment(order);
+        return requestProviderPreference(order, payment);
+    }
+
+    /**
+     * Loads the order, asserts it belongs to the authenticated customer, and
+     * verifies it is in a state that accepts a Mercado Pago payment.
+     */
+    private Order loadAndValidateOrder(Long orderId, User customer) {
+        if (customer == null || customer.getRole() != Role.CUSTOMER) {
+            throw new DomainException(PaymentErrorCodes.ACCESS_DENIED, HttpStatus.FORBIDDEN,
+                    "Only customers can initiate a checkout preference");
+        }
+        Order order = orderRepository.findWithItemsById(orderId)
+                .filter(o -> o.getCustomerUser() != null
+                        && o.getCustomerUser().getId().equals(customer.getId()))
+                .orElseThrow(() -> new DomainException(PaymentErrorCodes.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND,
+                        "Order not found"));
+        if (order.getType() != OrderType.ONLINE) {
+            throw new DomainException(PaymentErrorCodes.ORDER_NOT_PAYABLE, HttpStatus.CONFLICT,
+                    "Only online orders support hosted checkout");
+        }
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new DomainException(PaymentErrorCodes.ORDER_NOT_PAYABLE, HttpStatus.CONFLICT,
+                    "Order is not in a payable state");
+        }
+        return order;
+    }
+
+    /**
+     * Calls the payment gateway with the command built from the order and
+     * payment, then persists the provider-assigned identifiers and returns
+     * the redirect URL to the frontend.
+     */
+    private CreatePreferenceResponse requestProviderPreference(Order order, Payment payment) {
         CreatePreferenceCommand command = buildCommand(order, payment);
         payment.setExternalReference(command.externalReference());
         PaymentPreferenceResult result = paymentGateway.createPreference(command);
         payment.setProviderPreferenceId(result.preferenceId());
-        // Prefer production init point; sandbox is the fallback so dev/test
-        // environments still receive a usable redirect.
         String initPoint = result.initPoint() != null ? result.initPoint() : result.sandboxInitPoint();
         log.debug("Preference created: id={} initPoint={} sandbox={} selected={}",
                 result.preferenceId(), result.initPoint(), result.sandboxInitPoint(), initPoint);
         payment.setMetadata(buildMetadata(command.externalReference(), result.preferenceId(), initPoint));
         Payment saved = paymentRepository.save(payment);
         return new CreatePreferenceResponse(saved.getId(), result.preferenceId(), initPoint);
-    }
-
-    /** Validates that the supplied user is a registered customer. */
-    private void validateCustomer(User user) {
-        if (user == null || user.getRole() != Role.CUSTOMER) {
-            throw new DomainException("ACCESS_DENIED", HttpStatus.FORBIDDEN,
-                    "Only customers can initiate a checkout preference");
-        }
-    }
-
-    /** Loads the order ensuring it belongs to the supplied customer. */
-    private Order loadCustomerOrder(Long orderId, User customer) {
-        return orderRepository.findWithItemsById(orderId)
-                .filter(order -> order.getCustomerUser() != null
-                        && order.getCustomerUser().getId().equals(customer.getId()))
-                .orElseThrow(() -> new DomainException("ORDER_NOT_FOUND", HttpStatus.NOT_FOUND, "Order not found"));
-    }
-
-    /**
-     * Enforces the documented business rules: only ONLINE orders in
-     * PENDING_PAYMENT can be paid. POS orders must go through the in-store flow.
-     */
-    private void validatePayable(Order order) {
-        if (order.getType() != OrderType.ONLINE) {
-            throw new DomainException("ORDER_NOT_PAYABLE", HttpStatus.CONFLICT,
-                    "Only online orders support hosted checkout");
-        }
-        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
-            throw new DomainException("ORDER_NOT_PAYABLE", HttpStatus.CONFLICT,
-                    "Order is not in a payable state");
-        }
     }
 
     /** Cancels all open Mercado Pago payments for the order so a fresh preference can be created. */

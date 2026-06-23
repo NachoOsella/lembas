@@ -25,12 +25,17 @@ public class WebhookOrderEffectApplier {
         this.stockDeductionGateway = stockDeductionGateway;
     }
 
-    /** Marks the order as paid, records timestamps, and triggers FEFO stock deduction. */
+    /**
+     * Deducts FEFO stock first, then marks the order as paid only when the
+     * deduction succeeds. If stock is insufficient the order goes directly to
+     * {@code STOCK_CONFLICT} without ever passing through {@code PAID}.
+     */
     public void markPaidAndDeductStock(Order order) {
-        order.setStatus(OrderStatus.PAID);
-        order.setPaidAt(OffsetDateTime.now());
         boolean deducted = stockDeductionGateway.deductForOrder(order);
-        if (!deducted) {
+        if (deducted) {
+            order.setStatus(OrderStatus.PAID);
+            order.setPaidAt(OffsetDateTime.now());
+        } else {
             log.warn("Stock conflict for order {}: marking STOCK_CONFLICT", order.getId());
             order.setStatus(OrderStatus.STOCK_CONFLICT);
             order.setCancellationReason("STOCK_CONFLICT_AT_DEDUCTION");

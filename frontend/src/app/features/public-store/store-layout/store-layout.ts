@@ -135,9 +135,9 @@ export class StoreLayout implements OnInit {
     }
   }
 
-  /** Navigate to the cart/checkout page. */
+  /** Navigate to the public cart page. */
   goToCart(): void {
-    this.router.navigate(['/customer/checkout']);
+    this.router.navigate(['/store/cart']);
   }
 
   /** Logs out the current user and navigates to the store home page. */

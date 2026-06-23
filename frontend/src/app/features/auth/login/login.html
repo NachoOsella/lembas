@@ -167,13 +167,22 @@
 
         <p class="mt-6 text-center text-sm text-text-muted">
           No tenes cuenta?
-          <a
-            routerLink="/auth/register"
-            class="font-bold text-accent no-underline transition-colors duration-200 hover:text-primary hover:underline"
-          >
-            Registrate
-          </a>
-        </p>
+          @if (returnUrl(); as returnTo) {
+            <a
+              [routerLink]="['/auth/register']"
+              [queryParams]="{ returnUrl: returnTo }"
+              class="font-bold text-accent no-underline transition-colors duration-200 hover:text-primary hover:underline"
+            >
+              Registrate
+            </a>
+          } @else {
+            <a
+              routerLink="/auth/register"
+              class="font-bold text-accent no-underline transition-colors duration-200 hover:text-primary hover:underline"
+            >
+              Registrate
+            </a>
+          }
       </div>
     </div>
   </section>

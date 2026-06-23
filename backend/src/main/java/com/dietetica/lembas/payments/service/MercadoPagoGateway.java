@@ -8,10 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.mercadopago.client.merchantorder.MerchantOrderClient;
 import com.mercadopago.client.payment.PaymentClient;
-import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
-import com.mercadopago.client.preference.PreferenceItemRequest;
-import com.mercadopago.client.preference.PreferencePayerRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.core.MPRequestOptions;
 import com.mercadopago.exceptions.MPApiException;
@@ -26,7 +23,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +62,7 @@ public class MercadoPagoGateway implements PaymentGateway {
     private final PreferenceClient preferenceClient;
     private final PaymentClient paymentClient;
     private final MerchantOrderClient merchantOrderClient;
+    private final MercadoPagoPreferenceMapper preferenceMapper;
     private final MPRequestOptions baseRequestOptions;
     private final ObjectMapper objectMapper;
 
@@ -73,11 +70,13 @@ public class MercadoPagoGateway implements PaymentGateway {
             PreferenceClient preferenceClient,
             PaymentClient paymentClient,
             MerchantOrderClient merchantOrderClient,
+            MercadoPagoPreferenceMapper preferenceMapper,
             MPRequestOptions mercadoPagoRequestOptions
     ) {
         this.preferenceClient = preferenceClient;
         this.paymentClient = paymentClient;
         this.merchantOrderClient = merchantOrderClient;
+        this.preferenceMapper = preferenceMapper;
         this.baseRequestOptions = mercadoPagoRequestOptions;
         this.objectMapper = new ObjectMapper()
                 .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
@@ -87,7 +86,7 @@ public class MercadoPagoGateway implements PaymentGateway {
     @Override
     public PaymentPreferenceResult createPreference(CreatePreferenceCommand command) {
         validate(command);
-        PreferenceRequest request = buildPreferenceRequest(command);
+        PreferenceRequest request = preferenceMapper.toPreferenceRequest(command);
         MPRequestOptions options = withIdempotencyKey(command.idempotencyKey());
         Preference preference = executeWithRetry(
                 () -> preferenceClient.create(request, options),
@@ -188,50 +187,6 @@ public class MercadoPagoGateway implements PaymentGateway {
                 payment.getCurrencyId(),
                 metadata
         ));
-    }
-
-    // ------------------------------------------------------------------
-    // Preference request building
-    // ------------------------------------------------------------------
-
-    /** Builds a Mercado Pago Checkout Pro preference request from the command. */
-    private PreferenceRequest buildPreferenceRequest(CreatePreferenceCommand command) {
-        PreferenceRequest.PreferenceRequestBuilder builder = PreferenceRequest.builder()
-                .externalReference(command.externalReference())
-                // notification_url is intentionally NOT set here so MP uses
-                // the panel-level Webhooks URL, which signs notifications with
-                // the correct secret. Preference-level URLs cause MP to use a
-                // different internal dispatch system that produces HMAC values
-                // incompatible with the panel's webhook secret.
-                .backUrls(PreferenceBackUrlsRequest.builder()
-                        .success(command.successUrl())
-                        .failure(command.failureUrl())
-                        .pending(command.pendingUrl())
-                        .build())
-                .items(toPreferenceItems(command.items()));
-        if (command.customerEmail() != null && !command.customerEmail().isBlank()) {
-            builder.payer(PreferencePayerRequest.builder()
-                    .email(command.customerEmail())
-                    .build());
-        }
-        return builder.build();
-    }
-
-    /** Converts internal preference items to the SDK's typed item shape. */
-    private static List<PreferenceItemRequest> toPreferenceItems(
-            List<CreatePreferenceCommand.PreferenceItem> items
-    ) {
-        List<PreferenceItemRequest> result = new ArrayList<>(items.size());
-        for (CreatePreferenceCommand.PreferenceItem item : items) {
-            result.add(PreferenceItemRequest.builder()
-                    .id(item.productId() == null ? null : String.valueOf(item.productId()))
-                    .title(item.title())
-                    .quantity(item.quantity() == null ? null : item.quantity().intValue())
-                    .unitPrice(item.unitPrice())
-                    .currencyId("ARS")
-                    .build());
-        }
-        return result;
     }
 
     // ------------------------------------------------------------------

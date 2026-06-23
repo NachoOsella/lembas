@@ -58,7 +58,11 @@ export class PaymentCallback implements OnInit {
     return code ? this.errorMapping.getMessage(code) : null;
   });
 
+  /** Tracks the current polling setTimeout so it can be cancelled on destroy. */
+  private pollTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
   ngOnInit(): void {
+    this.destroyRef.onDestroy(() => this.cancelPollTimeout());
     // Prefer the query parameter (set by MP via the success/failure URL
     // configured on the preference). Fall back to sessionStorage so retries
     // triggered after the user already consumed the redirect still work.
@@ -95,7 +99,10 @@ export class PaymentCallback implements OnInit {
             this.phase.set('pending');
             return;
           }
-          setTimeout(() => this.pollOrder(orderId, attempt + 1), PaymentCallback.POLL_INTERVAL_MS);
+          this.pollTimeoutId = setTimeout(
+            () => this.pollOrder(orderId, attempt + 1),
+            PaymentCallback.POLL_INTERVAL_MS,
+          );
         },
         error: (err: unknown) => {
           this.phase.set('error');
@@ -106,8 +113,17 @@ export class PaymentCallback implements OnInit {
       });
   }
 
+  /** Cancels the pending poll timeout if one is scheduled. */
+  private cancelPollTimeout(): void {
+    if (this.pollTimeoutId !== null) {
+      clearTimeout(this.pollTimeoutId);
+      this.pollTimeoutId = null;
+    }
+  }
+
   /** Resumes polling after the user retries from a transient error. */
   protected retry(): void {
+    this.cancelPollTimeout();
     const fromQuery = Number(this.route.snapshot.queryParamMap.get('orderId'));
     const orderId = Number.isFinite(fromQuery) && fromQuery > 0 ? fromQuery : NaN;
     if (!Number.isFinite(orderId)) {

@@ -45,6 +45,11 @@ export class Login {
     return this.route.snapshot.queryParamMap.get('registered') === 'true';
   });
 
+  /** The return URL passed by route guards, if any. Preserved so the register link carries it. */
+  protected readonly returnUrl = computed(() =>
+    this.route.snapshot.queryParamMap.get('returnUrl') ?? null,
+  );
+
   /** Whether the email field has user input and currently fails validation. */
   protected readonly showEmailRealtimeError = computed(() => {
     const emailValue = this.loginModel().email.trim();
@@ -129,8 +134,32 @@ export class Login {
     return this.errorMapping.getMessage(code, 'Error al iniciar sesion. Intenta nuevamente.');
   }
 
-  /** Routes customers to the store and staff users to the admin area after login. */
+  /** Routes customers to the store and staff users to the admin area after login.
+   *  Honors a {@code returnUrl} query parameter set by route guards so users
+   *  land back on the page they were trying to access before authenticating. */
   private buildRedirectPath(role: string): string {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (returnUrl && isSafeRelativeUrl(returnUrl)) {
+      return returnUrl;
+    }
     return role === 'CUSTOMER' ? '/store' : '/admin';
   }
+}
+
+/**
+ * Rejects URLs that contain protocol schemas, double slashes, or do not
+ * start with a forward slash. Only relative paths are safe for client-side
+ * redirect after login.
+ */
+function isSafeRelativeUrl(url: string): boolean {
+  if (!url.startsWith('/')) {
+    return false;
+  }
+  if (url.includes('//')) {
+    return false;
+  }
+  if (url.includes(':')) {
+    return false;
+  }
+  return true;
 }

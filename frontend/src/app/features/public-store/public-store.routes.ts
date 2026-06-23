@@ -19,6 +19,10 @@ export default [
         loadComponent: () => import('./product-detail/product-detail').then((m) => m.ProductDetail),
       },
       {
+        path: 'cart',
+        loadComponent: () => import('./cart/cart').then((m) => m.default),
+      },
+      {
         path: 'catalog',
         redirectTo: 'products',
         pathMatch: 'full',

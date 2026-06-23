@@ -34,6 +34,18 @@ public final class PaymentErrorCodes {
     /** Webhook signature did not match the configured secret. */
     public static final String WEBHOOK_SIGNATURE_INVALID = "WEBHOOK_SIGNATURE_INVALID";
 
+    /** Order not found or does not belong to the authenticated customer. */
+    public static final String ORDER_NOT_FOUND = "ORDER_NOT_FOUND";
+
+    /** The order is not in a state that accepts a Mercado Pago payment. */
+    public static final String ORDER_NOT_PAYABLE = "ORDER_NOT_PAYABLE";
+
+    /** No local payment matched the provider webhook notification. */
+    public static final String PAYMENT_NOT_FOUND = "PAYMENT_NOT_FOUND";
+
+    /** Authenticated user lacks the required role for the operation. */
+    public static final String ACCESS_DENIED = "ACCESS_DENIED";
+
     private PaymentErrorCodes() {
     }
 }

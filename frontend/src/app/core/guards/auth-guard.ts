@@ -25,7 +25,7 @@ function staffDecision(authService: AuthService, router: Router): GuardResult {
 }
 
 /** Allows access only to authenticated users. */
-export const authGuard: CanActivateFn = (_route, _state) => {
+export const authGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -33,16 +33,20 @@ export const authGuard: CanActivateFn = (_route, _state) => {
     return true;
   }
   if (!canHydrateSession(authService)) {
-    return router.createUrlTree(['/auth/login']);
+    return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } });
   }
 
   return ensureSession(authService).pipe(
-    map((authenticated) => (authenticated ? true : router.createUrlTree(['/auth/login']))),
+    map((authenticated) =>
+      authenticated
+        ? true
+        : router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } }),
+    ),
   );
 };
 
 /** Allows access only to staff users (ADMIN, MANAGER, EMPLOYEE). */
-export const adminGuard: CanActivateFn = (_route, _state) => {
+export const adminGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -50,12 +54,14 @@ export const adminGuard: CanActivateFn = (_route, _state) => {
     return staffDecision(authService, router);
   }
   if (!canHydrateSession(authService)) {
-    return router.createUrlTree(['/auth/login']);
+    return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } });
   }
 
   return ensureSession(authService).pipe(
     map((authenticated) =>
-      authenticated ? staffDecision(authService, router) : router.createUrlTree(['/auth/login']),
+      authenticated
+        ? staffDecision(authService, router)
+        : router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } }),
     ),
   );
 };
@@ -83,7 +89,7 @@ export const guestGuard: CanActivateFn = (_route, _state) => {
 };
 
 /** Allows access only to ADMIN users within the admin area. */
-export const adminOnlyGuard: CanActivateFn = (_route, _state) => {
+export const adminOnlyGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -94,16 +100,20 @@ export const adminOnlyGuard: CanActivateFn = (_route, _state) => {
     return decide();
   }
   if (!canHydrateSession(authService)) {
-    return router.createUrlTree(['/auth/login']);
+    return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } });
   }
 
   return ensureSession(authService).pipe(
-    map((authenticated) => (authenticated ? decide() : router.createUrlTree(['/auth/login']))),
+    map((authenticated) =>
+      authenticated
+        ? decide()
+        : router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } }),
+    ),
   );
 };
 
 /** Allows access only to CUSTOMER users. */
-export const customerGuard: CanActivateFn = (_route, _state) => {
+export const customerGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -114,10 +124,14 @@ export const customerGuard: CanActivateFn = (_route, _state) => {
     return decide();
   }
   if (!canHydrateSession(authService)) {
-    return router.createUrlTree(['/auth/login']);
+    return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } });
   }
 
   return ensureSession(authService).pipe(
-    map((authenticated) => (authenticated ? decide() : router.createUrlTree(['/auth/login']))),
+    map((authenticated) =>
+      authenticated
+        ? decide()
+        : router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } }),
+    ),
   );
 };

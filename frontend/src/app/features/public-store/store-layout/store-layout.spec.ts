@@ -115,14 +115,14 @@ describe('StoreLayout', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/store']);
   });
 
-  it('should navigate to checkout on cart click', async () => {
+  it('should navigate to public cart on cart click', async () => {
     setup(false);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     component.goToCart();
     await fixture.whenStable();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/customer/checkout']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/store/cart']);
   });
 
   it('should navigate to /store/products with query param on search', async () => {

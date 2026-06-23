@@ -1,5 +1,5 @@
 import { Component, computed, signal, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   form,
   FormField,
@@ -29,6 +29,7 @@ import { PasswordToggle } from '../../../shared/components/password-toggle/passw
 })
 export class Register {
   private readonly auth = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly errorMapping = inject(ErrorMappingService);
 
@@ -122,9 +123,12 @@ export class Register {
         };
         await lastValueFrom(this.auth.register(request));
         this.registrationSucceeded.set(true);
-        await this.router.navigate(['/auth/login'], {
-          queryParams: { registered: 'true' },
-        });
+        const params: Record<string, string> = { registered: 'true' };
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        if (returnUrl) {
+          params['returnUrl'] = returnUrl;
+        }
+        await this.router.navigate(['/auth/login'], { queryParams: params });
       } catch (err: unknown) {
         this.registrationSucceeded.set(false);
         const message = this.buildBackendErrorMessage(err);

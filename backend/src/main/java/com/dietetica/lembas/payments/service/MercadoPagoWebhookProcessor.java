@@ -8,6 +8,7 @@ import com.dietetica.lembas.payments.gateway.PaymentGateway;
 import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.payments.model.PaymentStatus;
 import com.dietetica.lembas.payments.repository.PaymentRepository;
+import com.dietetica.lembas.payments.PaymentErrorCodes;
 import com.dietetica.lembas.shared.exception.DomainException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +92,7 @@ public class MercadoPagoWebhookProcessor {
         PaymentStatus newStatus = statusMapper.map(providerState.status());
         Payment payment = findPayment(paymentId, providerState)
                 .orElseThrow(() -> new DomainException(
-                        "PAYMENT_NOT_FOUND",
+                        PaymentErrorCodes.PAYMENT_NOT_FOUND,
                         HttpStatus.NOT_FOUND,
                         "Payment not found for provider id " + paymentId));
         if (shouldSkipAsAlreadyProcessed(payment.getStatus(), newStatus)) {
