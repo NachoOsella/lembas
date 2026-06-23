@@ -14,8 +14,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Unit tests for {@link WebhookSignatureValidator}.
  *
- * <p>Covers the documented MP signature scheme: ts/v1 extraction, manifest
- * shape, constant-time comparison, and rejection of missing/tampered parts.</p>
+ * <p>Covers the official MP signature scheme: ts/v1 extraction, the
+ * {@code id:...;request-id:...;ts:...;} manifest, constant-time comparison,
+ * lowercasing of {@code data.id}, omission of empty pairs, and rejection of
+ * missing/tampered parts.</p>
  */
 class WebhookSignatureValidatorTest {
 
@@ -34,12 +36,62 @@ class WebhookSignatureValidatorTest {
             )
     );
 
+    /** Manifest helper matching the official MP template. */
+    private static String manifest(String dataId, String requestId, String ts) {
+        StringBuilder sb = new StringBuilder();
+        if (dataId != null && !dataId.isBlank()) {
+            sb.append("id:").append(dataId.toLowerCase()).append(';');
+        }
+        if (requestId != null && !requestId.isBlank()) {
+            sb.append("request-id:").append(requestId).append(';');
+        }
+        sb.append("ts:").append(ts).append(';');
+        return sb.toString();
+    }
+
     @Test
     void shouldAcceptValidSignature() {
         String ts = "1700000000";
         String dataId = "12345";
         String requestId = "abc";
-        String v1 = hmac(SECRET, "id=" + dataId + "&request_id=" + requestId + "&ts=" + ts);
+        String v1 = hmac(SECRET, manifest(dataId, requestId, ts));
+        String signature = "ts=" + ts + ",v1=" + v1;
+
+        assertThatCode(() -> validator.validate(signature, requestId, dataId))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void shouldAcceptSignatureWithoutDataId() {
+        // When data.id query param is absent, the id: pair is omitted.
+        String ts = "1700000000";
+        String requestId = "abc";
+        String v1 = hmac(SECRET, manifest(null, requestId, ts));
+        String signature = "ts=" + ts + ",v1=" + v1;
+
+        assertThatCode(() -> validator.validate(signature, requestId, null))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void shouldAcceptSignatureWithoutRequestId() {
+        // When x-request-id header is absent, the request-id: pair is omitted.
+        String ts = "1700000000";
+        String dataId = "12345";
+        String v1 = hmac(SECRET, manifest(dataId, null, ts));
+        String signature = "ts=" + ts + ",v1=" + v1;
+
+        assertThatCode(() -> validator.validate(signature, null, dataId))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void shouldLowercaseUppercaseDataId() {
+        // MP requires uppercase order ids to be lowercased in the manifest.
+        String ts = "1700000000";
+        String dataId = "ORD01JQ4S4KY8HWQ6NA5PXB65B3D3";
+        String requestId = "abc";
+        String v1 = hmac(SECRET, manifest(dataId, requestId, ts)); // uses lowercased
         String signature = "ts=" + ts + ",v1=" + v1;
 
         assertThatCode(() -> validator.validate(signature, requestId, dataId))
@@ -78,7 +130,7 @@ class WebhookSignatureValidatorTest {
         String ts = "1700000000";
         String dataId = "12345";
         String requestId = "abc";
-        String wrong = hmac(SECRET, "id=" + dataId + "&request_id=" + requestId + "&ts=9999999999");
+        String wrong = hmac(SECRET, manifest(dataId, requestId, "9999999999"));
         String signature = "ts=" + ts + ",v1=" + wrong;
 
         assertThatThrownBy(() -> validator.validate(signature, requestId, dataId))
@@ -91,7 +143,7 @@ class WebhookSignatureValidatorTest {
         String ts = "1700000000";
         String dataId = "12345";
         String requestId = "abc";
-        String wrong = hmac("other-secret", "id=" + dataId + "&request_id=" + requestId + "&ts=" + ts);
+        String wrong = hmac("other-secret", manifest(dataId, requestId, ts));
         String signature = "ts=" + ts + ",v1=" + wrong;
 
         assertThatThrownBy(() -> validator.validate(signature, requestId, dataId))
@@ -103,7 +155,7 @@ class WebhookSignatureValidatorTest {
         String ts = "1700000000";
         String dataId = "12345";
         String requestId = "abc";
-        String v1 = hmac(SECRET, "id=" + dataId + "&request_id=" + requestId + "&ts=" + ts);
+        String v1 = hmac(SECRET, manifest(dataId, requestId, ts));
         // Real MP sometimes appends v0 etc. The validator should ignore them.
         String signature = "v0=ignored,ts=" + ts + ",v1=" + v1 + ",v2=more";
 

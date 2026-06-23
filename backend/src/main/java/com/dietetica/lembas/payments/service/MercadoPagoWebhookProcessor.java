@@ -109,7 +109,12 @@ public class MercadoPagoWebhookProcessor {
         return current == incoming;
     }
 
-    /** Extracts the provider payment id from a payload, preferring the nested data block. */
+    /**
+     * Extracts the relevant id from the webhook payload.
+     *
+     * <p>For {@code payment} webhooks the id is in {@code data.id}.
+     * For {@code merchant_order} webhooks the id is at the top level.</p>
+     */
     private String extractPaymentId(MercadoPagoWebhookPayload payload) {
         if (payload.data() != null && payload.data().id() != null) {
             return payload.data().id();

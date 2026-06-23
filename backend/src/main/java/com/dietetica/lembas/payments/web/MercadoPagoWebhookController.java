@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
@@ -51,12 +52,13 @@ public class MercadoPagoWebhookController {
     public ResponseEntity<Map<String, Object>> receive(
             @RequestHeader(name = "x-signature", required = false) String xSignature,
             @RequestHeader(name = "x-request-id", required = false) String xRequestId,
-            @RequestBody MercadoPagoWebhookPayload payload
+            // MP sends the relevant id as the `data.id` URL query parameter, NOT in
+            // the JSON body. Per the official signature spec, the `id:` pair in the
+            // manifest must use this query value (lowercased by the validator).
+            @RequestParam(name = "data.id", required = false) String dataId,
+            @RequestBody(required = false) MercadoPagoWebhookPayload payload
     ) {
         try {
-            String dataId = (payload.data() != null && payload.data().id() != null)
-                    ? payload.data().id()
-                    : payload.id();
             signatureValidator.validate(xSignature, xRequestId, dataId);
         } catch (DomainException ex) {
             log.warn("Rejected Mercado Pago webhook: {}", ex.getMessage());
@@ -64,7 +66,9 @@ public class MercadoPagoWebhookController {
                     .body(Map.of("received", false, "reason", ex.getCode()));
         }
         try {
-            processor.process(payload);
+            if (payload != null) {
+                processor.process(payload);
+            }
         } catch (RuntimeException ex) {
             // Log and still acknowledge so Mercado Pago does not retry forever.
             log.error("Failed to process Mercado Pago webhook", ex);

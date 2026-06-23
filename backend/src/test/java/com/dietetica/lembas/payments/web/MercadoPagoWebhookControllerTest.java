@@ -34,6 +34,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Routing and signature tests for {@link MercadoPagoWebhookController}.
+ *
+ * <p>MP sends {@code data.id} as a URL query parameter, so the test requests
+ * include {@code ?data.id=...}. The manifest is built per the official MP
+ * template {@code id:...;request-id:...;ts:...;}.</p>
  */
 @WebMvcTest(controllers = {MercadoPagoWebhookController.class, GlobalExceptionHandler.class})
 @AutoConfigureMockMvc(addFilters = false)
@@ -54,15 +58,28 @@ class MercadoPagoWebhookControllerTest {
     @MockitoBean
     private LembasUserDetailsService lembasUserDetailsService;
 
+    /** Manifest helper matching the official MP template (lowercases dataId). */
+    private static String manifest(String dataId, String requestId, String ts) {
+        StringBuilder sb = new StringBuilder();
+        if (dataId != null && !dataId.isBlank()) {
+            sb.append("id:").append(dataId.toLowerCase()).append(';');
+        }
+        if (requestId != null && !requestId.isBlank()) {
+            sb.append("request-id:").append(requestId).append(';');
+        }
+        sb.append("ts:").append(ts).append(';');
+        return sb.toString();
+    }
+
     @Test
     void shouldReturn200AndAcknowledgeWhenSignatureIsValid() throws Exception {
-        String dataId = "PAY-1";
+        String dataId = "12345";
         String ts = "1700000000";
         String requestId = "abc";
-        String v1 = hmac(SECRET, "id=" + dataId + "&request_id=" + requestId + "&ts=" + ts);
+        String v1 = hmac(SECRET, manifest(dataId, requestId, ts));
         when(processor.process(any())).thenReturn(Optional.of(1L));
 
-        mockMvc.perform(post("/api/webhooks/mercadopago")
+        mockMvc.perform(post("/api/webhooks/mercadopago?data.id=" + dataId)
                         .header("x-signature", "ts=" + ts + ",v1=" + v1)
                         .header("x-request-id", requestId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -70,7 +87,7 @@ class MercadoPagoWebhookControllerTest {
                                 {
                                   "type": "payment",
                                   "action": "payment.created",
-                                  "data": {"id": "PAY-1"}
+                                  "data": {"id": "12345"}
                                 }
                                 """))
                 .andExpect(status().isOk())
@@ -80,13 +97,13 @@ class MercadoPagoWebhookControllerTest {
 
     @Test
     void shouldReturn401WhenSignatureIsInvalid() throws Exception {
-        mockMvc.perform(post("/api/webhooks/mercadopago")
+        mockMvc.perform(post("/api/webhooks/mercadopago?data.id=12345")
                         .header("x-signature", "ts=1700000000,v1=deadbeef")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "type": "payment",
-                                  "data": {"id": "PAY-1"}
+                                  "data": {"id": "12345"}
                                 }
                                 """))
                 .andExpect(status().isUnauthorized())
@@ -96,26 +113,52 @@ class MercadoPagoWebhookControllerTest {
 
     @Test
     void shouldReturn401WhenSignatureHeaderIsMissing() throws Exception {
-        mockMvc.perform(post("/api/webhooks/mercadopago")
+        mockMvc.perform(post("/api/webhooks/mercadopago?data.id=12345")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"type": "payment", "data": {"id": "PAY-1"}}
+                                {"type": "payment", "data": {"id": "12345"}}
                                 """))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void shouldReturn200EvenWhenProcessorThrows() throws Exception {
-        String dataId = "PAY-2";
+        String dataId = "67890";
         String ts = "1700000000";
-        String v1 = hmac(SECRET, "id=" + dataId + "&request_id=&ts=" + ts);
+        // No x-request-id header: request-id pair is omitted from the manifest.
+        String v1 = hmac(SECRET, manifest(dataId, null, ts));
         when(processor.process(any())).thenThrow(new RuntimeException("DB down"));
 
-        mockMvc.perform(post("/api/webhooks/mercadopago")
+        mockMvc.perform(post("/api/webhooks/mercadopago?data.id=" + dataId)
                         .header("x-signature", "ts=" + ts + ",v1=" + v1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"type": "payment", "data": {"id": "PAY-2"}}
+                                {"type": "payment", "data": {"id": "67890"}}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.received").value(true));
+    }
+
+    @Test
+    void shouldValidateSignatureUsingQueryDataIdNotBody() throws Exception {
+        // The signature must validate against the query ?data.id, even when the
+        // body data.id differs (MP sends a merchant_order where body has no id).
+        String queryDataId = "42073962157";
+        String ts = "1782171894";
+        String requestId = "656248a4-b523-43ab-8835-baaa7553403e";
+        String v1 = hmac(SECRET, manifest(queryDataId, requestId, ts));
+
+        mockMvc.perform(post("/api/webhooks/mercadopago?data.id=" + queryDataId)
+                        .header("x-signature", "ts=" + ts + ",v1=" + v1)
+                        .header("x-request-id", requestId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "type": "topic_merchant_order_wh",
+                                  "action": "update",
+                                  "id": "42073962157",
+                                  "data": {"status": "closed"}
+                                }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.received").value(true));

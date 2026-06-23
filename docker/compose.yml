@@ -42,6 +42,9 @@ services:
       MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
       # Required when SPRING_PROFILES_ACTIVE=prod and MercadoPago webhooks are enabled.
       MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
+      # Public outbound webhook URL embedded in each checkout preference so MP
+      # knows where to POST notifications (e.g. the ngrok tunnel in sandbox).
+      MP_NOTIFICATION_URL: ${MP_NOTIFICATION_URL:-}
       MP_SUCCESS_URL: ${MP_SUCCESS_URL:-http://localhost/customer/payment/callback}
       MP_FAILURE_URL: ${MP_FAILURE_URL:-http://localhost/customer/payment/callback}
       MP_PENDING_URL: ${MP_PENDING_URL:-http://localhost/customer/payment/callback}
