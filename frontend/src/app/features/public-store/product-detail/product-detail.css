@@ -22,6 +22,18 @@
   aspect-ratio: 1 / 1;
 }
 
+/* Radial gradient overlay mimicking Lembas warm-orange + leaf-green brand glow. */
+.product-detail-hero__image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.4;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(242, 157, 82, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(47, 141, 114, 0.06) 0%, transparent 50%);
+}
+
 @media (min-width: 64rem) {
   .product-detail-hero__image {
     aspect-ratio: 1 / 1;

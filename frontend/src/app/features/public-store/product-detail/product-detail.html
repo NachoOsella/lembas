@@ -28,19 +28,6 @@
           <!-- ── Image ──────────────────────────────────────────────── -->
           <div class="product-detail-hero__image-wrap">
             <div class="product-detail-hero__image rounded-xl overflow-hidden bg-surface-warm">
-              <div
-                class="pointer-events-none absolute inset-0 opacity-40"
-                style="
-                  background-image:
-                    radial-gradient(
-                      circle at 25% 25%,
-                      rgba(242, 157, 82, 0.08) 0%,
-                      transparent 50%
-                    ),
-                    radial-gradient(circle at 75% 75%, rgba(47, 141, 114, 0.06) 0%, transparent 50%);
-                "
-                aria-hidden="true"
-              ></div>
               @if (p.imageUrl) {
                 <img
                   [src]="p.imageUrl"
@@ -63,7 +50,7 @@
             <a
               [routerLink]="['/store/products']"
               [queryParams]="{ categoryId: p.categoryId }"
-              class="self-start rounded-full bg-mint-wash/50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary transition hover:bg-mint-wash"
+              class="self-start rounded-full bg-mint-wash/50 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary transition hover:bg-mint-wash"
             >
               {{ p.categoryName }}
             </a>
@@ -77,7 +64,7 @@
 
             <!-- Brand -->
             @if (p.brandName) {
-              <p class="mt-2 text-sm font-medium text-[rgba(0,0,0,0.4)]">
+              <p class="mt-2 text-sm font-medium text-text-muted">
                 {{ p.brandName }}
               </p>
             }
@@ -91,7 +78,7 @@
 
             <!-- Description -->
             @if (p.description) {
-              <p class="mt-5 max-w-lg text-[15px] leading-relaxed text-text-muted">
+              <p class="mt-5 max-w-lg text-base leading-relaxed text-text-muted">
                 {{ p.description }}
               </p>
             }
@@ -147,7 +134,7 @@
 
             <!-- Trust signals -->
             <div class="mt-8 flex flex-col gap-3">
-              <div class="flex items-center gap-3 text-sm text-[rgba(0,0,0,0.5)]">
+              <div class="flex items-center gap-3 text-sm text-text-muted">
                 <span
                   class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash/50 text-primary"
                 >
@@ -155,7 +142,7 @@
                 </span>
                 Retiro sin filas en sucursal
               </div>
-              <div class="flex items-center gap-3 text-sm text-[rgba(0,0,0,0.5)]">
+              <div class="flex items-center gap-3 text-sm text-text-muted">
                 <span
                   class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash/50 text-primary"
                 >
@@ -163,7 +150,7 @@
                 </span>
                 Productos curados por expertos
               </div>
-              <div class="flex items-center gap-3 text-sm text-[rgba(0,0,0,0.5)]">
+              <div class="flex items-center gap-3 text-sm text-text-muted">
                 <span
                   class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash/50 text-primary"
                 >
@@ -189,7 +176,7 @@
           <h2 class="mt-2 text-2xl font-semibold text-white sm:text-3xl">
             Compra online, retira en sucursal
           </h2>
-          <p class="mt-2 max-w-lg text-[15px] leading-relaxed text-white/70">
+          <p class="mt-2 max-w-lg text-base leading-relaxed text-white/70">
             Armá tu pedido desde casa y pasá a buscarlo cuando te quede comodo. Sin filas, sin
             espera.
           </p>
