@@ -1,5 +1,12 @@
 # Production Docker Compose stack for Dietetica Lembas.
-# Run from this directory with: docker compose --env-file .env up -d --build
+# Run from this directory with:
+#   docker compose --env-file .env up -d --build
+#
+# Services:
+#   db         PostgreSQL 16
+#   backend    Spring Boot 3 (Java 21)
+#   web        Nginx serving the Angular app
+#   ngrok      Public tunnel for MP sandbox (skips when NGROK_AUTHTOKEN is empty)
 services:
   db:
     image: postgres:16-alpine
@@ -83,6 +90,52 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  # ngrok tunnel — exposes the web container publicly so Mercado Pago can
+  # deliver webhook notifications against a local checkout during sandbox
+  # testing.
+  #
+  # If NGROK_AUTHTOKEN is set in .env the tunnel starts automatically;
+  # otherwise the container prints a reminder and pauses without error.
+  #
+  # After startup, get the public URL from:
+  #   docker compose logs ngrok
+  # Look for:  msg="started tunnel" object-url="https://<random>.ngrok-free.app"
+  # Then set MP_NOTIFICATION_URL in .env to that URL + /api/webhooks/mercadopago
+  # and restart the backend:
+  #   docker compose up -d --force-recreate backend
+  ngrok:
+    image: ngrok/ngrok:3
+    container_name: lembas-ngrok
+    restart: unless-stopped
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+    volumes:
+      - ./ngrok.yml:/etc/ngrok/ngrok.yml:ro
+    ports:
+      - "${NGROK_WEB_PORT:-4040}:4040"
+    depends_on:
+      web:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        if [ -z "$$NGROK_AUTHTOKEN" ]; then
+          echo "=============================================================="
+          echo "  ngrok skipped: NGROK_AUTHTOKEN is not set."
+          echo "  Set NGROK_AUTHTOKEN in docker/.env to enable the public"
+          echo "  tunnel for Mercado Pago sandbox testing."
+          echo "=============================================================="
+          while true; do sleep 3600; done
+        fi
+        exec ngrok start --config /etc/ngrok/ngrok.yml backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4040/api/tunnels | grep -q 'public_url'"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
 volumes:
   pgdata:
