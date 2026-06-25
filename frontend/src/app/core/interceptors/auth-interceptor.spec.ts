@@ -146,7 +146,7 @@ describe('AuthInterceptor', () => {
 
     await new Promise<void>((resolve, reject) => {
       TestBed.runInInjectionContext(() =>
-        authInterceptor(new HttpRequest('GET', '/api/auth/me'), handler),
+        authInterceptor(new HttpRequest('GET', '/api/customer/orders'), handler),
       ).subscribe({ next: () => resolve(), error: reject });
     });
 
@@ -154,6 +154,34 @@ describe('AuthInterceptor', () => {
     expect(handledRequests).toHaveLength(2);
     expect(handledRequests[0].headers.has('Authorization')).toBe(false);
     expect(handledRequests[1].headers.has('Authorization')).toBe(false);
+  });
+
+  /**
+   * Should not attempt a refresh for the session probe /api/auth/me.
+   * A 401 there means "not logged in" and is handled by AuthService.ensureSession();
+   * triggering a refresh cycle (and then a login redirect) would kick anonymous
+   * visitors out of the public store on a hard refresh.
+   */
+  it('Should_notRefresh_when_sessionProbeReturns401', async () => {
+    const error = new HttpErrorResponse({ status: 401, url: '/api/auth/me' });
+    const handler: HttpHandlerFn = () => throwError(() => error);
+
+    await new Promise<void>((resolve) => {
+      TestBed.runInInjectionContext(() =>
+        authInterceptor(new HttpRequest('GET', '/api/auth/me'), handler),
+      ).subscribe({
+        next: () => {
+          throw new Error('Expected error, got success');
+        },
+        error: (received) => {
+          expect(received).toBe(error);
+          resolve();
+        },
+      });
+    });
+
+    expect(mockAuthService.refreshSession).not.toHaveBeenCalled();
+    expect(mockAuthService.clearAuth).not.toHaveBeenCalled();
   });
 
   /** Should clear auth and propagate the original 401 when refresh fails. */

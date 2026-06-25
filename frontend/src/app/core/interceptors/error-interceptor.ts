@@ -4,11 +4,16 @@ import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { catchError, throwError } from 'rxjs';
 
-/** API paths whose errors are handled directly by their owning forms. */
+/** API paths whose errors are handled directly by their owning forms/services. */
 const COMPONENT_OWNED_ERROR_PATHS = [
   '/api/auth/login',
   '/api/auth/register',
   '/api/auth/refresh',
+  // /api/auth/me is a session probe used by AuthService.ensureSession(). A 401
+  // here means "not logged in" and is handled by the service (it clears auth
+  // state and resolves to false). It must NOT be treated as an expired session
+  // that redirects anonymous visitors from the public store to the login page.
+  '/api/auth/me',
   '/api/store/branches',
 ];
 

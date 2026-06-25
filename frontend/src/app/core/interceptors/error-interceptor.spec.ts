@@ -139,6 +139,23 @@ describe('errorInterceptor', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
+  it('should not redirect to login for the /api/auth/me session probe 401', async () => {
+    // A 401 on the session probe means "not logged in", not an expired session.
+    // Redirecting here would kick anonymous visitors out of the public store
+    // on a hard refresh, since StoreLayout calls ensureSession() on init.
+    routerMock.url = '/store';
+    const meRequest = new HttpRequest('GET', '/api/auth/me');
+    const error = new HttpErrorResponse({
+      status: 401,
+      error: { message: 'Unauthorized' },
+    });
+
+    await captureError(meRequest, error);
+
+    expect(messageService.add).not.toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
   it('should not show a global toast for validation errors', async () => {
     const error = new HttpErrorResponse({
       status: 400,

@@ -19,7 +19,16 @@ function isBackendApiRequest(url: string): boolean {
 
 /** Returns true for auth endpoints that must not trigger a refresh retry. */
 function isPublicAuthRequest(url: string): boolean {
-  return url === '/api/auth/login' || url === '/api/auth/register' || url === '/api/auth/refresh' || url === '/api/auth/logout';
+  // /api/auth/me is a session probe: a 401 means "not logged in", not an expired
+  // session that should trigger a refresh cycle. AuthService.ensureSession()
+  // handles the 401 itself by clearing auth state and resolving to false.
+  return (
+    url === '/api/auth/login' ||
+    url === '/api/auth/register' ||
+    url === '/api/auth/refresh' ||
+    url === '/api/auth/logout' ||
+    url === '/api/auth/me'
+  );
 }
 
 /** Returns true when a failed response can be retried after refresh-cookie rotation. */
