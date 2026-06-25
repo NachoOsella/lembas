@@ -269,6 +269,11 @@
 
 - `backend/src/main/java/com/dietetica/lembas/users/service/UserAdminService.java`, `frontend/src/app/features/admin/users/user-form/`, `frontend/src/app/core/services/error-mapping.ts`, `docs/05-api/error-handling.md` -- prevencion de auto-degradacion de rol: backend bloquea con `SELF_ROLE_CHANGE_FORBIDDEN` (403) cuando un admin intenta cambiar su propio rol via `PUT/PATCH /api/admin/users/{id}`; frontend desactiva el selector de rol y muestra hint "No puede cambiar su propio rol" cuando se edita el propio usuario, y como red de seguridad extra no envia el cambio de rol en el request. Agregado test unitario `Should_rejectSelfRoleChange_when_adminTriesToChangeOwnRole` y mocks de `SecurityContextHelper` en los tests existentes de `updateUser`.
 
+## 2026-06-24
+
+- `frontend/src/app/core/interceptors/{auth-interceptor,error-interceptor}.{ts,spec.ts}` -- corregido bug de doble capa que redirigia usuarios anonimos al login en la tienda publica: (1) `/api/auth/me` 401 tratado como sesion expirada por ambos interceptores, agregado el endpoint a `isPublicAuthRequest` y `COMPONENT_OWNED_ERROR_PATHS`; (2) stale-cache entry de `index.html` en `/` (falta `Cache-Control`) referenciaba bundle viejo que aun redirigia, solucionado con `location = /index.html` en nginx con `Cache-Control: no-cache, no-store, must-revalidate`.
+- `docker/nginx.conf` -- agregado `location = /index.html` con `Cache-Control: no-cache, no-store, must-revalidate` y security headers para que index.html siempre se revalide y referencie los bundles hasheados actuales.
+
 ## 2026-06-06
 
 - `backend/src/main/java/com/dietetica/lembas/inventory/`, `frontend/src/app/features/admin/stock-entry/`, `docs/05-api/endpoints.md` -- alineado S2-US02 con recepcion de mercaderia: endpoint `POST /api/admin/stock/receipts`, DTOs `PurchaseReceiptRequest/Dto`, uso frontend de recepcion y ruta `/admin/stock/receipts` manteniendo compatibilidad con lotes de stock.
