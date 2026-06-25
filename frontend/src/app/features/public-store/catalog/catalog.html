@@ -24,7 +24,7 @@
         Nuestra góndola digital
       </h1>
       <p
-        class="mt-5 w-full max-w-[680px] text-base font-medium leading-7 text-emerald-50/75 sm:text-lg"
+        class="mt-5 w-full max-w-[680px] text-base font-medium leading-7 text-mint-wash/80 sm:text-lg"
       >
         Filtrá por categoría, compará precios y armá tu pedido para retirar en sucursal.
       </p>
@@ -46,7 +46,7 @@
   <main class="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-10">
     <!-- Product count / search info bar -->
     <div
-      class="catalog-page__card mb-8 flex flex-col gap-4 rounded-xl bg-white p-6 border border-[rgba(7,95,54,0.08)] sm:flex-row sm:items-center sm:justify-between"
+      class="catalog-page__card mb-8 flex flex-col gap-4 rounded-xl bg-white p-6 shadow-card sm:flex-row sm:items-center sm:justify-between"
     >
       <div>
         <app-eyebrow color="green">Góndola</app-eyebrow>
@@ -56,10 +56,10 @@
       </div>
       @if (searchQuery()) {
         <div
-          class="inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-[13px] font-semibold tracking-[-0.01em]"
+          class="inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold tracking-[-0.01em]"
         >
           <span class="flex items-center gap-2 text-text">
-            <i class="pi pi-search text-[11px] text-primary" aria-hidden="true"></i>
+            <i class="pi pi-search text-xs text-primary" aria-hidden="true"></i>
             <span>Resultados para</span>
             <span class="font-bold text-primary-dark">"{{ searchQuery() }}"</span>
           </span>
@@ -95,7 +95,7 @@
       </app-error-alert>
     } @else if (initialLoadDone() && products().length === 0) {
       <div
-        class="catalog-page__card rounded-xl bg-white p-12 text-center border border-[rgba(7,95,54,0.08)]"
+        class="catalog-page__card rounded-xl bg-white p-12 text-center shadow-card"
       >
         <app-empty-state
           icon="pi pi-shop"
@@ -110,7 +110,7 @@
 
       @if (totalRecords() > 0) {
         <div
-          class="catalog-page__card mt-10 rounded-xl bg-white p-5 border border-[rgba(7,95,54,0.08)]"
+          class="catalog-page__card mt-10 rounded-xl bg-white p-5 shadow-card"
         >
           <app-pagination
             [totalRecords]="totalRecords()"
