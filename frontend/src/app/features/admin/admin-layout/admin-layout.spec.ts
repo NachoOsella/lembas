@@ -2,9 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { signal, WritableSignal } from '@angular/core';
 import { MessageService } from 'primeng/api';
+import { of } from 'rxjs';
 
 import { AdminLayout } from './admin-layout';
 import { AuthService, AuthUser } from '../../../core/services/auth';
+import { CashService } from '../../../core/services/cash';
 
 describe('AdminLayout', () => {
   let component: AdminLayout;
@@ -72,6 +74,20 @@ describe('AdminLayout', () => {
         ]),
         MessageService,
         { provide: AuthService, useValue: mockAuthService },
+        {
+          provide: CashService,
+          useValue: {
+            currentSession: vi.fn(() =>
+              of({
+                id: 1,
+                status: 'OPEN',
+                branchId: 1,
+                branchName: 'Centro',
+                openingCashAmount: '0',
+              } as any),
+            ),
+          },
+        },
       ],
     }).compileComponents();
 
@@ -155,6 +171,15 @@ describe('AdminLayout', () => {
     );
     expect(labels).toContain('Precios');
     expect(labels).not.toContain('Usuarios');
+  });
+
+  /** Should display the open-cash indicator dot on the Caja nav item for branch users. */
+  it('Should_showCashIndicator_when_employeeHasOpenCashSession', () => {
+    setup(employeeUser);
+
+    const indicator = fixture.nativeElement.querySelector('.admin__nav-indicator');
+    expect(indicator).toBeTruthy();
+    expect(component['hasOpenCashSession']()).toBe(true);
   });
 
   /** Should hide Usuarios but keep pricing in sidebar when role is EMPLOYEE. */

@@ -6,6 +6,7 @@ import { AppMenu } from '../../../shared/components/app-menu/app-menu';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 
 import { AuthService } from '../../../core/services/auth';
+import { CashService } from '../../../core/services/cash';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
 interface AdminNavItem {
@@ -59,9 +60,13 @@ const LABEL_MAP: Record<string, string> = {
 export class AdminLayout implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly cashService = inject(CashService);
 
   protected readonly collapsed = signal(false);
   protected readonly breadcrumbs = signal<MenuItem[]>([]);
+
+  /** True when an open cash session exists for the current user's branch (S3-US06 sidebar indicator). */
+  protected readonly hasOpenCashSession = signal(false);
 
   /** Sidebar nav items filtered by role: "Usuarios" is ADMIN-only. */
   protected readonly navItems = computed(() => {
@@ -95,6 +100,7 @@ export class AdminLayout implements OnInit, OnDestroy {
       this.collapsed.set(true);
     }
     this.buildBreadcrumbs(this.router.url);
+    this.refreshOpenCashSession();
     this.router.events
       .pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
@@ -105,12 +111,31 @@ export class AdminLayout implements OnInit, OnDestroy {
         if (typeof window !== 'undefined' && window.innerWidth < 768) {
           this.collapsed.set(true);
         }
+        this.refreshOpenCashSession();
       });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /** Queries the current open cash session for MANAGER/EMPLOYEE branches to light up the Caja nav item. */
+  private refreshOpenCashSession(): void {
+    const user = this.auth.currentUser();
+    if (!user || user.role === 'CUSTOMER' || user.role === 'ADMIN' || user.branchId == null) {
+      this.hasOpenCashSession.set(false);
+      return;
+    }
+    this.cashService.currentSession(user.branchId).subscribe({
+      next: () => this.hasOpenCashSession.set(true),
+      error: () => this.hasOpenCashSession.set(false),
+    });
+  }
+
+  /** True when the cash nav item should display the open-session indicator dot. */
+  protected isCashNavItem(route: string): boolean {
+    return route === '/admin/cash';
   }
 
   /** Check if the given route matches the current URL for aria-current. */
