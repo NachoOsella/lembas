@@ -83,6 +83,7 @@ Services may throw `DomainException` directly when a dedicated exception subclas
 | CASH_SESSION_ALREADY_OPEN | Cash | 409 | A cash session is already OPEN for the branch |
 | CASH_SESSION_NOT_FOUND | Cash | 404 | No OPEN cash session exists for the branch (or the requested session id does not exist) |
 | CASH_BRANCH_REQUIRED | Cash | 400 | ADMIN must select a branch to open or query a cash session |
+| CASH_MOVEMENT_CLOSED_SESSION | Cash | 400 | Cannot register movements on a CLOSED cash session |
 
 ### Global exception handler
 

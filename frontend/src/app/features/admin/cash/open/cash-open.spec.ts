@@ -27,17 +27,15 @@ describe('CashOpen', () => {
     cashService = { openSession: vi.fn(), currentSession: vi.fn() };
     router = { navigate: vi.fn().mockResolvedValue(true) };
     const auth = {
-      currentUser: vi
-        .fn()
-        .mockReturnValue({
-          id: 1,
-          email: 'a@b.com',
-          firstName: 'A',
-          lastName: 'B',
-          role,
-          branchId,
-          branchName: branchId ? 'Centro' : null,
-        }),
+      currentUser: vi.fn().mockReturnValue({
+        id: 1,
+        email: 'a@b.com',
+        firstName: 'A',
+        lastName: 'B',
+        role,
+        branchId,
+        branchName: branchId ? 'Centro' : null,
+      }),
       getUserRole: vi.fn().mockReturnValue(role),
     };
     const userService = {
@@ -80,7 +78,9 @@ describe('CashOpen', () => {
 
   it('disables submit until the amount is set (employee)', async () => {
     configureAs('EMPLOYEE', 1);
-    cashService.currentSession.mockReturnValue(throwError(() => apiError(404, 'CASH_SESSION_NOT_FOUND')));
+    cashService.currentSession.mockReturnValue(
+      throwError(() => apiError(404, 'CASH_SESSION_NOT_FOUND')),
+    );
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -102,7 +102,9 @@ describe('CashOpen', () => {
 
   it('opens and redirects on success', async () => {
     configureAs('EMPLOYEE', 1);
-    cashService.currentSession.mockReturnValue(throwError(() => apiError(404, 'CASH_SESSION_NOT_FOUND')));
+    cashService.currentSession.mockReturnValue(
+      throwError(() => apiError(404, 'CASH_SESSION_NOT_FOUND')),
+    );
     cashService.openSession.mockReturnValue(of(openSession(11)));
     fixture.detectChanges();
     await fixture.whenStable();
@@ -123,7 +125,9 @@ describe('CashOpen', () => {
     cashService.currentSession.mockReturnValue(
       throwError(() => ({ error: { code: 'CASH_SESSION_NOT_FOUND' } })),
     );
-    cashService.openSession.mockReturnValue(throwError(() => apiError(409, 'CASH_SESSION_ALREADY_OPEN')));
+    cashService.openSession.mockReturnValue(
+      throwError(() => apiError(409, 'CASH_SESSION_ALREADY_OPEN')),
+    );
 
     fixture.detectChanges();
     await fixture.whenStable();

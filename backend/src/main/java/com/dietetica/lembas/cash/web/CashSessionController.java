@@ -1,7 +1,9 @@
 package com.dietetica.lembas.cash.web;
 
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import com.dietetica.lembas.cash.dto.CashMovementDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
+import com.dietetica.lembas.cash.dto.CreateCashMovementRequest;
 import com.dietetica.lembas.cash.dto.OpenCashSessionRequest;
 import com.dietetica.lembas.cash.service.CashService;
 import jakarta.validation.Valid;
@@ -59,9 +61,19 @@ public class CashSessionController {
         return cashService.getCurrentSession(branchId, securityContextHelper.getCurrentUser());
     }
 
-    /** Returns a single cash session by id. Used by the cash detail screen. */
+    /** Returns a single cash session by id including its manual movements. */
     @GetMapping("/{id}")
     public CashSessionDto getById(@PathVariable Long id) {
         return cashService.getSessionById(id);
+    }
+
+    /** Registers a manual cash movement in an OPEN cash session. */
+    @PostMapping("/{id}/movements")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CashMovementDto addMovement(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateCashMovementRequest request
+    ) {
+        return cashService.addMovement(id, request, securityContextHelper.getCurrentUser());
     }
 }

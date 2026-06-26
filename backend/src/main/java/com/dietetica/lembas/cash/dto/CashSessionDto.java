@@ -5,11 +5,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 /**
- * Cash session returned by the open and current endpoints.
+ * Cash session returned by the open, current and detail endpoints.
  *
- * <p>Close-only fields are omitted (null) while the session is OPEN, so
+ * <p>Close-only fields are omitted (null) while the session is OPEN, and
+ * {@code movements} is only populated by the detail endpoint, so
  * {@code @JsonInclude(NON_NULL)} keeps the payload compact.</p>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -32,6 +34,7 @@ public record CashSessionDto(
         OffsetDateTime closedAt,
         String closingNotes,
         OffsetDateTime createdAt,
-        OffsetDateTime updatedAt
+        OffsetDateTime updatedAt,
+        List<CashMovementDto> movements
 ) {
 }
