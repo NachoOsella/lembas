@@ -11,6 +11,7 @@ import com.dietetica.lembas.cash.model.CashSessionStatus;
 import com.dietetica.lembas.cash.repository.CashMovementRepository;
 import com.dietetica.lembas.cash.repository.CashSessionRepository;
 import com.dietetica.lembas.payments.model.Payment;
+import com.dietetica.lembas.users.repository.UserRepository;
 import com.dietetica.lembas.payments.model.PaymentMethod;
 import com.dietetica.lembas.payments.model.PaymentStatus;
 import com.dietetica.lembas.payments.repository.PaymentRepository;
@@ -60,6 +61,7 @@ public class CashService {
     private final CashMovementRepository cashMovementRepository;
     private final CashMovementMapper cashMovementMapper;
     private final PaymentRepository paymentRepository;
+    private final UserRepository userRepository;
 
     public CashService(
             CashSessionRepository cashSessionRepository,
@@ -67,7 +69,8 @@ public class CashService {
             CashSessionMapper cashSessionMapper,
             CashMovementRepository cashMovementRepository,
             CashMovementMapper cashMovementMapper,
-            PaymentRepository paymentRepository
+            PaymentRepository paymentRepository,
+            UserRepository userRepository
     ) {
         this.cashSessionRepository = cashSessionRepository;
         this.branchRepository = branchRepository;
@@ -75,6 +78,7 @@ public class CashService {
         this.cashMovementRepository = cashMovementRepository;
         this.cashMovementMapper = cashMovementMapper;
         this.paymentRepository = paymentRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -134,56 +138,12 @@ public class CashService {
     private static boolean isOneOpenPerBranchViolation(
             org.springframework.dao.DataIntegrityViolationException ex
     ) {
-        return matchesAnyMessage(ex, "uk_cash_sessions_one_open_per_branch", "cash_sessions_branch_id_key")
-                || containsPair(ex, "duplicate key", "cash_sessions");
-    }
-
-    /**
-     * Detects whether a {@link org.springframework.dao.DataIntegrityViolationException}
-     * was caused by a missing {@code users(id)} foreign key on cash_movements.
-     */
-    private static boolean isMissingUserViolation(
-            org.springframework.dao.DataIntegrityViolationException ex
-    ) {
-        return matchesAnyMessage(ex, "created_by_user_id", "fk_cash_movements_created_by_user");
-    }
-
-    /**
-     * Walks the cause chain of {@code ex} and returns true if any of the listed
-     * substrings appears in either the exception's own message or the message of
-     * any of its causes. Necessary because the most-specific cause (the underlying
-     * SQL exception) only carries the SQL state, not the constraint name.
-     */
-    private static boolean matchesAnyMessage(
-            org.springframework.dao.DataIntegrityViolationException ex,
-            String... needles
-    ) {
-        Throwable current = ex;
-        while (current != null) {
-            String message = current.getMessage();
-            if (message != null) {
-                for (String needle : needles) {
-                    if (message.contains(needle)) {
-                        return true;
-                    }
-                }
-            }
-            if (current.getCause() == current) {
-                break;
-            }
-            current = current.getCause();
-        }
-        return false;
-    }
-
-    /** True when the cause chain contains both {@code a} and {@code b} substrings. */
-    private static boolean containsPair(
-            org.springframework.dao.DataIntegrityViolationException ex,
-            String a,
-            String b
-    ) {
         String combined = collectMessages(ex);
-        return combined != null && combined.toLowerCase().contains(a) && combined.toLowerCase().contains(b);
+        if (combined == null) {
+            return false;
+        }
+        return combined.contains("uk_cash_sessions_one_open_per_branch")
+                || combined.contains("cash_sessions_branch_id_key");
     }
 
     /** Concatenates every non-null message along the cause chain for substring search. */
@@ -354,30 +314,23 @@ public class CashService {
 
         CashMovement movement = new CashMovement();
         movement.setCashSession(session);
-        movement.setCreatedByUser(currentUser);
+        // The currentUser comes from the security context as a detached entity; if
+        // attached to the movement directly, Hibernate would attempt to merge it
+        // (an extra UPDATE on the users row) which can race with concurrent updates
+        // and surface as a misleading constraint violation. Re-load the user inside
+        // this transaction so the FK is satisfied by a managed reference instead.
+        movement.setCreatedByUser(userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new DomainException(
+                        CODE_ACCESS_DENIED,
+                        HttpStatus.FORBIDDEN,
+                        "The authenticated user is no longer valid"
+                )));
         movement.setType(request.type());
         movement.setMethod(request.method());
         movement.setAmount(request.amount());
         movement.setReason(request.reason().trim());
 
-        // Save the movement. If the user was deleted between the auth check and the
-        // save, the FK on created_by_user_id raises a DataIntegrityViolationException
-        // that the global handler maps to a generic 409. Re-raise as ACCESS_DENIED so
-        // the UI can show a more meaningful message (the user lost mid-flight access).
-        CashMovement saved;
-        try {
-            saved = cashMovementRepository.save(movement);
-        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
-            if (isMissingUserViolation(ex)) {
-                throw new DomainException(
-                        CODE_ACCESS_DENIED,
-                        HttpStatus.FORBIDDEN,
-                        "The authenticated user is no longer valid for this operation"
-                );
-            }
-            throw ex;
-        }
-        return cashMovementMapper.toDto(saved);
+        return cashMovementMapper.toDto(cashMovementRepository.save(movement));
     }
 
     /** Rejects customers from any cash endpoint. */

@@ -25,7 +25,9 @@
     @if (errorMessage()) {
       <app-error-alert [message]="errorMessage()!" />
       <div class="cash-detail__back-row">
-        <app-button variant="secondary" icon="pi pi-arrow-left" label="Volver" (click)="goBack()" />
+        <app-button variant="secondary" icon="pi pi-arrow-left" (click)="goBack()">
+          Volver
+        </app-button>
       </div>
     } @else if (session(); as s) {
       <!-- Financial summary hero: opening, in, out, expected -->
@@ -78,6 +80,18 @@
             </div>
           }
         </dl>
+
+        @if (!isClosed) {
+          <div class="cash-detail__session-actions">
+            <p class="cash-detail__session-actions-copy">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              Podes registrar un ingreso, egreso o ajuste de caja usando el formulario modal.
+            </p>
+            <app-button variant="primary" icon="pi pi-plus" (click)="openMovementDialog()">
+              Registrar movimiento manual
+            </app-button>
+          </div>
+        }
       </app-section-card>
 
       <!-- Movements: data table (or empty state) -->
@@ -151,31 +165,8 @@
         }
       </app-section-card>
 
-      <!-- Movement form (only for OPEN sessions) -->
-      @if (!isClosed) {
-        <app-section-card
-          eyebrow="Acciones"
-          title="Registrar movimiento"
-          description="Usa el formulario modal para registrar ingresos, egresos o ajustes de caja durante la sesion."
-          tone="muted"
-        >
-          <div class="cash-detail__action-row">
-            <div class="cash-detail__action-copy">
-              <i class="pi pi-info-circle cash-detail__action-icon" aria-hidden="true"></i>
-              <p>
-                Cada movimiento queda asentado en la auditoria de la sesion con tipo, metodo, monto,
-                motivo y operador responsable.
-              </p>
-            </div>
-            <app-button
-              variant="primary"
-              icon="pi pi-plus"
-              label="Registrar movimiento manual"
-              (click)="openMovementDialog()"
-            />
-          </div>
-        </app-section-card>
-      } @else {
+      <!-- Closed-session notice -->
+      @if (isClosed) {
         <app-section-card
           eyebrow="Caja cerrada"
           title="Sesion finalizada"
@@ -188,12 +179,9 @@
               La sesion se cerro al finalizar la jornada. Consulta los movimientos arriba para
               conocer el detalle de la operatoria.
             </p>
-            <app-button
-              variant="primary"
-              icon="pi pi-arrow-left"
-              label="Volver"
-              (click)="goBack()"
-            />
+            <app-button variant="primary" icon="pi pi-arrow-left" (click)="goBack()">
+              Volver
+            </app-button>
           </div>
         </app-section-card>
       }

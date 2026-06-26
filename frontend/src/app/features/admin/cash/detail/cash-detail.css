@@ -105,45 +105,43 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Action row — the "Registrar movimiento" callout inside the section card
+   Session-actions footer — inline "Registrar movimiento" CTA inside the
+   session card (replaces the standalone "Acciones" section card).
    --------------------------------------------------------------------------- */
-.cash-detail__action-row {
+.cash-detail__session-actions {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1rem;
   flex-wrap: wrap;
-  padding: 0.5rem 0.25rem;
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(7, 95, 54, 0.08);
 }
 
-.cash-detail__action-copy {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
+.cash-detail__session-actions-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   flex: 1 1 18rem;
   min-width: 0;
-  color: var(--color-text);
-  font-size: 0.88rem;
-  line-height: 1.5;
-}
-
-.cash-detail__action-copy p {
   margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
 }
 
-.cash-detail__action-icon {
-  flex-shrink: 0;
-  margin-top: 0.15rem;
-  font-size: 1rem;
+.cash-detail__session-actions-copy i {
   color: var(--color-primary);
+  font-size: 0.95rem;
 }
 
 @media (max-width: 48rem) {
-  .cash-detail__action-row {
+  .cash-detail__session-actions {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .cash-detail__action-row app-button {
+  .cash-detail__session-actions app-button {
     width: 100%;
   }
 }

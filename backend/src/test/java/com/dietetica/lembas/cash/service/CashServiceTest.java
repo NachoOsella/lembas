@@ -62,6 +62,8 @@ class CashServiceTest {
     private CashMovementMapper cashMovementMapper;
     @Mock
     private com.dietetica.lembas.payments.repository.PaymentRepository paymentRepository;
+    @Mock
+    private com.dietetica.lembas.users.repository.UserRepository userRepository;
 
     @InjectMocks
     private CashService cashService;
@@ -227,6 +229,7 @@ class CashServiceTest {
     @Test
     void addMovementHappyPath() {
         User employee = user(Role.EMPLOYEE, 1L);
+        setId(employee, 1L);
         CashSession session = new CashSession();
         setId(session, 7L);
         session.setStatus(CashSessionStatus.OPEN);
@@ -236,6 +239,7 @@ class CashServiceTest {
                 new BigDecimal("100.00"), "Cobro externo", 1L, "Employee", null);
 
         when(cashSessionRepository.findById(7L)).thenReturn(Optional.of(session));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(employee));
         when(cashMovementRepository.save(any())).thenReturn(savedMovement);
         when(cashMovementMapper.toDto(savedMovement)).thenReturn(dto);
 
@@ -247,6 +251,7 @@ class CashServiceTest {
         assertThat(result.type()).isEqualTo(CashMovementType.CASH_IN);
         assertThat(result.amount()).isEqualByComparingTo("100.00");
         verify(cashMovementRepository).save(any());
+        verify(userRepository).findById(1L);
     }
 
     @Test
@@ -264,6 +269,28 @@ class CashServiceTest {
         assertThatThrownBy(() -> cashService.addMovement(7L, request, employee))
                 .isInstanceOf(DomainException.class)
                 .satisfies(ex -> assertCode(ex, "CASH_MOVEMENT_CLOSED_SESSION", HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void addMovementRejectsStaleUser() {
+        // The current user was deleted between the auth check and the save (rare, but
+        // possible if an admin disables the user mid-flight). The service must surface
+        // this as ACCESS_DENIED instead of a generic 409, so the FE can prompt a logout.
+        User employee = user(Role.EMPLOYEE, 99L);
+        setId(employee, 99L);
+        CashSession session = new CashSession();
+        setId(session, 7L);
+        session.setStatus(CashSessionStatus.OPEN);
+
+        when(cashSessionRepository.findById(7L)).thenReturn(Optional.of(session));
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        CreateCashMovementRequest request = new CreateCashMovementRequest(
+                CashMovementType.CASH_IN, CashMovementMethod.CASH, new BigDecimal("100.00"), "Cobro");
+
+        assertThatThrownBy(() -> cashService.addMovement(7L, request, employee))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertCode(ex, "ACCESS_DENIED", HttpStatus.FORBIDDEN));
     }
 
     @Test
@@ -315,30 +342,6 @@ class CashServiceTest {
         assertThatThrownBy(() -> cashService.openCashSession(request, employee))
                 .isInstanceOf(DomainException.class)
                 .satisfies(ex -> assertCode(ex, "CASH_SESSION_ALREADY_OPEN", HttpStatus.CONFLICT));
-    }
-
-    @Test
-    void addMovementMapsMissingUserConstraintToAccessDenied() {
-        // The user was deleted between the auth check and the save. The FK on
-        // created_by_user_id raises a DataIntegrityViolationException that we
-        // re-raise as ACCESS_DENIED so the UI can show a meaningful message.
-        User employee = user(Role.EMPLOYEE, 99L);
-        CashSession session = new CashSession();
-        setId(session, 7L);
-        session.setStatus(CashSessionStatus.OPEN);
-
-        when(cashSessionRepository.findById(7L)).thenReturn(Optional.of(session));
-        when(cashMovementRepository.save(any()))
-                .thenThrow(new org.springframework.dao.DataIntegrityViolationException(
-                        "could not execute statement [ERROR: insert or update on table \"cash_movements\" violates foreign key constraint \"fk_cash_movements_created_by_user\"",
-                        new java.sql.SQLException("foreign key", "23503")));
-
-        CreateCashMovementRequest request = new CreateCashMovementRequest(
-                CashMovementType.CASH_IN, CashMovementMethod.CASH, new BigDecimal("100.00"), "Cobro");
-
-        assertThatThrownBy(() -> cashService.addMovement(7L, request, employee))
-                .isInstanceOf(DomainException.class)
-                .satisfies(ex -> assertCode(ex, "ACCESS_DENIED", HttpStatus.FORBIDDEN));
     }
 
     @Test
