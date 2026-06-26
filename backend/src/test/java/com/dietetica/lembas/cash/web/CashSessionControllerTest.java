@@ -3,7 +3,10 @@ package com.dietetica.lembas.cash.web;
 import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.auth.service.LembasUserDetailsService;
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import com.dietetica.lembas.cash.dto.CashMovementDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
+import com.dietetica.lembas.cash.model.CashMovementMethod;
+import com.dietetica.lembas.cash.model.CashMovementType;
 import com.dietetica.lembas.cash.model.CashSessionStatus;
 import com.dietetica.lembas.cash.service.CashService;
 import com.dietetica.lembas.shared.exception.DomainException;
@@ -183,11 +186,69 @@ class CashSessionControllerTest {
                 .andExpect(jsonPath("$.code").value("CASH_SESSION_NOT_FOUND"));
     }
 
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void addMovementReturnsCreated() throws Exception {
+        User admin = new User(null, "admin@lembas.com", "hash", "Admin", "User", null, Role.ADMIN);
+        when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+        CashMovementDto dto = new CashMovementDto(1L, 5L, CashMovementType.CASH_IN, CashMovementMethod.CASH,
+                new BigDecimal("200.00"), "Cobro", 2L, "Admin", null);
+        when(cashService.addMovement(eq(5L), any(), eq(admin))).thenReturn(dto);
+
+        String body = """
+                {"type":"CASH_IN","method":"CASH","amount":200.00,"reason":"Cobro externo"}
+                """;
+
+        mockMvc.perform(post("/api/admin/cash-sessions/5/movements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.cashSessionId").value(5))
+                .andExpect(jsonPath("$.type").value("CASH_IN"))
+                .andExpect(jsonPath("$.amount").value(200.00));
+    }
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void addMovementRejectsClosed() throws Exception {
+        User employee = new User(1L, "emp@lembas.com", "hash", "Emp", "Loyee", null, Role.EMPLOYEE);
+        when(securityContextHelper.getCurrentUser()).thenReturn(employee);
+        when(cashService.addMovement(eq(5L), any(), eq(employee)))
+                .thenThrow(new DomainException("CASH_MOVEMENT_CLOSED_SESSION", HttpStatus.BAD_REQUEST, "Closed"));
+
+        String body = """
+                {"type":"CASH_OUT","method":"TRANSFER","amount":-500.00,"reason":"Pago"}
+                """;
+
+        mockMvc.perform(post("/api/admin/cash-sessions/5/movements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CASH_MOVEMENT_CLOSED_SESSION"));
+    }
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void addMovementRejectsMissingReason() throws Exception {
+        User employee = new User(1L, "emp@lembas.com", "hash", "Emp", "Loyee", null, Role.EMPLOYEE);
+        when(securityContextHelper.getCurrentUser()).thenReturn(employee);
+
+        String body = """
+                {"type":"CASH_IN","method":"CASH","amount":100}
+                """;
+
+        mockMvc.perform(post("/api/admin/cash-sessions/5/movements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
     private static CashSessionDto dto(long id, long branchId) {
         return new CashSessionDto(
                 id, CashSessionStatus.OPEN, branchId, "Branch " + branchId,
                 null, "Opener", new BigDecimal("100.00"), null, null,
-                null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null
         );
     }
 }

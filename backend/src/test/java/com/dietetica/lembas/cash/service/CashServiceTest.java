@@ -1,9 +1,15 @@
 package com.dietetica.lembas.cash.service;
 
+import com.dietetica.lembas.cash.dto.CashMovementDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
+import com.dietetica.lembas.cash.dto.CreateCashMovementRequest;
 import com.dietetica.lembas.cash.dto.OpenCashSessionRequest;
+import com.dietetica.lembas.cash.model.CashMovement;
+import com.dietetica.lembas.cash.model.CashMovementMethod;
+import com.dietetica.lembas.cash.model.CashMovementType;
 import com.dietetica.lembas.cash.model.CashSession;
 import com.dietetica.lembas.cash.model.CashSessionStatus;
+import com.dietetica.lembas.cash.repository.CashMovementRepository;
 import com.dietetica.lembas.cash.repository.CashSessionRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
@@ -18,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,6 +56,10 @@ class CashServiceTest {
     private BranchRepository branchRepository;
     @Mock
     private CashSessionMapper cashSessionMapper;
+    @Mock
+    private CashMovementRepository cashMovementRepository;
+    @Mock
+    private CashMovementMapper cashMovementMapper;
 
     @InjectMocks
     private CashService cashService;
@@ -185,15 +196,17 @@ class CashServiceTest {
     }
 
     @Test
-    void getByIdReturnsDtoWhenSessionExists() {
+    void getByIdReturnsDtoWithMovementsWhenSessionExists() {
         CashSession session = new CashSession();
         setId(session, 42L);
         when(cashSessionRepository.findById(42L)).thenReturn(Optional.of(session));
-        when(cashSessionMapper.toDto(session)).thenReturn(dto(42L, 1L));
+        when(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(42L)).thenReturn(List.of());
+        when(cashSessionMapper.toDto(eq(session), any())).thenReturn(dto(42L, 1L));
 
         CashSessionDto result = cashService.getSessionById(42L);
 
         assertThat(result.id()).isEqualTo(42L);
+        verify(cashMovementRepository).findByCashSessionIdOrderByCreatedAtAsc(42L);
     }
 
     @Test
@@ -203,6 +216,77 @@ class CashServiceTest {
         assertThatThrownBy(() -> cashService.getSessionById(404L))
                 .isInstanceOf(DomainException.class)
                 .satisfies(ex -> assertCode(ex, "CASH_SESSION_NOT_FOUND", HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    void addMovementHappyPath() {
+        User employee = user(Role.EMPLOYEE, 1L);
+        CashSession session = new CashSession();
+        setId(session, 7L);
+        session.setStatus(CashSessionStatus.OPEN);
+        CashMovement savedMovement = new CashMovement();
+        setId(savedMovement, 1L);
+        CashMovementDto dto = new CashMovementDto(1L, 7L, CashMovementType.CASH_IN, CashMovementMethod.CASH,
+                new BigDecimal("100.00"), "Cobro externo", 1L, "Employee", null);
+
+        when(cashSessionRepository.findById(7L)).thenReturn(Optional.of(session));
+        when(cashMovementRepository.save(any())).thenReturn(savedMovement);
+        when(cashMovementMapper.toDto(savedMovement)).thenReturn(dto);
+
+        CreateCashMovementRequest request = new CreateCashMovementRequest(
+                CashMovementType.CASH_IN, CashMovementMethod.CASH, new BigDecimal("100.00"), "Cobro externo");
+        CashMovementDto result = cashService.addMovement(7L, request, employee);
+
+        assertThat(result.id()).isEqualTo(1L);
+        assertThat(result.type()).isEqualTo(CashMovementType.CASH_IN);
+        assertThat(result.amount()).isEqualByComparingTo("100.00");
+        verify(cashMovementRepository).save(any());
+    }
+
+    @Test
+    void addMovementRejectsClosedSession() {
+        User employee = user(Role.EMPLOYEE, 1L);
+        CashSession session = new CashSession();
+        setId(session, 7L);
+        session.setStatus(CashSessionStatus.CLOSED);
+
+        when(cashSessionRepository.findById(7L)).thenReturn(Optional.of(session));
+
+        CreateCashMovementRequest request = new CreateCashMovementRequest(
+                CashMovementType.CASH_IN, CashMovementMethod.CASH, new BigDecimal("50.00"), "test");
+
+        assertThatThrownBy(() -> cashService.addMovement(7L, request, employee))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertCode(ex, "CASH_MOVEMENT_CLOSED_SESSION", HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void addMovementRejectsZeroAmount() {
+        User employee = user(Role.EMPLOYEE, 1L);
+        CashSession session = new CashSession();
+        setId(session, 7L);
+        session.setStatus(CashSessionStatus.OPEN);
+
+        when(cashSessionRepository.findById(7L)).thenReturn(Optional.of(session));
+
+        CreateCashMovementRequest request = new CreateCashMovementRequest(
+                CashMovementType.CASH_IN, CashMovementMethod.CASH, BigDecimal.ZERO, "test");
+
+        assertThatThrownBy(() -> cashService.addMovement(7L, request, employee))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertCode(ex, "VALIDATION_ERROR", HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void addMovementRejectsCustomer() {
+        User customer = user(Role.CUSTOMER, 1L);
+
+        CreateCashMovementRequest request = new CreateCashMovementRequest(
+                CashMovementType.CASH_IN, CashMovementMethod.CASH, new BigDecimal("10.00"), "test");
+
+        assertThatThrownBy(() -> cashService.addMovement(1L, request, customer))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertCode(ex, "ACCESS_DENIED", HttpStatus.FORBIDDEN));
     }
 
     @Test
@@ -235,7 +319,7 @@ class CashServiceTest {
         return new CashSessionDto(
                 id, CashSessionStatus.OPEN, branchId, "Branch " + branchId,
                 null, "Admin User", new BigDecimal("100.00"), null, null,
-                null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null
         );
     }
 
