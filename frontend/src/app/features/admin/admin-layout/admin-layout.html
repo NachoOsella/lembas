@@ -27,8 +27,7 @@
             <strong class="text-white text-base font-semibold tracking-[-0.02em] truncate"
               >Lembas</strong
             >
-            <small
-              class="text-white/45 text-xs font-semibold tracking-[0.12em] uppercase truncate"
+            <small class="text-white/45 text-xs font-semibold tracking-[0.12em] uppercase truncate"
               >Admin</small
             >
           </div>
@@ -53,6 +52,9 @@
           <i [class]="item.icon" aria-hidden="true" class="admin__nav-icon"></i>
           @if (!collapsed()) {
             <span class="admin__nav-label">{{ item.label }}</span>
+          }
+          @if (isCashNavItem(item.route) && hasOpenCashSession()) {
+            <span class="admin__nav-indicator" aria-hidden="true" title="Caja abierta"></span>
           }
         </a>
       }

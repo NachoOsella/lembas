@@ -10,6 +10,9 @@ import com.dietetica.lembas.orders.model.Order;
 import com.dietetica.lembas.orders.model.OrderItem;
 import com.dietetica.lembas.orders.model.OrderStatus;
 import com.dietetica.lembas.orders.model.OrderType;
+import com.dietetica.lembas.cash.model.CashSession;
+import com.dietetica.lembas.cash.model.CashSessionStatus;
+import com.dietetica.lembas.cash.repository.CashSessionRepository;
 import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.payments.model.PaymentMethod;
@@ -63,6 +66,8 @@ class PaymentSchemaIntegrationTest {
     private ProductRepository productRepository;
     @Autowired
     private CategoryRepository categoryRepository;
+    @Autowired
+    private CashSessionRepository cashSessionRepository;
 
     @Test
     void shouldPersistPendingMercadoPagoCheckoutPayment() {
@@ -79,13 +84,14 @@ class PaymentSchemaIntegrationTest {
     @Test
     void shouldPersistApprovedManualCashPaymentWithCashSessionId() {
         Order order = persistPosOrder("POS-20260612-PAY001");
-        Payment payment = manualPayment(order, PaymentMethod.CASH, 100L);
+        Long cashSessionId = persistOpenCashSession(order.getBranch(), order.getCreatedByUser());
+        Payment payment = manualPayment(order, PaymentMethod.CASH, cashSessionId);
 
         Payment saved = paymentRepository.saveAndFlush(payment);
 
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getStatus()).isEqualTo(PaymentStatus.APPROVED);
-        assertThat(saved.getCashSessionId()).isEqualTo(100L);
+        assertThat(saved.getCashSessionId()).isEqualTo(cashSessionId);
     }
 
     @Test
@@ -237,5 +243,15 @@ class PaymentSchemaIntegrationTest {
         return branchRepository.findAll().stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Seed branch is required for payment tests"));
+    }
+
+    /** Persists an OPEN cash session so payments can reference it via the V27 foreign key. */
+    private Long persistOpenCashSession(Branch branch, User opener) {
+        CashSession session = new CashSession();
+        session.setBranch(branch);
+        session.setOpenedByUser(opener);
+        session.setOpeningCashAmount(new BigDecimal("100.00"));
+        session.setStatus(CashSessionStatus.OPEN);
+        return cashSessionRepository.saveAndFlush(session).getId();
     }
 }

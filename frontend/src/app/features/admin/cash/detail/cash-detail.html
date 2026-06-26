@@ -1,0 +1,52 @@
+@if (loading()) {
+  <p class="text-sm text-neutral-500">Cargando caja...</p>
+} @else {
+  <app-page-header
+    eyebrow="Caja"
+    title="Caja actual"
+    description="Detalle de la sesion de caja abierta."
+  />
+
+  @if (errorMessage()) {
+    <app-error-alert [message]="errorMessage()!" />
+    <div class="mt-4">
+      <app-button variant="secondary" icon="pi pi-arrow-left" label="Volver" (click)="goBack()" />
+    </div>
+  } @else if (session(); as session) {
+    <div class="flex flex-col gap-3">
+      <div class="flex flex-col">
+        <span class="text-sm text-neutral-500">Sucursal</span>
+        <span class="font-medium text-neutral-800">{{ session.branchName }}</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="text-sm text-neutral-500">Monto inicial</span>
+        <span class="font-medium text-neutral-800">{{
+          session.openingCashAmount | currency: 'ARS'
+        }}</span>
+      </div>
+      @if (session.openedByUserName) {
+        <div class="flex flex-col">
+          <span class="text-sm text-neutral-500">Abierta por</span>
+          <span class="font-medium text-neutral-800">{{ session.openedByUserName }}</span>
+        </div>
+      }
+      @if (session.openedAt) {
+        <div class="flex flex-col">
+          <span class="text-sm text-neutral-500">Abierta el</span>
+          <span class="font-medium text-neutral-800">{{
+            session.openedAt | date: 'dd/MM/yyyy HH:mm'
+          }}</span>
+        </div>
+      }
+      @if (session.openingNotes) {
+        <div class="flex flex-col">
+          <span class="text-sm text-neutral-500">Notas de apertura</span>
+          <span class="font-medium text-neutral-800">{{ session.openingNotes }}</span>
+        </div>
+      }
+      <div class="mt-4 flex gap-2">
+        <app-button variant="secondary" icon="pi pi-arrow-left" label="Volver" (click)="goBack()" />
+      </div>
+    </div>
+  }
+}

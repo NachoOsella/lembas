@@ -26,7 +26,7 @@ PostgreSQL 16
 | V2__catalog.sql | categories, products |
 | V5__orders.sql | orders, order_items (planned; implemented as V25 in current schema history) |
 | V6__payments.sql | payments (planned; implemented as V26 in current schema history) |
-| V7__cash.sql | cash_sessions, cash_movements |
+| V27__cash.sql | cash_sessions, cash_movements (+ FK payments.cash_session_id and a partial UNIQUE index for one OPEN session per branch) |
 | V8__optional_promotions.sql | product_promotions |
 | V9__audit.sql | audit_logs |
 | V10__seed_data.sql | Demo data |
