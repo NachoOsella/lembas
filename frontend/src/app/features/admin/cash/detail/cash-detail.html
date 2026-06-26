@@ -9,16 +9,16 @@
     <app-page-header
       eyebrow="Caja"
       [title]="session()?.status === 'CLOSED' ? 'Caja cerrada' : 'Caja actual'"
-      [description]="
-        session()?.status === 'CLOSED'
-          ? 'Detalle de la sesion cerrada. No se admiten nuevos movimientos.'
-          : 'Detalle de la sesion abierta. Podes registrar ingresos, egresos o ajustes.'
-      "
     >
       @if (session(); as s) {
         <app-badge [tone]="statusBadges[s.status].tone" [icon]="statusBadges[s.status].icon">
           {{ statusBadges[s.status].label }}
         </app-badge>
+        @if (!isClosed) {
+          <app-button variant="primary" icon="pi pi-plus" (click)="openMovementDialog()">
+            Registrar movimiento
+          </app-button>
+        }
       }
     </app-page-header>
 
@@ -30,80 +30,22 @@
         </app-button>
       </div>
     } @else if (session(); as s) {
+      <!-- Session number + opening date line -->
+      <div class="cash-detail__session-line">
+        <span class="cash-detail__session-id">Sesion #{{ s.id }}</span>
+        <span class="cash-detail__session-date">
+          <i class="pi pi-calendar" aria-hidden="true"></i>
+          Abierta el {{ s.openedAt ? (s.openedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}
+        </span>
+      </div>
+
       <!-- Financial summary hero: opening, in, out, expected -->
       <section class="cash-detail__hero" aria-label="Resumen financiero de la sesion">
         <app-stat-card [metrics]="summaryMetrics()" />
       </section>
 
-      <!-- Session metadata card -->
-      <app-section-card
-        eyebrow="Sesion"
-        [title]="'Sesion #' + s.id"
-        description="Datos de apertura de la sesion de caja actual."
-      >
-        <dl class="cash-detail__meta">
-          <div class="cash-detail__meta-item">
-            <dt class="cash-detail__meta-label">
-              <i class="pi pi-building" aria-hidden="true"></i>
-              Sucursal
-            </dt>
-            <dd class="cash-detail__meta-value">{{ s.branchName }}</dd>
-          </div>
-
-          <div class="cash-detail__meta-item">
-            <dt class="cash-detail__meta-label">
-              <i class="pi pi-user" aria-hidden="true"></i>
-              Abierta por
-            </dt>
-            <dd class="cash-detail__meta-value">{{ s.openedByUserName ?? '—' }}</dd>
-          </div>
-
-          <div class="cash-detail__meta-item">
-            <dt class="cash-detail__meta-label">
-              <i class="pi pi-calendar" aria-hidden="true"></i>
-              Abierta el
-            </dt>
-            <dd class="cash-detail__meta-value">
-              {{ s.openedAt ? (s.openedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}
-            </dd>
-          </div>
-
-          @if (hasOpeningNotes) {
-            <div class="cash-detail__meta-item cash-detail__meta-item--wide">
-              <dt class="cash-detail__meta-label">
-                <i class="pi pi-file-edit" aria-hidden="true"></i>
-                Notas de apertura
-              </dt>
-              <dd class="cash-detail__meta-value cash-detail__meta-value--note">
-                {{ s.openingNotes }}
-              </dd>
-            </div>
-          }
-        </dl>
-
-        @if (!isClosed) {
-          <div class="cash-detail__session-actions">
-            <p class="cash-detail__session-actions-copy">
-              <i class="pi pi-info-circle" aria-hidden="true"></i>
-              Podes registrar un ingreso, egreso o ajuste de caja usando el formulario modal.
-            </p>
-            <app-button variant="primary" icon="pi pi-plus" (click)="openMovementDialog()">
-              Registrar movimiento manual
-            </app-button>
-          </div>
-        }
-      </app-section-card>
-
-      <!-- Movements: data table (or empty state) -->
-      <app-section-card
-        eyebrow="Movimientos"
-        [title]="'Movimientos de la caja'"
-        [description]="
-          hasMovements
-            ? movementsCount() + ' entrada(s) registrada(s) en esta sesion.'
-            : 'Todavia no se registraron movimientos ni pagos en esta caja.'
-        "
-      >
+      <!-- Movements table (or empty state) -->
+      <section class="cash-detail__movements">
         @if (hasMovements) {
           <app-data-table
             [data]="entries()"
@@ -163,14 +105,13 @@
             />
           </div>
         }
-      </app-section-card>
+      </section>
 
       <!-- Closed-session notice -->
       @if (isClosed) {
         <app-section-card
           eyebrow="Caja cerrada"
           title="Sesion finalizada"
-          description="La caja esta cerrada. No se admiten nuevos movimientos en esta sesion."
           tone="muted"
         >
           <div class="cash-detail__closed-cta">

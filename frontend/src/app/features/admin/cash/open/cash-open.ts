@@ -17,11 +17,11 @@ import { AppControlField } from '../../../../shared/components/app-control-field
 import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
 import { AppInputNumber } from '../../../../shared/components/app-input-number/app-input-number';
 import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { AppSectionCard } from '../../../../shared/components/app-section-card/app-section-card';
 import { AppSelect } from '../../../../shared/components/app-select/app-select';
 import { AppToast } from '../../../../shared/components/app-toast/app-toast';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { FormSection } from '../../../../shared/components/form-section/form-section';
 
 interface BranchOption {
   readonly label: string;
@@ -48,11 +48,11 @@ interface BranchOption {
     AppFormField,
     AppInputNumber,
     AppPageHeader,
-    AppSectionCard,
     AppSelect,
     AppToast,
     ErrorAlert,
     LoadingSpinner,
+    FormSection,
     FormsModule,
   ],
   templateUrl: './cash-open.html',
@@ -96,28 +96,7 @@ export class CashOpen implements OnInit {
     return this.auth.currentUser()?.branchName ?? null;
   });
 
-  /** Display name of the operator opening the cash session. */
-  protected readonly operatorName = computed(() => {
-    const user = this.auth.currentUser();
-    if (!user) {
-      return null;
-    }
-    return [user.firstName, user.lastName].filter((part) => !!part && part.length > 0).join(' ');
-  });
 
-  /** Localized "today" label for the branch info card. */
-  protected readonly todayLabel = new Date().toLocaleDateString('es-AR', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
-
-  /** Resolved branch address for the info card (when available). */
-  protected readonly resolvedBranchAddress = computed(() => {
-    const selected = this.branches().find((b) => b.id === this.branchId());
-    return selected?.address ?? null;
-  });
 
   /** True when the form is ready to be shown (branch resolved + no open session). */
   protected readonly formReady = computed(() => this.branchId() != null);
@@ -126,25 +105,6 @@ export class CashOpen implements OnInit {
   protected readonly canSubmit = computed(
     () => this.formReady() && this.openingCashAmount() != null && !this.saving() && !this.loading(),
   );
-
-  /** Hero amount label for the live preview. */
-  protected readonly amountPreview = computed(() => {
-    const amount = this.openingCashAmount();
-    if (amount == null) {
-      return 'Ingresa el monto inicial';
-    }
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  });
-
-  /** Whether the live preview is showing a real (non-zero) value. */
-  protected readonly hasAmount = computed(() => {
-    const amount = this.openingCashAmount();
-    return amount != null && amount > 0;
-  });
 
   /** Quick-set amount chips to speed up the most common opening balances. */
   protected readonly quickAmounts: ReadonlyArray<{

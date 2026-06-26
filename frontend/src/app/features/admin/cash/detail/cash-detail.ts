@@ -310,12 +310,6 @@ export class CashDetail implements OnInit {
     return this.entries().length > 0;
   }
 
-  /** True when an opening note was recorded. */
-  protected get hasOpeningNotes(): boolean {
-    const notes = this.session()?.openingNotes?.trim();
-    return !!notes && notes.length > 0;
-  }
-
   protected goBack(): void {
     void this.router.navigate(['/admin/cash']);
   }
