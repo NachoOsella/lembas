@@ -6,6 +6,12 @@
 /** Cash session lifecycle status. */
 export type CashSessionStatus = 'OPEN' | 'CLOSED';
 
+/** Cash movement direction. */
+export type CashMovementType = 'CASH_IN' | 'CASH_OUT' | 'ADJUSTMENT';
+
+/** Cash movement payment method. */
+export type CashMovementMethod = 'CASH' | 'TRANSFER' | 'OTHER';
+
 /** Cash session returned by the open, current and detail endpoints. */
 export interface CashSessionDto {
   id: number;
@@ -27,6 +33,29 @@ export interface CashSessionDto {
   closingNotes?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
+  /** Manual movements, only populated in the detail response. */
+  movements?: CashMovementDto[] | null;
+}
+
+/** Manual cash movement DTO matching the backend {@code CashMovementDto}. */
+export interface CashMovementDto {
+  id: number;
+  cashSessionId: number;
+  type: CashMovementType;
+  method: CashMovementMethod;
+  amount: string;
+  reason: string;
+  createdByUserId: number | null;
+  createdByUserName: string | null;
+  createdAt: string | null;
+}
+
+/** Request payload for POST /api/admin/cash-sessions/{id}/movements. */
+export interface CreateCashMovementRequest {
+  type: CashMovementType;
+  method: CashMovementMethod;
+  amount: string;
+  reason: string;
 }
 
 /** Request payload for POST /api/admin/cash-sessions/open. */

@@ -1,10 +1,12 @@
+<app-toast />
+
 @if (loading()) {
   <p class="text-sm text-neutral-500">Cargando caja...</p>
 } @else {
   <app-page-header
     eyebrow="Caja"
-    title="Caja actual"
-    description="Detalle de la sesion de caja abierta."
+    [title]="session()?.status === 'CLOSED' ? 'Caja cerrada' : 'Caja actual'"
+    description="Detalle de la sesion de caja."
   />
 
   @if (errorMessage()) {
@@ -13,37 +15,110 @@
       <app-button variant="secondary" icon="pi pi-arrow-left" label="Volver" (click)="goBack()" />
     </div>
   } @else if (session(); as session) {
-    <div class="flex flex-col gap-3">
-      <div class="flex flex-col">
-        <span class="text-sm text-neutral-500">Sucursal</span>
-        <span class="font-medium text-neutral-800">{{ session.branchName }}</span>
-      </div>
-      <div class="flex flex-col">
-        <span class="text-sm text-neutral-500">Monto inicial</span>
-        <span class="font-medium text-neutral-800">{{
-          session.openingCashAmount | currency: 'ARS'
-        }}</span>
-      </div>
-      @if (session.openedByUserName) {
+    <div class="flex flex-col gap-4">
+      <!-- Session info -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div class="flex flex-col">
-          <span class="text-sm text-neutral-500">Abierta por</span>
-          <span class="font-medium text-neutral-800">{{ session.openedByUserName }}</span>
+          <span class="text-sm text-neutral-500">Sucursal</span>
+          <span class="font-medium text-neutral-800">{{ session.branchName }}</span>
         </div>
-      }
-      @if (session.openedAt) {
         <div class="flex flex-col">
-          <span class="text-sm text-neutral-500">Abierta el</span>
+          <span class="text-sm text-neutral-500">Monto inicial</span>
           <span class="font-medium text-neutral-800">{{
-            session.openedAt | date: 'dd/MM/yyyy HH:mm'
+            session.openingCashAmount | currency: 'ARS'
           }}</span>
         </div>
-      }
-      @if (session.openingNotes) {
-        <div class="flex flex-col">
-          <span class="text-sm text-neutral-500">Notas de apertura</span>
-          <span class="font-medium text-neutral-800">{{ session.openingNotes }}</span>
+        @if (session.openedByUserName) {
+          <div class="flex flex-col">
+            <span class="text-sm text-neutral-500">Abierta por</span>
+            <span class="font-medium text-neutral-800">{{ session.openedByUserName }}</span>
+          </div>
+        }
+        @if (session.openedAt) {
+          <div class="flex flex-col">
+            <span class="text-sm text-neutral-500">Abierta el</span>
+            <span class="font-medium text-neutral-800">{{
+              session.openedAt | date: 'dd/MM/yyyy HH:mm'
+            }}</span>
+          </div>
+        }
+        @if (session.openingNotes) {
+          <div class="flex flex-col">
+            <span class="text-sm text-neutral-500">Notas de apertura</span>
+            <span class="font-medium text-neutral-800">{{ session.openingNotes }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Movements table -->
+      @if (movements().length > 0) {
+        <div class="mt-4">
+          <h3 class="text-base font-semibold text-neutral-800 mb-2">Movimientos</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-neutral-200 text-neutral-500 text-left">
+                  <th class="py-2 pr-3 font-medium">Tipo</th>
+                  <th class="py-2 pr-3 font-medium">Metodo</th>
+                  <th class="py-2 pr-3 font-medium text-right">Monto</th>
+                  <th class="py-2 pr-3 font-medium">Motivo</th>
+                  <th class="py-2 pr-3 font-medium">Registrado por</th>
+                  <th class="py-2 pr-3 font-medium">Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (mov of movements(); track mov.id) {
+                  <tr class="border-b border-neutral-100">
+                    <td class="py-2 pr-3">
+                      <app-severity-pill [tone]="movementTone(mov.type)">{{
+                        movementLabel(mov.type)
+                      }}</app-severity-pill>
+                    </td>
+                    <td class="py-2 pr-3 capitalize">{{ mov.method }}</td>
+                    <td
+                      class="py-2 pr-3 text-right font-mono"
+                      [class.text-red]="mov.type === 'CASH_OUT'"
+                      [class.text-primary]="mov.type === 'CASH_IN'"
+                    >
+                      {{ mov.type === 'CASH_IN' ? '+' : mov.type === 'CASH_OUT' ? '-' : ''
+                      }}{{ mov.amount | currency: 'ARS' }}
+                    </td>
+                    <td class="py-2 pr-3 max-w-xs truncate" [title]="mov.reason">
+                      {{ mov.reason }}
+                    </td>
+                    <td class="py-2 pr-3">{{ mov.createdByUserName }}</td>
+                    <td class="py-2 pr-3">{{ mov.createdAt | date: 'dd/MM HH:mm' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
       }
+
+      @if (movements().length === 0 && !isClosed) {
+        <p class="text-sm text-neutral-500 mt-2">
+          Todavia no hay movimientos registrados en esta caja.
+        </p>
+      }
+
+      <!-- Movement form -->
+      @if (!isClosed) {
+        <div class="mt-4 border-t border-neutral-200 pt-4">
+          <app-movement-form
+            [sessionId]="session.id"
+            [disabled]="isClosed"
+            (movementAdded)="onMovementAdded()"
+          />
+        </div>
+      } @else {
+        <div class="mt-4 border-t border-neutral-200 pt-4">
+          <p class="text-sm text-neutral-500">
+            La caja esta cerrada. No se pueden registrar nuevos movimientos.
+          </p>
+        </div>
+      }
+
       <div class="mt-4 flex gap-2">
         <app-button variant="secondary" icon="pi pi-arrow-left" label="Volver" (click)="goBack()" />
       </div>

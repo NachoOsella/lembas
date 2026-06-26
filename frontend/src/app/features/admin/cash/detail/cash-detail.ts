@@ -6,23 +6,33 @@ import { MessageService } from 'primeng/api';
 import { CashService } from '../../../../core/services/cash';
 import { ErrorMappingService } from '../../../../core/services/error-mapping';
 import { getApiError } from '../../../../shared/models/api-error';
-import { CashSessionDto } from '../../../../shared/models/cash-session';
+import { CashSessionDto, CashMovementDto } from '../../../../shared/models/cash-session';
 
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
 import { AppToast } from '../../../../shared/components/app-toast/app-toast';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
+import { MovementForm } from '../movement-form/movement-form';
+import {
+  SeverityPill,
+  SeverityPillTone,
+} from '../../../../shared/components/severity-pill/severity-pill';
 
 /**
- * Minimal cash detail screen (S3-US06).
- *
- * Shows the data of an open cash session (the result of an open or current
- * redirect). Close/movements are added by later stories; this screen only
- * renders the session state read-only.
+ * Cash detail screen with movements table and movement form (S3-US07).
  */
 @Component({
   selector: 'app-cash-detail',
-  imports: [AppButton, AppPageHeader, AppToast, ErrorAlert, CurrencyPipe, DatePipe],
+  imports: [
+    AppButton,
+    AppPageHeader,
+    AppToast,
+    ErrorAlert,
+    MovementForm,
+    SeverityPill,
+    CurrencyPipe,
+    DatePipe,
+  ],
   templateUrl: './cash-detail.html',
   styleUrl: './cash-detail.css',
 })
@@ -36,6 +46,7 @@ export class CashDetail implements OnInit {
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly session = signal<CashSessionDto | null>(null);
+  protected readonly movements = signal<CashMovementDto[]>([]);
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -44,9 +55,16 @@ export class CashDetail implements OnInit {
       this.errorMessage.set('Identificador de caja invalido.');
       return;
     }
+    this.loadSession(id);
+  }
+
+  private loadSession(id: number): void {
+    this.loading.set(true);
+    this.errorMessage.set(null);
     this.cashService.getById(id).subscribe({
       next: (session) => {
         this.session.set(session);
+        this.movements.set(session.movements ?? []);
         this.loading.set(false);
       },
       error: (err) => {
@@ -61,7 +79,47 @@ export class CashDetail implements OnInit {
     });
   }
 
-  /** Returns to the cash landing; the sidebar badge reflects the open session. */
+  /** Reloads the session after a movement is added. */
+  protected onMovementAdded(): void {
+    const id = this.session()?.id;
+    if (id != null) {
+      this.loadSession(id);
+    }
+  }
+
+  /** Tone for the movement type badge. */
+  protected movementTone(type: string): SeverityPillTone {
+    switch (type) {
+      case 'CASH_IN':
+        return 'success';
+      case 'CASH_OUT':
+        return 'danger';
+      case 'ADJUSTMENT':
+        return 'warn';
+      default:
+        return 'neutral';
+    }
+  }
+
+  /** Label for the movement type badge. */
+  protected movementLabel(type: string): string {
+    switch (type) {
+      case 'CASH_IN':
+        return 'Ingreso';
+      case 'CASH_OUT':
+        return 'Egreso';
+      case 'ADJUSTMENT':
+        return 'Ajuste';
+      default:
+        return type;
+    }
+  }
+
+  /** The form is disabled when the session is closed. */
+  protected get isClosed(): boolean {
+    return this.session()?.status === 'CLOSED';
+  }
+
   protected goBack(): void {
     void this.router.navigate(['/admin/cash']);
   }

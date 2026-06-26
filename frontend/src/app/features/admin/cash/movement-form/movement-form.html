@@ -1,0 +1,77 @@
+<app-toast />
+
+<div class="flex flex-col gap-3">
+  <h3 class="text-base font-semibold text-neutral-800">Nuevo movimiento manual</h3>
+
+  @if (errorMessage()) {
+    <app-error-alert [message]="errorMessage()!" />
+  }
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <app-control-field label="Tipo" [required]="true" forId="movement-type">
+      <app-select
+        inputId="movement-type"
+        name="movement-type"
+        [options]="typeOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar tipo"
+        [value]="type()"
+        (valueChange)="type.set($event)"
+        [disabled]="disabled()"
+      />
+    </app-control-field>
+
+    <app-control-field label="Metodo" [required]="true" forId="movement-method">
+      <app-select
+        inputId="movement-method"
+        name="movement-method"
+        [options]="methodOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar metodo"
+        [value]="method()"
+        (valueChange)="method.set($event)"
+        [disabled]="disabled()"
+      />
+    </app-control-field>
+  </div>
+
+  <app-control-field label="Monto" [required]="true" forId="movement-amount">
+    <app-input-number
+      inputId="movement-amount"
+      name="movement-amount"
+      mode="currency"
+      currency="ARS"
+      locale="es-AR"
+      placeholder="0.00"
+      [minFractionDigits]="2"
+      [maxFractionDigits]="2"
+      [value]="amount()"
+      (valueChange)="amount.set($event)"
+      [disabled]="disabled()"
+    />
+  </app-control-field>
+
+  <app-form-field
+    label="Motivo"
+    [required]="true"
+    [multiline]="true"
+    placeholder="Describe el motivo del movimiento"
+    testId="movement-reason"
+    [value]="reason()"
+    (valueChange)="reason.set($event)"
+    [disabled]="disabled()"
+  />
+
+  <div class="flex justify-end">
+    <app-button
+      variant="primary"
+      icon="pi pi-save"
+      [loading]="saving()"
+      [disabled]="!canSubmit()"
+      (click)="submit()"
+      label="Registrar movimiento"
+    />
+  </div>
+</div>

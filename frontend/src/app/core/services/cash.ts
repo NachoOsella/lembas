@@ -2,7 +2,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { CashSessionDto, OpenCashSessionRequest } from '../../shared/models/cash-session';
+import {
+  CashMovementDto,
+  CashSessionDto,
+  CreateCashMovementRequest,
+  OpenCashSessionRequest,
+} from '../../shared/models/cash-session';
 
 /** Provides admin operations for cash register sessions (S3-US06). */
 @Injectable({ providedIn: 'root' })
@@ -27,5 +32,13 @@ export class CashService {
   /** Returns a single cash session by id (cash detail screen). */
   getById(id: number): Observable<CashSessionDto> {
     return this.http.get<CashSessionDto>(`${this.cashSessionsUrl}/${id}`);
+  }
+
+  /** Registers a manual cash movement in an OPEN cash session. */
+  addMovement(sessionId: number, request: CreateCashMovementRequest): Observable<CashMovementDto> {
+    return this.http.post<CashMovementDto>(
+      `${this.cashSessionsUrl}/${sessionId}/movements`,
+      request,
+    );
   }
 }

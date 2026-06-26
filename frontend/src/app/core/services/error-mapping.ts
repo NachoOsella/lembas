@@ -121,6 +121,7 @@ export class ErrorMappingService {
       'Ya hay una caja abierta para esta sucursal. Cerrala antes de abrir una nueva.',
     CASH_SESSION_NOT_FOUND: 'No hay una caja abierta para esta sucursal.',
     CASH_BRANCH_REQUIRED: 'Debes seleccionar una sucursal para gestionar la caja.',
+    CASH_MOVEMENT_CLOSED_SESSION: 'No se pueden agregar movimientos a una caja ya cerrada.',
 
     // Order errors
     ORDER_INVALID_STATE: 'No se puede realizar esta operación en el estado actual del pedido.',
