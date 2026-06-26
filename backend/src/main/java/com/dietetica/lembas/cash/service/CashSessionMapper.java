@@ -1,10 +1,13 @@
 package com.dietetica.lembas.cash.service;
 
+import com.dietetica.lembas.cash.dto.CashMovementDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
 import com.dietetica.lembas.cash.model.CashSession;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.users.model.User;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /**
  * Manual mapper from {@link CashSession} entities to DTOs.
@@ -16,8 +19,13 @@ import org.springframework.stereotype.Component;
 @Component
 class CashSessionMapper {
 
-    /** Builds a DTO from a cash session aggregate. */
+    /** Builds a DTO from a cash session aggregate (open / current endpoints, no movements). */
     CashSessionDto toDto(CashSession session) {
+        return toDto(session, null);
+    }
+
+    /** Builds a DTO including the optional movements list (detail endpoint). */
+    CashSessionDto toDto(CashSession session, List<CashMovementDto> movements) {
         return new CashSessionDto(
                 session.getId(),
                 session.getStatus(),
@@ -37,7 +45,8 @@ class CashSessionMapper {
                 session.getClosedAt(),
                 session.getClosingNotes(),
                 session.getCreatedAt(),
-                session.getUpdatedAt()
+                session.getUpdatedAt(),
+                movements
         );
     }
 

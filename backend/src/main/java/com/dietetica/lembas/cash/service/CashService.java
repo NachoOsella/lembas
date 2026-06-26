@@ -1,9 +1,13 @@
 package com.dietetica.lembas.cash.service;
 
+import com.dietetica.lembas.cash.dto.CashMovementDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
+import com.dietetica.lembas.cash.dto.CreateCashMovementRequest;
 import com.dietetica.lembas.cash.dto.OpenCashSessionRequest;
+import com.dietetica.lembas.cash.model.CashMovement;
 import com.dietetica.lembas.cash.model.CashSession;
 import com.dietetica.lembas.cash.model.CashSessionStatus;
+import com.dietetica.lembas.cash.repository.CashMovementRepository;
 import com.dietetica.lembas.cash.repository.CashSessionRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
@@ -40,19 +44,26 @@ public class CashService {
     static final String CODE_INVALID_USER_BRANCH = "INVALID_USER_BRANCH";
     static final String CODE_BRANCH_NOT_FOUND = "BRANCH_NOT_FOUND";
     static final String CODE_ACCESS_DENIED = "ACCESS_DENIED";
+    static final String CODE_CASH_MOVEMENT_CLOSED_SESSION = "CASH_MOVEMENT_CLOSED_SESSION";
 
     private final CashSessionRepository cashSessionRepository;
     private final BranchRepository branchRepository;
     private final CashSessionMapper cashSessionMapper;
+    private final CashMovementRepository cashMovementRepository;
+    private final CashMovementMapper cashMovementMapper;
 
     public CashService(
             CashSessionRepository cashSessionRepository,
             BranchRepository branchRepository,
-            CashSessionMapper cashSessionMapper
+            CashSessionMapper cashSessionMapper,
+            CashMovementRepository cashMovementRepository,
+            CashMovementMapper cashMovementMapper
     ) {
         this.cashSessionRepository = cashSessionRepository;
         this.branchRepository = branchRepository;
         this.cashSessionMapper = cashSessionMapper;
+        this.cashMovementRepository = cashMovementRepository;
+        this.cashMovementMapper = cashMovementMapper;
     }
 
     /**
@@ -111,21 +122,74 @@ public class CashService {
     }
 
     /**
-     * Returns a cash session by id.
+     * Returns a cash session by id, including its manual movements.
      *
      * @param id the session id
-     * @return the session as a DTO
+     * @return the session as a DTO with movements included
      * @throws DomainException {@code CASH_SESSION_NOT_FOUND} when the session does not exist
      */
     @Transactional(readOnly = true)
     public CashSessionDto getSessionById(Long id) {
-        return cashSessionRepository.findById(id)
-                .map(cashSessionMapper::toDto)
+        CashSession session = cashSessionRepository.findById(id)
                 .orElseThrow(() -> new DomainException(
                         CODE_CASH_SESSION_NOT_FOUND,
                         HttpStatus.NOT_FOUND,
                         "Cash session not found"
                 ));
+        var movements = cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(id)
+                .stream()
+                .map(cashMovementMapper::toDto)
+                .toList();
+        return cashSessionMapper.toDto(session, movements);
+    }
+
+    /**
+     * Registers a manual cash movement in an OPEN session.
+     *
+     * @param sessionId   the target cash session id
+     * @param request     the movement payload
+     * @param currentUser the authenticated user
+     * @return the created movement as a DTO
+     * @throws DomainException {@code CASH_SESSION_NOT_FOUND} when the session does not exist
+     * @throws DomainException {@code CASH_MOVEMENT_CLOSED_SESSION} when the session is already closed
+     */
+    @Transactional
+    public CashMovementDto addMovement(Long sessionId, CreateCashMovementRequest request, User currentUser) {
+        ensureInternalUser(currentUser);
+        CashSession session = cashSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new DomainException(
+                        CODE_CASH_SESSION_NOT_FOUND,
+                        HttpStatus.NOT_FOUND,
+                        "Cash session not found"
+                ));
+
+        if (session.getStatus() == CashSessionStatus.CLOSED) {
+            throw new DomainException(
+                    CODE_CASH_MOVEMENT_CLOSED_SESSION,
+                    HttpStatus.BAD_REQUEST,
+                    "Cannot add movements to a closed cash session"
+            );
+        }
+
+        // amount != 0 is enforced by the DB CHECK; double-check at service level for early feedback.
+        if (request.amount().compareTo(java.math.BigDecimal.ZERO) == 0) {
+            throw new DomainException(
+                    "VALIDATION_ERROR",
+                    HttpStatus.BAD_REQUEST,
+                    "Movement amount must be different from zero"
+            );
+        }
+
+        CashMovement movement = new CashMovement();
+        movement.setCashSession(session);
+        movement.setCreatedByUser(currentUser);
+        movement.setType(request.type());
+        movement.setMethod(request.method());
+        movement.setAmount(request.amount());
+        movement.setReason(request.reason().trim());
+
+        CashMovement saved = cashMovementRepository.save(movement);
+        return cashMovementMapper.toDto(saved);
     }
 
     /** Rejects customers from any cash endpoint. */
