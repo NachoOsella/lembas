@@ -1,3 +1,313 @@
 :host {
   display: block;
 }
+
+/* ============================================================================
+   Cash open — visual layout
+   Follows the Lembas design system: color-block rhythm, 12px card radius,
+   whisper-soft shadows, full-pill buttons, tight tracking, Forest Green for
+   dark surfaces, warm cream canvas.
+   ============================================================================ */
+
+/* Loading state wrapper — fill the page so the spinner reads as page-level. */
+.cash-open__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24rem;
+  padding: 2rem 0;
+}
+
+/* Field wrapper inside form section cards. */
+.cash-open__field {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 38rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Summary block — amount hero + branch card side by side
+   --------------------------------------------------------------------------- */
+.cash-open__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 1.1rem;
+}
+
+/* Amount hero — the visual focal point of the screen. */
+.cash-open__amount-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-content: start;
+  gap: 0.7rem;
+  padding: 1.6rem 1.65rem 1.5rem;
+  overflow: hidden;
+  background: var(--color-primary-dark);
+  color: var(--color-text-on-dark);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  /* Subtle Forest Green dark band — anchors the financial moment. */
+}
+
+.cash-open__amount-hero::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: auto -3.5rem -3.5rem auto;
+  width: 14rem;
+  height: 14rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.cash-open__amount-eyebrow {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.cash-open__amount-value {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.42);
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: clamp(2rem, 4.4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s ease;
+}
+
+.cash-open__amount-value--ready {
+  color: var(--color-text-on-dark);
+}
+
+.cash-open__amount-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.cash-open__amount-hint i {
+  font-size: 0.85rem;
+  color: var(--color-mint-wash);
+}
+
+/* Branch card — surface variant of the amount hero (light). */
+.cash-open__branch-card {
+  display: grid;
+  align-content: start;
+  gap: 0.95rem;
+  padding: 1.5rem 1.55rem;
+  background: var(--color-surface);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.cash-open__branch-eyebrow {
+  margin: 0;
+  color: var(--color-bark);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.cash-open__branch-head {
+  display: flex;
+  align-items: center;
+  gap: 0.95rem;
+  min-width: 0;
+}
+
+.cash-open__branch-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.6rem;
+  height: 2.6rem;
+  font-size: 1.05rem;
+  color: var(--color-primary-dark);
+  background: var(--color-mint-wash);
+  border: 1px solid rgba(47, 141, 114, 0.18);
+  border-radius: 999px;
+}
+
+.cash-open__branch-name {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.cash-open__branch-address {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.25rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.cash-open__branch-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(7, 95, 54, 0.08);
+}
+
+.cash-open__branch-meta > div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.cash-open__branch-meta-label {
+  color: var(--color-bark);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cash-open__branch-meta-value {
+  color: var(--color-text);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  word-break: break-word;
+  text-transform: capitalize;
+}
+
+/* ---------------------------------------------------------------------------
+   Quick-amount chips
+   --------------------------------------------------------------------------- */
+.cash-open__quick-amounts {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.25rem;
+}
+
+.cash-open__quick-amounts-label {
+  color: var(--color-bark);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cash-open__quick-amounts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cash-open__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.95rem;
+  color: var(--color-primary-dark);
+  background: var(--color-mint-wash);
+  border: 1px solid rgba(47, 141, 114, 0.18);
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.cash-open__chip:hover {
+  background: var(--color-mint-wash-light);
+  border-color: rgba(47, 141, 114, 0.32);
+}
+
+.cash-open__chip:active {
+  transform: scale(0.95);
+}
+
+.cash-open__chip--active {
+  color: var(--color-text-on-dark);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.cash-open__chip--active:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+/* ---------------------------------------------------------------------------
+   Actions row
+   --------------------------------------------------------------------------- */
+.cash-open__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 48rem) {
+  .cash-open__actions {
+    flex-direction: column-reverse;
+  }
+
+  .cash-open__actions app-button {
+    width: 100%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive
+   --------------------------------------------------------------------------- */
+@media (max-width: 64rem) {
+  .cash-open__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .cash-open__branch-card {
+    order: 2;
+  }
+
+  .cash-open__amount-hero {
+    order: 1;
+  }
+}
+
+@media (max-width: 34rem) {
+  .cash-open__amount-hero {
+    padding: 1.3rem 1.25rem 1.25rem;
+  }
+
+  .cash-open__branch-card {
+    padding: 1.25rem 1.2rem;
+  }
+
+  .cash-open__branch-meta {
+    grid-template-columns: 1fr;
+  }
+}

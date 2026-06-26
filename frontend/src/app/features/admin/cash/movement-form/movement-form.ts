@@ -15,29 +15,60 @@ import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppControlField } from '../../../../shared/components/app-control-field/app-control-field';
 import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
 import { AppInputNumber } from '../../../../shared/components/app-input-number/app-input-number';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
 import { AppToast } from '../../../../shared/components/app-toast/app-toast';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 
-interface Option<T> {
+/** Visual + semantic description for a movement-type chip. */
+interface TypeOption {
+  readonly value: CashMovementType;
   readonly label: string;
-  readonly value: T;
+  readonly description: string;
+  readonly icon: string;
+  readonly tone: 'in' | 'out' | 'adjust';
 }
 
-const TYPE_OPTIONS: Option<CashMovementType>[] = [
-  { label: 'Ingreso', value: 'CASH_IN' },
-  { label: 'Egreso', value: 'CASH_OUT' },
-  { label: 'Ajuste', value: 'ADJUSTMENT' },
+/** Visual + semantic description for a method chip. */
+interface MethodOption {
+  readonly value: CashMovementMethod;
+  readonly label: string;
+  readonly icon: string;
+}
+
+const TYPE_OPTIONS: ReadonlyArray<TypeOption> = [
+  {
+    value: 'CASH_IN',
+    label: 'Ingreso',
+    description: 'Suma al fondo de la caja',
+    icon: 'pi pi-arrow-down',
+    tone: 'in',
+  },
+  {
+    value: 'CASH_OUT',
+    label: 'Egreso',
+    description: 'Retira efectivo de la caja',
+    icon: 'pi pi-arrow-up',
+    tone: 'out',
+  },
+  {
+    value: 'ADJUSTMENT',
+    label: 'Ajuste',
+    description: 'Correccion manual con motivo',
+    icon: 'pi pi-sliders-h',
+    tone: 'adjust',
+  },
 ];
 
-const METHOD_OPTIONS: Option<CashMovementMethod>[] = [
-  { label: 'Efectivo', value: 'CASH' },
-  { label: 'Transferencia', value: 'TRANSFER' },
-  { label: 'Otro', value: 'OTHER' },
+const METHOD_OPTIONS: ReadonlyArray<MethodOption> = [
+  { value: 'CASH', label: 'Efectivo', icon: 'pi pi-money-bill' },
+  { value: 'TRANSFER', label: 'Transferencia', icon: 'pi pi-receipt' },
+  { value: 'OTHER', label: 'Otro', icon: 'pi pi-ellipsis-h' },
 ];
 
 /**
  * Form to register a manual cash movement in an OPEN session.
+ *
+ * Uses visual pill selectors (type + method) instead of native dropdowns to
+ * keep the cash session workflow fast and reduce friction for the cashier.
  *
  * Emits {@code movementAdded} when the backend confirms the creation.
  */
@@ -48,7 +79,6 @@ const METHOD_OPTIONS: Option<CashMovementMethod>[] = [
     AppControlField,
     AppFormField,
     AppInputNumber,
-    AppSelect,
     AppToast,
     ErrorAlert,
     FormsModule,
@@ -68,6 +98,9 @@ export class MovementForm {
 
   /** Emitted after a successful movement creation. */
   readonly movementAdded = output<void>();
+
+  /** Emitted when the user dismisses the form without saving. */
+  readonly cancelled = output<void>();
 
   protected readonly type = signal<CashMovementType | null>(null);
   protected readonly method = signal<CashMovementMethod | null>(null);
@@ -89,6 +122,57 @@ export class MovementForm {
 
   protected readonly typeOptions = TYPE_OPTIONS;
   protected readonly methodOptions = METHOD_OPTIONS;
+
+  /** Description of the selected type — drives the contextual hint under amount. */
+  protected readonly selectedTypeDescription = computed(() => {
+    const selected = this.typeOptions.find((opt) => opt.value === this.type());
+    return selected?.description ?? null;
+  });
+
+  /** Description of the selected method — drives the contextual hint under amount. */
+  protected readonly selectedMethodLabel = computed(() => {
+    const selected = this.methodOptions.find((opt) => opt.value === this.method());
+    return selected?.label ?? null;
+  });
+
+  /** Live preview of the movement, shown when the form has enough data. */
+  protected readonly movementPreview = computed(() => {
+    const type = this.type();
+    const amount = this.amount();
+    if (!type || amount == null || amount <= 0) {
+      return null;
+    }
+    const sign = type === 'CASH_IN' ? '+' : type === 'CASH_OUT' ? '-' : '±';
+    const formatted = new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 2,
+    }).format(amount);
+    return `${sign} ${formatted}`;
+  });
+
+  protected selectType(value: CashMovementType): void {
+    if (this.disabled()) {
+      return;
+    }
+    this.type.set(value);
+  }
+
+  protected selectMethod(value: CashMovementMethod): void {
+    if (this.disabled()) {
+      return;
+    }
+    this.method.set(value);
+  }
+
+  /** Emits the cancelled event so the host can close the modal. */
+  protected cancel(): void {
+    if (this.saving()) {
+      return;
+    }
+    this.resetForm();
+    this.cancelled.emit();
+  }
 
   /** Creates a movement (or negative for CASH_OUT) and resets the form on success. */
   protected submit(): void {

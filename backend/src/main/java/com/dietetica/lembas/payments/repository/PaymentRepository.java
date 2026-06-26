@@ -1,6 +1,7 @@
 package com.dietetica.lembas.payments.repository;
 
 import com.dietetica.lembas.payments.model.Payment;
+import com.dietetica.lembas.payments.model.PaymentMethod;
 import com.dietetica.lembas.payments.model.PaymentProvider;
 import com.dietetica.lembas.payments.model.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +15,20 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     /** Finds all payments associated with an order in stable insertion order. */
     List<Payment> findByOrderIdOrderByIdAsc(Long orderId);
+
+    /**
+     * Finds payments linked to a cash session, optionally filtered by status
+     * and/or method, in stable insertion order. Used by the cash detail view
+     * to surface APPROVED POS sales alongside manual movements.
+     */
+    List<Payment> findByCashSessionIdOrderByIdAsc(Long cashSessionId);
+
+    /** Finds APPROVED payments of a given method linked to a cash session. */
+    List<Payment> findByCashSessionIdAndStatusAndMethodOrderByIdAsc(
+            Long cashSessionId,
+            PaymentStatus status,
+            PaymentMethod method
+    );
 
     /** Finds payments for an order filtered by lifecycle status. */
     List<Payment> findByOrderIdAndStatusOrderByIdAsc(Long orderId, PaymentStatus status);

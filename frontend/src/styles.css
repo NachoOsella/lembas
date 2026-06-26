@@ -4,6 +4,9 @@
 @theme {
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-script: 'Caveat', 'Plus Jakarta Sans', cursive;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
   --tracking-tight: -0.01em;
 
   --color-primary: #2f8d72;

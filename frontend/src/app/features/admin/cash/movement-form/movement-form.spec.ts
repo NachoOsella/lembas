@@ -150,4 +150,53 @@ describe('MovementForm', () => {
     expect(component['amount']()).toBeNull();
     expect(component['reason']()).toBe('');
   });
+
+  it('selectType updates the selected type signal', async () => {
+    createComponent();
+    await fixture.whenStable();
+
+    component['selectType']('CASH_OUT');
+    expect(component['type']()).toBe('CASH_OUT');
+  });
+
+  it('selectMethod updates the selected method signal', async () => {
+    createComponent();
+    await fixture.whenStable();
+
+    component['selectMethod']('TRANSFER');
+    expect(component['method']()).toBe('TRANSFER');
+  });
+
+  it('selectors are no-ops when the form is disabled', async () => {
+    createComponent();
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    component['selectType']('CASH_IN');
+    component['selectMethod']('OTHER');
+    expect(component['type']()).toBeNull();
+    expect(component['method']()).toBeNull();
+  });
+
+  it('exposes the selected type description for the live preview', async () => {
+    createComponent();
+    await fixture.whenStable();
+
+    expect(component['selectedTypeDescription']()).toBeNull();
+
+    component['type'].set('ADJUSTMENT');
+    expect(component['selectedTypeDescription']()).toContain('Correccion');
+  });
+
+  it('renders a movement preview only when type and amount are present', async () => {
+    createComponent();
+    await fixture.whenStable();
+
+    expect(component['movementPreview']()).toBeNull();
+
+    component['type'].set('CASH_IN');
+    component['amount'].set(1234.5);
+    expect(component['movementPreview']()).toContain('1.234,50');
+  });
 });

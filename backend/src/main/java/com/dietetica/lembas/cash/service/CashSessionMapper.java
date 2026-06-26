@@ -1,6 +1,6 @@
 package com.dietetica.lembas.cash.service;
 
-import com.dietetica.lembas.cash.dto.CashMovementDto;
+import com.dietetica.lembas.cash.dto.CashEntryDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
 import com.dietetica.lembas.cash.model.CashSession;
 import com.dietetica.lembas.shared.branch.model.Branch;
@@ -19,13 +19,13 @@ import java.util.List;
 @Component
 class CashSessionMapper {
 
-    /** Builds a DTO from a cash session aggregate (open / current endpoints, no movements). */
+    /** Builds a DTO from a cash session aggregate (open / current endpoints, no entries). */
     CashSessionDto toDto(CashSession session) {
         return toDto(session, null);
     }
 
-    /** Builds a DTO including the optional movements list (detail endpoint). */
-    CashSessionDto toDto(CashSession session, List<CashMovementDto> movements) {
+    /** Builds a DTO including the optional entries list (detail endpoint). */
+    CashSessionDto toDto(CashSession session, List<CashEntryDto> entries) {
         return new CashSessionDto(
                 session.getId(),
                 session.getStatus(),
@@ -46,7 +46,7 @@ class CashSessionMapper {
                 session.getClosingNotes(),
                 session.getCreatedAt(),
                 session.getUpdatedAt(),
-                movements
+                entries
         );
     }
 
