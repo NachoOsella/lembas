@@ -7,6 +7,7 @@ import com.dietetica.lembas.cash.service.CashService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,5 +57,11 @@ public class CashSessionController {
     @GetMapping("/current")
     public CashSessionDto current(@RequestParam(required = false) Long branchId) {
         return cashService.getCurrentSession(branchId, securityContextHelper.getCurrentUser());
+    }
+
+    /** Returns a single cash session by id. Used by the cash detail screen. */
+    @GetMapping("/{id}")
+    public CashSessionDto getById(@PathVariable Long id) {
+        return cashService.getSessionById(id);
     }
 }

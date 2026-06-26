@@ -161,6 +161,28 @@ class CashSessionControllerTest {
                 .andExpect(jsonPath("$.code").value("CASH_SESSION_NOT_FOUND"));
     }
 
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void getByIdReturnsSession() throws Exception {
+        when(cashService.getSessionById(7L)).thenReturn(dto(7L, 2L));
+
+        mockMvc.perform(get("/api/admin/cash-sessions/7"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(7))
+                .andExpect(jsonPath("$.status").value("OPEN"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void getByIdMapsNotFoundTo404() throws Exception {
+        when(cashService.getSessionById(99L))
+                .thenThrow(new DomainException("CASH_SESSION_NOT_FOUND", HttpStatus.NOT_FOUND, "Not found"));
+
+        mockMvc.perform(get("/api/admin/cash-sessions/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CASH_SESSION_NOT_FOUND"));
+    }
+
     private static CashSessionDto dto(long id, long branchId) {
         return new CashSessionDto(
                 id, CashSessionStatus.OPEN, branchId, "Branch " + branchId,

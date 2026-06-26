@@ -185,6 +185,27 @@ class CashServiceTest {
     }
 
     @Test
+    void getByIdReturnsDtoWhenSessionExists() {
+        CashSession session = new CashSession();
+        setId(session, 42L);
+        when(cashSessionRepository.findById(42L)).thenReturn(Optional.of(session));
+        when(cashSessionMapper.toDto(session)).thenReturn(dto(42L, 1L));
+
+        CashSessionDto result = cashService.getSessionById(42L);
+
+        assertThat(result.id()).isEqualTo(42L);
+    }
+
+    @Test
+    void getByIdThrowsNotFoundWhenMissing() {
+        when(cashSessionRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cashService.getSessionById(404L))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertCode(ex, "CASH_SESSION_NOT_FOUND", HttpStatus.NOT_FOUND));
+    }
+
+    @Test
     void currentRequiresBranchIdForAdmin() {
         User admin = user(Role.ADMIN, null);
 

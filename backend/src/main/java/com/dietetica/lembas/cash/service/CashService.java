@@ -110,6 +110,24 @@ public class CashService {
                 ));
     }
 
+    /**
+     * Returns a cash session by id.
+     *
+     * @param id the session id
+     * @return the session as a DTO
+     * @throws DomainException {@code CASH_SESSION_NOT_FOUND} when the session does not exist
+     */
+    @Transactional(readOnly = true)
+    public CashSessionDto getSessionById(Long id) {
+        return cashSessionRepository.findById(id)
+                .map(cashSessionMapper::toDto)
+                .orElseThrow(() -> new DomainException(
+                        CODE_CASH_SESSION_NOT_FOUND,
+                        HttpStatus.NOT_FOUND,
+                        "Cash session not found"
+                ));
+    }
+
     /** Rejects customers from any cash endpoint. */
     private void ensureInternalUser(User user) {
         if (user == null || user.getRole() == Role.CUSTOMER) {
