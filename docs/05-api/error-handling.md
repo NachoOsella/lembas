@@ -80,6 +80,9 @@ Services may throw `DomainException` directly when a dedicated exception subclas
 | CATEGORY_HAS_CHILDREN | Catalog | 409 | Category cannot be deleted while subcategories exist |
 | CATEGORY_HAS_PRODUCTS | Catalog | 409 | Category cannot be deleted while products reference it |
 | SELF_ROLE_CHANGE_FORBIDDEN | Users | 403 | User attempted to change their own role |
+| CASH_SESSION_ALREADY_OPEN | Cash | 409 | A cash session is already OPEN for the branch |
+| CASH_SESSION_NOT_FOUND | Cash | 404 | No OPEN cash session exists for the branch (or the requested session id does not exist) |
+| CASH_BRANCH_REQUIRED | Cash | 400 | ADMIN must select a branch to open or query a cash session |
 
 ### Global exception handler
 
