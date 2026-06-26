@@ -116,6 +116,12 @@ export class ErrorMappingService {
     // Stock errors
     INSUFFICIENT_STOCK: 'No hay stock suficiente para completar la operación.',
 
+    // Cash register errors
+    CASH_SESSION_ALREADY_OPEN:
+      'Ya hay una caja abierta para esta sucursal. Cerrala antes de abrir una nueva.',
+    CASH_SESSION_NOT_FOUND: 'No hay una caja abierta para esta sucursal.',
+    CASH_BRANCH_REQUIRED: 'Debes seleccionar una sucursal para gestionar la caja.',
+
     // Order errors
     ORDER_INVALID_STATE: 'No se puede realizar esta operación en el estado actual del pedido.',
 

@@ -48,7 +48,8 @@ export default [
       },
       {
         path: 'inventory/product/:productId/lots',
-        loadComponent: () => import('./stock-lot-detail/stock-lot-detail').then((m) => m.StockLotDetail),
+        loadComponent: () =>
+          import('./stock-lot-detail/stock-lot-detail').then((m) => m.StockLotDetail),
       },
       {
         path: 'stock/entry',
@@ -87,6 +88,14 @@ export default [
         loadComponent: () => import('./cash/cash').then((m) => m.Cash),
       },
       {
+        path: 'cash/open',
+        loadComponent: () => import('./cash/open/cash-open').then((m) => m.CashOpen),
+      },
+      {
+        path: 'cash/:id',
+        loadComponent: () => import('./cash/detail/cash-detail').then((m) => m.CashDetail),
+      },
+      {
         path: 'stock/movements',
         loadComponent: () =>
           import('./stock-movements/stock-movements').then((m) => m.StockMovements),
@@ -101,11 +110,13 @@ export default [
       },
       {
         path: 'purchase-orders',
-        loadComponent: () => import('./purchase-orders/purchase-orders').then((m) => m.PurchaseOrders),
+        loadComponent: () =>
+          import('./purchase-orders/purchase-orders').then((m) => m.PurchaseOrders),
       },
       {
         path: 'pricing',
-        loadComponent: () => import('./pricing/price-update-workflow').then((m) => m.PriceUpdateWorkflow),
+        loadComponent: () =>
+          import('./pricing/price-update-workflow').then((m) => m.PriceUpdateWorkflow),
       },
       {
         path: 'reports',
