@@ -11,15 +11,17 @@ import { getApiError } from '../../../../shared/models/api-error';
 import { Branch } from '../../../../shared/models/user';
 import { OpenCashSessionRequest } from '../../../../shared/models/cash-session';
 
+import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppControlField } from '../../../../shared/components/app-control-field/app-control-field';
 import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
 import { AppInputNumber } from '../../../../shared/components/app-input-number/app-input-number';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
 import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
+import { AppSectionCard } from '../../../../shared/components/app-section-card/app-section-card';
+import { AppSelect } from '../../../../shared/components/app-select/app-select';
 import { AppToast } from '../../../../shared/components/app-toast/app-toast';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { FormSection } from '../../../../shared/components/form-section/form-section';
+import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
 
 interface BranchOption {
   readonly label: string;
@@ -40,15 +42,17 @@ interface BranchOption {
 @Component({
   selector: 'app-cash-open',
   imports: [
+    AppBadge,
     AppButton,
     AppControlField,
     AppFormField,
     AppInputNumber,
-    AppSelect,
     AppPageHeader,
+    AppSectionCard,
+    AppSelect,
     AppToast,
     ErrorAlert,
-    FormSection,
+    LoadingSpinner,
     FormsModule,
   ],
   templateUrl: './cash-open.html',
@@ -92,14 +96,66 @@ export class CashOpen implements OnInit {
     return this.auth.currentUser()?.branchName ?? null;
   });
 
+  /** Display name of the operator opening the cash session. */
+  protected readonly operatorName = computed(() => {
+    const user = this.auth.currentUser();
+    if (!user) {
+      return null;
+    }
+    return [user.firstName, user.lastName].filter((part) => !!part && part.length > 0).join(' ');
+  });
+
+  /** Localized "today" label for the branch info card. */
+  protected readonly todayLabel = new Date().toLocaleDateString('es-AR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  /** Resolved branch address for the info card (when available). */
+  protected readonly resolvedBranchAddress = computed(() => {
+    const selected = this.branches().find((b) => b.id === this.branchId());
+    return selected?.address ?? null;
+  });
+
+  /** True when the form is ready to be shown (branch resolved + no open session). */
+  protected readonly formReady = computed(() => this.branchId() != null);
+
   /** Submit is enabled when a branch is resolved and the opening amount is set. */
   protected readonly canSubmit = computed(
-    () =>
-      this.branchId() != null &&
-      this.openingCashAmount() != null &&
-      !this.saving() &&
-      !this.loading(),
+    () => this.formReady() && this.openingCashAmount() != null && !this.saving() && !this.loading(),
   );
+
+  /** Hero amount label for the live preview. */
+  protected readonly amountPreview = computed(() => {
+    const amount = this.openingCashAmount();
+    if (amount == null) {
+      return 'Ingresa el monto inicial';
+    }
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 2,
+    }).format(amount);
+  });
+
+  /** Whether the live preview is showing a real (non-zero) value. */
+  protected readonly hasAmount = computed(() => {
+    const amount = this.openingCashAmount();
+    return amount != null && amount > 0;
+  });
+
+  /** Quick-set amount chips to speed up the most common opening balances. */
+  protected readonly quickAmounts: ReadonlyArray<{
+    readonly value: number;
+    readonly label: string;
+  }> = [
+    { value: 5000, label: '5.000' },
+    { value: 10000, label: '10.000' },
+    { value: 20000, label: '20.000' },
+    { value: 50000, label: '50.000' },
+  ];
 
   ngOnInit(): void {
     this.initialize();
@@ -156,6 +212,11 @@ export class CashOpen implements OnInit {
     if (value != null) {
       this.checkOpenSession(value);
     }
+  }
+
+  /** Applies a quick-amount chip value to the opening amount. */
+  protected applyQuickAmount(value: number): void {
+    this.openingCashAmount.set(value);
   }
 
   /** Asks the backend for the current OPEN session; if it exists, redirects to its detail. */

@@ -60,6 +60,8 @@ class CashServiceTest {
     private CashMovementRepository cashMovementRepository;
     @Mock
     private CashMovementMapper cashMovementMapper;
+    @Mock
+    private com.dietetica.lembas.payments.repository.PaymentRepository paymentRepository;
 
     @InjectMocks
     private CashService cashService;
@@ -201,12 +203,16 @@ class CashServiceTest {
         setId(session, 42L);
         when(cashSessionRepository.findById(42L)).thenReturn(Optional.of(session));
         when(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(42L)).thenReturn(List.of());
+        when(paymentRepository.findByCashSessionIdAndStatusAndMethodOrderByIdAsc(
+                eq(42L), any(), any())).thenReturn(List.of());
         when(cashSessionMapper.toDto(eq(session), any())).thenReturn(dto(42L, 1L));
 
         CashSessionDto result = cashService.getSessionById(42L);
 
         assertThat(result.id()).isEqualTo(42L);
         verify(cashMovementRepository).findByCashSessionIdOrderByCreatedAtAsc(42L);
+        verify(paymentRepository).findByCashSessionIdAndStatusAndMethodOrderByIdAsc(
+                eq(42L), any(), any());
     }
 
     @Test
@@ -285,6 +291,52 @@ class CashServiceTest {
                 CashMovementType.CASH_IN, CashMovementMethod.CASH, new BigDecimal("10.00"), "test");
 
         assertThatThrownBy(() -> cashService.addMovement(1L, request, customer))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertCode(ex, "ACCESS_DENIED", HttpStatus.FORBIDDEN));
+    }
+
+    @Test
+    void openMapsUniqueConstraintRaceToAlreadyOpen() {
+        // A race where the in-memory existsByBranchIdAndStatus check passes but the
+        // partial unique index fires at commit time must surface as the same business
+        // error the caller would have seen for the slow path.
+        User employee = user(Role.EMPLOYEE, 1L);
+        Branch branch = branch(1L, true);
+
+        when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
+        when(cashSessionRepository.existsByBranchIdAndStatus(1L, CashSessionStatus.OPEN)).thenReturn(false);
+        when(cashSessionRepository.save(any(CashSession.class)))
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException(
+                        "could not execute statement [ERROR: duplicate key value violates unique constraint \"uk_cash_sessions_one_open_per_branch\"",
+                        new java.sql.SQLException("duplicate key", "23505")));
+
+        OpenCashSessionRequest request = new OpenCashSessionRequest(new BigDecimal("100.00"), null, null);
+
+        assertThatThrownBy(() -> cashService.openCashSession(request, employee))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertCode(ex, "CASH_SESSION_ALREADY_OPEN", HttpStatus.CONFLICT));
+    }
+
+    @Test
+    void addMovementMapsMissingUserConstraintToAccessDenied() {
+        // The user was deleted between the auth check and the save. The FK on
+        // created_by_user_id raises a DataIntegrityViolationException that we
+        // re-raise as ACCESS_DENIED so the UI can show a meaningful message.
+        User employee = user(Role.EMPLOYEE, 99L);
+        CashSession session = new CashSession();
+        setId(session, 7L);
+        session.setStatus(CashSessionStatus.OPEN);
+
+        when(cashSessionRepository.findById(7L)).thenReturn(Optional.of(session));
+        when(cashMovementRepository.save(any()))
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException(
+                        "could not execute statement [ERROR: insert or update on table \"cash_movements\" violates foreign key constraint \"fk_cash_movements_created_by_user\"",
+                        new java.sql.SQLException("foreign key", "23503")));
+
+        CreateCashMovementRequest request = new CreateCashMovementRequest(
+                CashMovementType.CASH_IN, CashMovementMethod.CASH, new BigDecimal("100.00"), "Cobro");
+
+        assertThatThrownBy(() -> cashService.addMovement(7L, request, employee))
                 .isInstanceOf(DomainException.class)
                 .satisfies(ex -> assertCode(ex, "ACCESS_DENIED", HttpStatus.FORBIDDEN));
     }

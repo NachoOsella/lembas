@@ -1,3 +1,269 @@
 :host {
   display: block;
 }
+
+/* ============================================================================
+   Cash detail — visual layout
+   Follows the Lembas design system: color-block rhythm, 12px card radius,
+   whisper-soft shadows, full-pill buttons, tight tracking, Forest Green for
+   dark surfaces, warm cream canvas.
+   ============================================================================ */
+
+/* Hero strip spacing — keeps the financial summary off the page header. */
+.cash-detail__hero {
+  margin-top: 0.5rem;
+}
+
+/* Back row under error alerts. */
+.cash-detail__back-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 0.5rem;
+}
+
+/* Loading state wrapper — fill the page so the spinner reads as page-level. */
+.cash-detail__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24rem;
+  padding: 2rem 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Session metadata definition list
+   --------------------------------------------------------------------------- */
+.cash-detail__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1.1rem 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.cash-detail__meta-item {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.95rem 1.1rem;
+  border: 1px solid rgba(7, 95, 54, 0.08);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(247, 249, 245, 0.6) 0%, rgba(247, 249, 245, 0) 100%);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.cash-detail__meta-item:hover {
+  border-color: rgba(47, 141, 114, 0.18);
+  background: linear-gradient(180deg, rgba(247, 249, 245, 0.85) 0%, rgba(247, 249, 245, 0.25) 100%);
+}
+
+.cash-detail__meta-item--wide {
+  grid-column: 1 / -1;
+}
+
+.cash-detail__meta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--color-bark);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.cash-detail__meta-label i {
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  font-size: 0.72rem;
+  color: var(--color-primary-dark);
+  background: rgba(47, 141, 114, 0.12);
+  border-radius: 999px;
+}
+
+.cash-detail__meta-value {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.cash-detail__meta-value--note {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.55;
+}
+
+/* ---------------------------------------------------------------------------
+   Action row — the "Registrar movimiento" callout inside the section card
+   --------------------------------------------------------------------------- */
+.cash-detail__action-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.25rem;
+}
+
+.cash-detail__action-copy {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  flex: 1 1 18rem;
+  min-width: 0;
+  color: var(--color-text);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.cash-detail__action-copy p {
+  margin: 0;
+}
+
+.cash-detail__action-icon {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  font-size: 1rem;
+  color: var(--color-primary);
+}
+
+@media (max-width: 48rem) {
+  .cash-detail__action-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cash-detail__action-row app-button {
+    width: 100%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Movements table — cell-level styling on top of app-data-table
+   --------------------------------------------------------------------------- */
+.cash-detail__method {
+  text-transform: capitalize;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.cash-detail__amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cash-detail__amount-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.15rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.cash-detail__amount-sign {
+  font-size: 0.75rem;
+  font-weight: 800;
+  margin-right: 0.1rem;
+}
+
+.cash-detail__amount--in .cash-detail__amount-value {
+  color: var(--color-primary-dark);
+  background: rgba(212, 233, 226, 0.7);
+  border: 1px solid rgba(47, 141, 114, 0.18);
+}
+
+.cash-detail__amount--out .cash-detail__amount-value {
+  color: var(--color-red-dark);
+  background: rgba(255, 230, 224, 0.7);
+  border: 1px solid rgba(200, 32, 20, 0.18);
+}
+
+.cash-detail__amount--adjust .cash-detail__amount-value {
+  color: var(--color-amber-text);
+  background: var(--color-amber-tint);
+  border: 1px solid rgba(203, 162, 88, 0.42);
+}
+
+.cash-detail__reason {
+  max-width: 18rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+
+/* ---------------------------------------------------------------------------
+   Empty + closed states
+   --------------------------------------------------------------------------- */
+.cash-detail__empty {
+  padding: 0.5rem 0 0;
+}
+
+.cash-detail__closed-cta {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+  padding: 1.25rem 1.4rem;
+  border: 1px dashed rgba(7, 95, 54, 0.18);
+  border-radius: 12px;
+  background: rgba(247, 249, 245, 0.4);
+}
+
+.cash-detail__closed-icon {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  color: var(--color-primary-dark);
+  background: var(--color-mint-wash);
+  border: 1px solid rgba(47, 141, 114, 0.18);
+  border-radius: 999px;
+}
+
+.cash-detail__closed-copy {
+  flex: 1 1 18rem;
+  margin: 0;
+  color: var(--color-text);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive: stack session meta on small screens
+   --------------------------------------------------------------------------- */
+@media (max-width: 48rem) {
+  .cash-detail__meta {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .cash-detail__meta-item {
+    padding: 0.85rem 0.95rem;
+  }
+
+  .cash-detail__closed-cta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cash-detail__closed-copy {
+    flex: 1 1 auto;
+  }
+}

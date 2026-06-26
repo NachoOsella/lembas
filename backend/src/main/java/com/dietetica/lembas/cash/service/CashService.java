@@ -1,5 +1,6 @@
 package com.dietetica.lembas.cash.service;
 
+import com.dietetica.lembas.cash.dto.CashEntryDto;
 import com.dietetica.lembas.cash.dto.CashMovementDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
 import com.dietetica.lembas.cash.dto.CreateCashMovementRequest;
@@ -9,6 +10,10 @@ import com.dietetica.lembas.cash.model.CashSession;
 import com.dietetica.lembas.cash.model.CashSessionStatus;
 import com.dietetica.lembas.cash.repository.CashMovementRepository;
 import com.dietetica.lembas.cash.repository.CashSessionRepository;
+import com.dietetica.lembas.payments.model.Payment;
+import com.dietetica.lembas.payments.model.PaymentMethod;
+import com.dietetica.lembas.payments.model.PaymentStatus;
+import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
@@ -18,6 +23,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -51,19 +59,22 @@ public class CashService {
     private final CashSessionMapper cashSessionMapper;
     private final CashMovementRepository cashMovementRepository;
     private final CashMovementMapper cashMovementMapper;
+    private final PaymentRepository paymentRepository;
 
     public CashService(
             CashSessionRepository cashSessionRepository,
             BranchRepository branchRepository,
             CashSessionMapper cashSessionMapper,
             CashMovementRepository cashMovementRepository,
-            CashMovementMapper cashMovementMapper
+            CashMovementMapper cashMovementMapper,
+            PaymentRepository paymentRepository
     ) {
         this.cashSessionRepository = cashSessionRepository;
         this.branchRepository = branchRepository;
         this.cashSessionMapper = cashSessionMapper;
         this.cashMovementRepository = cashMovementRepository;
         this.cashMovementMapper = cashMovementMapper;
+        this.paymentRepository = paymentRepository;
     }
 
     /**
@@ -95,8 +106,100 @@ public class CashService {
         session.setStatus(CashSessionStatus.OPEN);
 
         // Re-derive status/timestamps are handled by @PrePersist; save returns the persisted entity.
-        CashSession saved = cashSessionRepository.save(session);
+        // The DB enforces "one open session per branch" via a partial unique index
+        // (uk_cash_sessions_one_open_per_branch); a race between two requests that
+        // both pass the in-memory check above would surface as a
+        // DataIntegrityViolationException. Translate it into the same business error
+        // the caller would have seen for the slow path.
+        CashSession saved;
+        try {
+            saved = cashSessionRepository.save(session);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            if (isOneOpenPerBranchViolation(ex)) {
+                throw new DomainException(
+                        CODE_CASH_SESSION_ALREADY_OPEN,
+                        HttpStatus.CONFLICT,
+                        "A cash session is already open for branch " + branch.getId()
+                );
+            }
+            throw ex;
+        }
         return cashSessionMapper.toDto(saved);
+    }
+
+    /**
+     * Detects whether the given {@link org.springframework.dao.DataIntegrityViolationException}
+     * was caused by the partial unique index that enforces one OPEN session per branch.
+     */
+    private static boolean isOneOpenPerBranchViolation(
+            org.springframework.dao.DataIntegrityViolationException ex
+    ) {
+        return matchesAnyMessage(ex, "uk_cash_sessions_one_open_per_branch", "cash_sessions_branch_id_key")
+                || containsPair(ex, "duplicate key", "cash_sessions");
+    }
+
+    /**
+     * Detects whether a {@link org.springframework.dao.DataIntegrityViolationException}
+     * was caused by a missing {@code users(id)} foreign key on cash_movements.
+     */
+    private static boolean isMissingUserViolation(
+            org.springframework.dao.DataIntegrityViolationException ex
+    ) {
+        return matchesAnyMessage(ex, "created_by_user_id", "fk_cash_movements_created_by_user");
+    }
+
+    /**
+     * Walks the cause chain of {@code ex} and returns true if any of the listed
+     * substrings appears in either the exception's own message or the message of
+     * any of its causes. Necessary because the most-specific cause (the underlying
+     * SQL exception) only carries the SQL state, not the constraint name.
+     */
+    private static boolean matchesAnyMessage(
+            org.springframework.dao.DataIntegrityViolationException ex,
+            String... needles
+    ) {
+        Throwable current = ex;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null) {
+                for (String needle : needles) {
+                    if (message.contains(needle)) {
+                        return true;
+                    }
+                }
+            }
+            if (current.getCause() == current) {
+                break;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    /** True when the cause chain contains both {@code a} and {@code b} substrings. */
+    private static boolean containsPair(
+            org.springframework.dao.DataIntegrityViolationException ex,
+            String a,
+            String b
+    ) {
+        String combined = collectMessages(ex);
+        return combined != null && combined.toLowerCase().contains(a) && combined.toLowerCase().contains(b);
+    }
+
+    /** Concatenates every non-null message along the cause chain for substring search. */
+    private static String collectMessages(Throwable ex) {
+        StringBuilder sb = new StringBuilder();
+        Throwable current = ex;
+        while (current != null) {
+            if (current.getMessage() != null) {
+                sb.append(current.getMessage()).append('\n');
+            }
+            if (current.getCause() == current) {
+                break;
+            }
+            current = current.getCause();
+        }
+        return sb.length() == 0 ? null : sb.toString();
     }
 
     /**
@@ -136,11 +239,80 @@ public class CashService {
                         HttpStatus.NOT_FOUND,
                         "Cash session not found"
                 ));
-        var movements = cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(id)
-                .stream()
-                .map(cashMovementMapper::toDto)
-                .toList();
-        return cashSessionMapper.toDto(session, movements);
+        List<CashEntryDto> entries = buildUnifiedEntries(id);
+        return cashSessionMapper.toDto(session, entries);
+    }
+
+    /**
+     * Combines the session's manual cash movements with APPROVED POS payments
+     * that were settled in cash (the only payments that physically move the
+     * drawer). Returns an empty list when neither source has anything to
+     * report.
+     *
+     * <p>Sorted ascending by {@code occurredAt}; ties broken by id so the order
+     * is stable across requests.</p>
+     */
+    private List<CashEntryDto> buildUnifiedEntries(Long sessionId) {
+        List<CashEntryDto> entries = new ArrayList<>();
+        cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(sessionId)
+                .forEach(movement -> entries.add(toEntry(movement)));
+        paymentRepository.findByCashSessionIdAndStatusAndMethodOrderByIdAsc(
+                sessionId, PaymentStatus.APPROVED, PaymentMethod.CASH
+        ).forEach(payment -> entries.add(toEntry(payment)));
+        entries.sort(Comparator
+                .comparing(CashEntryDto::occurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(CashEntryDto::id, Comparator.nullsLast(Comparator.naturalOrder())));
+        return entries;
+    }
+
+    /** Adapts a manual movement to the unified entry shape. */
+    private CashEntryDto toEntry(CashMovement movement) {
+        String direction = switch (movement.getType()) {
+            case CASH_IN -> "IN";
+            case CASH_OUT -> "OUT";
+            case ADJUSTMENT -> "NEUTRAL";
+        };
+        String method = movement.getMethod() == null ? null : movement.getMethod().name();
+        String userName = userFullName(movement.getCreatedByUser());
+        return new CashEntryDto(
+                "MANUAL",
+                movement.getId(),
+                movement.getType().name(),
+                method,
+                direction,
+                movement.getAmount(),
+                movement.getReason(),
+                userName,
+                movement.getCreatedAt(),
+                null
+        );
+    }
+
+    /** Adapts an APPROVED CASH payment to the unified entry shape. */
+    private CashEntryDto toEntry(Payment payment) {
+        String orderNumber = payment.getOrder() == null ? null : payment.getOrder().getOrderNumber();
+        String orderLabel = orderNumber == null ? "Sin pedido" : "Pedido #" + orderNumber;
+        return new CashEntryDto(
+                "PAYMENT",
+                payment.getId(),
+                "PAYMENT",
+                payment.getMethod().name(),
+                "IN",
+                payment.getAmount(),
+                orderNumber == null ? "Pago registrado" : "Pago " + orderLabel,
+                orderLabel,
+                payment.getApprovedAt() != null ? payment.getApprovedAt() : payment.getCreatedAt(),
+                payment.getOrder() == null ? null : payment.getOrder().getId()
+        );
+    }
+
+    private static String userFullName(User user) {
+        if (user == null) {
+            return null;
+        }
+        String first = user.getFirstName() == null ? "" : user.getFirstName();
+        String last = user.getLastName() == null ? "" : user.getLastName();
+        return (first + " " + last).trim();
     }
 
     /**
@@ -188,7 +360,23 @@ public class CashService {
         movement.setAmount(request.amount());
         movement.setReason(request.reason().trim());
 
-        CashMovement saved = cashMovementRepository.save(movement);
+        // Save the movement. If the user was deleted between the auth check and the
+        // save, the FK on created_by_user_id raises a DataIntegrityViolationException
+        // that the global handler maps to a generic 409. Re-raise as ACCESS_DENIED so
+        // the UI can show a more meaningful message (the user lost mid-flight access).
+        CashMovement saved;
+        try {
+            saved = cashMovementRepository.save(movement);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            if (isMissingUserViolation(ex)) {
+                throw new DomainException(
+                        CODE_ACCESS_DENIED,
+                        HttpStatus.FORBIDDEN,
+                        "The authenticated user is no longer valid for this operation"
+                );
+            }
+            throw ex;
+        }
         return cashMovementMapper.toDto(saved);
     }
 

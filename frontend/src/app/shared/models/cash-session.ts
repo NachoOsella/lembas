@@ -12,6 +12,39 @@ export type CashMovementType = 'CASH_IN' | 'CASH_OUT' | 'ADJUSTMENT';
 /** Cash movement payment method. */
 export type CashMovementMethod = 'CASH' | 'TRANSFER' | 'OTHER';
 
+/**
+ * Origin of a {@link CashEntryDto}.
+ *
+ * - {@code MANUAL} entries come from {@code cash_movements} (operator-registered).
+ * - {@code PAYMENT} entries come from {@code payments} (APPROVED POS sales
+ *   settled in cash that physically affect the drawer).
+ */
+export type CashEntryKind = 'MANUAL' | 'PAYMENT';
+
+/** Cash flow direction of a {@link CashEntryDto}. */
+export type CashEntryDirection = 'IN' | 'OUT' | 'NEUTRAL';
+
+/**
+ * Unified entry in a cash session's timeline.
+ *
+ * <p>Replaces the previous {@code movements} shape on the FE; the backend now
+ * surfaces both manual movements and APPROVED cash payments as a single
+ * chronologically-sorted list.</p>
+ */
+export interface CashEntryDto {
+  kind: CashEntryKind;
+  id: number;
+  type: string;
+  method: string | null;
+  direction: CashEntryDirection;
+  amount: string;
+  description: string;
+  registeredBy: string | null;
+  occurredAt: string | null;
+  /** Optional link to the underlying record (order id for {@code PAYMENT} entries). */
+  referenceId?: number | null;
+}
+
 /** Cash session returned by the open, current and detail endpoints. */
 export interface CashSessionDto {
   id: number;
@@ -33,8 +66,8 @@ export interface CashSessionDto {
   closingNotes?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
-  /** Manual movements, only populated in the detail response. */
-  movements?: CashMovementDto[] | null;
+  /** Unified timeline of manual movements + APPROVED CASH payments. */
+  entries?: CashEntryDto[] | null;
 }
 
 /** Manual cash movement DTO matching the backend {@code CashMovementDto}. */

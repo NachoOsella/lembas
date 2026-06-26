@@ -1,3 +1,337 @@
 :host {
   display: block;
 }
+
+/* ============================================================================
+   Cash movement form — visual layout
+   Stepped fieldset groups (Tipo → Método + Monto → Motivo) with a live
+   preview block that reflects the cashier's choices.
+   ============================================================================ */
+
+.movement-form {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Fieldset groups — shared step container
+   --------------------------------------------------------------------------- */
+.movement-form__group {
+  display: grid;
+  gap: 0.95rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.movement-form__legend {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+}
+
+.movement-form__legend-index {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.95rem;
+  height: 1.95rem;
+  background: var(--color-primary-dark);
+  color: var(--color-text-on-dark);
+  border-radius: 0.8rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.movement-form__legend-title {
+  display: block;
+  color: var(--color-primary-dark);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.movement-form__legend-hint {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------------------
+   Type selector — 3-up large cards
+   --------------------------------------------------------------------------- */
+.movement-form__type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.movement-form__type {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  padding: 1rem 1.1rem 1.05rem;
+  background: var(--color-surface);
+  border: 1.5px solid rgba(7, 95, 54, 0.1);
+  border-radius: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.movement-form__type:hover {
+  border-color: rgba(47, 141, 114, 0.32);
+  background: rgba(247, 249, 245, 0.6);
+}
+
+.movement-form__type:active {
+  transform: scale(0.98);
+}
+
+.movement-form__type:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.movement-form__type-icon {
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  color: var(--color-primary-dark);
+  background: var(--color-mint-wash);
+  border: 1px solid rgba(47, 141, 114, 0.18);
+  border-radius: 999px;
+  font-size: 0.95rem;
+}
+
+.movement-form__type-label {
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.movement-form__type-desc {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+/* Active state — green ring + light green fill. */
+.movement-form__type--active {
+  border-color: var(--color-primary);
+  background: var(--color-mint-wash-pale);
+  box-shadow:
+    0 0 0 1px var(--color-primary),
+    0 6px 14px -8px rgba(47, 141, 114, 0.6);
+}
+
+.movement-form__type--active .movement-form__type-icon {
+  color: var(--color-text-on-dark);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* Per-tone accent override (active state). */
+.movement-form__type--in.movement-form__type--active {
+  background: var(--color-mint-wash-pale);
+}
+
+.movement-form__type--out.movement-form__type--active .movement-form__type-icon {
+  background: var(--color-red);
+  border-color: var(--color-red);
+  color: var(--color-text-on-dark);
+}
+
+.movement-form__type--adjust.movement-form__type--active .movement-form__type-icon {
+  background: var(--color-amber);
+  border-color: var(--color-amber);
+  color: var(--color-text-on-dark);
+}
+
+/* ---------------------------------------------------------------------------
+   Method selector — pill chips
+   --------------------------------------------------------------------------- */
+.movement-form__method-row {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.movement-form__field-label {
+  color: var(--color-bark);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.movement-form__method-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.movement-form__method {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.4rem;
+  padding: 0.5rem 0.95rem;
+  color: var(--color-primary-dark);
+  background: var(--color-surface);
+  border: 1.5px solid rgba(7, 95, 54, 0.1);
+  border-radius: 50px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.movement-form__method i {
+  font-size: 0.85rem;
+  color: inherit;
+}
+
+.movement-form__method:hover {
+  background: var(--color-mint-wash-pale);
+  border-color: rgba(47, 141, 114, 0.32);
+}
+
+.movement-form__method:active {
+  transform: scale(0.96);
+}
+
+.movement-form__method:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.movement-form__method--active {
+  color: var(--color-text-on-dark);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.movement-form__method--active:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+/* ---------------------------------------------------------------------------
+   Live preview block
+   --------------------------------------------------------------------------- */
+.movement-form__preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1.1rem;
+  background: linear-gradient(180deg, rgba(247, 249, 245, 0.6) 0%, rgba(247, 249, 245, 0.2) 100%);
+  border: 1px solid rgba(7, 95, 54, 0.08);
+  border-radius: 12px;
+}
+
+.movement-form__preview-amount {
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary-dark);
+}
+
+.movement-form__preview-amount--placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.5;
+}
+
+.movement-form__preview-amount--CASH_IN {
+  color: var(--color-primary-dark);
+}
+
+.movement-form__preview-amount--CASH_OUT {
+  color: var(--color-red-dark);
+}
+
+.movement-form__preview-amount--ADJUSTMENT {
+  color: var(--color-amber-text);
+}
+
+.movement-form__preview-meta {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.movement-form__preview-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.movement-form__preview-meta i {
+  color: var(--color-primary);
+  font-size: 0.82rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Actions
+   --------------------------------------------------------------------------- */
+.movement-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ---------------------------------------------------------------------------
+   Disabled (session closed) treatment
+   --------------------------------------------------------------------------- */
+.movement-form__group[disabled] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive
+   --------------------------------------------------------------------------- */
+@media (max-width: 48rem) {
+  .movement-form__type-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .movement-form__preview {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .movement-form__actions {
+    flex-direction: column-reverse;
+  }
+
+  .movement-form__actions app-button {
+    width: 100%;
+  }
+}
