@@ -3,6 +3,7 @@ package com.dietetica.lembas;
 import com.dietetica.lembas.auth.repository.RefreshTokenRepository;
 import com.dietetica.lembas.catalog.repository.CategoryRepository;
 import com.dietetica.lembas.catalog.repository.ProductRepository;
+import com.dietetica.lembas.cash.repository.CashSessionRepository;
 import com.dietetica.lembas.inventory.repository.StockLotRepository;
 import com.dietetica.lembas.inventory.repository.StockMovementRepository;
 import com.dietetica.lembas.orders.repository.OrderItemRepository;
@@ -116,6 +117,10 @@ class LembasBackendApplicationTests {
 
     @MockitoBean
     private ProductSalePriceHistoryRepository productSalePriceHistoryRepository;
+
+    /** Provides the cash session repository collaborator while JPA repositories are disabled. */
+    @MockitoBean
+    private CashSessionRepository cashSessionRepository;
 
     /**
      * Keeps a fast smoke test for the application context without external services.
