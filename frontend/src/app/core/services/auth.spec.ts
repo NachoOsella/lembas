@@ -103,7 +103,7 @@ describe('Auth service', () => {
 
   it('Should_clearAuthAndRequestCookieClear_when_logoutCalled', () => {
     service.saveAuthResponse(successResponse);
-    service.logout();
+    service.logout().subscribe();
 
     const req = httpMock.expectOne(`${apiUrl}/logout`);
     expect(req.request.method).toBe('POST');
