@@ -45,6 +45,12 @@ public record CashSessionDto(
          * previous {@code movements} field; both shapes were kept identical
          * during the migration and the FE now reads {@code entries}.
          */
-        List<CashEntryDto> entries
+        List<CashEntryDto> entries,
+        /**
+         * Informational totals grouped by payment method (S3-US08). Populated
+         * by the close endpoint and by {@code getById} for closed sessions.
+         * Omitted for open/current responses thanks to {@code NON_NULL}.
+         */
+        CashTotalsByMethodDto totalsByMethod
 ) {
 }

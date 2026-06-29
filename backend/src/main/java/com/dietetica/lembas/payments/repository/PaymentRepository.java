@@ -30,6 +30,16 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             PaymentMethod method
     );
 
+    /**
+     * Finds payments for a cash session filtered by lifecycle status, in
+     * stable insertion order. Used by the close use case (S3-US08) to load
+     * only the APPROVED payments that actually contributed to the drawer.
+     */
+    List<Payment> findByCashSessionIdAndStatusOrderByIdAsc(
+            Long cashSessionId,
+            PaymentStatus status
+    );
+
     /** Finds payments for an order filtered by lifecycle status. */
     List<Payment> findByOrderIdAndStatusOrderByIdAsc(Long orderId, PaymentStatus status);
 

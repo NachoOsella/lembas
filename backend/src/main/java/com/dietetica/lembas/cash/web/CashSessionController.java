@@ -1,6 +1,7 @@
 package com.dietetica.lembas.cash.web;
 
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import com.dietetica.lembas.cash.dto.CashCloseRequest;
 import com.dietetica.lembas.cash.dto.CashMovementDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
 import com.dietetica.lembas.cash.dto.CreateCashMovementRequest;
@@ -21,8 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
  * REST endpoints used by internal users (ADMIN, MANAGER, EMPLOYEE) to manage
  * cash register sessions.
  *
- * <p>Sprint 3 S3-US06 exposes the open and current endpoints; movement/close
- * endpoints are added by later stories.</p>
+ * <p>Open/current/detail/movements endpoints come from S3-US06 and S3-US07;
+ * the close endpoint is added by S3-US08.</p>
  */
 @RestController
 @RequestMapping("/api/admin/cash-sessions")
@@ -75,5 +76,19 @@ public class CashSessionController {
             @Valid @RequestBody CreateCashMovementRequest request
     ) {
         return cashService.addMovement(id, request, securityContextHelper.getCurrentUser());
+    }
+
+    /**
+     * Closes an OPEN cash session with the cash counted by the cashier (S3-US08).
+     *
+     * <p>Returns the closed session including the expected/counted/difference
+     * amounts, the closing user, and the totals-by-method breakdown.</p>
+     */
+    @PostMapping("/{id}/close")
+    public CashSessionDto close(
+            @PathVariable Long id,
+            @Valid @RequestBody CashCloseRequest request
+    ) {
+        return cashService.closeCashSession(id, request, securityContextHelper.getCurrentUser());
     }
 }
