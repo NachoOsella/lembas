@@ -116,6 +116,31 @@ export class CashDetail implements OnInit {
     return opening + this.totalIn() - this.totalOut() + this.totalAdjustments();
   });
 
+  /**
+   * Physical cash that should be in the drawer.
+   * Only CASH-method entries affect the bill count; transfers/cards/QR are
+   * tracked as informational at close. Net = opening + cash IN - cash OUT
+   * + cash neutral adjustments.
+   */
+  protected readonly cashInDrawer = computed(() => {
+    const opening = Number(this.session()?.openingCashAmount ?? 0);
+    const cashIn = this.entries()
+      .filter((m) => m.method === 'CASH' && m.direction === 'IN')
+      .reduce((sum, m) => sum + Number(m.amount), 0);
+    const cashOut = this.entries()
+      .filter((m) => m.method === 'CASH' && m.direction === 'OUT')
+      .reduce((sum, m) => sum + Number(m.amount), 0);
+    const cashAdjust = this.entries()
+      .filter((m) => m.method === 'CASH' && m.direction === 'NEUTRAL')
+      .reduce((sum, m) => sum + Number(m.amount), 0);
+    return opening + cashIn - cashOut + cashAdjust;
+  });
+
+  /** Count of cash-method entries for the cash-in-drawer metric detail. */
+  protected readonly cashMovementsCount = computed(
+    () => this.entries().filter((m) => m.method === 'CASH').length,
+  );
+
   /** Count of entries for the section eyebrow. */
   protected readonly movementsCount = computed(() => this.entries().length);
 
@@ -150,6 +175,16 @@ export class CashDetail implements OnInit {
       detail: 'Apertura + ingresos - egresos',
       icon: 'pi pi-wallet',
       tone: 'forest',
+    },
+    {
+      label: 'Efectivo en caja',
+      value: this.formatCurrency(this.cashInDrawer()),
+      detail:
+        this.cashMovementsCount() > 0
+          ? `Solo movimientos en efectivo (${this.cashMovementsCount()})`
+          : 'Solo el fondo inicial, en billetes',
+      icon: 'pi pi-money-bill',
+      tone: 'sage',
     },
   ]);
 
@@ -310,22 +345,17 @@ export class CashDetail implements OnInit {
     return this.entries().length > 0;
   }
 
-  /** True when an opening note was recorded. */
-  protected get hasOpeningNotes(): boolean {
-    const notes = this.session()?.openingNotes?.trim();
-    return !!notes && notes.length > 0;
-  }
-
   protected goBack(): void {
     void this.router.navigate(['/admin/cash']);
   }
 
-  /** Formats a numeric value as ARS currency (es-AR locale). */
+  /** Formats a numeric value as ARS currency (es-AR locale), no decimals. */
   private formatCurrency(value: number): string {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS',
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   }
 }
