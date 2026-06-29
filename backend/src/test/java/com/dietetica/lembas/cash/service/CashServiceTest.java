@@ -374,7 +374,7 @@ class CashServiceTest {
         return new CashSessionDto(
                 id, CashSessionStatus.OPEN, branchId, "Branch " + branchId,
                 null, "Admin User", new BigDecimal("100.00"), null, null,
-                null, null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null, null
         );
     }
 

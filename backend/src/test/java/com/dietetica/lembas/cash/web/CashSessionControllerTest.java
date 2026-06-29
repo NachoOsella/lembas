@@ -244,11 +244,115 @@ class CashSessionControllerTest {
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void closeReturnsOkWithSessionDto() throws Exception {
+        User employee = new User(1L, "emp@lembas.com", "hash", "Emp", "Loyee", null, Role.EMPLOYEE);
+        when(securityContextHelper.getCurrentUser()).thenReturn(employee);
+        CashSessionDto closed = new CashSessionDto(
+                5L, CashSessionStatus.CLOSED, 1L, "Branch 1",
+                1L, "Opener", new BigDecimal("100.00"), null, null,
+                new BigDecimal("600.00"), new BigDecimal("600.00"), BigDecimal.ZERO,
+                null, 1L, "Emp", null, null, null, null,
+                null, null
+        );
+        when(cashService.closeCashSession(eq(5L), any(), eq(employee))).thenReturn(closed);
+
+        String body = """
+                {"countedCashAmount": 600.00, "closingNotes": "OK"}
+                """;
+
+        mockMvc.perform(post("/api/admin/cash-sessions/5/close")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(5))
+                .andExpect(jsonPath("$.status").value("CLOSED"))
+                .andExpect(jsonPath("$.expectedCashAmount").value(600.00))
+                .andExpect(jsonPath("$.countedCashAmount").value(600.00))
+                .andExpect(jsonPath("$.cashDifferenceAmount").value(0.00));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void closeMapsNotFoundTo404() throws Exception {
+        User admin = new User(null, "admin@lembas.com", "hash", "Admin", "User", null, Role.ADMIN);
+        when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+        when(cashService.closeCashSession(eq(99L), any(), eq(admin)))
+                .thenThrow(new DomainException("CASH_SESSION_NOT_FOUND", HttpStatus.NOT_FOUND, "Not found"));
+
+        String body = """
+                {"countedCashAmount": 100.00}
+                """;
+
+        mockMvc.perform(post("/api/admin/cash-sessions/99/close")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CASH_SESSION_NOT_FOUND"));
+    }
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void closeMapsAlreadyClosedTo409() throws Exception {
+        User employee = new User(1L, "emp@lembas.com", "hash", "Emp", "Loyee", null, Role.EMPLOYEE);
+        when(securityContextHelper.getCurrentUser()).thenReturn(employee);
+        when(cashService.closeCashSession(eq(5L), any(), eq(employee)))
+                .thenThrow(new DomainException("CASH_SESSION_ALREADY_CLOSED", HttpStatus.CONFLICT, "Already closed"));
+
+        String body = """
+                {"countedCashAmount": 100.00}
+                """;
+
+        mockMvc.perform(post("/api/admin/cash-sessions/5/close")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CASH_SESSION_ALREADY_CLOSED"));
+    }
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void closeMapsReasonRequiredTo400() throws Exception {
+        User employee = new User(1L, "emp@lembas.com", "hash", "Emp", "Loyee", null, Role.EMPLOYEE);
+        when(securityContextHelper.getCurrentUser()).thenReturn(employee);
+        when(cashService.closeCashSession(eq(5L), any(), eq(employee)))
+                .thenThrow(new DomainException("CASH_DIFFERENCE_REASON_REQUIRED", HttpStatus.BAD_REQUEST, "Reason required"));
+
+        String body = """
+                {"countedCashAmount": 50.00}
+                """;
+
+        mockMvc.perform(post("/api/admin/cash-sessions/5/close")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CASH_DIFFERENCE_REASON_REQUIRED"));
+    }
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void closeValidatesRequestPayload() throws Exception {
+        User employee = new User(1L, "emp@lembas.com", "hash", "Emp", "Loyee", null, Role.EMPLOYEE);
+        when(securityContextHelper.getCurrentUser()).thenReturn(employee);
+
+        // Missing countedCashAmount triggers a bean validation error.
+        String body = """
+                {"closingNotes": "sin conteo"}
+                """;
+
+        mockMvc.perform(post("/api/admin/cash-sessions/5/close")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
     private static CashSessionDto dto(long id, long branchId) {
         return new CashSessionDto(
                 id, CashSessionStatus.OPEN, branchId, "Branch " + branchId,
                 null, "Opener", new BigDecimal("100.00"), null, null,
-                null, null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null, null
         );
     }
 }
