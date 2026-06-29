@@ -86,7 +86,9 @@
           [columns]="entriesColumns"
           [loading]="false"
           [sortable]="false"
-          [paginated]="false"
+          [paginated]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 20, 50]"
           emptyTitle="Sin entradas"
           emptyDescription="Todavia no se registraron movimientos ni pagos."
         >
