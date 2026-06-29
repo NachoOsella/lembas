@@ -142,7 +142,10 @@ export class StoreLayout implements OnInit {
 
   /** Logs out the current user and navigates to the store home page. */
   logout(): void {
-    this.auth.logout();
-    this.router.navigate(['/store']);
+    // auth.logout() clears the in-memory state synchronously before the HTTP
+    // call, so the guest guard on /store does not bounce the user back.
+    this.auth.logout().subscribe({
+      complete: () => this.router.navigate(['/store']),
+    });
   }
 }

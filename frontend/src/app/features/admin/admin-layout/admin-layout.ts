@@ -149,8 +149,12 @@ export class AdminLayout implements OnInit, OnDestroy {
 
   /** Logs out the current user and redirects to login. */
   protected logout(): void {
-    this.auth.logout();
-    this.router.navigate(['/auth/login']);
+    // auth.logout() now clears the in-memory state synchronously before the
+    // HTTP call, so the guest guard on /auth/login will not bounce the user
+    // back to the dashboard while the logout request is still in flight.
+    this.auth.logout().subscribe({
+      complete: () => this.router.navigate(['/auth/login']),
+    });
   }
 
   private buildBreadcrumbs(url: string): void {

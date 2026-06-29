@@ -83,12 +83,20 @@ export class AuthService {
       .pipe(tap((response) => this.saveAuthResponse(response)));
   }
 
-  /** Clears backend cookies and local in-memory auth state. */
-  logout(): void {
-    this.http.post<void>(`${this.apiUrl}/logout`, {}).subscribe({
-      next: () => this.clearAuth(),
-      error: () => this.clearAuth(),
-    });
+  /**
+   * Clears the in-memory auth state immediately so subsequent route guards see
+   * the user as unauthenticated, then fires the backend logout request to clear
+   * the HttpOnly cookies. Returns an Observable so callers can await the HTTP
+   * call if they need to (the local state is always cleared synchronously).
+   */
+  logout(): Observable<void> {
+    // Clear in-memory state synchronously so guest guards don't see a stale
+    // authenticated user and bounce the navigation back to the dashboard.
+    this.clearAuth();
+    return this.http.post<void>(`${this.apiUrl}/logout`, {}).pipe(
+      catchError(() => of(undefined)),
+      map(() => undefined),
+    );
   }
 
   /** Returns whether the current in-memory session is authenticated. */

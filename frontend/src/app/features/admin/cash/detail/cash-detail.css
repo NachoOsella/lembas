@@ -194,3 +194,16 @@
     gap: 0.4rem;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Metric strip — tighten the value font + card min-width so 5 cards fit
+   on desktop without horizontal clipping. Scoped to cash-detail only.
+   --------------------------------------------------------------------------- */
+:host ::ng-deep .cash-detail__hero .metric-strip {
+  grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr));
+}
+
+:host ::ng-deep .cash-detail__hero .metric-strip__value {
+  font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+  letter-spacing: -0.03em;
+}
