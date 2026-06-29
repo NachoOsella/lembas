@@ -54,6 +54,13 @@
       [title]="'Cerrar caja #' + s.id"
     >
       <app-badge tone="warning" icon="pi pi-info-circle">Sesion abierta</app-badge>
+      <app-button
+        variant="primary"
+        icon="pi pi-lock"
+        (click)="scrollToArqueo()"
+      >
+        Ir al arqueo
+      </app-button>
     </app-page-header>
 
     @if (errorMessage()) {
@@ -106,6 +113,7 @@
     }
 
     <form class="cash-close__form" (submit)="openConfirm(); $event.preventDefault()">
+      <div class="cash-close__arqueo" id="cash-close-arqueo">
       <app-form-section
         [index]="1"
         title="Arqueo de efectivo"
@@ -130,6 +138,7 @@
           </div>
         </div>
       </app-form-section>
+      </div>
 
       @if (countedCashAmount() != null) {
         <section class="cash-close__difference" aria-label="Diferencia de efectivo">

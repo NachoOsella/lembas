@@ -134,6 +134,54 @@ describe('CashClose', () => {
     expect(component['totalsByMethod']()).toEqual(totals);
     // expected = opening (100) + cash in (50) = 150 when backend does not provide it
     expect(component['expectedCash']()).toBe(150);
+    // net movements effect: 50 IN
+    expect(component['netMovementsEffect']()).toBe(50);
+  });
+
+  it('netMovementsEffect considers direction and filters to CASH method only', async () => {
+    const entries: CashEntryDto[] = [
+      {
+        kind: 'MANUAL',
+        id: 1,
+        type: 'CASH_OUT',
+        method: 'CASH',
+        direction: 'OUT',
+        amount: '1000.00',
+        description: 'pago',
+        registeredBy: 'Opener',
+        occurredAt: '2026-06-29T08:30:00Z',
+      },
+      {
+        kind: 'MANUAL',
+        id: 2,
+        type: 'CASH_OUT',
+        method: 'TRANSFER',
+        direction: 'OUT',
+        amount: '1000.00',
+        description: 'test',
+        registeredBy: 'Opener',
+        occurredAt: '2026-06-29T08:36:00Z',
+      },
+      {
+        kind: 'MANUAL',
+        id: 3,
+        type: 'CASH_IN',
+        method: 'CASH',
+        direction: 'IN',
+        amount: '500.00',
+        description: 'cobro',
+        registeredBy: 'Opener',
+        occurredAt: '2026-06-29T08:40:00Z',
+      },
+    ];
+    configureRoute('1');
+    cashService.getById.mockReturnValue(of(buildSession({ entries })));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    // CASH OUT 1000 + CASH IN 500 = -500 net. TRANSFER OUT is informational only.
+    expect(component['netMovementsEffect']()).toBe(-500);
   });
 
   it('redirects to detail when the session is already closed', async () => {

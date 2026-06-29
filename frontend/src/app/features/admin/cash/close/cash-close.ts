@@ -145,6 +145,7 @@ export class CashClose implements OnInit {
 
   protected readonly summaryMetrics = computed<readonly AppMetricItem[]>(() => {
     const totals = this.totalsByMethod();
+    const net = this.netMovementsEffect();
     return [
       {
         label: 'Apertura',
@@ -154,13 +155,12 @@ export class CashClose implements OnInit {
         tone: 'forest',
       },
       {
-        label: 'Total movimientos',
-        value: this.formatCurrency(this.totalMovementsAmount()),
-        detail: this.hasEntries()
-          ? `${this.entries().length} entradas registradas`
-          : 'Sin movimientos manuales',
+        label: 'Efectivo en movimientos',
+        value: this.formatSignedCurrency(net),
+        detail: this.movementsDetail(),
         icon: 'pi pi-exchange',
-        tone: 'sage',
+        tone: net === 0 ? 'sage' : net > 0 ? 'sage' : 'amber',
+        trend: net === 0 ? 'neutral' : net > 0 ? 'up' : 'down',
       },
       {
         label: 'Pagos en efectivo',
@@ -292,6 +292,24 @@ export class CashClose implements OnInit {
     this.confirmDialogVisible.set(true);
   }
 
+  /**
+   * Header-level shortcut: scrolls the user to the arqueo form and focuses
+   * the counted-cash input. Used by the always-visible "Cerrar caja" button
+   * in the page header so the user does not have to scroll to find the
+   * submit action.
+   */
+  protected scrollToArqueo(): void {
+    const target = document.getElementById('cash-close-arqueo');
+    if (target instanceof HTMLElement) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const input = target.querySelector('input');
+      if (input instanceof HTMLElement) {
+        // Defer to let the smooth scroll start.
+        setTimeout(() => input.focus(), 250);
+      }
+    }
+  }
+
   /** Closes the confirmation modal without submitting. */
   protected closeConfirm(): void {
     if (this.saving()) {
@@ -354,11 +372,49 @@ export class CashClose implements OnInit {
     void this.router.navigate(['/admin/cash']);
   }
 
-  /** Total amount of manual movements for the summary metric. */
-  private totalMovementsAmount(): number {
+  /**
+   * Net cash effect of all manual movements (CASH-method only, matching the
+   * expected-cash rule). Positive means the movements put more cash in the
+   * drawer; negative means they took cash out. Adjustments (NEUTRAL) keep
+   * their sign as entered by the operator.
+   */
+  private netMovementsEffect(): number {
     return this.entries()
-      .filter((entry) => entry.kind === 'MANUAL')
-      .reduce((sum, entry) => sum + Number(entry.amount), 0);
+      .filter((entry) => entry.kind === 'MANUAL' && entry.method === 'CASH')
+      .reduce((sum, entry) => {
+        const amount = Number(entry.amount);
+        if (entry.direction === 'IN') {
+          return sum + Math.abs(amount);
+        }
+        if (entry.direction === 'OUT') {
+          return sum - Math.abs(amount);
+        }
+        // NEUTRAL (adjustment): signed value, operator-entered.
+        return sum + amount;
+      }, 0);
+  }
+
+  /**
+   * Detail string for the movements metric: summarizes how many CASH IN/OUT
+   * movements were registered and flags non-cash movements as informational.
+   */
+  private movementsDetail(): string {
+    const manual = this.entries().filter((entry) => entry.kind === 'MANUAL');
+    if (manual.length === 0) {
+      return 'Sin movimientos manuales';
+    }
+    const cashIn = manual.filter((e) => e.method === 'CASH' && e.direction === 'IN').length;
+    const cashOut = manual.filter((e) => e.method === 'CASH' && e.direction === 'OUT').length;
+    const nonCash = manual.length - cashIn - cashOut;
+    const parts: string[] = [];
+    if (cashIn > 0) {
+      parts.push(`${cashIn} ingreso${cashIn > 1 ? 's' : ''}`);
+    }
+    if (cashOut > 0) {
+      parts.push(`${cashOut} egreso${cashOut > 1 ? 's' : ''}`);
+    }
+    const summary = parts.length > 0 ? parts.join(' + ') : 'Solo ajustes';
+    return nonCash > 0 ? `${summary} (${nonCash} informacional)` : summary;
   }
 
   /** Total amount of APPROVED payments across all methods. */
@@ -496,6 +552,16 @@ export class CashClose implements OnInit {
   /** Formats a number as ARS currency (es-AR locale), no decimals. */
   private formatCurrency(value: number): string {
     return ARS_CURRENCY.format(value);
+  }
+
+  /** Formats a number as ARS currency with an explicit sign prefix so the
+   *  movements metric shows direction at a glance. */
+  private formatSignedCurrency(value: number): string {
+    if (value === 0) {
+      return ARS_CURRENCY.format(0);
+    }
+    const sign = value > 0 ? '+' : '−';
+    return `${sign} ${ARS_CURRENCY.format(Math.abs(value))}`;
   }
 }
 
