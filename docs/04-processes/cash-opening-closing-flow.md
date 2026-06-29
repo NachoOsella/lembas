@@ -85,12 +85,29 @@ sequenceDiagram
 
 ```text
 expectedCashAmount = openingCashAmount
-                   + SUM(cash payments)
-                   + SUM(cash_in movements)
-                   - SUM(cash_out movements)
+                   + SUM(payments WHERE method=CASH AND status=APPROVED)
+                   + SUM(cash_movements WHERE type=CASH_IN AND method=CASH)
+                   - SUM(cash_movements WHERE type=CASH_OUT AND method=CASH)
+                   + SUM(cash_movements WHERE type=ADJUSTMENT AND method=CASH)
 
 cashDifference = countedCashAmount - expectedCashAmount
 ```
+
+### Convention notes
+
+- `expectedCashAmount` only considers CASH-method movements; QR, TRANSFER and
+  CARD payments are reported in the `totalsByMethod` breakdown for the close
+  report but do not affect the drawer.
+- `cashDifference` follows the formula `counted - expected`: a positive value
+  means the drawer has more cash than expected ("sobrante"), a negative value
+  means less ("faltante"), zero means "cuadra exacto".
+- When `cashDifference != 0`, `cashDifferenceReason` is mandatory (enforced by
+  `CASH_DIFFERENCE_REASON_REQUIRED` 400 in the backend and revalidated on the
+  FE before submit). The session still closes anyway.
+- The close endpoint (`POST /api/admin/cash-sessions/{id}/close`) returns the
+  full `CashSessionDto` with `status=CLOSED`, the close metadata, the entries
+  timeline and a `totalsByMethod` breakdown (`paymentsByMethod` and
+  `movementsByMethod`).
 
 ### Close rules
 
