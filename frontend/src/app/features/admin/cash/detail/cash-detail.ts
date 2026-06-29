@@ -1,7 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { MessageService } from 'primeng/api';
 
 import { CashService } from '../../../../core/services/cash';
 import { ErrorMappingService } from '../../../../core/services/error-mapping';
@@ -27,10 +26,17 @@ import { EmptyState } from '../../../../shared/components/empty-state/empty-stat
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
 import { MovementForm } from '../movement-form/movement-form';
+import { SeverityPill } from '../../../../shared/components/severity-pill/severity-pill';
 import {
-  SeverityPill,
-  SeverityPillTone,
-} from '../../../../shared/components/severity-pill/severity-pill';
+  CASH_ENTRY_COLUMNS,
+  cashEntryAmountModifier,
+  cashEntryKindLabel,
+  cashEntryKindTone,
+  cashEntryLabel,
+  cashEntryMethodLabel,
+  cashEntrySign,
+  cashEntryTypeTone,
+} from '../shared/cash-entry-display';
 
 /** Badge configuration for the OPEN/CLOSED session status. */
 interface SessionBadgeConfig {
@@ -77,7 +83,6 @@ export class CashDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly cashService = inject(CashService);
-  private readonly messageService = inject(MessageService);
   private readonly errorMapping = inject(ErrorMappingService);
 
   protected readonly loading = signal(true);
@@ -189,15 +194,7 @@ export class CashDetail implements OnInit {
   ]);
 
   /** Data-table column definition for the unified entries list. */
-  protected readonly entriesColumns = [
-    { field: 'kind', header: 'Origen' },
-    { field: 'type', header: 'Tipo' },
-    { field: 'method', header: 'Metodo' },
-    { field: 'amount', header: 'Monto' },
-    { field: 'description', header: 'Detalle' },
-    { field: 'registeredBy', header: 'Registrado por' },
-    { field: 'occurredAt', header: 'Fecha' },
-  ];
+  protected readonly entriesColumns = CASH_ENTRY_COLUMNS;
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -261,87 +258,39 @@ export class CashDetail implements OnInit {
     this.movementDialogVisible.set(false);
   }
 
-  /** Tone for the entry type pill (CASH_IN green, CASH_OUT red, ADJUSTMENT amber). */
-  protected movementTone(entry: CashEntryDto): SeverityPillTone {
-    if (entry.kind === 'PAYMENT') {
-      return 'neutral';
-    }
-    switch (entry.type) {
-      case 'CASH_IN':
-        return 'success';
-      case 'CASH_OUT':
-        return 'danger';
-      case 'ADJUSTMENT':
-        return 'warn';
-      default:
-        return 'neutral';
-    }
+  /** Tone for the entry type pill. */
+  protected movementTone(entry: CashEntryDto) {
+    return cashEntryTypeTone(entry);
   }
 
   /** Localized label for the entry type or kind. */
   protected movementLabel(entry: CashEntryDto): string {
-    if (entry.kind === 'PAYMENT') {
-      return 'Pago';
-    }
-    switch (entry.type) {
-      case 'CASH_IN':
-        return 'Ingreso';
-      case 'CASH_OUT':
-        return 'Egreso';
-      case 'ADJUSTMENT':
-        return 'Ajuste';
-      default:
-        return entry.type;
-    }
+    return cashEntryLabel(entry);
   }
 
   /** Pill label for the entry kind (Manual / Caja). */
   protected kindLabel(kind: CashEntryDto['kind']): string {
-    return kind === 'PAYMENT' ? 'Caja' : 'Manual';
+    return cashEntryKindLabel(kind);
   }
 
   /** Tone for the kind pill (Manual = success, Caja = warn). */
-  protected kindTone(kind: CashEntryDto['kind']): SeverityPillTone {
-    return kind === 'PAYMENT' ? 'warn' : 'success';
+  protected kindTone(kind: CashEntryDto['kind']) {
+    return cashEntryKindTone(kind);
   }
 
   /** Localized label for the entry method (manual or payment). */
   protected methodLabel(method: string | null): string {
-    if (!method) {
-      return '—';
-    }
-    switch (method) {
-      case 'CASH':
-        return 'Efectivo';
-      case 'TRANSFER':
-        return 'Transferencia';
-      case 'OTHER':
-        return 'Otro';
-      case 'QR':
-        return 'QR';
-      case 'DEBIT_CARD':
-        return 'Tarjeta de débito';
-      case 'CREDIT_CARD':
-        return 'Tarjeta de crédito';
-      case 'CHECKOUT_PRO':
-        return 'Mercado Pago';
-      default:
-        return method;
-    }
+    return cashEntryMethodLabel(method);
   }
 
   /** Sign prefix to display in the amount cell. */
   protected movementSign(direction: CashEntryDto['direction']): string {
-    if (direction === 'IN') return '+';
-    if (direction === 'OUT') return '-';
-    return '±';
+    return cashEntrySign(direction);
   }
 
   /** Tone class applied to the amount cell based on entry direction. */
   protected movementAmountClass(entry: CashEntryDto): string {
-    if (entry.direction === 'IN') return 'cash-detail__amount--in';
-    if (entry.direction === 'OUT') return 'cash-detail__amount--out';
-    return 'cash-detail__amount--adjust';
+    return `cash-detail__amount--${cashEntryAmountModifier(entry.direction)}`;
   }
 
   /** The form is disabled when the session is closed. */
