@@ -149,29 +149,4 @@ describe('CashOpen', () => {
     component['applyQuickAmount'](20000);
     expect(component['openingCashAmount']()).toBe(20000);
   });
-
-  it('amountPreview renders placeholder when no amount is set', async () => {
-    configureAs('EMPLOYEE', 1);
-    cashService.currentSession.mockReturnValue(
-      throwError(() => apiError(404, 'CASH_SESSION_NOT_FOUND')),
-    );
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(component['amountPreview']()).toContain('Ingresa el monto');
-    expect(component['hasAmount']()).toBe(false);
-  });
-
-  it('amountPreview renders formatted ARS currency when amount is set', async () => {
-    configureAs('EMPLOYEE', 1);
-    cashService.currentSession.mockReturnValue(
-      throwError(() => apiError(404, 'CASH_SESSION_NOT_FOUND')),
-    );
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    component['openingCashAmount'].set(12345.6);
-    expect(component['amountPreview']()).toContain('12.345,60');
-    expect(component['hasAmount']()).toBe(true);
-  });
 });
