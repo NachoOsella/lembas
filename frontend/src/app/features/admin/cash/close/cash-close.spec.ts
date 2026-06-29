@@ -261,16 +261,17 @@ describe('CashClose', () => {
     expect(component['canSubmit']()).toBe(false);
   });
 
-  it('confirmClose sends POST /close and switches to the closed view', async () => {
+  it('confirmClose sends POST /close and redirects to the open form', async () => {
     configureRoute('1');
     cashService.getById.mockReturnValue(of(buildSession({ openingCashAmount: '500.00' })));
-    const closed = buildClosedSession({
-      id: 1,
-      expectedCashAmount: '500.00',
-      countedCashAmount: '500.00',
-      cashDifferenceAmount: '0.00',
-    });
-    cashService.closeSession.mockReturnValue(of(closed));
+    cashService.closeSession.mockReturnValue(
+      of(buildClosedSession({
+        id: 1,
+        expectedCashAmount: '500.00',
+        countedCashAmount: '500.00',
+        cashDifferenceAmount: '0.00',
+      })),
+    );
 
     fixture.detectChanges();
     await fixture.whenStable();
@@ -287,12 +288,11 @@ describe('CashClose', () => {
       closingNotes: null,
       cashDifferenceReason: null,
     });
-    expect(component['viewState']()).toBe('closed');
-    expect(component['closedSnapshot']()).toEqual(closed);
     expect(component['confirmDialogVisible']()).toBe(false);
     expect(messageService.add).toHaveBeenCalledWith(
       expect.objectContaining({ summary: 'Caja cerrada' }),
     );
+    expect(router.navigate).toHaveBeenCalledWith(['/admin/cash/open']);
   });
 
   it('confirmClose sends the difference reason when difference is non-zero', async () => {
@@ -344,7 +344,7 @@ describe('CashClose', () => {
     // when the code is not in the mapping.
     expect(component['errorMessage']()).toBe('Reason required');
     expect(component['saving']()).toBe(false);
-    expect(component['viewState']()).toBe('form');
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 
   it('shows CASH_SESSION_ALREADY_CLOSED error message when the backend rejects a double close', async () => {
@@ -376,37 +376,21 @@ describe('CashClose', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/admin/cash', 1]);
   });
 
-  it('viewDetail from the closed summary navigates to the detail page', async () => {
+  it('redirects to /admin/cash/open on successful close', async () => {
     configureRoute('1');
-    cashService.getById.mockReturnValue(of(buildSession()));
-    cashService.closeSession.mockReturnValue(of(buildClosedSession()));
+    cashService.getById.mockReturnValue(of(buildSession({ openingCashAmount: '500.00' })));
+    cashService.closeSession.mockReturnValue(
+      of(buildClosedSession({ id: 1, expectedCashAmount: '500.00', countedCashAmount: '500.00' })),
+    );
 
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(100);
+    component['countedCashAmount'].set(500);
     component['openConfirm']();
     component['confirmClose']();
     await fixture.whenStable();
 
-    component['viewDetail']();
-    expect(router.navigate).toHaveBeenCalledWith(['/admin/cash', 1]);
-  });
-
-  it('goToLanding from the closed summary navigates to /admin/cash', async () => {
-    configureRoute('1');
-    cashService.getById.mockReturnValue(of(buildSession()));
-    cashService.closeSession.mockReturnValue(of(buildClosedSession()));
-
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    component['countedCashAmount'].set(100);
-    component['openConfirm']();
-    component['confirmClose']();
-    await fixture.whenStable();
-
-    component['goToLanding']();
-    expect(router.navigate).toHaveBeenCalledWith(['/admin/cash']);
+    expect(router.navigate).toHaveBeenCalledWith(['/admin/cash/open']);
   });
 });

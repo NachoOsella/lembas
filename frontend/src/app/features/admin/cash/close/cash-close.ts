@@ -335,16 +335,17 @@ export class CashClose implements OnInit {
     this.errorMessage.set(null);
 
     this.cashService.closeSession(this.sessionId, request).subscribe({
-      next: (closed) => {
+      next: () => {
         this.saving.set(false);
         this.confirmDialogVisible.set(false);
-        this.closedSnapshot.set(closed);
-        this.viewState.set('closed');
         this.messageService.add({
           severity: 'success',
           summary: 'Caja cerrada',
           detail: 'El cierre de caja fue registrado correctamente.',
         });
+        // Redirect straight to the open form so the user can start a new
+        // session without seeing the closed (read-only) detail screen.
+        void this.router.navigate(['/admin/cash/open']);
       },
       error: (err) => {
         this.saving.set(false);
