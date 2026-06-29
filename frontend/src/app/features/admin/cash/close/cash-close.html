@@ -3,51 +3,6 @@
 <div class="cash-close-page">
   @if (loading()) {
     <app-loading-spinner label="Cargando caja..." size="lg" surface="card" />
-  } @else if (viewState() === 'closed' && closedSnapshot(); as closed) {
-    <app-page-header eyebrow="Caja" title="Cierre de caja">
-      <app-badge tone="success" icon="pi pi-check-circle">Sesion cerrada</app-badge>
-    </app-page-header>
-
-    <div class="cash-close__session-line">
-      <span class="cash-close__session-id">Sesion #{{ closed.id }}</span>
-      <span class="cash-close__session-date">
-        <i class="pi pi-calendar" aria-hidden="true"></i>
-        Cerrada el {{ closed.closedAt ? (closed.closedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}
-      </span>
-    </div>
-
-    <section class="cash-close__summary" aria-label="Resumen del cierre">
-      <app-stat-card [metrics]="closedMetrics()" />
-    </section>
-
-    <app-section-card
-      eyebrow="Cierre"
-      [title]="'Cerrada por ' + (closed.closedByUserName ?? 'el equipo')"
-      tone="muted"
-    >
-      <div class="cash-close__final">
-        @if (closed.cashDifferenceReason) {
-          <div class="cash-close__reason">
-            <span class="cash-close__reason-label">Motivo de la diferencia</span>
-            <p class="cash-close__reason-copy">{{ closed.cashDifferenceReason }}</p>
-          </div>
-        }
-        @if (closed.closingNotes) {
-          <div class="cash-close__notes">
-            <span class="cash-close__reason-label">Notas de cierre</span>
-            <p class="cash-close__reason-copy">{{ closed.closingNotes }}</p>
-          </div>
-        }
-        <div class="cash-close__actions cash-close__actions--final">
-          <app-button variant="secondary" icon="pi pi-arrow-left" (click)="goToLanding()">
-            Volver al inicio
-          </app-button>
-          <app-button variant="primary" icon="pi pi-list" (click)="viewDetail()">
-            Ver detalle de la caja
-          </app-button>
-        </div>
-      </div>
-    </app-section-card>
   } @else if (session(); as s) {
     <app-page-header
       eyebrow="Caja"
@@ -95,17 +50,25 @@
           <ng-template #body let-entry>
             <tr>
               <td>
-                <app-badge tone="success">{{ kindLabel(entry.kind) }}</app-badge>
+                <app-severity-pill [tone]="kindTone(entry.kind)">
+                  {{ kindLabel(entry.kind) }}
+                </app-severity-pill>
               </td>
-              <td>{{ movementLabel(entry) }}</td>
-              <td>{{ methodLabel(entry.method) }}</td>
+              <td>
+                <app-severity-pill [tone]="movementTone(entry)">
+                  {{ movementLabel(entry) }}
+                </app-severity-pill>
+              </td>
+              <td class="cash-close__method">{{ methodLabel(entry.method) }}</td>
               <td [class]="'cash-close__amount ' + movementAmountClass(entry)">
                 <span class="cash-close__amount-value">
                   <span class="cash-close__amount-sign">{{ movementSign(entry.direction) }}</span>
                   {{ entry.amount | currency: 'ARS' }}
                 </span>
               </td>
-              <td>{{ entry.description }}</td>
+              <td class="cash-close__reason" [title]="entry.description">
+                {{ entry.description }}
+              </td>
               <td>{{ entry.registeredBy ?? '—' }}</td>
               <td>{{ entry.occurredAt | date: 'dd/MM HH:mm' }}</td>
             </tr>

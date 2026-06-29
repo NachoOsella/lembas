@@ -21,7 +21,6 @@ import { AppFormField } from '../../../../shared/components/app-form-field/app-f
 import { AppInputNumber } from '../../../../shared/components/app-input-number/app-input-number';
 import { AppModal } from '../../../../shared/components/app-modal/app-modal';
 import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { AppSectionCard } from '../../../../shared/components/app-section-card/app-section-card';
 import {
   AppMetricItem,
   AppStatCard,
@@ -30,9 +29,17 @@ import { AppToast } from '../../../../shared/components/app-toast/app-toast';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 import { FormSection } from '../../../../shared/components/form-section/form-section';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
-
-/** View states for the close page (S3-US08). */
-type CloseView = 'form' | 'closed';
+import {
+  CASH_ENTRY_COLUMNS,
+  cashEntryAmountModifier,
+  cashEntryKindLabel,
+  cashEntryKindTone,
+  cashEntryLabel,
+  cashEntryMethodLabel,
+  cashEntrySign,
+  cashEntryTypeTone,
+} from '../shared/cash-entry-display';
+import { SeverityPill } from '../../../../shared/components/severity-pill/severity-pill';
 
 const ARS_CURRENCY = new Intl.NumberFormat('es-AR', {
   style: 'currency',
@@ -61,12 +68,12 @@ const ARS_CURRENCY = new Intl.NumberFormat('es-AR', {
     AppInputNumber,
     AppModal,
     AppPageHeader,
-    AppSectionCard,
     AppStatCard,
     AppToast,
     ErrorAlert,
     FormSection,
     LoadingSpinner,
+    SeverityPill,
     CurrencyPipe,
     DatePipe,
   ],
@@ -93,8 +100,6 @@ export class CashClose implements OnInit {
   protected readonly closingNotes = signal('');
 
   protected readonly confirmDialogVisible = signal(false);
-  protected readonly viewState = signal<CloseView>('form');
-  protected readonly closedSnapshot = signal<CashSessionDto | null>(null);
 
   /** Id resolved from the route param; -1 means the route is invalid. */
   private sessionId = -1;
@@ -200,52 +205,7 @@ export class CashClose implements OnInit {
     },
   ]);
 
-  protected readonly closedMetrics = computed<readonly AppMetricItem[]>(() => {
-    const closed = this.closedSnapshot();
-    if (!closed) {
-      return [];
-    }
-    return [
-      {
-        label: 'Apertura',
-        value: this.formatCurrency(this.opening()),
-        detail: 'Fondo inicial',
-        icon: 'pi pi-flag',
-        tone: 'forest',
-      },
-      {
-        label: 'Esperado',
-        value: this.formatCurrency(Number(closed.expectedCashAmount ?? this.expectedCash())),
-        detail: 'Efectivo esperado al cierre',
-        icon: 'pi pi-wallet',
-        tone: 'forest',
-      },
-      {
-        label: 'Contado',
-        value: this.formatCurrency(Number(closed.countedCashAmount ?? 0)),
-        detail: 'Efectivo contado por el cajero',
-        icon: 'pi pi-money-bill',
-        tone: 'sage',
-      },
-      {
-        label: this.differenceLabel(),
-        value: this.formatCurrency(Math.abs(Number(closed.cashDifferenceAmount ?? 0))),
-        detail: closed.cashDifferenceReason ?? 'Sin diferencia',
-        icon: 'pi pi-chart-line',
-        tone: Number(closed.cashDifferenceAmount ?? 0) === 0 ? 'sage' : 'amber',
-      },
-    ];
-  });
-
-  protected readonly entriesColumns = [
-    { field: 'kind', header: 'Origen' },
-    { field: 'type', header: 'Tipo' },
-    { field: 'method', header: 'Metodo' },
-    { field: 'amount', header: 'Monto' },
-    { field: 'description', header: 'Detalle' },
-    { field: 'registeredBy', header: 'Registrado por' },
-    { field: 'occurredAt', header: 'Fecha' },
-  ];
+  protected readonly entriesColumns = CASH_ENTRY_COLUMNS;
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('sessionId'));
@@ -362,17 +322,6 @@ export class CashClose implements OnInit {
     void this.router.navigate(['/admin/cash', this.sessionId]);
   }
 
-  /** Navigates to the detail page from the final summary. */
-  protected viewDetail(): void {
-    const id = this.closedSnapshot()?.id ?? this.sessionId;
-    void this.router.navigate(['/admin/cash', id]);
-  }
-
-  /** Navigates back to the cash landing. */
-  protected goToLanding(): void {
-    void this.router.navigate(['/admin/cash']);
-  }
-
   /**
    * Net cash effect of all manual movements (CASH-method only, matching the
    * expected-cash rule). Positive means the movements put more cash in the
@@ -471,71 +420,37 @@ export class CashClose implements OnInit {
 
   /** Localized label for the entry type or kind. */
   protected movementLabel(entry: CashEntryDto): string {
-    if (entry.kind === 'PAYMENT') {
-      return 'Pago';
-    }
-    switch (entry.type) {
-      case 'CASH_IN':
-        return 'Ingreso';
-      case 'CASH_OUT':
-        return 'Egreso';
-      case 'ADJUSTMENT':
-        return 'Ajuste';
-      default:
-        return entry.type;
-    }
+    return cashEntryLabel(entry);
+  }
+
+  /** Severity tone for the entry type pill. */
+  protected movementTone(entry: CashEntryDto) {
+    return cashEntryTypeTone(entry);
   }
 
   /** Pill label for the entry kind (Manual / Caja). */
   protected kindLabel(kind: CashEntryDto['kind']): string {
-    return kind === 'PAYMENT' ? 'Caja' : 'Manual';
+    return cashEntryKindLabel(kind);
+  }
+
+  /** Severity tone for the kind pill (Manual = success, Caja = warn). */
+  protected kindTone(kind: CashEntryDto['kind']) {
+    return cashEntryKindTone(kind);
   }
 
   /** Localized label for the entry method. */
   protected methodLabel(method: string | null): string {
-    if (!method) {
-      return '—';
-    }
-    switch (method) {
-      case 'CASH':
-        return 'Efectivo';
-      case 'TRANSFER':
-        return 'Transferencia';
-      case 'OTHER':
-        return 'Otro';
-      case 'QR':
-        return 'QR';
-      case 'DEBIT_CARD':
-        return 'Tarjeta de débito';
-      case 'CREDIT_CARD':
-        return 'Tarjeta de crédito';
-      case 'CHECKOUT_PRO':
-        return 'Mercado Pago';
-      default:
-        return method;
-    }
+    return cashEntryMethodLabel(method);
   }
 
   /** Tone class for the amount cell. */
   protected movementAmountClass(entry: CashEntryDto): string {
-    if (entry.direction === 'IN') {
-      return 'cash-close__amount--in';
-    }
-    if (entry.direction === 'OUT') {
-      return 'cash-close__amount--out';
-    }
-    return 'cash-close__amount--adjust';
+    return `cash-close__amount--${cashEntryAmountModifier(entry.direction)}`;
   }
 
   /** Sign prefix for the amount cell. */
   protected movementSign(direction: CashEntryDto['direction']): string {
-    if (direction === 'IN') {
-      return '+';
-    }
-    if (direction === 'OUT') {
-      return '-';
-    }
-    return '±';
+    return cashEntrySign(direction);
   }
 
   /** Maps backend API errors to Spanish copy. */
