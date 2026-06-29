@@ -61,7 +61,7 @@ describe('AdminLayout', () => {
       currentUser: currentUserSignal,
       isAuthenticated: signal(currentUserValue !== null),
       getUserRole: vi.fn(() => currentUserValue?.role ?? null),
-      logout: vi.fn(),
+      logout: vi.fn(() => of(undefined)),
     };
 
     TestBed.configureTestingModule({

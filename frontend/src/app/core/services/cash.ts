@@ -3,13 +3,14 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import {
+  CashCloseRequestPayload,
   CashMovementDto,
   CashSessionDto,
   CreateCashMovementRequest,
   OpenCashSessionRequest,
 } from '../../shared/models/cash-session';
 
-/** Provides admin operations for cash register sessions (S3-US06). */
+/** Provides admin operations for cash register sessions (S3-US06/S3-US07/S3-US08). */
 @Injectable({ providedIn: 'root' })
 export class CashService {
   private readonly http = inject(HttpClient);
@@ -40,5 +41,14 @@ export class CashService {
       `${this.cashSessionsUrl}/${sessionId}/movements`,
       request,
     );
+  }
+
+  /**
+   * Closes an OPEN cash session with the cash counted by the cashier (S3-US08).
+   * Returns the closed session including expected/counted/difference amounts
+   * and the totals-by-method breakdown.
+   */
+  closeSession(id: number, request: CashCloseRequestPayload): Observable<CashSessionDto> {
+    return this.http.post<CashSessionDto>(`${this.cashSessionsUrl}/${id}/close`, request);
   }
 }

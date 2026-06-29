@@ -15,6 +15,9 @@
           {{ statusBadges[s.status].label }}
         </app-badge>
         @if (!isClosed) {
+          <app-button variant="secondary" icon="pi pi-lock" (click)="goToClose()">
+            Cerrar caja
+          </app-button>
           <app-button variant="primary" icon="pi pi-plus" (click)="openMovementDialog()">
             Registrar movimiento
           </app-button>
@@ -52,7 +55,9 @@
             [columns]="entriesColumns"
             [loading]="false"
             [sortable]="false"
-            [paginated]="false"
+            [paginated]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 20, 50]"
             emptyTitle="No hay movimientos"
             emptyDescription="Todavia no se registraron movimientos ni pagos."
           >

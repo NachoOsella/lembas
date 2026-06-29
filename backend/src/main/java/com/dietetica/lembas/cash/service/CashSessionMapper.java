@@ -2,6 +2,7 @@ package com.dietetica.lembas.cash.service;
 
 import com.dietetica.lembas.cash.dto.CashEntryDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
+import com.dietetica.lembas.cash.dto.CashTotalsByMethodDto;
 import com.dietetica.lembas.cash.model.CashSession;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.users.model.User;
@@ -21,11 +22,19 @@ class CashSessionMapper {
 
     /** Builds a DTO from a cash session aggregate (open / current endpoints, no entries). */
     CashSessionDto toDto(CashSession session) {
-        return toDto(session, null);
+        return toDto(session, null, null);
     }
 
     /** Builds a DTO including the optional entries list (detail endpoint). */
     CashSessionDto toDto(CashSession session, List<CashEntryDto> entries) {
+        return toDto(session, entries, null);
+    }
+
+    /**
+     * Builds a DTO including the optional entries list and the optional
+     * totals-by-method breakdown (S3-US08 close endpoint).
+     */
+    CashSessionDto toDto(CashSession session, List<CashEntryDto> entries, CashTotalsByMethodDto totalsByMethod) {
         return new CashSessionDto(
                 session.getId(),
                 session.getStatus(),
@@ -46,7 +55,8 @@ class CashSessionMapper {
                 session.getClosingNotes(),
                 session.getCreatedAt(),
                 session.getUpdatedAt(),
-                entries
+                entries,
+                totalsByMethod
         );
     }
 

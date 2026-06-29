@@ -92,6 +92,12 @@ export default [
         loadComponent: () => import('./cash/open/cash-open').then((m) => m.CashOpen),
       },
       {
+        // Declared BEFORE the generic cash/:id route so Angular's first-match
+        // router picks this path when navigating to /admin/cash/close/:id.
+        path: 'cash/close/:sessionId',
+        loadComponent: () => import('./cash/close/cash-close').then((m) => m.CashClose),
+      },
+      {
         path: 'cash/:id',
         loadComponent: () => import('./cash/detail/cash-detail').then((m) => m.CashDetail),
       },

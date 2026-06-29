@@ -1,0 +1,222 @@
+<app-toast />
+
+<div class="cash-close-page">
+  @if (loading()) {
+    <app-loading-spinner label="Cargando caja..." size="lg" surface="card" />
+  } @else if (session(); as s) {
+    <app-page-header
+      eyebrow="Caja"
+      [title]="'Cerrar caja #' + s.id"
+    >
+      <app-badge tone="warning" icon="pi pi-info-circle">Sesion abierta</app-badge>
+      <app-button
+        variant="primary"
+        icon="pi pi-lock"
+        (click)="scrollToArqueo()"
+      >
+        Ir al arqueo
+      </app-button>
+    </app-page-header>
+
+    @if (errorMessage()) {
+      <app-error-alert [message]="errorMessage()!" />
+    }
+
+    <div class="cash-close__session-line">
+      <span class="cash-close__session-id">Sesion #{{ s.id }}</span>
+      <span class="cash-close__session-date">
+        <i class="pi pi-calendar" aria-hidden="true"></i>
+        Abierta el {{ s.openedAt ? (s.openedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}
+      </span>
+    </div>
+
+    <section class="cash-close__summary" aria-label="Resumen de la sesion">
+      <app-stat-card [metrics]="summaryMetrics()" />
+    </section>
+
+    @if (hasEntries()) {
+      <section class="cash-close__entries">
+        <app-data-table
+          [data]="entries()"
+          [columns]="entriesColumns"
+          [loading]="false"
+          [sortable]="false"
+          [paginated]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 20, 50]"
+          emptyTitle="Sin entradas"
+          emptyDescription="Todavia no se registraron movimientos ni pagos."
+        >
+          <ng-template #body let-entry>
+            <tr>
+              <td>
+                <app-severity-pill [tone]="kindTone(entry.kind)">
+                  {{ kindLabel(entry.kind) }}
+                </app-severity-pill>
+              </td>
+              <td>
+                <app-severity-pill [tone]="movementTone(entry)">
+                  {{ movementLabel(entry) }}
+                </app-severity-pill>
+              </td>
+              <td class="cash-close__method">{{ methodLabel(entry.method) }}</td>
+              <td [class]="'cash-close__amount ' + movementAmountClass(entry)">
+                <span class="cash-close__amount-value">
+                  <span class="cash-close__amount-sign">{{ movementSign(entry.direction) }}</span>
+                  {{ entry.amount | currency: 'ARS' }}
+                </span>
+              </td>
+              <td class="cash-close__reason" [title]="entry.description">
+                {{ entry.description }}
+              </td>
+              <td>{{ entry.registeredBy ?? '—' }}</td>
+              <td>{{ entry.occurredAt | date: 'dd/MM HH:mm' }}</td>
+            </tr>
+          </ng-template>
+        </app-data-table>
+      </section>
+    }
+
+    <form class="cash-close__form" (submit)="openConfirm(); $event.preventDefault()">
+      <div class="cash-close__arqueo" id="cash-close-arqueo">
+      <app-form-section
+        [index]="1"
+        title="Arqueo de efectivo"
+        description="Ingresa el efectivo contado en la caja para calcular la diferencia."
+      >
+        <div class="cash-close__form-grid">
+          <div class="cash-close__form-field">
+            <app-control-field label="Efectivo contado" [required]="true" forId="counted-cash-amount">
+              <app-input-number
+                inputId="counted-cash-amount"
+                name="counted-cash-amount"
+                mode="currency"
+                currency="ARS"
+                locale="es-AR"
+                [min]="0"
+                [minFractionDigits]="2"
+                [maxFractionDigits]="2"
+                [value]="countedCashAmount()"
+                (valueChange)="countedCashAmount.set($event)"
+              />
+            </app-control-field>
+          </div>
+        </div>
+      </app-form-section>
+      </div>
+
+      @if (countedCashAmount() != null) {
+        <section class="cash-close__difference" aria-label="Diferencia de efectivo">
+          <app-stat-card [metrics]="differenceMetrics()" />
+        </section>
+      }
+
+      @if (isDifferenceNonZero()) {
+        <app-form-section
+          [index]="2"
+          title="Motivo de la diferencia"
+          description="Cuando la diferencia es distinta de cero, es obligatorio justificar el motivo."
+        >
+          <app-form-field
+            label="Motivo de la diferencia"
+            [required]="true"
+            [multiline]="true"
+            placeholder="Ej: Faltante por error de conteo / Sobrante por vuelto extra"
+            testId="cash-difference-reason"
+            [value]="cashDifferenceReason()"
+            (valueChange)="cashDifferenceReason.set($event)"
+            [error]="isReasonInvalid() ? 'Indica el motivo del sobrante o faltante.' : ''"
+            hint="Quedara registrado en el cierre de la caja."
+          />
+        </app-form-section>
+      }
+
+      <app-form-section
+        [index]="isDifferenceNonZero() ? 3 : 2"
+        title="Notas de cierre"
+        description="Informacion adicional sobre el cierre (opcional)."
+      >
+        <app-form-field
+          label="Notas (opcional)"
+          [multiline]="true"
+          placeholder="Observaciones para el equipo"
+          testId="cash-closing-notes"
+          [value]="closingNotes()"
+          (valueChange)="closingNotes.set($event)"
+        />
+      </app-form-section>
+
+      <div class="cash-close__actions">
+        <app-button variant="secondary" type="button" (click)="cancel()">
+          Cancelar
+        </app-button>
+        <app-button
+          type="submit"
+          icon="pi pi-lock"
+          [loading]="saving()"
+          [disabled]="!canSubmit()"
+        >
+          Cerrar caja
+        </app-button>
+      </div>
+    </form>
+  }
+
+  @if (session(); as modalSession) {
+    <app-modal
+      [(visible)]="confirmDialogVisible"
+      [title]="'Confirmar cierre de caja'"
+      [width]="'min(94vw, 46rem)'"
+    >
+      <div class="cash-close__confirm">
+        <p class="cash-close__confirm-intro">
+          Estas por cerrar la sesion <strong>#{{ modalSession.id }}</strong> de la
+          sucursal <strong>{{ modalSession.branchName }}</strong>. Esta accion
+          no se puede deshacer.
+        </p>
+        <app-stat-card [metrics]="differenceMetrics()" />
+        <ul class="cash-close__confirm-list">
+          <li>
+            <span class="cash-close__confirm-label">Apertura</span>
+            <span class="cash-close__confirm-value">{{ opening() | currency: 'ARS' }}</span>
+          </li>
+          <li>
+            <span class="cash-close__confirm-label">Efectivo esperado</span>
+            <span class="cash-close__confirm-value">{{ expectedCash() | currency: 'ARS' }}</span>
+          </li>
+          <li>
+            <span class="cash-close__confirm-label">Efectivo contado</span>
+            <span class="cash-close__confirm-value">
+              {{ (countedCashAmount() ?? 0) | currency: 'ARS' }}
+            </span>
+          </li>
+        </ul>
+        @if (isDifferenceNonZero()) {
+          <div class="cash-close__confirm-reason">
+            <span class="cash-close__confirm-reason-label">Motivo de la diferencia</span>
+            <p class="cash-close__confirm-reason-copy">{{ cashDifferenceReason() }}</p>
+          </div>
+        }
+        @if (closingNotes().trim()) {
+          <div class="cash-close__confirm-reason">
+            <span class="cash-close__confirm-reason-label">Notas de cierre</span>
+            <p class="cash-close__confirm-reason-copy">{{ closingNotes() }}</p>
+          </div>
+        }
+      </div>
+      <div class="cash-close__confirm-actions" modalFooter>
+        <app-button variant="secondary" type="button" (click)="closeConfirm()">
+          Volver
+        </app-button>
+        <app-button
+          variant="primary"
+          icon="pi pi-lock"
+          [loading]="saving()"
+          (click)="confirmClose()"
+        >
+          Confirmar cierre
+        </app-button>
+      </div>
+    </app-modal>
+  }
+</div>

@@ -148,6 +148,11 @@ POST  /api/admin/cash-sessions/open       Request: { openingCashAmount, openingN
 GET   /api/admin/cash-sessions/current
 POST  /api/admin/cash-sessions/{id}/movements  Request: { type, method, amount, reason }
 POST  /api/admin/cash-sessions/{id}/close  Request: { countedCashAmount, closingNotes?, cashDifferenceReason? }
+       Response: CashSessionDto (CLOSED) including expectedCashAmount, countedCashAmount,
+                 cashDifferenceAmount, cashDifferenceReason, closedByUser, closedAt,
+                 entries timeline and totalsByMethod breakdown.
+       Errors:  CASH_SESSION_NOT_FOUND (404), CASH_SESSION_ALREADY_CLOSED (409),
+                CASH_DIFFERENCE_REASON_REQUIRED (400), VALIDATION_ERROR (400).
 GET   /api/admin/cash-sessions
 GET   /api/admin/cash-sessions/{id}
 ```

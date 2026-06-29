@@ -45,6 +45,17 @@ export interface CashEntryDto {
   referenceId?: number | null;
 }
 
+/**
+ * Informational totals grouped by payment method, returned alongside a
+ * closed session (S3-US08). Keys are the {@code name()} of the source enum
+ * (e.g. {@code CASH}, {@code QR}, {@code TRANSFER}); values are BigDecimal
+ * serialized as strings, with two decimals and HALF_UP rounding.
+ */
+export interface CashTotalsByMethod {
+  paymentsByMethod: Record<string, string>;
+  movementsByMethod: Record<string, string>;
+}
+
 /** Cash session returned by the open, current and detail endpoints. */
 export interface CashSessionDto {
   id: number;
@@ -68,6 +79,11 @@ export interface CashSessionDto {
   updatedAt?: string | null;
   /** Unified timeline of manual movements + APPROVED CASH payments. */
   entries?: CashEntryDto[] | null;
+  /**
+   * Totals-by-method breakdown for the close report. Populated by the close
+   * endpoint and by {@code getById} for closed sessions.
+   */
+  totalsByMethod?: CashTotalsByMethod | null;
 }
 
 /** Manual cash movement DTO matching the backend {@code CashMovementDto}. */
@@ -97,4 +113,16 @@ export interface OpenCashSessionRequest {
   openingNotes?: string | null;
   /** Required for ADMIN; ignored for MANAGER/EMPLOYEE (derived from the user). */
   branchId?: number | null;
+}
+
+/** Request payload for POST /api/admin/cash-sessions/{id}/close. */
+export interface CashCloseRequestPayload {
+  countedCashAmount: string;
+  closingNotes?: string | null;
+  /**
+   * Required by the backend when the difference between counted and expected
+   * cash is non-zero. The FE validates this client-side first; the backend
+   * re-validates as the source of truth.
+   */
+  cashDifferenceReason?: string | null;
 }

@@ -34,7 +34,7 @@ describe('StoreLayout', () => {
     mockAuthService = {
       currentUser: currentUserSignal,
       isAuthenticated: isAuthenticatedSignal,
-      logout: vi.fn(),
+      logout: vi.fn(() => of(undefined)),
       ensureSession: vi.fn().mockReturnValue(of(true)),
     };
 

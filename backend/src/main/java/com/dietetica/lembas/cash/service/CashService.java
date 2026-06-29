@@ -1,8 +1,10 @@
 package com.dietetica.lembas.cash.service;
 
+import com.dietetica.lembas.cash.dto.CashCloseRequest;
 import com.dietetica.lembas.cash.dto.CashEntryDto;
 import com.dietetica.lembas.cash.dto.CashMovementDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
+import com.dietetica.lembas.cash.dto.CashTotalsByMethodDto;
 import com.dietetica.lembas.cash.dto.CreateCashMovementRequest;
 import com.dietetica.lembas.cash.dto.OpenCashSessionRequest;
 import com.dietetica.lembas.cash.model.CashMovement;
@@ -11,7 +13,6 @@ import com.dietetica.lembas.cash.model.CashSessionStatus;
 import com.dietetica.lembas.cash.repository.CashMovementRepository;
 import com.dietetica.lembas.cash.repository.CashSessionRepository;
 import com.dietetica.lembas.payments.model.Payment;
-import com.dietetica.lembas.users.repository.UserRepository;
 import com.dietetica.lembas.payments.model.PaymentMethod;
 import com.dietetica.lembas.payments.model.PaymentStatus;
 import com.dietetica.lembas.payments.repository.PaymentRepository;
@@ -20,10 +21,14 @@ import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
+import com.dietetica.lembas.users.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -54,6 +59,8 @@ public class CashService {
     static final String CODE_BRANCH_NOT_FOUND = "BRANCH_NOT_FOUND";
     static final String CODE_ACCESS_DENIED = "ACCESS_DENIED";
     static final String CODE_CASH_MOVEMENT_CLOSED_SESSION = "CASH_MOVEMENT_CLOSED_SESSION";
+    static final String CODE_CASH_SESSION_ALREADY_CLOSED = "CASH_SESSION_ALREADY_CLOSED";
+    static final String CODE_CASH_DIFFERENCE_REASON_REQUIRED = "CASH_DIFFERENCE_REASON_REQUIRED";
 
     private final CashSessionRepository cashSessionRepository;
     private final BranchRepository branchRepository;
@@ -62,6 +69,7 @@ public class CashService {
     private final CashMovementMapper cashMovementMapper;
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
+    private final CashCloseCalculator cashCloseCalculator;
 
     public CashService(
             CashSessionRepository cashSessionRepository,
@@ -70,7 +78,8 @@ public class CashService {
             CashMovementRepository cashMovementRepository,
             CashMovementMapper cashMovementMapper,
             PaymentRepository paymentRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            CashCloseCalculator cashCloseCalculator
     ) {
         this.cashSessionRepository = cashSessionRepository;
         this.branchRepository = branchRepository;
@@ -79,6 +88,7 @@ public class CashService {
         this.cashMovementMapper = cashMovementMapper;
         this.paymentRepository = paymentRepository;
         this.userRepository = userRepository;
+        this.cashCloseCalculator = cashCloseCalculator;
     }
 
     /**
@@ -331,6 +341,110 @@ public class CashService {
         movement.setReason(request.reason().trim());
 
         return cashMovementMapper.toDto(cashMovementRepository.save(movement));
+    }
+
+    /**
+     * Closes an OPEN cash session after the cashier reports the physical cash
+     * counted in the drawer (S3-US08).
+     *
+     * <p>The expected cash is computed by {@link CashCloseCalculator} from the
+     * session opening amount, its APPROVED payments grouped by method and the
+     * manual movements registered during the session. The difference between
+     * the counted and expected amounts is persisted along with the closing
+     * user, timestamp and optional notes. When the difference is non-zero, a
+     * non-blank {@code cashDifferenceReason} is mandatory; the session still
+     * closes anyway, per the business rule.</p>
+     *
+     * @param sessionId   target session
+     * @param request     close payload (counted amount, notes, reason)
+     * @param currentUser authenticated user (must be internal)
+     * @return the closed session as a DTO, including the entries timeline and
+     *         the totals-by-method breakdown
+     * @throws DomainException {@code CASH_SESSION_NOT_FOUND} when the id is unknown,
+     *                         {@code CASH_SESSION_ALREADY_CLOSED} when already closed,
+     *                         {@code CASH_DIFFERENCE_REASON_REQUIRED} when the
+     *                         difference is non-zero and the reason is missing
+     */
+    @Transactional
+    public CashSessionDto closeCashSession(Long sessionId, CashCloseRequest request, User currentUser) {
+        ensureInternalUser(currentUser);
+
+        // Defensive: counted cash is @PositiveOrZero at the DTO layer but the
+        // service still treats null as an explicit error so the caller gets a
+        // clear code rather than a NullPointerException later. Done before any
+        // DB lookup so the request is short-circuited on bad input.
+        if (request.countedCashAmount() == null) {
+            throw new DomainException(
+                    "VALIDATION_ERROR",
+                    HttpStatus.BAD_REQUEST,
+                    "countedCashAmount is required"
+            );
+        }
+
+        CashSession session = cashSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new DomainException(
+                        CODE_CASH_SESSION_NOT_FOUND,
+                        HttpStatus.NOT_FOUND,
+                        "Cash session not found"
+                ));
+
+        if (session.getStatus() == CashSessionStatus.CLOSED) {
+            throw new DomainException(
+                    CODE_CASH_SESSION_ALREADY_CLOSED,
+                    HttpStatus.CONFLICT,
+                    "Cash session " + sessionId + " is already closed"
+            );
+        }
+
+        // Re-load the closer inside the transaction so the FK is satisfied by a
+        // managed reference (same defensive pattern as addMovement).
+        User closer = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new DomainException(
+                        CODE_ACCESS_DENIED,
+                        HttpStatus.FORBIDDEN,
+                        "The authenticated user is no longer valid"
+                ));
+
+        // Load the inputs the calculator needs. Manual movements are already
+        // ordered by createdAt; payments are filtered to APPROVED so cancelled
+        // and refunded ones never affect the drawer.
+        List<CashMovement> movements = cashMovementRepository
+                .findByCashSessionIdOrderByCreatedAtAsc(sessionId);
+        List<Payment> approvedPayments = paymentRepository
+                .findByCashSessionIdAndStatusOrderByIdAsc(sessionId, PaymentStatus.APPROVED);
+
+        CashCloseCalculator.CashCloseResult calc = cashCloseCalculator
+                .calculate(session, approvedPayments, movements);
+
+        BigDecimal counted = request.countedCashAmount().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal expected = calc.expectedCashAmount();
+        BigDecimal difference = counted.subtract(expected).setScale(2, RoundingMode.HALF_UP);
+
+        String normalizedReason = normalizeBlank(request.cashDifferenceReason());
+        if (difference.signum() != 0 && (normalizedReason == null)) {
+            throw new DomainException(
+                    CODE_CASH_DIFFERENCE_REASON_REQUIRED,
+                    HttpStatus.BAD_REQUEST,
+                    "A non-zero cash difference requires a justification"
+            );
+        }
+
+        // Persist the close metadata. The @PreUpdate hook refreshes updatedAt.
+        session.setExpectedCashAmount(expected);
+        session.setCountedCashAmount(counted);
+        session.setCashDifferenceAmount(difference);
+        session.setCashDifferenceReason(normalizedReason);
+        session.setClosingNotes(normalizeBlank(request.closingNotes()));
+        session.setClosedByUser(closer);
+        session.setClosedAt(OffsetDateTime.now());
+        session.setStatus(CashSessionStatus.CLOSED);
+
+        CashSession saved = cashSessionRepository.save(session);
+
+        // Build the response with the unified entries timeline plus the
+        // totals-by-method breakdown for the close report.
+        List<CashEntryDto> entries = buildUnifiedEntries(sessionId);
+        return cashSessionMapper.toDto(saved, entries, calc.totalsByMethod());
     }
 
     /** Rejects customers from any cash endpoint. */
