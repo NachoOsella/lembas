@@ -239,8 +239,10 @@
           </div>
         }
       </div>
-      <ng-template pTemplate="footer">
-        <app-button variant="secondary" (click)="closeConfirm()">Volver</app-button>
+      <div class="cash-close__confirm-actions" modalFooter>
+        <app-button variant="secondary" type="button" (click)="closeConfirm()">
+          Volver
+        </app-button>
         <app-button
           variant="primary"
           icon="pi pi-lock"
@@ -249,7 +251,7 @@
         >
           Confirmar cierre
         </app-button>
-      </ng-template>
+      </div>
     </app-modal>
   }
 </div>
