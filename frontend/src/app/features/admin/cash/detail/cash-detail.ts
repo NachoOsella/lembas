@@ -247,6 +247,15 @@ export class CashDetail implements OnInit {
     this.movementDialogVisible.set(true);
   }
 
+  /** Navigates to the close-cash screen for the current session. */
+  protected goToClose(): void {
+    const id = this.session()?.id;
+    if (id == null) {
+      return;
+    }
+    void this.router.navigate(['/admin/cash/close', id]);
+  }
+
   /** Closes the movement dialog without saving. */
   protected closeMovementDialog(): void {
     this.movementDialogVisible.set(false);
