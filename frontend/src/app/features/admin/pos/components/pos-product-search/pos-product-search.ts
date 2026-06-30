@@ -5,7 +5,9 @@ import {
   ElementRef,
   OnInit,
   computed,
+  effect,
   inject,
+  input,
   signal,
   viewChild,
 } from '@angular/core';
@@ -31,6 +33,12 @@ const SEARCH_DEBOUNCE_MS = 200;
 
 /** Minimum length to consider an input as a barcode-shaped query. */
 const BARCODE_MIN_DIGITS = 6;
+
+/** Combined key for the search pipeline (query + branch id). */
+interface SearchKey {
+  readonly query: string;
+  readonly branchId: number | null;
+}
 
 /**
  * POS product search component.
@@ -86,13 +94,13 @@ export class PosProductSearchComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
 
   /**
-   * Branch used to resolve available stock.
+   * Branch id used to resolve per-product available stock.
    *
-   * <p>For S3-US09 the branch is resolved from the active cash session
-   * once LEMBAS-52 lands. Until then the component is rendered with a
-   * null branch; the UI shows "stock: —" on every row.</p>
+   * <p>Bound by the parent page from the active cash session. When null
+   * (e.g. no session is open yet) the backend reports stock as null and
+   * the cards render a neutral "Verificar" badge.</p>
    */
-  readonly branchId = signal<number | null>(null);
+  readonly branchId = input<number | null>(null);
 
   /** Heuristic: true when the query is numeric and 6+ digits (barcode). */
   readonly isLikelyBarcode = computed(() =>
@@ -107,25 +115,50 @@ export class PosProductSearchComponent implements OnInit {
       (this.querySignal() ?? '').trim().length > 0,
   );
 
-  private readonly searchTrigger$ = new Subject<string>();
+  /**
+   * Unified search trigger fed by both the query input and the branch id.
+   * Using a combined key lets {@code distinctUntilChanged} drop duplicates
+   * when both fire in quick succession (e.g. typing a query while the
+   * branch signal is settling on construction or after a tab visibility
+   * change).
+   */
+  private readonly searchTrigger$ = new Subject<SearchKey>();
+
+  /**
+   * Effect that pushes the current (query, branchId) into the trigger
+   * whenever the branch input changes. Set up as a field initializer so
+   * Angular can register it in injection context.
+   */
+  private readonly branchIdEffect = effect(() => {
+    const branchId = this.branchId();
+    this.searchTrigger$.next({
+      query: this.query.value ?? '',
+      branchId,
+    });
+  });
 
   ngOnInit(): void {
     // Auto-focus the search input on load so a barcode scanner can start
     // firing reads immediately.
     queueMicrotask(() => this.inputRef()?.nativeElement.focus());
 
-    // Wire the debounced search pipeline.
+    // Query-driven side of the same trigger.
     this.query.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((value) => this.searchTrigger$.next(value ?? ''));
+      .subscribe((value) =>
+        this.searchTrigger$.next({
+          query: value ?? '',
+          branchId: this.branchId(),
+        }),
+      );
 
     this.searchTrigger$
       .pipe(
         debounceTime(SEARCH_DEBOUNCE_MS),
-        distinctUntilChanged(),
+        distinctUntilChanged((a, b) => a.query === b.query && a.branchId === b.branchId),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((q) => this.runSearch(q));
+      .subscribe(({ query, branchId }) => this.runSearch(query, branchId));
   }
 
   /** Enter key handler — executes the search immediately, bypassing debounce. */
@@ -134,7 +167,7 @@ export class PosProductSearchComponent implements OnInit {
     if (!q) {
       return;
     }
-    this.runSearch(q);
+    this.runSearch(q, this.branchId());
   }
 
   /**
@@ -166,8 +199,8 @@ export class PosProductSearchComponent implements OnInit {
     return this.isLikelyBarcode();
   }
 
-  private runSearch(q: string): void {
-    const trimmed = q.trim();
+  private runSearch(rawQuery: string, branchId: number | null): void {
+    const trimmed = rawQuery.trim();
     if (!trimmed) {
       this.results.set([]);
       this.errorMessage.set(null);
@@ -175,7 +208,7 @@ export class PosProductSearchComponent implements OnInit {
     }
     this.loading.set(true);
     this.errorMessage.set(null);
-    this.searchService.search(trimmed, this.branchId()).subscribe({
+    this.searchService.search(trimmed, branchId).subscribe({
       next: (items) => {
         this.results.set(items);
         this.loading.set(false);
