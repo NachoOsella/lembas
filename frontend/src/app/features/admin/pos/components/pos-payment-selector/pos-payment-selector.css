@@ -1,0 +1,75 @@
+/* ============================================================================
+   POS payment selector — pill row of radio options
+   Uses design tokens. Color-coded active state on Forest Green to match the
+   rest of the admin theme.
+   ============================================================================ */
+
+:host {
+  display: block;
+}
+
+.pos-payment-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.pos-payment-selector--disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.pos-payment-selector__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.85rem;
+  background: var(--color-surface);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+    transform 0.05s ease;
+}
+
+.pos-payment-selector__option:hover:not(:disabled) {
+  background: var(--color-mint-wash-subtle);
+  border-color: var(--color-primary);
+}
+
+.pos-payment-selector__option:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.pos-payment-selector__option:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.pos-payment-selector__option:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.pos-payment-selector__option--active {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  color: #ffffff;
+}
+
+.pos-payment-selector__option--active:hover:not(:disabled) {
+  background: var(--color-primary-darker);
+  border-color: var(--color-primary-darker);
+}
+
+.pos-payment-selector__icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.pos-payment-selector__label {
+  white-space: nowrap;
+}
