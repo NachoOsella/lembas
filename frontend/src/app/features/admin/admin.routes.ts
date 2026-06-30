@@ -81,7 +81,7 @@ export default [
       },
       {
         path: 'pos',
-        loadComponent: () => import('./pos/pos').then((m) => m.Pos),
+        loadComponent: () => import('./pos/pos').then((m) => m.AdminPosPage),
       },
       {
         path: 'cash',
