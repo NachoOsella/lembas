@@ -149,11 +149,29 @@ GET /api/pos/products/search?q=<query>&branchId=<id>
             omitted (e.g. no cash session is open yet), availableStock is null
             and the UI renders the row as "stock: —".
 
-POST /api/admin/pos/sales
-  Request:  { items: [ { productId, quantity } ], paymentMethod, customerUserId?, customerNameSnapshot? }
+POST /api/pos/sales
+  Auth:     roles ADMIN, MANAGER, EMPLOYEE
+  Request:  {
+              items:         [ { productId: number, quantity: integer >= 1 } ] (1-100 lines),
+              paymentMethod: CASH | QR | TRANSFER | DEBIT_CARD | CREDIT_CARD | OTHER,
+              cashReceived:  number | null  (optional, only meaningful for CASH),
+              notes:         string | null  (optional, <= 500 chars)
+            }
   Response: OrderDetailDto (201)
-  Errors:   INSUFFICIENT_STOCK (409), CASH_SESSION_REQUIRED (400)
-  Notes:    Transactional: validates open register, deducts FEFO stock, creates order, payment, movements.
+  Errors:   CASH_BRANCH_REQUIRED (400)    - cashier has no assigned branch
+            CASH_SESSION_NOT_FOUND (404)  - no OPEN cash session for the cashier's branch
+            BRANCH_NOT_FOUND (404)         - resolved branch is missing or inactive
+            PRODUCT_NOT_FOUND (404)        - product id is missing or inactive
+            INSUFFICIENT_STOCK (409)       - FEFO cannot cover the requested quantity
+            VALIDATION_ERROR (400)         - malformed body (empty items, quantity <= 0, missing method)
+  Notes:    Single transaction. Validates the open cash session, plans a FEFO
+            stock deduction (expiration ASC, NULLS LAST) with pessimistic
+            write locks, creates the order (POS, PAID) with order items
+            (name + barcode snapshots), records one POS_SALE stock movement
+            per lot touched (signed negative, unit cost snapshot) and a
+            MANUAL/APPROVED payment linked to the same cash session.
+            cashReceived is persisted in the payment metadata for change
+            calculation / arqueo. Duplicate productId lines are merged.
 ```
 
 ### Cash register

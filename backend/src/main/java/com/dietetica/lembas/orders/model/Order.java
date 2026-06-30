@@ -48,7 +48,8 @@ import java.util.List;
                 @Index(name = "idx_orders_type", columnList = "type"),
                 @Index(name = "idx_orders_customer_user_id", columnList = "customer_user_id"),
                 @Index(name = "idx_orders_created_by_user_id", columnList = "created_by_user_id"),
-                @Index(name = "idx_orders_status_type", columnList = "status,type")
+                @Index(name = "idx_orders_status_type", columnList = "status,type"),
+                @Index(name = "idx_orders_cash_session_id", columnList = "cash_session_id")
         }
 )
 @Getter
@@ -93,6 +94,16 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")
     private User createdByUser;
+
+    /**
+     * Cash session (Sprint 3) the POS order was billed against. Nullable for
+     * ONLINE orders. No foreign key at the DB level: cash sessions are
+     * append-only history and must be archiveable without breaking historical
+     * orders. The application layer validates the session is OPEN at sale
+     * time (see {@code PosSaleService}).
+     */
+    @Column(name = "cash_session_id")
+    private Long cashSessionId;
 
     /** Customer name captured at order time. */
     @Column(name = "customer_name_snapshot", length = 255)
