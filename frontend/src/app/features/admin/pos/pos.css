@@ -1,7 +1,8 @@
 /* ============================================================================
-   POS landing page — visual layout
-   Follows the Lembas design system: Forest Green header, mint wash surface,
-   12px card radius, color tokens instead of hard-coded values.
+   POS landing page — two-panel layout
+   Forest Green header from app-page-header, mint-wash surfaces, design tokens
+   for every color. The grid collapses to a single column on narrow viewports
+   so the cashier can still operate from a tablet.
    ============================================================================ */
 
 :host {
@@ -17,6 +18,30 @@
   margin: 0 auto;
 }
 
-.pos-page__search {
-  display: block;
+.pos-page__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .pos-page__grid {
+    grid-template-columns: 3fr 2fr; /* 60/40 split, search-dominant */
+    gap: 1.5rem;
+  }
+}
+
+.pos-page__left,
+.pos-page__right {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* prevents grid blowout with wide content */
+}
+
+@media (max-width: 1023px) {
+  .pos-page__right {
+    position: sticky;
+    top: 1rem;
+  }
 }

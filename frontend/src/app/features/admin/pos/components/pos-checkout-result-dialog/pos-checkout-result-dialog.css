@@ -1,0 +1,139 @@
+/* ============================================================================
+   POS receipt dialog — visual layout
+   Uses design tokens. The icon circle echoes the success badge pattern from
+   the rest of the admin theme.
+   ============================================================================ */
+
+:host {
+  display: block;
+}
+
+.pos-receipt__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-top: 0.25rem;
+}
+
+.pos-receipt__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  background: var(--color-mint-wash-subtle);
+  border: 1px solid rgba(7, 95, 54, 0.08);
+  border-radius: 0.5rem;
+}
+
+.pos-receipt__order-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pos-receipt__order-number {
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.pos-receipt__total-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: var(--color-mint-wash-subtle);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: 0.65rem;
+}
+
+.pos-receipt__total-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.01em;
+}
+
+.pos-receipt__total-amount {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.pos-receipt__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.pos-receipt__items {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 0.85rem;
+}
+
+.pos-receipt__items-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pos-receipt__items-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pos-receipt__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.85rem;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.pos-receipt__item-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.pos-receipt__item-qty {
+  margin-left: 0.3rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.pos-receipt__item-subtotal {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pos-receipt__overflow {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.pos-receipt__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

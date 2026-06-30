@@ -1,9 +1,50 @@
+<app-toast />
+
 <div class="pos-page">
   <app-page-header
     eyebrow="Punto de venta"
     title="Venta presencial"
-    description="Busca un producto por nombre o escaneá su codigo de barras para sumarlo a la venta."
-  />
+    description="Busca un producto, agregalo al carrito y elegi el metodo de pago. F8 cobra la venta actual."
+  >
+    @if (cashSession(); as session) {
+      <app-badge tone="success" icon="pi pi-check-circle" data-testid="cash-session-badge">
+        Caja abierta #{{ session.id }}
+      </app-badge>
+    } @else if (!isCashSessionLoading()) {
+      <app-badge tone="danger" icon="pi pi-exclamation-circle" data-testid="cash-session-missing">
+        Sin caja abierta
+      </app-badge>
+      <app-button
+        variant="primary"
+        icon="pi pi-plus"
+        routerLink="/admin/cash/open"
+        data-testid="open-cash-button"
+      >Abrir caja</app-button>
+    }
+  </app-page-header>
 
-  <app-pos-product-search class="pos-page__search" />
+  <div class="pos-page__grid">
+    <section class="pos-page__left" aria-label="Busqueda de productos">
+      <app-pos-product-search />
+    </section>
+    <section class="pos-page__right" aria-label="Carrito y cobro">
+      <app-pos-cart
+        #cartComponent
+        [canCheckout]="canCheckout()"
+        [processing]="processing()"
+        (checkoutRequested)="onCheckout()"
+        data-testid="pos-cart-panel"
+      />
+    </section>
+  </div>
 </div>
+
+@if (lastResult(); as result) {
+  <app-pos-checkout-result-dialog
+    [visible]="!!lastResult()"
+    [order]="result"
+    (newSale)="startNewSale()"
+    (hidden)="onResultDialogClosed()"
+    data-testid="pos-checkout-result-dialog"
+  />
+}

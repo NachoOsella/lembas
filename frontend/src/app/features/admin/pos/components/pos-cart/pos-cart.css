@@ -1,0 +1,169 @@
+/* ============================================================================
+   POS cart panel — visual layout
+   BEM naming, design tokens, follows the same surface/contrast rhythm as
+   the search panel on the left of the page.
+   ============================================================================ */
+
+:host {
+  display: block;
+}
+
+.pos-cart {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   Line rows
+   --------------------------------------------------------------------------- */
+
+.pos-cart__lines {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pos-cart__line {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--color-mint-wash-pale);
+  border: 1px solid rgba(7, 95, 54, 0.08);
+  border-radius: 0.65rem;
+}
+
+.pos-cart__line-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.pos-cart__line-name {
+  font-weight: 650;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pos-cart__line-unit {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pos-cart__line-qty {
+  width: 8.5rem;
+}
+
+.pos-cart__line-subtotal {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+
+/* ---------------------------------------------------------------------------
+   Quantity stepper
+   --------------------------------------------------------------------------- */
+
+.pos-cart__qty-input {
+  text-align: center;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pos-cart__qty-btn {
+  width: 1.85rem !important;
+  height: 1.85rem !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Totals
+   --------------------------------------------------------------------------- */
+
+.pos-cart__totals {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-neutral, rgba(0, 0, 0, 0.08));
+  border-radius: 0.65rem;
+}
+
+.pos-cart__total-label {
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--color-text);
+  letter-spacing: 0.01em;
+}
+
+.pos-cart__total-amount {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ---------------------------------------------------------------------------
+   Cash-received block (CASH only)
+   --------------------------------------------------------------------------- */
+
+.pos-cart__cash {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.85rem;
+  padding: 0.75rem 0.9rem;
+  margin: 0.75rem 0 1rem;
+  background: var(--color-mint-wash-subtle);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: 0.65rem;
+}
+
+.pos-cart__cash-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.pos-cart__cash-input {
+  flex: 1 1 9rem;
+  min-width: 9rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Action row
+   --------------------------------------------------------------------------- */
+
+.pos-cart__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .pos-cart__line {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'info   remove'
+      'qty    subtotal';
+    row-gap: 0.4rem;
+  }
+  .pos-cart__line-info { grid-area: info; }
+  .pos-cart__line-qty  { grid-area: qty; width: auto; }
+  .pos-cart__line-subtotal { grid-area: subtotal; justify-self: end; }
+}

@@ -86,6 +86,39 @@ describe('PosCartStore', () => {
     });
   });
 
+  describe('setQuantity', () => {
+    it('updates the quantity of an existing line', () => {
+      store.addItem({ productId: 1, name: 'Aceite', unitPrice: 100 });
+      store.setQuantity(1, 5);
+      expect(store.lines()[0].quantity).toBe(5);
+    });
+
+    it('removes the line when the new quantity is zero', () => {
+      store.addItem({ productId: 1, name: 'Aceite', unitPrice: 100 });
+      store.setQuantity(1, 0);
+      expect(store.lines()).toEqual([]);
+    });
+
+    it('removes the line when the new quantity is negative', () => {
+      store.addItem({ productId: 1, name: 'Aceite', unitPrice: 100 });
+      store.setQuantity(1, -2);
+      expect(store.lines()).toEqual([]);
+    });
+
+    it('is a no-op when the productId is not present', () => {
+      store.addItem({ productId: 1, name: 'Aceite', unitPrice: 100 });
+      store.setQuantity(999, 5);
+      expect(store.lines()).toHaveLength(1);
+      expect(store.lines()[0].quantity).toBe(1);
+    });
+
+    it('rounds down fractional quantities to integers', () => {
+      store.addItem({ productId: 1, name: 'Aceite', unitPrice: 100 });
+      store.setQuantity(1, 3.7);
+      expect(store.lines()[0].quantity).toBe(3);
+    });
+  });
+
   describe('clear', () => {
     it('resets the cart to empty', () => {
       store.addItem({ productId: 1, name: 'Aceite', unitPrice: 100 });

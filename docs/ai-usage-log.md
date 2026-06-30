@@ -317,3 +317,28 @@
 - `backend/src/test/java/com/dietetica/lembas/pos/` -- 33 tests: 15 unitarios del servicio (happy path, merge de items, snapshots, payment MANUAL/APPROVED, metadata con cashReceived, signed negativo del movimiento, multiples lotes, errores CASH_BRANCH_REQUIRED/CASH_SESSION_NOT_FOUND/PRODUCT_NOT_FOUND/INSUFFICIENT_STOCK/BRANCH_NOT_FOUND, normalizacion de notas), 7 WebMvcTest del controller (201 happy + 5 mappings 400/404/409), 11 integration tests con Testcontainers (FEFO cross-lot, multiple stock movements, INSUFFICIENT_STOCK con rollback completo, sin caja abierta, producto inactivo, validacion 400, sin auth 401, metadata con cashReceived). Suite completa: 684/684 pasan sin regresiones.
 - `frontend/src/app/features/admin/pos/services/pos-sale.service.ts` + spec -- servicio HTTP para `POST /api/pos/sales` reusando `OrderDetail` y `PaymentMethod` del modelo compartido, con 4 tests (happy path, mapeo de 4xx, QR sin cashReceived, creation check). FE: 710/710 pasan, build limpio.
 - `docs/05-api/endpoints.md` -- entrada `POST /api/pos/sales` expandida con contrato completo, errores documentados, notas transaccionales y referencia al FEFO + persistencia de `cashReceived` en metadata.
+
+## 2026-06-30 (S3-US11)
+
+- `frontend/src/app/features/admin/pos/state/pos-cart.store.ts` -- agregado `setQuantity(productId, quantity)` que actualiza la cantidad de una linea o la elimina si llega a 0 (evita filas fantasma en la UI del cashier).
+- `frontend/src/app/features/admin/pos/components/pos-payment-selector/` -- nuevo `PosPaymentSelectorComponent` con pills horizontales para los 5 metodos POS (CASH, QR, TRANSFER, DEBIT_CARD, CREDIT_CARD). Excluye CHECKOUT_PRO y OTHER via narrow type. 5 tests.
+- `frontend/src/app/features/admin/pos/components/pos-cart/` -- nuevo `PosCartComponent` con:
+  - Lista de lineas con `app-input-number` para cantidad (increment/decrement), subtotal por linea, boton remove
+  - Total general formateado como es-AR currency
+  - Integracion con `PosPaymentSelectorComponent` via two-way binding
+  - Bloque cash-received condicional para CASH, con badges "Falta $X" / "Vuelto $Y"
+  - Botones "Vaciar carrito" + "Cobrar (F8)"
+  - `getSelection()` publico para que el parent pueda leer el estado via `viewChild`
+  - 14 tests cubren happy path, edge cases y los flags de disabled
+- `frontend/src/app/features/admin/pos/components/pos-checkout-result-dialog/` -- nuevo `PosCheckoutResultDialogComponent` que muestra el comprobante post-venta: orden, total, metodo de pago (badge), items (truncados a 5 con "+ N items mas"), botones "Cerrar" y "Nueva venta". 4 tests (PrimeNG Dialog renderiza a `document.body` por `appendTo='body'`).
+- `frontend/src/app/features/admin/pos/pos.ts` -- refactor del page wrapper a `AdminPosPage` (la clase `Pos` ahora se llama `AdminPosPage`, mismo archivo, sin cambio de ruta). La nueva version:
+  - Layout 2 paneles (60/40 split) responsive: search izquierda, cart derecha
+  - Probe de `CashService.currentSession()` en `ngOnInit` con badge contextual
+  - Sin caja abierta: badge danger + boton "Abrir caja" (routerLink a `/admin/cash/open`)
+  - F8 quick checkout via `@HostListener('document:keydown')` solo cuando `canCheckout && !processing`
+  - `onCheckout()` orquesta `PosSaleService.createSale()` con loading + success/error toasts via `MessageService` y mapeo de errores via `ErrorMappingService`
+  - Post-venta: `cart.clear()`, `cartComponent.resetSelection()`, abrir `PosCheckoutResultDialogComponent`
+  - 16 tests cubren todas las ramas incluyendo F8, errores mapeados, y ausencia de caja
+- `frontend/src/app/features/admin/admin.routes.ts` -- actualizado para exportar `m.AdminPosPage` en vez de `m.Pos`. La ruta `/admin/pos` y el selector del componente no cambian.
+- `frontend/src/app/features/admin/pos/pos.spec.ts` -- reescrito con 16 tests cubriendo la nueva AdminPosPage (creacion, cash session badge, F8 shortcut, checkout flow, error mapping, startNewSale).
+- Total tests FE: 749/749 pasan (39 nuevos para US11 sobre 710 previos), build limpio.
