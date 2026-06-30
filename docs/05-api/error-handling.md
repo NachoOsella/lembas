@@ -86,6 +86,8 @@ Services may throw `DomainException` directly when a dedicated exception subclas
 | CASH_MOVEMENT_CLOSED_SESSION | Cash | 400 | Cannot register movements on a CLOSED cash session |
 | CASH_SESSION_ALREADY_CLOSED | Cash | 409 | The cash session is already CLOSED; cannot be closed again |
 | CASH_DIFFERENCE_REASON_REQUIRED | Cash | 400 | The close difference is non-zero and `cashDifferenceReason` is missing |
+| POS_QUERY_REQUIRED | POS | 400 | POS product search `q` parameter is missing or blank |
+| POS_QUERY_TOO_LONG | POS | 400 | POS product search `q` parameter exceeds 100 characters |
 
 ### Global exception handler
 

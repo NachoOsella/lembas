@@ -134,6 +134,21 @@ PATCH  /api/admin/orders/{id}/cancel  Request: { reason }
 ### POS (in-store sales)
 
 ```
+GET /api/pos/products/search?q=<query>&branchId=<id>
+  Auth:     roles ADMIN, MANAGER, EMPLOYEE
+  Params:   q        required, 1-100 characters after trim
+            branchId optional, used to resolve available stock
+  Response: [PosProductSearchItemDto] (200)
+  Errors:   POS_QUERY_REQUIRED (400), POS_QUERY_TOO_LONG (400)
+  Heuristic:
+            - if q matches \\d{6,}, runs an exact case-insensitive match on the
+              barcode column (uses the unique idx_products_barcode index)
+            - otherwise runs a name + brand + barcode + category LIKE search
+              bounded to 25 results, sorted by name
+  Notes:    Each row exposes the branch-level available stock. When branchId is
+            omitted (e.g. no cash session is open yet), availableStock is null
+            and the UI renders the row as "stock: —".
+
 POST /api/admin/pos/sales
   Request:  { items: [ { productId, quantity } ], paymentMethod, customerUserId?, customerNameSnapshot? }
   Response: OrderDetailDto (201)
