@@ -1,0 +1,74 @@
+<app-modal
+  [(visible)]="visible"
+  (hidden)="hidden.emit()"
+  [title]="'Venta registrada'"
+  width="min(92vw, 32rem)"
+  [closable]="true"
+  [dismissible]="true"
+  [modal]="true"
+>
+  <div class="pos-receipt__body" data-testid="receipt-body">
+    <div class="pos-receipt__meta">
+      <span class="pos-receipt__order-label">Orden</span>
+      <span class="pos-receipt__order-number" data-testid="receipt-order-number">
+        {{ order().orderNumber }}
+      </span>
+    </div>
+
+    <div class="pos-receipt__total-row">
+      <span class="pos-receipt__total-label">Total cobrado</span>
+      <span class="pos-receipt__total-amount" data-testid="receipt-total">
+        $ {{ totalFormatted() }}
+      </span>
+    </div>
+
+    <div class="pos-receipt__badges">
+      @if (paymentMethod(); as method) {
+        <app-badge tone="info" icon="pi pi-credit-card" data-testid="receipt-method">
+          {{ paymentMethodLabel() }}
+        </app-badge>
+      }
+      <app-badge tone="neutral" icon="pi pi-receipt" data-testid="receipt-type">
+        POS
+      </app-badge>
+    </div>
+
+    @if (visibleItems().length > 0) {
+      <section class="pos-receipt__items" aria-label="Items de la venta">
+        <h3 class="pos-receipt__items-title">Items</h3>
+        <ul class="pos-receipt__items-list">
+          @for (item of visibleItems(); track item.id) {
+            <li class="pos-receipt__item">
+              <span class="pos-receipt__item-name">
+                {{ item.productName }}
+                <span class="pos-receipt__item-qty">x {{ item.quantity }}</span>
+              </span>
+              <span class="pos-receipt__item-subtotal">
+                $ {{ lineSubtotalFormatted(item.unitPrice, item.quantity) }}
+              </span>
+            </li>
+          }
+        </ul>
+        @if (overflow() > 0) {
+          <p class="pos-receipt__overflow" data-testid="receipt-overflow">
+            + {{ overflow() }} items mas
+          </p>
+        }
+      </section>
+    }
+  </div>
+
+  <div modalFooter class="pos-receipt__footer">
+    <app-button
+      variant="secondary"
+      (click)="visible.set(false)"
+      data-testid="receipt-close"
+    >Cerrar</app-button>
+    <app-button
+      variant="primary"
+      icon="pi pi-plus"
+      (click)="onNewSale()"
+      data-testid="receipt-new-sale"
+    >Nueva venta</app-button>
+  </div>
+</app-modal>
