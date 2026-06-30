@@ -392,4 +392,226 @@ describe('AdminPosPage', () => {
     expect(PosCheckoutResultDialogComponent).toBeDefined();
     expect(AppPageHeader).toBeDefined();
   });
+
+  // ---------------------------------------------------------------------------
+  // Stale cash session re-probe (race-condition fix)
+  // ---------------------------------------------------------------------------
+
+  it('refreshCashSession re-probes the current cash session', () => {
+    configure();
+    expect(cashService.currentSession).toHaveBeenCalledTimes(1);
+    component.refreshCashSession();
+    expect(cashService.currentSession).toHaveBeenCalledTimes(2);
+  });
+
+  it('re-probes the cash session when the tab regains focus', () => {
+    configure();
+    expect(cashService.currentSession).toHaveBeenCalledTimes(1);
+
+    Object.defineProperty(document, 'visibilityState', {
+      value: 'visible',
+      configurable: true,
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    expect(cashService.currentSession).toHaveBeenCalledTimes(2);
+  });
+
+  it('does NOT re-probe when the tab is hidden', () => {
+    configure();
+    expect(cashService.currentSession).toHaveBeenCalledTimes(1);
+
+    Object.defineProperty(document, 'visibilityState', {
+      value: 'hidden',
+      configurable: true,
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    expect(cashService.currentSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('re-probes the session on F8 so a stale cache is not acted on', () => {
+    configure();
+    cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
+    fixture.detectChanges();
+    // Pre-condition: only the initial probe has happened.
+    const callsBefore = cashService.currentSession.mock.calls.length;
+
+    // Simulate the session being closed in another tab right before F8.
+    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    posSale = { createSale: vi.fn() };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [AdminPosPage],
+      providers: [
+        provideNoopAnimations(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        MessageService,
+        { provide: CashService, useValue: cashService },
+        { provide: PosSaleService, useValue: posSale },
+      ],
+    });
+    fixture = TestBed.createComponent(AdminPosPage);
+    component = fixture.componentInstance;
+    cart = TestBed.inject(PosCartStore);
+    cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
+    fixture.detectChanges();
+
+    // F8 must re-probe AND short-circuit onCheckout (no POST).
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8' }));
+
+    expect(cashService.currentSession).toHaveBeenCalled();
+    expect(posSale.createSale).not.toHaveBeenCalled();
+  });
+
+  it('refresh-cash-session-button calls refreshCashSession', () => {
+    configure();
+    expect(cashService.currentSession).toHaveBeenCalledTimes(1);
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="refresh-cash-session-button"]',
+    ) as HTMLButtonElement;
+    expect(btn).toBeTruthy();
+    btn.click();
+    expect(cashService.currentSession).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows the refresh button when the cash session is open', () => {
+    configure();
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="refresh-cash-session-button"]',
+    );
+    expect(btn).toBeTruthy();
+  });
+
+  it('shows the refresh button when the cash session is missing', () => {
+    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    posSale = { createSale: vi.fn() };
+    TestBed.configureTestingModule({
+      imports: [AdminPosPage],
+      providers: [
+        provideNoopAnimations(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        MessageService,
+        { provide: CashService, useValue: cashService },
+        { provide: PosSaleService, useValue: posSale },
+      ],
+    });
+    fixture = TestBed.createComponent(AdminPosPage);
+    component = fixture.componentInstance;
+    cart = TestBed.inject(PosCartStore);
+    fixture.detectChanges();
+
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="refresh-cash-session-button"]',
+    );
+    expect(btn).toBeTruthy();
+  });
+
+  it('re-probes the session on CASH_SESSION_NOT_FOUND checkout failure', () => {
+    configure();
+    cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
+    posSale.createSale.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 404,
+            error: {
+              status: 404,
+              code: 'CASH_SESSION_NOT_FOUND',
+              message: 'No open session',
+            },
+          }),
+      ),
+    );
+    fixture.detectChanges();
+
+    const cartInstance = fixture.debugElement.query(
+      (el: { componentInstance: unknown }) =>
+        el.componentInstance instanceof PosCartComponent,
+    );
+    const cartComp = cartInstance.componentInstance as PosCartComponent;
+    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod']
+      .set('QR');
+    fixture.detectChanges();
+
+    const callsBefore = cashService.currentSession.mock.calls.length;
+    component.onCheckout();
+    fixture.detectChanges();
+
+    // The error path should have triggered a re-probe.
+    expect(cashService.currentSession.mock.calls.length).toBeGreaterThan(callsBefore);
+  });
+
+  it('re-probes the session on CASH_BRANCH_REQUIRED checkout failure', () => {
+    configure();
+    cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
+    posSale.createSale.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            error: {
+              status: 400,
+              code: 'CASH_BRANCH_REQUIRED',
+              message: 'Branch required',
+            },
+          }),
+      ),
+    );
+    fixture.detectChanges();
+
+    const cartInstance = fixture.debugElement.query(
+      (el: { componentInstance: unknown }) =>
+        el.componentInstance instanceof PosCartComponent,
+    );
+    const cartComp = cartInstance.componentInstance as PosCartComponent;
+    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod']
+      .set('QR');
+    fixture.detectChanges();
+
+    const callsBefore = cashService.currentSession.mock.calls.length;
+    component.onCheckout();
+    fixture.detectChanges();
+
+    expect(cashService.currentSession.mock.calls.length).toBeGreaterThan(callsBefore);
+  });
+
+  it('does NOT re-probe the session on INSUFFICIENT_STOCK (cart-related) failure', () => {
+    configure();
+    cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
+    posSale.createSale.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 409,
+            error: {
+              status: 409,
+              code: 'INSUFFICIENT_STOCK',
+              message: 'Insufficient stock',
+            },
+          }),
+      ),
+    );
+    fixture.detectChanges();
+
+    const cartInstance = fixture.debugElement.query(
+      (el: { componentInstance: unknown }) =>
+        el.componentInstance instanceof PosCartComponent,
+    );
+    const cartComp = cartInstance.componentInstance as PosCartComponent;
+    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod']
+      .set('QR');
+    fixture.detectChanges();
+
+    const callsBefore = cashService.currentSession.mock.calls.length;
+    component.onCheckout();
+    fixture.detectChanges();
+
+    // No re-probe on a cart-related error.
+    expect(cashService.currentSession.mock.calls.length).toBe(callsBefore);
+  });
 });
