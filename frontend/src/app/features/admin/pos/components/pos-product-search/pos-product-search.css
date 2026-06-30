@@ -1,0 +1,177 @@
+/* ============================================================================
+   POS product search — visual layout
+   Follows the Lembas design system: Forest Green for accents, mint wash
+   surfaces, 12px card radius, whisper-soft shadows, design-token colors.
+   ============================================================================ */
+
+:host {
+  display: block;
+}
+
+.pos-search {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   Input row — search field with leading icon and inline spinner
+   --------------------------------------------------------------------------- */
+
+.pos-search__input-row {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.pos-search__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pos-search__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.pos-search__input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pos-search__icon {
+  position: absolute;
+  left: 0.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-primary);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.pos-search__input {
+  width: 100%;
+  font-size: 1rem;
+  padding: 0.75rem 0.95rem 0.75rem 2.6rem;
+  background: var(--color-surface);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 0.75rem;
+  color: var(--color-text);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pos-search__input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.pos-search__input::placeholder {
+  color: rgba(0, 0, 0, 0.42);
+}
+
+.pos-search__spinner {
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.pos-search__spinner-dot {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid rgba(47, 141, 114, 0.18);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: pos-search-spin 0.7s linear infinite;
+}
+
+@keyframes pos-search-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Barcode-mode hint — small inline banner below the input
+   --------------------------------------------------------------------------- */
+
+.pos-search__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  background: var(--color-mint-wash);
+  border: 1px solid rgba(47, 141, 114, 0.18);
+  border-radius: 999px;
+}
+
+.pos-search__hint i {
+  font-size: 0.78rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Loading state — full-width band that lets the cashier know something
+   is happening
+   --------------------------------------------------------------------------- */
+
+.pos-search__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Results grid
+   --------------------------------------------------------------------------- */
+
+.pos-search__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 640px) {
+  .pos-search__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .pos-search__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.pos-search__grid-item {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   Empty state
+   --------------------------------------------------------------------------- */
+
+.pos-search__empty {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  background: var(--color-mint-wash-pale);
+  border: 1px dashed rgba(47, 141, 114, 0.22);
+  border-radius: 0.75rem;
+  text-align: center;
+}

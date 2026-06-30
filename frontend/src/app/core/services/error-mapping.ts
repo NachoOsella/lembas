@@ -78,6 +78,10 @@ export class ErrorMappingService {
 
     // Supplier errors
     SUPPLIER_NOT_FOUND: 'El proveedor seleccionado no fue encontrado.',
+
+    // POS errors
+    POS_QUERY_REQUIRED: 'Ingresá un producto o escaneá un código de barras.',
+    POS_QUERY_TOO_LONG: 'La búsqueda es demasiado larga. Probá con menos caracteres.',
     SUPPLIER_CUIT_DUPLICATED: 'Ya existe un proveedor activo con ese CUIT.',
     SUPPLIER_PRODUCT_NOT_FOUND: 'La asociacion producto-proveedor no fue encontrada.',
     SUPPLIER_PRODUCT_DUPLICATED: 'Ese producto ya esta asociado a este proveedor.',

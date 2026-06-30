@@ -1,0 +1,83 @@
+<app-section-card
+  eyebrow="Catalogo"
+  title="Buscar producto"
+  description="Escribi el nombre o escaneá el codigo de barras. La caja abierta define la sucursal de la que se descuenta stock."
+  class="pos-search"
+>
+  <div class="pos-search__input-row">
+    <div class="pos-search__field">
+      <label for="pos-search-input" class="pos-search__label">
+        Producto o codigo de barras
+      </label>
+      <div class="pos-search__input-wrap">
+        <i class="pi pi-search pos-search__icon" aria-hidden="true"></i>
+        <input
+          #queryInput
+          id="pos-search-input"
+          type="text"
+          pInputText
+          [formControl]="query"
+          (keyup.enter)="onEnter()"
+          placeholder="Ej. aceite de oliva o 7501234567890"
+          class="pos-search__input"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          inputmode="text"
+          aria-label="Buscar producto o escanear codigo de barras"
+          data-testid="pos-search-input"
+        />
+        @if (loading()) {
+          <div class="pos-search__spinner" aria-hidden="true">
+            <span class="pos-search__spinner-dot"></span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (isBarcodeHeuristic()) {
+    <div class="pos-search__hint" data-testid="barcode-mode">
+      <i class="pi pi-bolt" aria-hidden="true"></i>
+      <span>Modo barcode activo: la consulta ira directo contra el codigo exacto.</span>
+    </div>
+  }
+
+  @if (errorMessage(); as msg) {
+    <div data-testid="search-error">
+      <app-error-alert
+        [message]="msg"
+        variant="card"
+      />
+    </div>
+  }
+
+  @if (loading() && results().length === 0) {
+    <div class="pos-search__loading">
+      <app-loading-spinner label="Buscando productos..." size="md" surface="band" />
+    </div>
+  }
+
+  @if (results().length > 0) {
+    <ul
+      class="pos-search__grid"
+      role="listbox"
+      aria-label="Resultados de busqueda"
+      data-testid="pos-search-results"
+    >
+      @for (item of results(); track item.id) {
+        <li role="option" class="pos-search__grid-item">
+          <app-pos-product-card
+            [item]="item"
+            [disabled]="isOutOfStock(item)"
+            (selected)="onSelect(item)"
+          />
+        </li>
+      }
+    </ul>
+  } @else if (hasNoResults()) {
+    <p class="pos-search__empty" data-testid="empty-state">
+      Sin resultados para &quot;{{ query.value }}&quot;
+    </p>
+  }
+</app-section-card>

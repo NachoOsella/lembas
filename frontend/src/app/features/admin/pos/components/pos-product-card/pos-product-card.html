@@ -1,0 +1,39 @@
+<button
+  type="button"
+  class="pos-card"
+  [class.pos-card--disabled]="disabled"
+  [class.pos-card--out-of-stock]="isOutOfStock()"
+  [disabled]="disabled"
+  [attr.aria-disabled]="disabled"
+  [attr.aria-label]="'Agregar ' + item.name + (disabled ? ' (sin stock)' : '')"
+  (click)="onClick()"
+>
+  <div class="pos-card__head">
+    <div class="pos-card__title-wrap">
+      <h3 class="pos-card__title">{{ item.name }}</h3>
+      @if (item.brandName) {
+        <p class="pos-card__brand">{{ item.brandName }}</p>
+      }
+    </div>
+    <span class="pos-card__price">$ {{ item.salePrice }}</span>
+  </div>
+
+  <div class="pos-card__foot">
+    @if (item.barcode) {
+      <code class="pos-card__barcode">{{ item.barcode }}</code>
+    } @else {
+      <span class="pos-card__barcode pos-card__barcode--empty">&nbsp;</span>
+    }
+    @if (isOutOfStock()) {
+      <span class="pos-card__stock pos-card__stock--out" data-testid="out-of-stock">
+        <i class="pi pi-ban" aria-hidden="true"></i>
+        sin stock
+      </span>
+    } @else {
+      <span
+        class="pos-card__stock"
+        [class.pos-card__stock--ok]="hasPositiveStock()"
+      >{{ stockLabel() }}</span>
+    }
+  </div>
+</button>
