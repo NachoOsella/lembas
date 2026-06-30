@@ -68,6 +68,27 @@ export class PosCartStore {
     this._lines.update((lines) => lines.filter((line) => line.productId !== productId));
   }
 
+  /**
+   * Sets the quantity of a line. Removing the line when the new quantity is
+   * zero or negative keeps the cart tidy and avoids phantom zero-value rows
+   * in the cashier UI.
+   */
+  setQuantity(productId: number, quantity: number): void {
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      this.removeLine(productId);
+      return;
+    }
+    this._lines.update((lines) => {
+      const idx = lines.findIndex((line) => line.productId === productId);
+      if (idx < 0) {
+        return lines;
+      }
+      const copy = [...lines];
+      copy[idx] = { ...copy[idx], quantity: Math.floor(quantity) };
+      return copy;
+    });
+  }
+
   /** Clears the cart. */
   clear(): void {
     this._lines.set([]);
