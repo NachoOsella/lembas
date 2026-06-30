@@ -16,14 +16,15 @@ import java.util.List;
 /**
  * Manual mapper from {@link Order} entities to DTOs.
  *
- * <p>Kept package-private on purpose: only the orders service classes need it.
- * Avoids MapStruct to keep dependencies low and behavior explicit.</p>
+ * <p>Public so cross-module use cases (e.g. {@code PosSaleService}) can
+ * project a freshly persisted order without leaking the entity through the
+ * boundary. Avoids MapStruct to keep dependencies low and behavior explicit.</p>
  */
 @Component
-class OrderMapper {
+public class OrderMapper {
 
     /** Builds a lightweight summary row from an order aggregate. */
-    OrderSummaryDto toSummaryDto(Order order) {
+    public OrderSummaryDto toSummaryDto(Order order) {
         return new OrderSummaryDto(
                 order.getId(),
                 order.getOrderNumber(),
@@ -47,7 +48,7 @@ class OrderMapper {
     }
 
     /** Builds a full detail DTO from an order aggregate. */
-    OrderDetailDto toDetailDto(Order order) {
+    public OrderDetailDto toDetailDto(Order order) {
         List<OrderItemDto> items = order.getItems() == null
                 ? List.of()
                 : order.getItems().stream().map(this::toItemDto).toList();
@@ -85,7 +86,7 @@ class OrderMapper {
     }
 
     /** Maps a single line item. */
-    OrderItemDto toItemDto(OrderItem item) {
+    public OrderItemDto toItemDto(OrderItem item) {
         Long productId = item.getProduct() == null ? null : item.getProduct().getId();
         return new OrderItemDto(
                 item.getId(),
