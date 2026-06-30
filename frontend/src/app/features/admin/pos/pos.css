@@ -1,0 +1,22 @@
+/* ============================================================================
+   POS landing page — visual layout
+   Follows the Lembas design system: Forest Green header, mint wash surface,
+   12px card radius, color tokens instead of hard-coded values.
+   ============================================================================ */
+
+:host {
+  display: block;
+}
+
+.pos-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.pos-page__search {
+  display: block;
+}

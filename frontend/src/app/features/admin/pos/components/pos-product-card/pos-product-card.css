@@ -1,0 +1,152 @@
+/* ============================================================================
+   POS product card — visual layout
+   Compact card optimised for fast cashier scanning. Uses design tokens
+   instead of hard-coded colors and follows the 12px card radius + mint
+   wash surface used across the admin.
+   ============================================================================ */
+
+:host {
+  display: block;
+}
+
+.pos-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  background: var(--color-surface);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: 0.75rem;
+  box-shadow: 0 0 0.5px rgba(0, 0, 0, 0.06), 0 1px 1px rgba(0, 0, 0, 0.08);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+}
+
+.pos-card:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary), 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.pos-card:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.pos-card:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+/* Out-of-stock variant — muted surface, no hover ring */
+.pos-card--out-of-stock,
+.pos-card--disabled {
+  background: var(--color-mint-wash-pale);
+  border-color: rgba(7, 95, 54, 0.06);
+  cursor: not-allowed;
+}
+
+.pos-card--disabled {
+  opacity: 0.72;
+}
+
+/* ---------------------------------------------------------------------------
+   Head row — name + brand on the left, price on the right
+   --------------------------------------------------------------------------- */
+
+.pos-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+  margin-bottom: 0.55rem;
+}
+
+.pos-card__title-wrap {
+  min-width: 0;
+  flex: 1;
+}
+
+.pos-card__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.2;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pos-card__brand {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pos-card__price {
+  font-size: 1rem;
+  font-weight: 750;
+  color: var(--color-primary-dark);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ---------------------------------------------------------------------------
+   Foot row — barcode on the left, stock pill on the right
+   --------------------------------------------------------------------------- */
+
+.pos-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  font-size: 0.78rem;
+}
+
+.pos-card__barcode {
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  background: var(--color-mint-wash-subtle);
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(7, 95, 54, 0.08);
+}
+
+.pos-card__barcode--empty {
+  background: transparent;
+  border-color: transparent;
+}
+
+.pos-card__stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-mint-wash-subtle);
+  border: 1px solid rgba(7, 95, 54, 0.08);
+}
+
+.pos-card__stock--ok {
+  color: var(--color-primary-dark);
+  background: var(--color-mint-wash);
+  border-color: rgba(47, 141, 114, 0.18);
+}
+
+.pos-card__stock--out {
+  color: var(--color-red);
+  background: var(--color-red-tint);
+  border-color: rgba(200, 32, 20, 0.18);
+}
+
+.pos-card__stock--out i {
+  font-size: 0.72rem;
+}
