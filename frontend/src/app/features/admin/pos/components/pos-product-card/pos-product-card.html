@@ -1,39 +1,33 @@
 <button
   type="button"
   class="pos-card"
-  [class.pos-card--disabled]="disabled"
   [class.pos-card--out-of-stock]="isOutOfStock()"
   [disabled]="disabled"
   [attr.aria-disabled]="disabled"
-  [attr.aria-label]="'Agregar ' + item.name + (disabled ? ' (sin stock)' : '')"
+  [attr.aria-label]="ariaLabel()"
   (click)="onClick()"
 >
   <div class="pos-card__head">
-    <div class="pos-card__title-wrap">
-      <h3 class="pos-card__title">{{ item.name }}</h3>
+    <div class="pos-card__heading">
+      <h3 class="pos-card__name" [title]="item.name">{{ item.name }}</h3>
       @if (item.brandName) {
         <p class="pos-card__brand">{{ item.brandName }}</p>
       }
     </div>
-    <span class="pos-card__price">$ {{ item.salePrice }}</span>
+    <div class="pos-card__price-block">
+      <span class="pos-card__price">$ {{ priceFormatted() }}</span>
+    </div>
   </div>
 
-  <div class="pos-card__foot">
-    @if (item.barcode) {
-      <code class="pos-card__barcode">{{ item.barcode }}</code>
-    } @else {
-      <span class="pos-card__barcode pos-card__barcode--empty">&nbsp;</span>
-    }
-    @if (isOutOfStock()) {
-      <span class="pos-card__stock pos-card__stock--out" data-testid="out-of-stock">
-        <i class="pi pi-ban" aria-hidden="true"></i>
-        sin stock
-      </span>
-    } @else {
-      <span
-        class="pos-card__stock"
-        [class.pos-card__stock--ok]="hasPositiveStock()"
-      >{{ stockLabel() }}</span>
-    }
+  <div class="pos-card__stock-row" [attr.data-testid]="'pos-card-stock-' + item.id">
+    <span
+      class="pos-card__stock"
+      [class.pos-card__stock--ok]="hasPositiveStock()"
+      [class.pos-card__stock--out]="isOutOfStock()"
+      [class.pos-card__stock--unknown]="stockState() === 'unknown'"
+    >
+      <i class="pi pos-card__stock-icon" [class]="stockIcon()" aria-hidden="true"></i>
+      <span class="pos-card__stock-label">{{ stockLabel() }}</span>
+    </span>
   </div>
 </button>

@@ -77,6 +77,35 @@ describe('PosProductSearchComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('forwards the branchId input to the search service as a query param', async () => {
+    await createComponent();
+    fixture.componentRef.setInput('branchId', 7);
+    typeInInput('ace');
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    const req = httpMock.expectOne(
+      (r) => r.url === '/api/pos/products/search' && r.params.get('branchId') === '7',
+    );
+    req.flush([]);
+  });
+
+  it('re-fetches the current search when branchId changes', async () => {
+    await createComponent();
+    typeInInput('ace');
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    flushQuery('ace', []);
+    expect(component.results()).toEqual([]);
+
+    // Change the branch. The current search should re-run with the new id
+    // after the debounce window (200ms).
+    fixture.componentRef.setInput('branchId', 9);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const refetch = httpMock.expectOne(
+      (r) => r.url === '/api/pos/products/search' && r.params.get('branchId') === '9',
+    );
+    expect(refetch.request.params.get('q')).toBe('ace');
+    refetch.flush([]);
+  });
+
   it('autofocuses the search input on init', async () => {
     await createComponent();
     // queueMicrotask was used to schedule the focus; wait one tick.

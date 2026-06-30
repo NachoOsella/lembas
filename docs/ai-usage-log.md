@@ -342,3 +342,28 @@
 - `frontend/src/app/features/admin/admin.routes.ts` -- actualizado para exportar `m.AdminPosPage` en vez de `m.Pos`. La ruta `/admin/pos` y el selector del componente no cambian.
 - `frontend/src/app/features/admin/pos/pos.spec.ts` -- reescrito con 16 tests cubriendo la nueva AdminPosPage (creacion, cash session badge, F8 shortcut, checkout flow, error mapping, startNewSale).
 - Total tests FE: 749/749 pasan (39 nuevos para US11 sobre 710 previos), build limpio.
+
+## 2026-06-30 (S3-US11 visual fixes)
+
+- `frontend/src/app/features/admin/pos/components/pos-product-card/` -- rediseño de la card:
+  - Eliminado el barcode (no era accionable y rompa el layout).
+  - Stock badge con 3 tonos segun stockState(): "N en stock" (ok, verde), "Sin stock" (out, rojo), "Verificar stock" (unknown, ceramic neutral). Cada estado usa el spec del design system: Success Badge, Danger Badge, Neutral Badge respectivamente.
+  - Precio formateado con Intl.NumberFormat('es-AR', {maximumFractionDigits: 0}) para separador de miles ("2.500" en vez de "2500").
+  - Nombre truncado a 2 lineas con line-clamp, brand en una sola linea.
+  - Hover/focus usan la regla de 1px box-shadow verde del design system.
+  - Press usa scale(0.95) (signature del design system).
+  - Aria-label anuncia nombre + precio + estado de stock para screen readers.
+  - 15 tests cubren los 3 tonos, formatos, click, disabled state y a11y.
+- `frontend/src/app/features/admin/pos/components/pos-product-search/pos-product-search.ts`:
+  - `branchId` ahora es un `input<number | null>(null)` en vez de un signal interno.
+  - El componente lee el branchId del input y lo pasa al servicio en cada request.
+  - Pipeline de busqueda unificado: un solo `Subject<{query, branchId}>` con `distinctUntilChanged` que dedupa cuando ambos disparan a la vez (typing + branch change).
+  - 2 tests nuevos cubren que el branchId se envia como query param y que cambiar el branch re-dispara la busqueda con el query actual.
+- `frontend/src/app/features/admin/pos/pos.ts` -- agregado `resolvedBranchId = computed(() => cashSession()?.branchId ?? null)` que se pasa al `<app-pos-product-search [branchId]="resolvedBranchId()" />` en `pos.html`. Asi las cards muestran stock real del branch de la caja abierta.
+- `frontend/src/app/features/admin/pos/components/pos-product-search/pos-product-search.css` -- input de busqueda mas proporcionado:
+  - Padding reducido (0.55rem en vez de 0.75rem).
+  - Border-radius 0.55rem en vez de 0.75rem.
+  - Focus ring de 1px (spec del design system) en vez de 3px.
+  - Icono usa Brown Bark (color de eyebrow en el design system) en vez de Leaf Green.
+  - Hover state sutil con border tint.
+- Total tests FE: 766/766 pasan (17 nuevos sobre 749 previos), build limpio.

@@ -123,7 +123,7 @@ export class ErrorMappingService {
     // Cash register errors
     CASH_SESSION_ALREADY_OPEN:
       'Ya hay una caja abierta para esta sucursal. Cerrala antes de abrir una nueva.',
-    CASH_SESSION_NOT_FOUND: 'No hay una caja abierta para esta sucursal.',
+    CASH_SESSION_NOT_FOUND: 'No hay una caja abierta para esta sucursal. Abrí una y reintentá la venta.',
     CASH_BRANCH_REQUIRED: 'Debes seleccionar una sucursal para gestionar la caja.',
     CASH_MOVEMENT_CLOSED_SESSION: 'No se pueden agregar movimientos a una caja ya cerrada.',
     CASH_SESSION_ALREADY_CLOSED: 'La caja ya esta cerrada.',

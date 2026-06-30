@@ -80,6 +80,15 @@ export class AdminPosPage implements OnInit {
   protected readonly lastResult = signal<OrderDetail | null>(null);
 
   /**
+   * Branch id used by the product search to resolve per-product stock.
+   * Sourced from the active cash session; falls back to null when no
+   * session is open (search results then show "Verificar" badges).
+   */
+  protected readonly resolvedBranchId = computed<number | null>(
+    () => this.cashSession()?.branchId ?? null,
+  );
+
+  /**
    * Whether the cashier can charge right now. Requires: items in the cart
    * AND an open cash session resolved.
    */
@@ -91,20 +100,61 @@ export class AdminPosPage implements OnInit {
   private readonly cartComponent = viewChild<PosCartComponent>('cartComponent');
 
   ngOnInit(): void {
+    this.refreshCashSession();
+  }
+
+  /**
+   * Re-probes the current cash session.
+   *
+   * <p>Invoked on three occasions:</p>
+   * <ol>
+   *   <li>Page load ({@code ngOnInit}) — initial badge state.</li>
+   *   <li>Tab visibility change — when the cashier returns to this tab the
+   *       session may have been opened or closed in another tab, so we
+   *       refresh to keep the badge and the {@code canCheckout} gate in
+   *       sync with the backend.</li>
+   *   <li>Checkout failure with {@code CASH_SESSION_NOT_FOUND} — auto-sync
+   *       the UI after a stale cache produced a 404.</li>
+   * </ol>
+   */
+  refreshCashSession(): void {
     this.loadCashSession();
   }
 
-  /** F8 triggers a checkout when the page is in a chargeable state. */
+  /**
+   * F8 triggers a checkout when the page is in a chargeable state.
+   *
+   * <p>Re-probes the cash session first to avoid firing a doomed POST when
+   * the cache is stale (e.g. the cashier closed the session in another
+   * tab). If the re-probe confirms no session, the canCheckout gate flips
+   * to false and the call short-circuits before the HTTP request.</p>
+   */
   @HostListener('document:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
     if (event.key !== 'F8') {
       return;
     }
-    if (!this.canCheckout() || this.processing()) {
+    if (this.processing()) {
       return;
     }
     event.preventDefault();
+    this.refreshCashSession();
     this.onCheckout();
+  }
+
+  /**
+   * When the tab regains focus (e.g. the cashier opened or closed a
+   * session in another window) we re-probe the session to keep the
+   * badge and the canCheckout gate in sync. Cheap (one GET) and prevents
+   * the stale-cache race that produced the
+   * "No se pudo cobrar / Sin caja abierta" toast.
+   */
+  @HostListener('document:visibilitychange')
+  onVisibilityChange(): void {
+    if (typeof document === 'undefined' || document.visibilityState !== 'visible') {
+      return;
+    }
+    this.refreshCashSession();
   }
 
   /** Called by the cart component's "Cobrar" button or the F8 shortcut. */
@@ -160,6 +210,13 @@ export class AdminPosPage implements OnInit {
           detail: message,
           life: 6000,
         });
+        // When the backend reports a missing or closed cash session, the
+        // cached page state is stale: re-probe so the badge and the
+        // canCheckout gate update immediately (and the cashier sees why
+        // the next attempt is blocked).
+        if (code === 'CASH_SESSION_NOT_FOUND' || code === 'CASH_BRANCH_REQUIRED') {
+          this.refreshCashSession();
+        }
       },
     });
   }

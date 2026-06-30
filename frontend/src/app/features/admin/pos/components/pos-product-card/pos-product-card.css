@@ -1,8 +1,9 @@
 /* ============================================================================
    POS product card — visual layout
-   Compact card optimised for fast cashier scanning. Uses design tokens
-   instead of hard-coded colors and follows the 12px card radius + mint
-   wash surface used across the admin.
+   Compact, scannable tile for the cashier. Uses the design tokens for every
+   color. The stock badge is the most prominent visual cue and uses a clear
+   three-state tone (ok / out / unknown) so the cashier never has to guess
+   whether an item is sellable.
    ============================================================================ */
 
 :host {
@@ -10,17 +11,20 @@
 }
 
 .pos-card {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  min-height: 7.5rem;
   text-align: left;
   padding: 0.85rem 1rem;
   background: var(--color-surface);
-  border: 1px solid rgba(7, 95, 54, 0.1);
+  border: 1px solid var(--color-border-neutral, #e7e7e7);
   border-radius: 0.75rem;
-  box-shadow: 0 0 0.5px rgba(0, 0, 0, 0.06), 0 1px 1px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0 0.5px rgba(0, 0, 0, 0.14), 0 1px 1px rgba(0, 0, 0, 0.24);
   color: var(--color-text);
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+  gap: 0.65rem;
 }
 
 .pos-card:hover:not(:disabled) {
@@ -35,118 +39,131 @@
 }
 
 .pos-card:active:not(:disabled) {
-  transform: scale(0.99);
+  /* Design system signature: scale(0.95) on press */
+  transform: scale(0.95);
 }
 
-/* Out-of-stock variant — muted surface, no hover ring */
 .pos-card--out-of-stock,
-.pos-card--disabled {
+.pos-card:disabled {
   background: var(--color-mint-wash-pale);
-  border-color: rgba(7, 95, 54, 0.06);
+  border-color: rgba(0, 0, 0, 0.06);
   cursor: not-allowed;
-}
-
-.pos-card--disabled {
-  opacity: 0.72;
+  opacity: 0.78;
+  box-shadow: none;
 }
 
 /* ---------------------------------------------------------------------------
-   Head row — name + brand on the left, price on the right
+   Head row: name + brand on the left, price on the right
    --------------------------------------------------------------------------- */
 
 .pos-card__head {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.85rem;
-  margin-bottom: 0.55rem;
+  gap: 0.65rem;
+  min-height: 0;
 }
 
-.pos-card__title-wrap {
+.pos-card__heading {
+  flex: 1 1 0;
   min-width: 0;
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
-.pos-card__title {
+.pos-card__name {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 650;
-  line-height: 1.2;
+  line-height: 1.25;
   color: var(--color-text);
-  white-space: nowrap;
+  /* Up to 2 lines before truncating with an ellipsis. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 .pos-card__brand {
-  margin: 0.15rem 0 0;
-  font-size: 0.78rem;
+  margin: 0;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
+  font-weight: 500;
+  letter-spacing: 0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.pos-card__price-block {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+}
+
 .pos-card__price {
-  font-size: 1rem;
-  font-weight: 750;
+  font-size: 1.15rem;
+  font-weight: 800;
   color: var(--color-primary-dark);
-  white-space: nowrap;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 /* ---------------------------------------------------------------------------
-   Foot row — barcode on the left, stock pill on the right
+   Stock badge — the cashier's primary signal
    --------------------------------------------------------------------------- */
 
-.pos-card__foot {
+.pos-card__stock-row {
+  margin-top: auto;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
-  font-size: 0.78rem;
-}
-
-.pos-card__barcode {
-  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  background: var(--color-mint-wash-subtle);
-  padding: 0.15rem 0.45rem;
-  border-radius: 0.35rem;
-  border: 1px solid rgba(7, 95, 54, 0.08);
-}
-
-.pos-card__barcode--empty {
-  background: transparent;
-  border-color: transparent;
 }
 
 .pos-card__stock {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  padding: 0.15rem 0.55rem;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   background: var(--color-mint-wash-subtle);
-  border: 1px solid rgba(7, 95, 54, 0.08);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  color: var(--color-text-muted);
+  max-width: 100%;
+}
+
+.pos-card__stock-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.pos-card__stock-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pos-card__stock--ok {
-  color: var(--color-primary-dark);
-  background: var(--color-mint-wash);
+  /* Success Badge: Leaf Green text on Mint Leaf Wash, green border. */
+  color: var(--color-primary);
+  background: rgba(212, 233, 226, 0.72);
   border-color: rgba(47, 141, 114, 0.18);
 }
 
 .pos-card__stock--out {
+  /* Danger Badge: Red text on Red Tint, red border. */
   color: var(--color-red);
   background: var(--color-red-tint);
   border-color: rgba(200, 32, 20, 0.18);
 }
 
-.pos-card__stock--out i {
-  font-size: 0.72rem;
+.pos-card__stock--unknown {
+  /* Neutral Badge: Text Black Soft on Ceramic. */
+  color: rgba(0, 0, 0, 0.58);
+  background: var(--color-ceramic, #e7dbc0);
+  border-color: rgba(0, 0, 0, 0.06);
 }

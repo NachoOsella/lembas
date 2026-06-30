@@ -10,6 +10,14 @@
       <app-badge tone="success" icon="pi pi-check-circle" data-testid="cash-session-badge">
         Caja abierta #{{ session.id }}
       </app-badge>
+      <app-button
+        variant="ghost"
+        size="sm"
+        icon="pi pi-refresh"
+        ariaLabel="Refrescar estado de la caja"
+        (click)="refreshCashSession()"
+        data-testid="refresh-cash-session-button"
+      ></app-button>
     } @else if (!isCashSessionLoading()) {
       <app-badge tone="danger" icon="pi pi-exclamation-circle" data-testid="cash-session-missing">
         Sin caja abierta
@@ -20,12 +28,20 @@
         routerLink="/admin/cash/open"
         data-testid="open-cash-button"
       >Abrir caja</app-button>
+      <app-button
+        variant="ghost"
+        size="sm"
+        icon="pi pi-refresh"
+        ariaLabel="Refrescar estado de la caja"
+        (click)="refreshCashSession()"
+        data-testid="refresh-cash-session-button"
+      ></app-button>
     }
   </app-page-header>
 
   <div class="pos-page__grid">
     <section class="pos-page__left" aria-label="Busqueda de productos">
-      <app-pos-product-search />
+      <app-pos-product-search [branchId]="resolvedBranchId()" />
     </section>
     <section class="pos-page__right" aria-label="Carrito y cobro">
       <app-pos-cart

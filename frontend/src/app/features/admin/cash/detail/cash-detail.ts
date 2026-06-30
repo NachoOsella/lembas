@@ -115,11 +115,17 @@ export class CashDetail implements OnInit {
       .reduce((sum, m) => sum + Number(m.amount), 0),
   );
 
-  /** Expected cash in drawer = opening + in - out + adjustments. */
-  protected readonly expectedCash = computed(() => {
-    const opening = Number(this.session()?.openingCashAmount ?? 0);
-    return opening + this.totalIn() - this.totalOut() + this.totalAdjustments();
-  });
+  /**
+   * Net total of every movement through the session (any payment method).
+   * Excludes the opening amount so the two stats serve different purposes:
+   * - {@code totalMovements} answers "how much activity went through the
+   *   drawer", including QR / transfers / card.
+   * - {@code cashInDrawer} answers "how much physical cash should be
+   *   sitting in the drawer right now".
+   */
+  protected readonly totalMovements = computed(
+    () => this.totalIn() - this.totalOut() + this.totalAdjustments(),
+  );
 
   /**
    * Physical cash that should be in the drawer.
@@ -175,10 +181,13 @@ export class CashDetail implements OnInit {
       trend: this.totalOut() > 0 ? 'down' : 'neutral',
     },
     {
-      label: 'Esperado en caja',
-      value: this.formatCurrency(this.expectedCash()),
-      detail: 'Apertura + ingresos - egresos',
-      icon: 'pi pi-wallet',
+      label: 'Total movimientos',
+      value: this.formatCurrency(this.totalMovements()),
+      detail:
+        this.movementsCount() > 0
+          ? `Neto de todos los movimientos (${this.movementsCount()})`
+          : 'Sin movimientos registrados',
+      icon: 'pi pi-chart-line',
       tone: 'forest',
     },
     {

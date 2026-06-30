@@ -226,8 +226,12 @@ public class CashService {
         List<CashEntryDto> entries = new ArrayList<>();
         cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(sessionId)
                 .forEach(movement -> entries.add(toEntry(movement)));
-        paymentRepository.findByCashSessionIdAndStatusAndMethodOrderByIdAsc(
-                sessionId, PaymentStatus.APPROVED, PaymentMethod.CASH
+        // Include every APPROVED payment regardless of method so the FE
+        // timeline shows QR, transfers, card, etc. alongside cash. The
+        // physical-cash calculations on top of this list keep filtering by
+        // CASH; the table here is a chronological activity log.
+        paymentRepository.findByCashSessionIdAndStatusOrderByIdAsc(
+                sessionId, PaymentStatus.APPROVED
         ).forEach(payment -> entries.add(toEntry(payment)));
         entries.sort(Comparator
                 .comparing(CashEntryDto::occurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
