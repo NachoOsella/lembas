@@ -138,10 +138,13 @@ class PreferenceServiceTest {
     }
 
     @Test
-    void shouldCancelStaleFakePreferenceAndCreateNewRealOne() {
+    void shouldCancelStalePreferenceAndCreateFreshOne() {
         User customer = customer(10L);
         Order order = orderForCustomer(customer, OrderStatus.PENDING_PAYMENT, OrderType.ONLINE);
-        // Simulate a pending payment left behind by the FakePaymentGateway.
+        // Simulate a pending payment left behind by a previous checkout attempt
+        // (for example, the customer navigated away and never paid). MP
+        // Checkout Pro preferences are single-use, so the next attempt must
+        // cancel the stale one and create a fresh preference.
         Payment stale = new Payment();
         stale.setId(8L);
         stale.setOrder(order);
@@ -149,7 +152,7 @@ class PreferenceServiceTest {
         stale.setMethod(PaymentMethod.CHECKOUT_PRO);
         stale.setStatus(PaymentStatus.PENDING);
         stale.setAmount(order.getTotal());
-        stale.setProviderPreferenceId("fake-deadbeef-1234");
+        stale.setProviderPreferenceId("1234567890");
 
         when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(

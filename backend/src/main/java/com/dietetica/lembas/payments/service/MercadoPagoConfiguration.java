@@ -7,24 +7,22 @@ import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.core.MPRequestOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Wires the {@link com.dietetica.lembas.payments.gateway.PaymentGateway}
- * implementation used by the application and the official Mercado Pago SDK
- * clients it depends on.
+ * Wires the official Mercado Pago SDK clients and the {@link
+ * com.dietetica.lembas.payments.gateway.PaymentGateway} implementation used by
+ * the application.
  *
- * <p>The active implementation is driven by the {@code app.payments.gateway}
- * property: {@code fake} selects {@link FakePaymentGateway} (default for dev
- * and test), {@code mercadopago} selects {@link MercadoPagoGateway}. The rest
- * of the application stays decoupled from any specific provider.</p>
+ * <p>The gateway is the production {@link MercadoPagoGateway} backed by the
+ * {@code com.mercadopago:sdk-java} SDK. There is no alternative in-memory
+ * implementation: every checkout goes through the real Mercado Pago REST API.</p>
  *
- * <p>When the real Mercado Pago gateway is selected, this configuration builds
- * the official SDK clients ({@link PreferenceClient}, {@link PaymentClient},
+ * <p>This configuration also builds the official SDK clients
+ * ({@link PreferenceClient}, {@link PaymentClient},
  * {@link MerchantOrderClient}) as Spring beans and publishes a default
  * {@link MPRequestOptions} with the configured timeouts. Per-request
  * customization (idempotency key, etc.) is layered on top by the gateway.</p>
@@ -35,26 +33,12 @@ public class MercadoPagoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(MercadoPagoConfiguration.class);
 
-    /** Property key selecting the active gateway implementation. */
-    public static final String GATEWAY_PROPERTY = "app.payments.gateway";
-
     /** Default Mercado Pago base URL when none is configured. */
     static final String DEFAULT_BASE_URL = "https://api.mercadopago.com";
 
     /**
-     * Resolves the gateway mode from configuration, defaulting to
-     * {@link GatewayMode#FAKE} so the application boots in development and
-     * CI without external services.
-     */
-    @Bean
-    public GatewayMode gatewayMode(@Value("${" + GATEWAY_PROPERTY + ":fake}") String mode) {
-        return GatewayMode.from(mode);
-    }
-
-    /**
-     * Seeds the SDK global state and validates that the credentials required
-     * by the real Mercado Pago gateway are present whenever
-     * {@code app.payments.gateway=mercadopago} is set.
+     * Validates that the credentials required by the real Mercado Pago
+     * gateway are present and seeds the SDK global state.
      *
      * <p>Fail-fast at startup: production misconfigurations do not surface
      * only at the first checkout attempt. The validation runs as an
@@ -69,22 +53,16 @@ public class MercadoPagoConfiguration {
      * for the current sprint.</p>
      */
     @Bean
-    public ApplicationRunner mercadoPagoCredentialsGuard(
-            MercadoPagoProperties properties, GatewayMode mode
-    ) {
-        return args -> validateAndSeed(properties, mode);
+    public ApplicationRunner mercadoPagoCredentialsGuard(MercadoPagoProperties properties) {
+        return args -> validateAndSeed(properties);
     }
 
     /**
-     * Visible for tests: validates the Mercado Pago credentials required by
-     * the real gateway and seeds the SDK global state. Throws
-     * {@link IllegalStateException} on misconfiguration so the application
-     * fails fast at startup.
+     * Visible for tests: validates the Mercado Pago credentials and seeds the
+     * SDK global state. Throws {@link IllegalStateException} on
+     * misconfiguration so the application fails fast at startup.
      */
-    static void validateAndSeed(MercadoPagoProperties properties, GatewayMode mode) {
-        if (mode != GatewayMode.MERCADO_PAGO) {
-            return;
-        }
+    static void validateAndSeed(MercadoPagoProperties properties) {
         requireNonBlank(properties.accessToken(), "app.mercado-pago.access-token");
         requireNonBlank(properties.webhookSecret(), "app.mercado-pago.webhook-secret");
         // Seed the SDK global state once at startup. Per-request options
@@ -129,7 +107,7 @@ public class MercadoPagoConfiguration {
     private static void requireNonBlank(String value, String propertyName) {
         if (value == null || value.isBlank()) {
             throw new IllegalStateException(
-                    propertyName + " must be set when " + GATEWAY_PROPERTY + "=mercadopago"
+                    propertyName + " must be set"
             );
         }
     }

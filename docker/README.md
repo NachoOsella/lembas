@@ -66,7 +66,6 @@ prints a reminder and pauses harmlessly.
 3. In `docker/.env` set:
    ```bash
    NGROK_AUTHTOKEN=<your-authtoken>
-   PAYMENTS_GATEWAY=mercadopago
    MP_ACCESS_TOKEN=TEST-...   # from the Mercado Pago Developers panel, "Pruebas" tab
    MP_WEBHOOK_SECRET=<a-strong-shared-secret>
    MP_NOTIFICATION_URL=http://placeholder.invalid/api/webhooks/mercadopago  # replaced after ngrok starts
@@ -200,9 +199,8 @@ The `.env` file at `docker/.env` controls all configuration. Key variables:
 | `JWT_SECRET` | *(required)* | 256-bit+ secret for JWT signing |
 | `SPRING_PROFILES_ACTIVE` | `prod` | Active Spring profile |
 | `WEB_PORT` | `80` | Public HTTP port |
-| `PAYMENTS_GATEWAY` | `fake` | `fake` (in-memory) or `mercadopago` (real HTTP) |
-| `MP_ACCESS_TOKEN` | *(blank)* | Required when `PAYMENTS_GATEWAY=mercadopago` |
-| `MP_WEBHOOK_SECRET` | *(blank)* | Required when `PAYMENTS_GATEWAY=mercadopago` |
+| `MP_ACCESS_TOKEN` | *(required)* | Mercado Pago access token (sandbox or production) |
+| `MP_WEBHOOK_SECRET` | *(required)* | Shared secret used to verify Mercado Pago webhook signatures |
 | `MP_NOTIFICATION_URL` | `http://localhost:8080/api/webhooks/mercadopago` | Public URL MP POSTs to |
 | `MP_SUCCESS_URL` / `MP_FAILURE_URL` / `MP_PENDING_URL` | `http://localhost/customer/payment/callback` | Customer redirect targets |
 | `NGROK_AUTHTOKEN` | *(blank)* | ngrok authtoken. Leave blank to skip the tunnel; set to enable Mercado Pago sandbox testing |

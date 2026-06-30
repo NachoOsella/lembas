@@ -37,7 +37,6 @@ This keeps the backend simpler while still keeping the external API calls locali
 
 | Environment variable | Description |
 |---|---|
-| `PAYMENTS_GATEWAY` | `fake` (default, in-memory) or `mercadopago` (real HTTP) |
 | `MP_ACCESS_TOKEN` | Mercado Pago access token (sandbox or production) |
 | `MP_WEBHOOK_SECRET` | Secret for webhook signature verification |
 | `MP_NOTIFICATION_URL` | Public URL MP POSTs webhook notifications to |
@@ -45,9 +44,11 @@ This keeps the backend simpler while still keeping the external API calls locali
 | `MP_FAILURE_URL` | Redirect URL after failed payment |
 | `MP_PENDING_URL` | Redirect URL for pending payment |
 
-The `accessToken` and `webhookSecret` are not required at startup when
-`PAYMENTS_GATEWAY=fake`. Switching to `mercadopago` makes them mandatory
-and the application fails fast at boot if they are blank.
+The application always uses the real Mercado Pago SDK gateway. `accessToken`
+and `webhookSecret` are mandatory and the application fails fast at boot if
+either is blank. The Docker compose stack requires both values via
+environment variables, while `application.yml` ships benign placeholders so
+unit tests and the offline smoke test can boot without real credentials.
 
 ### Local sandbox testing with ngrok
 

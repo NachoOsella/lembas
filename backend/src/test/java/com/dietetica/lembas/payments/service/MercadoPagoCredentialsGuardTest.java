@@ -6,59 +6,51 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Unit tests for the credentials guard that fails fast when the real Mercado
- * Pago gateway is selected without {@code accessToken} and {@code webhookSecret}.
+ * Unit tests for the credentials guard that fails fast when the Mercado Pago
+ * gateway is started without {@code accessToken} and {@code webhookSecret}.
  */
 class MercadoPagoCredentialsGuardTest {
 
     @Test
-    void shouldPassWhenFakeGatewayIsSelectedRegardlessOfCredentials() {
-        MercadoPagoProperties properties = properties(null, null);
-
-        assertThatCode(() -> MercadoPagoConfiguration.validateAndSeed(properties, GatewayMode.FAKE))
-                .doesNotThrowAnyException();
-    }
-
-    @Test
-    void shouldPassWhenMercadoPagoGatewayIsSelectedWithFullCredentials() {
+    void shouldPassWhenCredentialsArePresent() {
         MercadoPagoProperties properties = properties("test-token", "test-secret");
 
-        assertThatCode(() -> MercadoPagoConfiguration.validateAndSeed(properties, GatewayMode.MERCADO_PAGO))
+        assertThatCode(() -> MercadoPagoConfiguration.validateAndSeed(properties))
                 .doesNotThrowAnyException();
     }
 
     @Test
-    void shouldFailWhenMercadoPagoGatewayIsSelectedWithoutAccessToken() {
+    void shouldFailWhenAccessTokenIsMissing() {
         MercadoPagoProperties properties = properties(null, "test-secret");
 
-        assertThatThrownBy(() -> MercadoPagoConfiguration.validateAndSeed(properties, GatewayMode.MERCADO_PAGO))
+        assertThatThrownBy(() -> MercadoPagoConfiguration.validateAndSeed(properties))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("access-token");
     }
 
     @Test
-    void shouldFailWhenMercadoPagoGatewayIsSelectedWithBlankAccessToken() {
+    void shouldFailWhenAccessTokenIsBlank() {
         MercadoPagoProperties properties = properties("   ", "test-secret");
 
-        assertThatThrownBy(() -> MercadoPagoConfiguration.validateAndSeed(properties, GatewayMode.MERCADO_PAGO))
+        assertThatThrownBy(() -> MercadoPagoConfiguration.validateAndSeed(properties))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("access-token");
     }
 
     @Test
-    void shouldFailWhenMercadoPagoGatewayIsSelectedWithoutWebhookSecret() {
+    void shouldFailWhenWebhookSecretIsMissing() {
         MercadoPagoProperties properties = properties("test-token", null);
 
-        assertThatThrownBy(() -> MercadoPagoConfiguration.validateAndSeed(properties, GatewayMode.MERCADO_PAGO))
+        assertThatThrownBy(() -> MercadoPagoConfiguration.validateAndSeed(properties))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("webhook-secret");
     }
 
     @Test
-    void shouldFailWhenMercadoPagoGatewayIsSelectedWithBlankWebhookSecret() {
+    void shouldFailWhenWebhookSecretIsBlank() {
         MercadoPagoProperties properties = properties("test-token", "");
 
-        assertThatThrownBy(() -> MercadoPagoConfiguration.validateAndSeed(properties, GatewayMode.MERCADO_PAGO))
+        assertThatThrownBy(() -> MercadoPagoConfiguration.validateAndSeed(properties))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("webhook-secret");
     }

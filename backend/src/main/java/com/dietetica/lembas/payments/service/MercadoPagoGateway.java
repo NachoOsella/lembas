@@ -19,7 +19,6 @@ import com.mercadopago.resources.payment.Payment;
 import com.mercadopago.resources.preference.Preference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -42,10 +41,6 @@ import java.util.concurrent.Callable;
  * of the SDK and is performed by {@link WebhookSignatureValidator}.</p>
  */
 @Component
-@ConditionalOnProperty(
-        name = MercadoPagoConfiguration.GATEWAY_PROPERTY,
-        havingValue = "mercadopago"
-)
 public class MercadoPagoGateway implements PaymentGateway {
 
     private static final Logger log = LoggerFactory.getLogger(MercadoPagoGateway.class);

@@ -43,12 +43,10 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75.0 -XX:+UseContainerSupport}
-      # Gateway mode: fake (in-memory) or mercadopago (real HTTP).
-      PAYMENTS_GATEWAY: ${PAYMENTS_GATEWAY:-fake}
-      # Required when SPRING_PROFILES_ACTIVE=prod and MercadoPago integration is enabled.
-      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
-      # Required when SPRING_PROFILES_ACTIVE=prod and MercadoPago webhooks are enabled.
-      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
+      # Required: real Mercado Pago access token (sandbox or production).
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:?MP_ACCESS_TOKEN is required}
+      # Required: shared secret used to verify Mercado Pago webhook signatures.
+      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:?MP_WEBHOOK_SECRET is required}
       # Public outbound webhook URL embedded in each checkout preference so MP
       # knows where to POST notifications (e.g. the ngrok tunnel in sandbox).
       MP_NOTIFICATION_URL: ${MP_NOTIFICATION_URL:-}

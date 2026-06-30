@@ -11,13 +11,11 @@ import org.springframework.validation.annotation.Validated;
  *
  * <p>Bound from the {@code app.mercado-pago.*} prefix and validated on startup.
  * The {@code accessToken} and {@code webhookSecret} are intentionally not
- * {@code @NotBlank}: the application boots with the in-memory
- * {@code FakePaymentGateway} when they are empty, which is the expected
- * behaviour for local development and the default {@code dev}/{@code test}
- * profiles. Production deployments that switch to the real Mercado Pago
- * gateway must override both values via environment variables; the
- * {@link MercadoPagoConfiguration} performs a runtime check at bean
- * construction time so misconfigurations fail fast.</p>
+ * {@code @NotBlank}: benign placeholders are provided in {@code application.yml}
+ * so unit tests and the offline smoke test can boot without real credentials.
+ * {@link MercadoPagoConfiguration} performs a runtime check at application
+ * startup so misconfigurations fail fast; the Docker compose stack requires
+ * both values to be set via environment variables in any deployment.</p>
  */
 @ConfigurationProperties(prefix = "app.mercado-pago")
 @Validated

@@ -9,11 +9,14 @@ import java.util.Optional;
 /**
  * Abstraction over an external payment provider.
  *
- * <p>Decouples payment use cases (preference creation, webhook processing) from any
- * concrete Mercado Pago client so the rest of the system can be unit-tested with a
- * deterministic {@link com.dietetica.lembas.payments.service.FakePaymentGateway}
- * and the real implementation can be swapped or extended without touching the
- * application services.</p>
+ * <p>Decouples payment use cases (preference creation, webhook processing) from
+ * any concrete Mercado Pago client so the rest of the system can be
+ * unit-tested by mocking this interface and the real implementation can be
+ * extended without touching the application services.</p>
+ *
+ * <p>The production implementation is
+ * {@link com.dietetica.lembas.payments.service.MercadoPagoGateway}, backed by
+ * the official {@code com.mercadopago:sdk-java} SDK.</p>
  *
  * <p>Implementations must be safe to call from multiple threads.</p>
  */
