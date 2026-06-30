@@ -1,0 +1,108 @@
+<app-section-card
+  eyebrow="Venta"
+  title="Carrito"
+  [description]="(itemCount() === 1 ? '1 item' : (itemCount() + ' items')) + ' en el carrito'"
+  class="pos-cart"
+>
+  @if (!hasLines()) {
+    <app-empty-state
+      icon="pi pi-shopping-cart"
+      title="Carrito vacio"
+      description="Escaneá un producto o buscalo por nombre para empezar la venta."
+    />
+  } @else {
+    <ul class="pos-cart__lines" role="list" data-testid="pos-cart-lines">
+      @for (line of lines(); track line.productId) {
+        <li class="pos-cart__line" [attr.data-testid]="'pos-cart-line-' + line.productId">
+          <div class="pos-cart__line-info">
+            <span class="pos-cart__line-name">{{ line.name }}</span>
+            <span class="pos-cart__line-unit">$ {{ line.unitPrice }} c/u</span>
+          </div>
+          <div class="pos-cart__line-qty">
+            <app-input-number
+              [value]="line.quantity"
+              (valueChange)="onQuantityChange(line.productId, $event)"
+              [min]="0"
+              [max]="999"
+              [showButtons]="true"
+            />
+          </div>
+          <span class="pos-cart__line-subtotal" data-testid="pos-line-subtotal">
+            $ {{ lineSubtotalFormatted(line) }}
+          </span>
+          <app-button
+            icon="pi pi-trash"
+            variant="ghost"
+            size="sm"
+            [iconOnly]="true"
+            ariaLabel="Quitar item"
+            (click)="cart.removeLine(line.productId)"
+            [attr.data-testid]="'pos-remove-' + line.productId"
+          />
+        </li>
+      }
+    </ul>
+
+    <div class="pos-cart__totals" data-testid="pos-cart-totals">
+      <span class="pos-cart__total-label">Total</span>
+      <span class="pos-cart__total-amount" data-testid="pos-cart-total">
+        $ {{ totalFormatted() }}
+      </span>
+    </div>
+
+    <app-pos-payment-selector
+      [value]="selectedMethod()"
+      (valueChange)="selectedMethod.set($event)"
+      [disabled]="processing()"
+    />
+
+    @if (requiresCash()) {
+      <div class="pos-cart__cash">
+        <label for="pos-cash-received" class="pos-cart__cash-label">
+          Efectivo recibido
+        </label>
+        <div class="pos-cart__cash-input">
+          <app-input-number
+            inputId="pos-cash-received"
+            [value]="cashReceived()"
+            (valueChange)="cashReceived.set($event)"
+            [min]="0"
+            mode="currency"
+            currency="ARS"
+            locale="es-AR"
+            placeholder="0,00"
+          />
+        </div>
+        @if (cashShort(); as short) {
+          <app-badge tone="warning" icon="pi pi-exclamation-circle" data-testid="cash-short">
+            Falta $ {{ short }}
+          </app-badge>
+        }
+        @if (cashChange(); as change) {
+          <app-badge tone="success" icon="pi pi-check-circle" data-testid="cash-change">
+            Vuelto $ {{ change }}
+          </app-badge>
+        }
+      </div>
+    }
+
+    <div class="pos-cart__actions">
+      <app-button
+        variant="secondary"
+        icon="pi pi-trash"
+        (click)="onClearCart()"
+        [disabled]="processing()"
+        data-testid="pos-clear-button"
+      >Vaciar carrito</app-button>
+      <app-button
+        variant="primary"
+        icon="pi pi-bolt"
+        (click)="onCheckout()"
+        [disabled]="!canConfirmCheckout()"
+        [loading]="processing()"
+        size="lg"
+        testId="pos-checkout-button"
+      >Cobrar (F8)</app-button>
+    </div>
+  }
+</app-section-card>
