@@ -205,16 +205,19 @@ class CashServiceTest {
         setId(session, 42L);
         when(cashSessionRepository.findById(42L)).thenReturn(Optional.of(session));
         when(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(42L)).thenReturn(List.of());
-        when(paymentRepository.findByCashSessionIdAndStatusAndMethodOrderByIdAsc(
-                eq(42L), any(), any())).thenReturn(List.of());
+        when(paymentRepository.findByCashSessionIdAndStatusOrderByIdAsc(
+                eq(42L), any())).thenReturn(List.of());
         when(cashSessionMapper.toDto(eq(session), any())).thenReturn(dto(42L, 1L));
 
         CashSessionDto result = cashService.getSessionById(42L);
 
         assertThat(result.id()).isEqualTo(42L);
         verify(cashMovementRepository).findByCashSessionIdOrderByCreatedAtAsc(42L);
-        verify(paymentRepository).findByCashSessionIdAndStatusAndMethodOrderByIdAsc(
-                eq(42L), any(), any());
+        // The unified entries list now includes every APPROVED payment
+        // (QR / transfers / card included) so the FE timeline shows the
+        // full picture. The physical-cash stats still filter by CASH.
+        verify(paymentRepository).findByCashSessionIdAndStatusOrderByIdAsc(
+                eq(42L), any());
     }
 
     @Test
