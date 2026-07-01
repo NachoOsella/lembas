@@ -7,6 +7,25 @@
   box-shadow: var(--shadow-card);
 }
 
+/* Hero decorative glows: replaced blur-3xl with cheap radial gradients. */
+.catalog-page__hero-glow--orange {
+  background: radial-gradient(
+    circle,
+    rgba(242, 157, 82, 0.18) 0%,
+    rgba(242, 157, 82, 0.08) 35%,
+    transparent 70%
+  );
+}
+
+.catalog-page__hero-glow--green {
+  background: radial-gradient(
+    circle,
+    rgba(47, 141, 114, 0.22) 0%,
+    rgba(47, 141, 114, 0.1) 40%,
+    transparent 75%
+  );
+}
+
 .catnav__pill:focus-visible,
 .catalog-page__card a:focus-visible {
   outline: 2px solid var(--color-primary);
