@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { CatalogService } from '../../../core/services/catalog';
@@ -23,6 +23,7 @@ const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-catalog',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     EmptyState,
     ErrorAlert,

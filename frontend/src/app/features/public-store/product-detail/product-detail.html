@@ -32,6 +32,8 @@
                 <img
                   [src]="p.imageUrl"
                   [alt]="p.name"
+                  fetchpriority="high"
+                  decoding="async"
                   class="relative z-[1] h-full w-full object-cover"
                 />
               } @else {

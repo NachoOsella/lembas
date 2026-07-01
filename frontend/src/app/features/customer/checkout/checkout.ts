@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
@@ -16,6 +16,7 @@ import { QuantityStepper } from '../../../shared/components/quantity-stepper/qua
 
 @Component({
   selector: 'app-checkout',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, AppButton, AppEyebrow, EmptyState, ErrorAlert, QuantityStepper, CurrencyArPipe],
   templateUrl: './checkout.html',
   styleUrl: './checkout.css',

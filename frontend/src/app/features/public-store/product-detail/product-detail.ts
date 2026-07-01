@@ -1,5 +1,5 @@
 import { ViewportScroller } from '@angular/common';
-import { Component, DestroyRef, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 
@@ -18,6 +18,7 @@ import { QuantityStepper } from '../../../shared/components/quantity-stepper/qua
 
 @Component({
   selector: 'app-product-detail',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
     AppBadge,

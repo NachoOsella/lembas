@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 
@@ -15,6 +15,7 @@ import {
 } from '../../../shared/components/app-store-footer/app-store-footer';
 @Component({
   selector: 'app-store-layout',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, AppStoreNav, AppStoreFooter],
   templateUrl: './store-layout.html',
   styleUrl: './store-layout.css',

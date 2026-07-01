@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -43,6 +43,7 @@ interface TimelineStep {
  */
 @Component({
   selector: 'app-order-detail',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     AppButton,
     AppEyebrow,
@@ -53,6 +54,7 @@ interface TimelineStep {
     ShortDateArPipe,
   ],
   templateUrl: './order-detail.html',
+  styleUrl: './order-detail.css',
 })
 export class OrderDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);

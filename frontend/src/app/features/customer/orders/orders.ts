@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { CustomerOrderService } from '../../../core/services/customer-order';
@@ -18,6 +18,7 @@ import { LoadingSpinner } from '../../../shared/components/loading-spinner/loadi
  */
 @Component({
   selector: 'app-orders',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AppButton, AppEyebrow, AppDataTable, EmptyState, ErrorAlert, LoadingSpinner],
   templateUrl: './orders.html',
   styleUrl: './orders.css',

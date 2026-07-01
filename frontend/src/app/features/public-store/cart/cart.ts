@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { Cart, CartItem } from '../../../core/services/cart';
@@ -19,6 +19,7 @@ import { EmptyState } from '../../../shared/components/empty-state/empty-state';
  */
 @Component({
   selector: 'app-cart',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CurrencyArPipe, AppButton, AppEyebrow, EmptyState],
   templateUrl: './cart.html',
   styleUrl: './cart.css',
