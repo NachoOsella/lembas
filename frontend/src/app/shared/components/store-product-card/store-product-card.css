@@ -35,6 +35,13 @@
   }
 }
 
+/* -- Mobile: drop the texture overlay (mix-blend-mode is expensive) -- */
+@media (max-width: 639px) {
+  .store-product-card__texture {
+    display: none;
+  }
+}
+
 /* -- Image section -------------------------------------------------- */
 .store-product-card__image {
   position: relative;
@@ -91,10 +98,9 @@
   width: 72px;
   height: 72px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.96);
   color: rgba(0, 0, 0, 0.15);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(4px);
   font-size: 1.75rem;
 }
 
@@ -104,14 +110,13 @@
   top: 0.75rem;
   z-index: 2;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.96);
   padding: 0.2rem 0.6rem;
   font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   max-width: calc(100% - 1.5rem);
   overflow: hidden;
@@ -140,13 +145,14 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.96);
   color: var(--color-primary);
   opacity: 0;
   transform: translateY(1rem);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(4px);
-  transition: all 0.5s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
   font-size: 0.875rem;
 }
 
@@ -167,7 +173,6 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  backdrop-filter: blur(4px);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
