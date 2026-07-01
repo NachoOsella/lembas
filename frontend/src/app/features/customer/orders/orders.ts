@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { CustomerOrderService } from '../../../core/services/customer-order';
@@ -6,9 +6,14 @@ import { OrderSummary, orderStatusLabel, orderStatusSeverity } from '../../../sh
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
 import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
+import { AppPagination } from '../../../shared/components/app-pagination/app-pagination';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
+import { SeverityPill, SeverityPillTone } from '../../../shared/components/severity-pill/severity-pill';
+
+/** Page size used by the mobile card list. */
+const MOBILE_PAGE_SIZE = 8;
 
 /**
  * Lists the authenticated customer's order history.
@@ -19,7 +24,16 @@ import { LoadingSpinner } from '../../../shared/components/loading-spinner/loadi
 @Component({
   selector: 'app-orders',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppButton, AppEyebrow, AppDataTable, EmptyState, ErrorAlert, LoadingSpinner],
+  imports: [
+    AppButton,
+    AppEyebrow,
+    AppDataTable,
+    AppPagination,
+    EmptyState,
+    ErrorAlert,
+    LoadingSpinner,
+    SeverityPill,
+  ],
   templateUrl: './orders.html',
   styleUrl: './orders.css',
 })
@@ -30,6 +44,17 @@ export class Orders implements OnInit {
   protected readonly loading = signal(true);
   protected readonly error = signal(false);
   protected readonly orders = signal<OrderSummary[]>([]);
+
+  /** Mobile card list pagination state. */
+  protected readonly first = signal(0);
+  protected readonly pageSize = signal(MOBILE_PAGE_SIZE);
+
+  /** Slice of `orders` for the current mobile page. */
+  protected readonly pagedOrders = computed(() => {
+    const all = this.orders();
+    const start = this.first();
+    return all.slice(start, start + this.pageSize());
+  });
 
   /** Column definitions for the app-data-table. */
   protected readonly columns: ColumnDef[] = [
@@ -51,6 +76,7 @@ export class Orders implements OnInit {
     this.service.getOrders().subscribe({
       next: (data) => {
         this.orders.set(data);
+        this.first.set(0);
         this.loading.set(false);
       },
       error: () => {
@@ -58,6 +84,13 @@ export class Orders implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  /** Handles page changes for the mobile card list pagination. */
+  protected onPageChange(event: { first: number; rows: number }): void {
+    this.first.set(event.first);
+    this.pageSize.set(event.rows);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   /** Navigates to the detail page for one order. */
@@ -78,6 +111,23 @@ export class Orders implements OnInit {
   /** Returns a PrimeNG severity key for status badge colouring. */
   protected statusSeverity(status: OrderSummary['status']): string {
     return orderStatusSeverity(status);
+  }
+
+  /**
+   * Maps the PrimeNG-style severity to the {@link SeverityPillTone}
+   * vocabulary used by the mobile card's status pill.
+   */
+  protected statusTone(status: OrderSummary['status']): SeverityPillTone {
+    switch (orderStatusSeverity(status)) {
+      case 'success':
+        return 'success';
+      case 'warn':
+        return 'warn';
+      case 'danger':
+        return 'danger';
+      default:
+        return 'neutral';
+    }
   }
 
   /** Formats an ISO date string as a locale-aware short date. */

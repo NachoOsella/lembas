@@ -101,42 +101,57 @@
 
       <!-- Mobile card list -->
       <div class="space-y-4 sm:hidden">
-        @for (order of orders(); track order.id) {
-          <div
-            class="rounded-xl bg-white p-5 shadow-card"
-            (click)="viewOrder(order.id)"
-            role="button"
-            [attr.aria-label]="'Ver pedido ' + order.orderNumber"
-          >
-            <div class="flex items-start justify-between gap-3">
-              <span class="text-sm font-semibold text-primary">{{ order.orderNumber }}</span>
-              <span
-                class="inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider"
-                [class]="
-                  statusSeverity(order.status) === 'success'
-                    ? 'bg-mint-wash text-primary'
-                    : statusSeverity(order.status) === 'danger'
-                      ? 'bg-red-50 text-red'
-                      : statusSeverity(order.status) === 'warn'
-                        ? 'bg-amber-tint text-amber-text'
-                        : 'bg-surface-warm text-text-muted'
-                "
-              >
-                {{ statusLabel(order.status) }}
-              </span>
+        @for (order of pagedOrders(); track order.id) {
+          <article class="rounded-xl bg-white p-5 shadow-card">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-sm font-semibold text-primary truncate">{{ order.orderNumber }}</span>
             </div>
-            <div class="mt-4 flex items-end justify-between gap-3">
+
+            <div class="mt-3">
+              <app-severity-pill [tone]="statusTone(order.status)">
+                {{ statusLabel(order.status) }}
+              </app-severity-pill>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between gap-3 border-t border-border-warm pt-4">
               <div class="min-w-0 text-sm">
                 <p class="text-text-muted">{{ formatDate(order.createdAt) }}</p>
-                <p class="mt-0.5 font-semibold text-text">{{ order.branchName }}</p>
+                <p class="mt-0.5 font-semibold text-text truncate">{{ order.branchName }}</p>
               </div>
-              <span class="shrink-0 text-base font-semibold text-text">
+              <span class="shrink-0 text-xl font-bold text-text">
                 {{ formatCurrency(order.total) }}
               </span>
             </div>
-          </div>
+
+            <button
+              type="button"
+              class="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-mint-wash/60 px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-mint-wash"
+              (click)="viewOrder(order.id)"
+              [attr.aria-label]="'Ver detalle del pedido ' + order.orderNumber"
+            >
+              Ver detalle
+              <i class="pi pi-arrow-right text-xs" aria-hidden="true"></i>
+            </button>
+          </article>
         }
       </div>
+
+      <!-- Mobile pagination (only when there are more orders than fit on one page) -->
+      @if (orders().length > pageSize()) {
+        <div class="mt-6 sm:hidden">
+          <div class="rounded-xl bg-white p-3 shadow-card">
+            <app-pagination
+              [totalRecords]="orders().length"
+              [rows]="pageSize()"
+              [first]="first()"
+              [rowsPerPageOptions]="[5, 8, 15]"
+              (pageChange)="onPageChange($event)"
+              [showCurrentPageReport]="true"
+              currentPageReportTemplate="Mostrando {first}-{last} de {totalRecords} pedidos"
+            />
+          </div>
+        </div>
+      }
     }
   </div>
 </section>
