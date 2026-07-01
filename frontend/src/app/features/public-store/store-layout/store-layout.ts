@@ -104,6 +104,19 @@ export class StoreLayout implements OnInit {
   /** Pickup label that introduces the city marker. */
   protected readonly footerPickupLabel = 'Retiro en sucursal';
 
+  /**
+   * Hides the floating cart CTA on the cart, checkout, and payment pages,
+   * so the button does not overlap the page content the user is already on.
+   */
+  protected readonly showFloatingCart = computed(() => {
+    const url = this.router.url;
+    return (
+      !url.startsWith('/store/cart') &&
+      !url.startsWith('/store/checkout') &&
+      !url.startsWith('/store/payment')
+    );
+  });
+
     ngOnInit(): void {
     // Hydrate auth state from HttpOnly cookies so the nav shows login/register
     // or user info correctly before the first render completes.

@@ -108,15 +108,17 @@
 </header>
 
 <!-- Floating Cart CTA -->
-<a
-  routerLink="/store/cart"
-  class="app-store-nav__cart"
-  aria-label="Ir al carrito de compras"
->
-  <i class="pi pi-shopping-bag text-xl"></i>
-  @if (cartCount() > 0) {
-    <span class="app-store-nav__cart-badge">
-      {{ cartCount() }}
-    </span>
-  }
-</a>
+@if (showFloatingCart()) {
+  <a
+    routerLink="/store/cart"
+    class="app-store-nav__cart"
+    aria-label="Ir al carrito de compras"
+  >
+    <i class="pi pi-shopping-bag text-xl"></i>
+    @if (cartCount() > 0) {
+      <span class="app-store-nav__cart-badge">
+        {{ cartCount() }}
+      </span>
+    }
+  </a>
+}

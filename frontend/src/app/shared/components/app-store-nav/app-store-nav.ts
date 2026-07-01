@@ -72,4 +72,12 @@ export class AppStoreNav {
 
   /** Emitted when the user clicks the cart icon. */
   readonly cartClick = output<void>();
+
+  /**
+   * Whether to render the floating cart CTA. Defaults to true. The parent
+   * (typically the public store layout) sets this to false on routes where
+   * the user is already inside the cart or checkout flow, so the floating
+   * button does not overlap the page content.
+   */
+  readonly showFloatingCart = input(true);
 }
