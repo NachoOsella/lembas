@@ -1,4 +1,4 @@
-import { Component, OnInit, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { CatalogService } from '../../../core/services/catalog';
@@ -16,6 +16,7 @@ import { ProductSummary } from '../../../shared/models/product';
 
 @Component({
   selector: 'app-home',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
     AppButton,
@@ -238,7 +239,7 @@ import { ProductSummary } from '../../../shared/models/product';
                 [numVisible]="5"
                 [numScroll]="1"
                 [circular]="true"
-                [autoplayInterval]="3000"
+                [autoplayInterval]="6000"
                 [showIndicators]="true"
                 [showNavigators]="true"
                 [responsiveOptions]="carouselResponsiveOptions"
@@ -301,7 +302,7 @@ import { ProductSummary } from '../../../shared/models/product';
                   padding="2rem"
                   [showBlob]="false"
                   [clickable]="true"
-                  class="home-benefits-card sm:hidden"
+                  class="home-benefits-card home-benefits-card--dupe"
                   aria-hidden="true"
                 >
                   <div class="text-center">
@@ -393,7 +394,7 @@ import { ProductSummary } from '../../../shared/models/product';
                   padding="1.5rem"
                   [showBlob]="false"
                   [clickable]="true"
-                  class="home-reviews-card sm:hidden"
+                  class="home-reviews-card home-reviews-card--dupe"
                   aria-hidden="true"
                 >
                   <div class="flex items-center gap-4">
