@@ -373,3 +373,33 @@
   - Icono usa Brown Bark (color de eyebrow en el design system) en vez de Leaf Green.
   - Hover state sutil con border tint.
 - Total tests FE: 766/766 pasan (17 nuevos sobre 749 previos), build limpio.
+
+## 2026-07-01
+
+- `frontend/` -- mobile performance pass sobre el flujo del cliente, en branch `fix/mobile-perf-customer-flow` (6 commits). Diagnostico: el `StoreLayout` (sticky + `backdrop-blur-md`) se monta tambien en `/customer/**`; la home acumula 6 animaciones infinitas + 2 `blur-3xl` + 2 marquees + carousel autoplay + cards duplicadas; el `store-product-card` tiene `backdrop-filter: blur(4px)` en 4 elementos por card y `mix-blend-mode: multiply`; el nav usa `transition-all`. Cambios:
+  - `app-store-nav.{html,css}`: `bg-white/95 backdrop-blur-md` solo en `lg:`, fondo solido en mobile; `transition-all` -> `transition-shadow`.
+  - `home.{ts,css}`: en mobile (`<640px`) se desactivan `home-ticket-float`, `home-ticket-sheen`, `home-barcode-pulse`, `home-reveal*`, `home-section-reveal`, `home-card-rise`. Los marquees de benefits/reviews se vuelven grid estatico de 1 columna y las cards duplicadas (track `b-...`) se ocultan. `autoplayInterval` del carousel 3000 -> 6000 ms.
+  - `store-product-card.{html,css}`: `backdrop-filter: blur(4px)` removido en `__placeholder`, `__category`, `__stock--out`, `__stock--low`, `__hover-icon` (fondos subidos a `rgba(...,0.96)`). Textura con `mix-blend-mode` oculta en mobile. `transition-all duration-500` -> `transition-[transform,box-shadow,filter] duration-300`. Hover-icon pasa de `transition: all 0.5s` a `opacity + transform` explicitos.
+  - `hero-flowers.ts`: sway animation desactivada en mobile.
+  - `home.html` (inline) + `catalog.html` + `home.css` + `catalog.css`: los 2 `blur-3xl` (400-500px) del hero reemplazados por `radial-gradient` solidos.
+  - Nuevo `frontend/src/app/features/customer/customer-layout/` (ts/html/css): layout liviano para `/customer/**` con nav plana (brand + "Mis pedidos" + "Mi perfil" + logout), sin `backdrop-blur`, sin branch selector, sin search bar, sin floating cart, footer minimo. `customer.routes.ts` deja de usar `StoreLayout` y pasa a `CustomerLayout`. El chunk de customer ya no arrastra `AppStoreNav`/`AppStoreFooter`/`HeroFlowers`.
+  - `product-detail.html`: `fetchpriority="high"` + `decoding="async"` en la imagen LCP.
+  - `store-product-card.html`: `decoding="async"` en la imagen (ya tenia `loading="lazy"`).
+  - `ChangeDetectionStrategy.OnPush` agregado a `Home`, `Catalog`, `ProductDetail`, `Orders`, `OrderDetail`, `Cart`, `Checkout`, `StoreLayout`, `CustomerLayout`. (StoreProductCard ya lo tenia.)
+  - Build limpio (`ng build`), 766/766 tests Vitest pasan.
+
+## 2026-07-01 (continuacion)
+
+- `frontend/src/app/features/public-store/home/{home.css,home.ts}` y `frontend/src/app/shared/components/hero-flowers/hero-flowers.ts` -- commit `0d576757` revierte parcialmente el pase mobile-perf: en mobile la home vuelve a tener `home-reveal`, `home-ticket-float`, `home-ticket-sheen`, `home-barcode-pulse`, `home-section-reveal`, `home-card-rise`, los marquees infinitos de benefits/reviews, el `sway` de hero-flowers, y el `autoplayInterval` del carousel a 3000 ms. Las tarjetas duplicadas del marquee vuelven a `sm:hidden` (visibles en mobile, necesarias para el loop). Se mantienen: nav sin blur en mobile, store-product-card sin backdrop-filter, hero glows con radial-gradient en vez de blur-3xl, CustomerLayout, LCP fetchpriority, OnPush. 766/766 tests siguen pasando, build limpio.
+
+## 2026-07-01 (busqueda en mobile)
+
+- `frontend/src/app/shared/components/app-input/{app-input.ts,app-input.html}` -- agregado `viewChild<ElementRef<HTMLInputElement>>('input')` con template ref `#input` en ambos inputs (con/sin formField). Nuevo metodo publico `blurInput()` que llama `this.inputRef()?.nativeElement.blur()`. Permite a los padres forzar el cierre del teclado virtual mobile.
+- `frontend/src/app/shared/components/app-search-bar/app-search-bar.ts` -- `viewChild(AppInput)` para acceder al `AppInput`; `onEnter()` ahora emite el `search` y luego llama `this.inputRef()?.blurInput()` para que el teclado mobile se cierre tras el submit. `onClear()` tambien hace blur. `onEnter()` retorna early si el query esta vacio.
+- `frontend/src/app/features/public-store/catalog/catalog.html` -- el `<main>` ahora lleva `id="catalog-results"` como ancla de scroll.
+- `frontend/src/app/features/public-store/store-layout/store-layout.ts` -- `onSearch()` programa `setTimeout(120)` que hace `document.getElementById('catalog-results')?.scrollIntoView({behavior:'smooth', block:'start'})` despues de la navegacion. Asi, cuando el usuario tipea "yerba" y submitea, ve: teclado se cierra (blur), reset al top por `scrollPositionRestoration`, y luego smooth scroll al card de resultados. 766/766 tests pasan, build limpio.
+
+## 2026-07-01 (orders y cart mobile)
+
+- `frontend/src/app/features/customer/orders/{orders.ts,orders.html}` -- commit `38b19546`. La mobile card del historial de pedidos tenia tres problemas: el status pill largo ('PAGO RECHAZADO', 'PENDIENTE DE PAGO') se salia del card y quedaba recortado, toda la card era un click target sin affordance, y no habia paginacion. Redisenada como stack vertical con orden claro: orderNumber en su fila, status pill (`<app-severity-pill>` con mapeo de tone desde el severity de PrimeNG) en su propia linea, fecha+sucursal arriba del divider, total a la derecha, y boton explicito 'Ver detalle' al final. Paginacion client-side via `pagedOrders` computed + `<app-pagination>` (8 por default, opciones 5/8/15) cuando hay mas de 8 orders. Data-table de desktop intacto.
+- `frontend/src/app/features/public-store/cart/cart.html`, `frontend/src/app/features/customer/checkout/checkout.html`, `frontend/src/app/shared/components/app-store-nav/{app-store-nav.ts,app-store-nav.html}`, `frontend/src/app/features/public-store/store-layout/{store-layout.ts,store-layout.html}` -- commit `ad50b289`. Line items del cart y checkout pasan a layout horizontal siempre: thumbnail 96x96 a la izquierda (112x112 en sm+), info a la derecha con titulo + line total arriba, 'Quitar' y stepper abajo. El floating cart CTA (boton fixed bottom-right) se oculta en `/store/cart`, `/store/checkout` y `/store/payment` via un nuevo input `showFloatingCart` en `app-store-nav`, computado en `StoreLayout` desde `router.url`. Asi no tapa el stepper ni los links del footer. 766/766 tests pasan, build limpio.
