@@ -7,6 +7,8 @@ import { MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 
+import { AuthService } from '../../../core/services/auth';
+import { UserService } from '../../../core/services/user';
 import { AdminPosPage } from './pos';
 import { PosProductSearchComponent } from './components/pos-product-search/pos-product-search';
 import { PosCartComponent } from './components/pos-cart/pos-cart';
@@ -69,6 +71,19 @@ function buildOrder(): OrderDetail {
   };
 }
 
+/** Builds a minimal currentUser for EMPLOYEE tests. */
+function employeeUser() {
+  return {
+    id: 1,
+    email: 'cashier@x.com',
+    firstName: 'Carla',
+    lastName: 'Cajero',
+    role: 'EMPLOYEE' as const,
+    branchId: 1,
+    branchName: 'Centro',
+  };
+}
+
 /** Unit tests for the {@link AdminPosPage} orchestrator. */
 describe('AdminPosPage', () => {
   let fixture: ComponentFixture<AdminPosPage>;
@@ -76,10 +91,17 @@ describe('AdminPosPage', () => {
   let cart: PosCartStore;
   let cashService: { currentSession: ReturnType<typeof vi.fn> };
   let posSale: { createSale: ReturnType<typeof vi.fn> };
+  let authService: { currentUser: ReturnType<typeof vi.fn>; getUserRole: ReturnType<typeof vi.fn> };
+  let userService: { listBranches: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     cashService = { currentSession: vi.fn().mockReturnValue(of(cashSession())) };
     posSale = { createSale: vi.fn() };
+    authService = {
+      currentUser: vi.fn().mockReturnValue(employeeUser()),
+      getUserRole: vi.fn().mockReturnValue('EMPLOYEE'),
+    };
+    userService = { listBranches: vi.fn().mockReturnValue(of([])) };
   });
 
   function configure(): void {
@@ -94,6 +116,8 @@ describe('AdminPosPage', () => {
         MessageService,
         { provide: CashService, useValue: cashService },
         { provide: PosSaleService, useValue: posSale },
+        { provide: AuthService, useValue: authService },
+        { provide: UserService, useValue: userService },
       ],
     });
 
@@ -140,8 +164,17 @@ describe('AdminPosPage', () => {
   });
 
   it('shows the missing cash badge and "Abrir caja" button when no session is open', () => {
-    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    cashService = {
+      currentSession: vi.fn().mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 404 })),
+      ),
+    };
     posSale = { createSale: vi.fn() };
+    authService = {
+      currentUser: vi.fn().mockReturnValue(employeeUser()),
+      getUserRole: vi.fn().mockReturnValue('EMPLOYEE'),
+    };
+    userService = { listBranches: vi.fn().mockReturnValue(of([])) };
     TestBed.configureTestingModule({
       imports: [AdminPosPage],
       providers: [
@@ -152,6 +185,8 @@ describe('AdminPosPage', () => {
         MessageService,
         { provide: CashService, useValue: cashService },
         { provide: PosSaleService, useValue: posSale },
+        { provide: AuthService, useValue: authService },
+        { provide: UserService, useValue: userService },
       ],
     });
     fixture = TestBed.createComponent(AdminPosPage);
@@ -168,6 +203,11 @@ describe('AdminPosPage', () => {
     );
     expect(openBtn).toBeTruthy();
   });
+
+  /** True when AdminPosPage passes branchId (1) to currentSession. */
+  function hasBranchParam(calls: unknown[][]): boolean {
+    return calls.some((args) => args[0] === 1 || args[0] === undefined);
+  }
 
   // ---------------------------------------------------------------------------
   // Checkout
@@ -188,8 +228,17 @@ describe('AdminPosPage', () => {
   });
 
   it('does not call createSale when there is no cash session (even with a method)', () => {
-    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    cashService = {
+      currentSession: vi.fn().mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 404 })),
+      ),
+    };
     posSale = { createSale: vi.fn() };
+    authService = {
+      currentUser: vi.fn().mockReturnValue(employeeUser()),
+      getUserRole: vi.fn().mockReturnValue('EMPLOYEE'),
+    };
+    userService = { listBranches: vi.fn().mockReturnValue(of([])) };
     TestBed.configureTestingModule({
       imports: [AdminPosPage],
       providers: [
@@ -200,6 +249,8 @@ describe('AdminPosPage', () => {
         MessageService,
         { provide: CashService, useValue: cashService },
         { provide: PosSaleService, useValue: posSale },
+        { provide: AuthService, useValue: authService },
+        { provide: UserService, useValue: userService },
       ],
     });
     fixture = TestBed.createComponent(AdminPosPage);
@@ -207,8 +258,6 @@ describe('AdminPosPage', () => {
     cart = TestBed.inject(PosCartStore);
     fixture.detectChanges();
     cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
-    // Selection lives in the cart component (private); simulate via a click flow
-    // is not feasible in this orchestrator test, so we just verify canCheckout is false.
     component.onCheckout();
     expect(posSale.createSale).not.toHaveBeenCalled();
   });
@@ -220,14 +269,9 @@ describe('AdminPosPage', () => {
     cart.setQuantity(1, 2);
     fixture.detectChanges();
 
-    // Simulate the cart's selection by setting it via the same kind of
-    // accessor the cart uses. Since selectedMethod is a protected signal,
-    // we exercise the wiring through the cart component by simulating the
-    // "Cobrar" event payload.
     const expected = buildOrder();
     posSale.createSale.mockReturnValue(of(expected));
 
-    // Inject a fake cart that returns a known selection.
     const cartInstance = fixture.debugElement.query(
       (el) => el.componentInstance instanceof PosCartComponent,
     );
@@ -247,6 +291,8 @@ describe('AdminPosPage', () => {
       { productId: 2, quantity: 1 },
     ]);
     expect(request.cashReceived).toBeNull();
+    // EMPLOYEE does not send branchId in the request.
+    expect(request.branchId).toBeNull();
   });
 
   it('clears the cart, resets selection and shows the result dialog on success', () => {
@@ -271,7 +317,6 @@ describe('AdminPosPage', () => {
       '[data-testid="pos-checkout-result-dialog"]',
     );
     expect(dialog).toBeTruthy();
-    // Result dialog renders into body (PrimeNG appendTo='body')
     expect(document.body.textContent).toContain('PS-20260630-000001');
   });
 
@@ -300,9 +345,7 @@ describe('AdminPosPage', () => {
     component.onCheckout();
     fixture.detectChanges();
 
-    // cart should NOT be cleared on failure
     expect(cart.lines().length).toBe(1);
-    // lastResult should NOT be set
     expect((unsafe(component)['lastResult'] as () => unknown)()).toBeNull();
   });
 
@@ -338,8 +381,17 @@ describe('AdminPosPage', () => {
   });
 
   it('does nothing on F8 when the cash session is missing', () => {
-    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    cashService = {
+      currentSession: vi.fn().mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 404 })),
+      ),
+    };
     posSale = { createSale: vi.fn() };
+    authService = {
+      currentUser: vi.fn().mockReturnValue(employeeUser()),
+      getUserRole: vi.fn().mockReturnValue('EMPLOYEE'),
+    };
+    userService = { listBranches: vi.fn().mockReturnValue(of([])) };
     TestBed.configureTestingModule({
       imports: [AdminPosPage],
       providers: [
@@ -350,6 +402,8 @@ describe('AdminPosPage', () => {
         MessageService,
         { provide: CashService, useValue: cashService },
         { provide: PosSaleService, useValue: posSale },
+        { provide: AuthService, useValue: authService },
+        { provide: UserService, useValue: userService },
       ],
     });
     fixture = TestBed.createComponent(AdminPosPage);
@@ -385,8 +439,6 @@ describe('AdminPosPage', () => {
   });
 
   it('declares the public surface the page depends on', () => {
-    // Defensive: keeps the public wiring honest. If a future refactor
-    // removes any of these dependencies the page would silently break.
     expect(PosProductSearchComponent).toBeDefined();
     expect(PosCartComponent).toBeDefined();
     expect(PosCheckoutResultDialogComponent).toBeDefined();
@@ -434,12 +486,18 @@ describe('AdminPosPage', () => {
     configure();
     cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
     fixture.detectChanges();
-    // Pre-condition: only the initial probe has happened.
-    const callsBefore = cashService.currentSession.mock.calls.length;
 
-    // Simulate the session being closed in another tab right before F8.
-    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    cashService = {
+      currentSession: vi.fn().mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 404 })),
+      ),
+    };
     posSale = { createSale: vi.fn() };
+    authService = {
+      currentUser: vi.fn().mockReturnValue(employeeUser()),
+      getUserRole: vi.fn().mockReturnValue('EMPLOYEE'),
+    };
+    userService = { listBranches: vi.fn().mockReturnValue(of([])) };
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       imports: [AdminPosPage],
@@ -451,6 +509,8 @@ describe('AdminPosPage', () => {
         MessageService,
         { provide: CashService, useValue: cashService },
         { provide: PosSaleService, useValue: posSale },
+        { provide: AuthService, useValue: authService },
+        { provide: UserService, useValue: userService },
       ],
     });
     fixture = TestBed.createComponent(AdminPosPage);
@@ -459,7 +519,6 @@ describe('AdminPosPage', () => {
     cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
     fixture.detectChanges();
 
-    // F8 must re-probe AND short-circuit onCheckout (no POST).
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8' }));
 
     expect(cashService.currentSession).toHaveBeenCalled();
@@ -486,8 +545,17 @@ describe('AdminPosPage', () => {
   });
 
   it('shows the refresh button when the cash session is missing', () => {
-    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    cashService = {
+      currentSession: vi.fn().mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 404 })),
+      ),
+    };
     posSale = { createSale: vi.fn() };
+    authService = {
+      currentUser: vi.fn().mockReturnValue(employeeUser()),
+      getUserRole: vi.fn().mockReturnValue('EMPLOYEE'),
+    };
+    userService = { listBranches: vi.fn().mockReturnValue(of([])) };
     TestBed.configureTestingModule({
       imports: [AdminPosPage],
       providers: [
@@ -498,6 +566,8 @@ describe('AdminPosPage', () => {
         MessageService,
         { provide: CashService, useValue: cashService },
         { provide: PosSaleService, useValue: posSale },
+        { provide: AuthService, useValue: authService },
+        { provide: UserService, useValue: userService },
       ],
     });
     fixture = TestBed.createComponent(AdminPosPage);
@@ -542,7 +612,6 @@ describe('AdminPosPage', () => {
     component.onCheckout();
     fixture.detectChanges();
 
-    // The error path should have triggered a re-probe.
     expect(cashService.currentSession.mock.calls.length).toBeGreaterThan(callsBefore);
   });
 
@@ -611,7 +680,173 @@ describe('AdminPosPage', () => {
     component.onCheckout();
     fixture.detectChanges();
 
-    // No re-probe on a cart-related error.
     expect(cashService.currentSession.mock.calls.length).toBe(callsBefore);
+  });
+
+  // ---------------------------------------------------------------------------
+  // ADMIN branch selector
+  // ---------------------------------------------------------------------------
+
+  it('loads branches and shows the branch selector when the user is ADMIN', () => {
+    authService = {
+      currentUser: vi.fn().mockReturnValue({
+        id: 1,
+        email: 'admin@x.com',
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'ADMIN',
+        branchId: null,
+        branchName: null,
+      }),
+      getUserRole: vi.fn().mockReturnValue('ADMIN'),
+    };
+    userService = {
+      listBranches: vi.fn().mockReturnValue(
+        of([
+          { id: 1, name: 'Centro', active: true },
+          { id: 2, name: 'Norte', active: true },
+        ]),
+      ),
+    };
+    cashService = {
+      currentSession: vi.fn().mockReturnValue(of(cashSession())),
+    };
+    posSale = { createSale: vi.fn() };
+
+    TestBed.configureTestingModule({
+      imports: [AdminPosPage],
+      providers: [
+        provideNoopAnimations(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        MessageService,
+        { provide: CashService, useValue: cashService },
+        { provide: PosSaleService, useValue: posSale },
+        { provide: AuthService, useValue: authService },
+        { provide: UserService, useValue: userService },
+      ],
+    });
+
+    fixture = TestBed.createComponent(AdminPosPage);
+    component = fixture.componentInstance;
+    cart = TestBed.inject(PosCartStore);
+    fixture.detectChanges();
+
+    const branchSelect = fixture.nativeElement.querySelector(
+      '[data-testid="pos-branch-select"]',
+    );
+    expect(branchSelect).toBeTruthy();
+    // Should have loaded branches
+    expect(userService.listBranches).toHaveBeenCalled();
+    // No session loaded yet because no branch selected (multiple branches).
+    expect(cashService.currentSession).not.toHaveBeenCalled();
+  });
+
+  it('auto-selects the single branch and probes the cash session when ADMIN has one branch', () => {
+    authService = {
+      currentUser: vi.fn().mockReturnValue({
+        id: 1,
+        email: 'admin@x.com',
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'ADMIN',
+        branchId: null,
+        branchName: null,
+      }),
+      getUserRole: vi.fn().mockReturnValue('ADMIN'),
+    };
+    userService = {
+      listBranches: vi.fn().mockReturnValue(
+        of([{ id: 1, name: 'Unica', active: true }]),
+      ),
+    };
+    cashService = {
+      currentSession: vi.fn().mockReturnValue(of(cashSession())),
+    };
+    posSale = { createSale: vi.fn() };
+
+    TestBed.configureTestingModule({
+      imports: [AdminPosPage],
+      providers: [
+        provideNoopAnimations(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        MessageService,
+        { provide: CashService, useValue: cashService },
+        { provide: PosSaleService, useValue: posSale },
+        { provide: AuthService, useValue: authService },
+        { provide: UserService, useValue: userService },
+      ],
+    });
+
+    fixture = TestBed.createComponent(AdminPosPage);
+    component = fixture.componentInstance;
+    cart = TestBed.inject(PosCartStore);
+    fixture.detectChanges();
+
+    // Auto-selected branch 1 -> probes cash session for branchId=1.
+    expect(cashService.currentSession).toHaveBeenCalledWith(1);
+  });
+
+  it('passes branchId in the checkout request when ADMIN has a branch selected', () => {
+    authService = {
+      currentUser: vi.fn().mockReturnValue({
+        id: 1,
+        email: 'admin@x.com',
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'ADMIN',
+        branchId: null,
+        branchName: null,
+      }),
+      getUserRole: vi.fn().mockReturnValue('ADMIN'),
+    };
+    userService = {
+      listBranches: vi.fn().mockReturnValue(
+        of([{ id: 1, name: 'Unica', active: true }]),
+      ),
+    };
+    cashService = {
+      currentSession: vi.fn().mockReturnValue(of(cashSession())),
+    };
+    posSale = { createSale: vi.fn().mockReturnValue(of(buildOrder())) };
+
+    TestBed.configureTestingModule({
+      imports: [AdminPosPage],
+      providers: [
+        provideNoopAnimations(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        MessageService,
+        { provide: CashService, useValue: cashService },
+        { provide: PosSaleService, useValue: posSale },
+        { provide: AuthService, useValue: authService },
+        { provide: UserService, useValue: userService },
+      ],
+    });
+
+    fixture = TestBed.createComponent(AdminPosPage);
+    component = fixture.componentInstance;
+    cart = TestBed.inject(PosCartStore);
+    cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
+    fixture.detectChanges();
+
+    const cartInstance = fixture.debugElement.query(
+      (el) => el.componentInstance instanceof PosCartComponent,
+    );
+    const cartComp = cartInstance.componentInstance as PosCartComponent;
+    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod']
+      .set('QR');
+    fixture.detectChanges();
+
+    component.onCheckout();
+
+    expect(posSale.createSale).toHaveBeenCalledTimes(1);
+    const request = posSale.createSale.mock.calls[0][0];
+    // ADMIN sends branchId in the request.
+    expect(request.branchId).toBe(1);
   });
 });

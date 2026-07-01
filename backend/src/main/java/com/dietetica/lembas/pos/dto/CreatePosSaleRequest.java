@@ -25,11 +25,15 @@ import java.util.List;
  *                      and persisted in the payment metadata. Null for
  *                      QR / TRANSFER / CARD / OTHER.
  * @param notes         optional free-text notes; persisted on the order
+ * @param branchId      optional branch id for ADMIN users who need to specify
+ *                      which branch they are selling at; ignored for MANAGER
+ *                      and EMPLOYEE (derived from the authenticated user)
  */
 public record CreatePosSaleRequest(
         @NotEmpty @Size(max = 100) List<@Valid CreatePosSaleItemRequest> items,
         @NotNull PaymentMethod paymentMethod,
         @Positive BigDecimal cashReceived,
-        @Size(max = 500) String notes
+        @Size(max = 500) String notes,
+        @Positive Long branchId
 ) {
 }

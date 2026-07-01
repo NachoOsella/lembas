@@ -6,6 +6,8 @@
   [dismissableMask]="dismissible()"
   [closable]="closable()"
   [appendTo]="'body'"
+  [position]="dialogPosition()"
+  [breakpoints]="breakpoints()"
   [style]="{ width: width() }"
   styleClass="app-modal"
   (onHide)="onHide()"

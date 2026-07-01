@@ -28,6 +28,7 @@
   max-height: min(80vh, 50rem);
   padding: 1rem var(--space-4, 2.4rem);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .app-modal .p-dialog-footer {
@@ -66,10 +67,19 @@
   width: 100%;
 }
 
+/* ------------------------------------------------------------------ */
+/* Mobile: dialog fills the viewport and anchors to the top so the    */
+/* virtual keyboard opening does not trigger a "jump" (centering      */
+/* recalculation on Android). The !important width override is needed */
+/* because the inline `[style]` width has higher specificity than     */
+/* PrimeNG breakpoints-generated CSS.                                 */
+/* ------------------------------------------------------------------ */
 @media (max-width: 48rem) {
   .app-modal {
-    max-width: calc(100vw - 1rem);
-    max-height: calc(100dvh - 1rem);
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+    max-height: calc(100dvh - 0.5rem);
+    margin: 0.25rem auto;
     border-radius: 1rem;
   }
 
@@ -80,6 +90,7 @@
   .app-modal .p-dialog-content {
     max-height: calc(100dvh - 9.5rem);
     padding: 0.85rem 1rem;
+    overflow-x: hidden;
   }
 
   .app-modal .p-dialog-footer {

@@ -205,7 +205,7 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
 
         CreatePosSaleRequest request = new CreatePosSaleRequest(
                 List.of(new CreatePosSaleItemRequest(product.getId(), 1)),
-                PaymentMethod.CASH, new BigDecimal("3000.00"), null);
+                PaymentMethod.CASH, new BigDecimal("3000.00"), null, null);
 
         mockMvc.perform(post("/api/pos/sales")
                         .header("Authorization", "Bearer " + cashierToken)
@@ -424,6 +424,6 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
             Long productId, int qty, PaymentMethod method, BigDecimal cashReceived) {
         return new CreatePosSaleRequest(
                 List.of(new CreatePosSaleItemRequest(productId, qty)),
-                method, cashReceived, null);
+                method, cashReceived, null, null);
     }
 }

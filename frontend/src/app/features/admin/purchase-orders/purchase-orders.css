@@ -4,131 +4,274 @@
 
 .purchase-orders-page {
   display: grid;
-  gap: var(--space-4);
+  gap: 1rem;
 }
 
 .table-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
+  gap: 0.4rem;
   align-items: center;
 }
 
-.purchase-order-form {
-  display: grid;
-  gap: var(--space-4);
+/* Modal form: clean flex column. Actions live in modalFooter. */
+.po-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
 }
 
-.purchase-order-form__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
+/* form-section and the items table must shrink so the table wrapper
+   can scroll horizontally inside the modal on narrow viewports. */
+:host ::ng-deep app-form-section,
+:host ::ng-deep .po-form__items-table,
+:host ::ng-deep .po-form__items-table .p-datatable-wrapper {
+  min-width: 0;
 }
 
-.purchase-order-form__field {
+.po-form__grid {
   display: grid;
-  gap: var(--space-1);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
 }
 
-.purchase-order-form__field--wide {
+.po-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.po-form__field--wide {
   grid-column: 1 / -1;
 }
 
-.purchase-order-form__error {
+.po-form__label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.po-form__required {
   color: var(--color-red);
-  font-size: 0.78rem;
+  margin-left: 0.125rem;
+}
+
+.po-form__hint,
+.po-form__error {
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.po-form__hint {
+  color: var(--color-text-muted);
+}
+
+.po-form__error {
+  color: var(--color-red);
   font-weight: 700;
 }
 
-.purchase-order-item-picker {
+/* PrimeNG controls fill the available field width. */
+:host ::ng-deep .po-form .p-select,
+:host ::ng-deep .po-form .p-inputnumber,
+:host ::ng-deep .po-form .p-inputnumber-input,
+:host ::ng-deep .po-form .p-datepicker,
+:host ::ng-deep .po-form .p-datepicker-input,
+:host ::ng-deep .po-form app-select,
+:host ::ng-deep .po-form app-date-picker,
+:host ::ng-deep .po-form app-input-number {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Items picker: grid keeps select/button from fighting over flex space. */
+.po-form__picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.po-form__picker-row {
   display: grid;
-  grid-template-columns: minmax(18rem, 1fr) minmax(12rem, auto);
-  gap: var(--space-3);
-  align-items: start;
-  margin-bottom: var(--space-3);
-  padding: var(--space-3);
-  background: var(--color-surface-warmest);
-  border: 1px solid rgba(7, 95, 54, 0.1);
-  border-radius: var(--radius-card);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: stretch;
+  min-width: 0;
 }
 
-.purchase-order-item-picker__action {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 12rem;
+.po-form__picker-row app-button {
+  display: inline-flex;
+  align-items: stretch;
 }
 
-.purchase-order-item-picker__action-label {
-  color: var(--color-bark);
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: var(--tracking-tight, -0.01em);
-  line-height: 1.5;
+.po-form__picker-row app-button .app-button {
+  white-space: nowrap;
 }
 
-.purchase-order-item-picker__action app-button {
+/* Items table: horizontal scroll when columns exceed available width. */
+.po-form__items-table {
+  display: block;
+  min-width: 0;
+}
+
+:host ::ng-deep .po-form__items-table .p-datatable-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+:host ::ng-deep .po-form__items-table .p-datatable-table {
+  min-width: 45rem;
+  table-layout: fixed;
   width: 100%;
 }
 
-.purchase-order-items-table {
-  display: block;
-}
-
-.purchase-order-item-muted {
+.po-form__muted {
   display: block;
   color: var(--color-text-muted);
-  margin-top: 0.2rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  margin-top: 0.15rem;
 }
 
-:host ::ng-deep .purchase-order-items-table .app-data-table .p-datatable-table {
-  min-width: 54rem;
+:host ::ng-deep .po-form__items-table .p-datatable-tbody > tr > td {
+  vertical-align: middle;
 }
 
-:host ::ng-deep .purchase-order-items-table .app-data-table .p-datatable-tbody > tr > td {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: initial;
-  vertical-align: top;
-}
-
-:host ::ng-deep .purchase-order-items-table .app-data-table .p-datatable-tbody > tr > td:nth-child(4) {
+:host ::ng-deep .po-form__items-table .p-datatable-tbody > tr > td:nth-child(4) {
   color: var(--color-primary-dark);
   font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
-.purchase-order-total {
+.po-form__subtotal,
+.po-form__row-action {
+  text-align: right;
+}
+
+.po-form__row-action {
+  padding-right: 0.25rem;
+}
+
+.po-form__total {
   display: flex;
   justify-content: flex-end;
-  gap: var(--space-3);
-  padding-top: var(--space-3);
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: 1.05rem;
   color: var(--color-text);
-  font-size: 1.1rem;
 }
 
-.purchase-order-total strong {
+.po-form__total strong {
   color: var(--color-primary-dark);
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
-.purchase-order-form__actions {
+.po-form__actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--space-2);
+  gap: 0.75rem;
+  width: 100%;
 }
 
-.purchase-order-cancel {
-  display: grid;
-  gap: var(--space-3);
+.po-form__cancel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
-@media (max-width: 768px) {
-  .purchase-order-form__grid,
-  .purchase-order-item-picker {
-    grid-template-columns: 1fr;
+/* Mobile: compact the form so the picker overlay and the focused input
+   stay above the soft keyboard. */
+@media (max-width: 48rem) {
+  .po-form {
+    gap: 0.6rem;
   }
 
-  .purchase-order-form__actions {
-    justify-content: stretch;
+  .po-form__grid {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+
+  .po-form__field,
+  .po-form__picker {
+    gap: 0.25rem;
+  }
+
+  .po-form__label,
+  :host ::ng-deep app-form-section .form-section__title {
+    font-size: 0.78rem;
+  }
+
+  .po-form__hint,
+  .po-form__error,
+  :host ::ng-deep app-form-section .form-section__description {
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+
+  .po-form__total {
+    font-size: 0.95rem;
+    padding-top: 0.5rem;
+    margin-top: 0.35rem;
+  }
+
+  .po-form__picker-row,
+  .po-form__actions {
+    grid-template-columns: 1fr;
+    flex-direction: column-reverse;
+  }
+
+  .po-form__picker-row app-button,
+  .po-form__picker-row app-button .app-button,
+  .po-form__actions app-button,
+  .po-form__actions app-button .app-button {
+    width: 100%;
+  }
+
+  :host ::ng-deep app-form-section .form-section {
+    padding: 0.75rem 0.85rem;
+    gap: 0.55rem;
+  }
+
+  /* Items table compresses to ~1 row so the dropdown opens comfortably. */
+  :host ::ng-deep .po-form__items-table .p-datatable-wrapper {
+    max-height: 7.5rem;
+  }
+
+  :host ::ng-deep .po-form__items-table .p-datatable-tbody > tr > td,
+  :host ::ng-deep .po-form__items-table .p-datatable-thead > tr > th {
+    padding: 0.45rem 0.55rem;
+    font-size: 0.78rem;
+  }
+
+  /* Picker overlay: capped, scrollable, single-line options. */
+  :host ::ng-deep .po-form__picker .p-select-overlay {
+    max-width: 100% !important;
+    min-width: 100% !important;
+    max-height: 32dvh !important;
+  }
+
+  :host ::ng-deep .po-form__picker .p-select-overlay .p-select-list-container {
+    max-height: 22dvh !important;
+    overflow: auto;
+  }
+
+  :host ::ng-deep .po-form__picker .p-select-overlay .p-select-option {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.8rem;
+    line-height: 1.25;
+    white-space: nowrap;
+    min-width: max-content;
+  }
+
+  :host ::ng-deep .po-form__picker .p-select-overlay .p-select-filter {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.5rem;
   }
 }

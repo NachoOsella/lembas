@@ -67,7 +67,9 @@
 
     <ng-template #body let-order>
       <tr>
-        <td><strong>#{{ order.id }}</strong></td>
+        <td>
+          <strong>#{{ order.id }}</strong>
+        </td>
         <td>{{ order.supplierName }}</td>
         <td>{{ order.branchName }}</td>
         <td><app-status-badge [status]="order.status" [config]="statusBadges" /></td>
@@ -76,17 +78,52 @@
         <td>
           <div class="table-actions">
             @if (canEdit(order)) {
-              <app-button variant="ghost" size="sm" icon="pi pi-pencil" [iconOnly]="true" [ariaLabel]="'Editar orden ' + order.id" (click)="openEdit(order)" />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-pencil"
+                [iconOnly]="true"
+                [ariaLabel]="'Editar orden ' + order.id"
+                (click)="openEdit(order)"
+              />
             }
             @if (canConfirm(order)) {
-              <app-button variant="ghost" size="sm" icon="pi pi-check" [iconOnly]="true" [ariaLabel]="'Confirmar orden ' + order.id" (click)="confirm(order)" />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-check"
+                [iconOnly]="true"
+                [ariaLabel]="'Confirmar orden ' + order.id"
+                (click)="confirm(order)"
+              />
             }
             @if (canSend(order)) {
-              <app-button variant="ghost" size="sm" icon="pi pi-send" [iconOnly]="true" [ariaLabel]="'Marcar enviada ' + order.id" (click)="markSent(order)" />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-send"
+                [iconOnly]="true"
+                [ariaLabel]="'Marcar enviada ' + order.id"
+                (click)="markSent(order)"
+              />
             }
-            <app-button variant="ghost" size="sm" icon="pi pi-download" [iconOnly]="true" [ariaLabel]="'Descargar PDF orden ' + order.id" (click)="downloadPdf(order)" />
+            <app-button
+              variant="ghost"
+              size="sm"
+              icon="pi pi-download"
+              [iconOnly]="true"
+              [ariaLabel]="'Descargar PDF orden ' + order.id"
+              (click)="downloadPdf(order)"
+            />
             @if (canCancel(order)) {
-              <app-button variant="ghost" size="sm" icon="pi pi-times" [iconOnly]="true" [ariaLabel]="'Cancelar orden ' + order.id" (click)="openCancel(order)" />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-times"
+                [iconOnly]="true"
+                [ariaLabel]="'Cancelar orden ' + order.id"
+                (click)="openCancel(order)"
+              />
             }
           </div>
         </td>
@@ -95,93 +132,120 @@
   </app-data-table>
 </div>
 
-<app-modal [(visible)]="dialogVisible" [title]="editingOrder() ? 'Editar orden de compra' : 'Nueva orden de compra'" [width]="'min(64rem, 96vw)'">
-  <form class="purchase-order-form" (ngSubmit)="save()" novalidate>
-    <app-form-section [index]="1" title="Datos generales" description="Selecciona proveedor, sucursal y fecha esperada.">
-      <div class="purchase-order-form__grid">
-        <app-control-field label="Proveedor" forId="po-supplier" [required]="true" [error]="submitted() && !supplierId() ? 'Selecciona un proveedor.' : ''">
+<app-modal
+  [(visible)]="dialogVisible"
+  [title]="editingOrder() ? 'Editar orden de compra' : 'Nueva orden de compra'"
+  [width]="'min(56rem, 96vw)'"
+>
+  <form class="po-form" (ngSubmit)="save()" novalidate>
+    <app-form-section
+      [index]="1"
+      title="Datos generales"
+      description="Selecciona proveedor, sucursal y fecha esperada."
+    >
+      <div class="po-form__grid">
+        <div class="po-form__field">
+          <label for="po-supplier" class="po-form__label">
+            Proveedor <span class="po-form__required" aria-hidden="true">*</span>
+          </label>
           <app-select
             inputId="po-supplier"
             [value]="supplierId()"
             (valueChange)="onSupplierChange($event)"
-            name="supplierId"
             [options]="supplierOptions()"
             placeholder="Seleccionar proveedor"
             [loading]="loadingLookups()"
+            [showClear]="true"
             filterPlaceholder="Buscar proveedor..."
           />
-        </app-control-field>
+          @if (submitted() && !supplierId()) {
+            <small class="po-form__error">Selecciona un proveedor.</small>
+          }
+        </div>
 
-        <app-control-field label="Sucursal" forId="po-branch" [required]="true" [error]="submitted() && !branchId() ? 'Selecciona una sucursal.' : ''">
+        <div class="po-form__field">
+          <label for="po-branch" class="po-form__label">
+            Sucursal <span class="po-form__required" aria-hidden="true">*</span>
+          </label>
           <app-select
             inputId="po-branch"
             [value]="branchId()"
             (valueChange)="branchId.set($event)"
-            name="branchId"
             [options]="branchOptions()"
             placeholder="Seleccionar sucursal"
             [loading]="loadingLookups()"
+            [showClear]="true"
             filterPlaceholder="Buscar sucursal..."
           />
-        </app-control-field>
+          @if (submitted() && !branchId()) {
+            <small class="po-form__error">Selecciona una sucursal.</small>
+          }
+        </div>
 
-        <app-control-field label="Fecha esperada" forId="po-date">
+        <div class="po-form__field po-form__field--wide">
+          <label for="po-date" class="po-form__label">Fecha esperada</label>
           <app-date-picker
             inputId="po-date"
             [(value)]="expectedDeliveryDate"
             dateFormat="yy-mm-dd"
             placeholder="Sin fecha"
           />
-        </app-control-field>
+        </div>
 
-        <div class="purchase-order-form__field purchase-order-form__field--wide">
+        <div class="po-form__field po-form__field--wide">
           <app-form-field
             label="Notas"
             [multiline]="true"
             [(value)]="notes"
             placeholder="Indicaciones para el proveedor"
-            testId="purchase-order-notes"
+            testId="po-notes"
           />
         </div>
       </div>
     </app-form-section>
 
-    <app-form-section [index]="2" title="Items" description="Agrega productos asociados al proveedor. El costo se precarga y puede editarse.">
-      <div class="purchase-order-item-picker">
-        <app-control-field label="Producto del proveedor" forId="po-item-product" hint="Solo se muestran productos asociados al proveedor seleccionado.">
+    <app-form-section
+      [index]="2"
+      title="Items"
+      description="Agrega productos asociados al proveedor. El costo se precarga y puede editarse."
+    >
+      <div class="po-form__picker">
+        <label for="po-item-product" class="po-form__label">Producto del proveedor</label>
+        <div class="po-form__picker-row">
           <app-select
             inputId="po-item-product"
             [value]="selectedSupplierProductId()"
             (valueChange)="selectedSupplierProductId.set($event)"
-            name="selectedSupplierProductId"
             [options]="supplierProductOptions()"
             placeholder="Producto del proveedor"
             [loading]="loadingProducts()"
+            [showClear]="true"
+            emptyMessage="No hay productos asociados al proveedor"
             filterPlaceholder="Buscar producto..."
+            [appendTo]="null"
           />
-        </app-control-field>
-
-        <div class="purchase-order-item-picker__action" aria-label="Agregar producto a la orden">
-          <span class="purchase-order-item-picker__action-label">Accion</span>
           <app-button
             type="button"
             variant="primary"
-            size="lg"
-            icon="pi pi-plus-circle"
+            icon="pi pi-plus"
             [disabled]="!selectedSupplierProductId()"
             (click)="addSelectedItem()"
+            [ariaLabel]="'Agregar producto a la orden'"
           >
-            Agregar producto
+            Agregar
           </app-button>
         </div>
+        <small class="po-form__hint"
+          >Solo se muestran productos asociados al proveedor seleccionado.</small
+        >
       </div>
 
       @if (submitted() && draftItems().length === 0) {
-        <small class="purchase-order-form__error">Agrega al menos un item.</small>
+        <small class="po-form__error">Agrega al menos un item.</small>
       }
 
       <app-data-table
-        class="purchase-order-items-table"
+        class="po-form__items-table"
         [data]="draftItems()"
         [columns]="itemColumns"
         [sortable]="false"
@@ -193,51 +257,74 @@
           <tr>
             <td>
               <strong>{{ item.productName }}</strong>
-              <small class="purchase-order-item-muted">{{ item.supplierSku || 'Sin SKU proveedor' }}</small>
+              <small class="po-form__muted">{{ item.supplierSku || 'Sin SKU proveedor' }}</small>
             </td>
             <td>
-              <app-control-field label="Cantidad" [error]="submitted() && (item.quantityOrdered ?? 0) <= 0 ? 'Mayor a cero.' : ''">
-                <app-input-number [(value)]="item.quantityOrdered" mode="decimal" [min]="0" [maxFractionDigits]="3" />
-              </app-control-field>
+              <app-input-number
+                [(value)]="item.quantityOrdered"
+                mode="decimal"
+                [min]="0"
+                [maxFractionDigits]="3"
+                placeholder="0"
+              />
             </td>
             <td>
-              <app-control-field label="Costo unitario" [error]="submitted() && (item.unitCost ?? 0) < 0 ? 'No puede ser negativo.' : ''">
-                <app-input-number [(value)]="item.unitCost" mode="currency" currency="ARS" locale="es-AR" [min]="0" [maxFractionDigits]="2" />
-              </app-control-field>
+              <app-input-number
+                [(value)]="item.unitCost"
+                mode="currency"
+                currency="ARS"
+                locale="es-AR"
+                [min]="0"
+                [maxFractionDigits]="2"
+                placeholder="0"
+              />
             </td>
-            <td>{{ formatPrice(itemSubtotal(item)) }}</td>
-            <td>
-              <div class="table-actions">
-                <app-button variant="ghost" size="sm" icon="pi pi-trash" [iconOnly]="true" [ariaLabel]="'Quitar ' + item.productName" (click)="removeItem(item.supplierProductId)" />
-              </div>
+            <td class="po-form__subtotal">{{ formatPrice(itemSubtotal(item)) }}</td>
+            <td class="po-form__row-action">
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-trash"
+                [iconOnly]="true"
+                [ariaLabel]="'Quitar ' + item.productName"
+                (click)="removeItem(item.supplierProductId)"
+              />
             </td>
           </tr>
         </ng-template>
       </app-data-table>
 
-      <div class="purchase-order-total">
+      <div class="po-form__total">
         <span>Total</span>
         <strong>{{ formatPrice(total()) }}</strong>
       </div>
     </app-form-section>
 
-    <div class="purchase-order-form__actions">
-      <app-button type="button" variant="secondary" (click)="dialogVisible.set(false)">Cancelar</app-button>
+    <div class="po-form__actions" modalFooter>
+      <app-button type="button" variant="secondary" (click)="dialogVisible.set(false)">
+        Cancelar
+      </app-button>
       <app-button type="submit" [loading]="saving()">Guardar orden</app-button>
     </div>
   </form>
 </app-modal>
 
-<app-modal [(visible)]="cancelDialogVisible" title="Cancelar orden de compra" [width]="'min(32rem, 92vw)'">
-  <div class="purchase-order-cancel">
+<app-modal
+  [(visible)]="cancelDialogVisible"
+  title="Cancelar orden de compra"
+  [width]="'min(32rem, 92vw)'"
+>
+  <div class="po-form__cancel">
     <app-form-field
       label="Motivo"
       [(value)]="cancelReason"
       placeholder="Motivo opcional"
       testId="purchase-order-cancel-reason"
     />
-    <div class="purchase-order-form__actions">
-      <app-button variant="secondary" (click)="cancelDialogVisible.set(false)">Volver</app-button>
+    <div class="po-form__actions" modalFooter>
+      <app-button variant="secondary" type="button" (click)="cancelDialogVisible.set(false)">
+        Volver
+      </app-button>
       <app-button variant="danger" (click)="cancelSelected()">Cancelar orden</app-button>
     </div>
   </div>

@@ -66,6 +66,17 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     /** Finds the earliest payment created for a provider external reference. */
     Optional<Payment> findFirstByExternalReferenceOrderByIdAsc(String externalReference);
 
+    /**
+     * Finds the earliest active payment for a provider external reference.
+     * Active means PENDING or IN_PROCESS — used by the webhook processor to
+     * prefer a still-open payment over a cancelled one when multiple payment
+     * records exist for the same order (e.g. after a customer retry).
+     */
+    Optional<Payment> findFirstByExternalReferenceAndStatusInOrderByIdAsc(
+            String externalReference,
+            Collection<PaymentStatus> statuses
+    );
+
     /** Finds the earliest open payment whose order number matches the provider external reference. */
     Optional<Payment> findFirstByOrderOrderNumberAndStatusInOrderByIdAsc(
             String orderNumber,

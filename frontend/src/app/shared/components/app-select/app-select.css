@@ -11,3 +11,86 @@
 :host ::ng-deep .p-select-filter {
   width: 100%;
 }
+
+/* Constrain the dropdown overlay so it never overflows the viewport or
+   the host modal. Without this, a wide overlay (filter + long option
+   text) can trigger a horizontal scrollbar, which shifts the entire
+   page and causes the centered modal to "jump". On small screens the
+   cap matches the app-modal width (calc(100vw - 1rem)) so the overlay
+   aligns with the dialog edges. */
+:host ::ng-deep .p-select-overlay {
+  max-width: min(calc(100vw - 1rem), 32rem) !important;
+  min-width: 0 !important;
+}
+
+:host ::ng-deep .p-select-overlay .p-select-list-container {
+  max-width: min(calc(100vw - 1rem), 32rem) !important;
+  min-width: 0 !important;
+}
+
+:host ::ng-deep .p-select-overlay .p-select-list {
+  max-width: min(calc(100vw - 1rem), 32rem) !important;
+  min-width: 0 !important;
+}
+
+:host ::ng-deep .p-select-overlay .p-select-filter-container {
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile: compact the select overlay so it does not consume the      */
+/* full screen and the keyboard-triggered viewport resize feels less   */
+/* jarring. The overlay is capped in height and individual options get */
+/* tighter padding/smaller font.                                      */
+/* ------------------------------------------------------------------ */
+@media (max-width: 48rem) {
+  /* Cap the overlay at roughly half the viewport so it never
+     monopolises the screen. */
+  :host ::ng-deep .p-select-overlay {
+    max-height: 50dvh !important;
+  }
+
+  /* Scrollable list area constrained so the filter + header stay
+     visible. */
+  :host ::ng-deep .p-select-overlay .p-select-list-container {
+    max-height: 38dvh !important;
+  }
+
+  /* Compact the trigger and add ellipsis so long option text
+     (e.g. "Producto X - $ 12.345,00") truncates cleanly instead
+     of being clipped mid-character. */
+  :host ::ng-deep .p-select-label {
+    font-size: 0.88rem;
+    padding: 0.5rem 0.65rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Tighter filter bar. */
+  :host ::ng-deep .p-select-overlay .p-select-header {
+    padding: 0.35rem 0.5rem 0;
+  }
+
+  :host ::ng-deep .p-select-overlay .p-select-filter-container {
+    padding: 0 0.5rem 0.35rem;
+  }
+
+  :host ::ng-deep .p-select-overlay .p-select-filter {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  /* Smaller, tighter options so more fit without scrolling. */
+  :host ::ng-deep .p-select-overlay .p-select-option {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.84rem;
+    line-height: 1.35;
+  }
+
+  /* Reduce empty-message bulk. */
+  :host ::ng-deep .p-select-overlay .p-select-empty-message {
+    padding: 0.65rem;
+    font-size: 0.82rem;
+  }
+}

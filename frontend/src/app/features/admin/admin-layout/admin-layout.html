@@ -1,7 +1,11 @@
 <!-- Toast notifications for the entire admin section -->
 <app-toast />
 
-<div class="admin bg-canvas text-text font-sans tracking-tight min-h-screen flex" role="document">
+<div
+  class="admin bg-canvas text-text font-sans tracking-tight min-h-screen flex"
+  [class.admin--sidebar-open]="!collapsed()"
+  role="document"
+>
   <!-- ===== Sidebar (Forest Green) ===== -->
   <aside
     class="admin__sidebar"

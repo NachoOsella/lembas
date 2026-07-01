@@ -16,8 +16,6 @@
 .app-data-table__scroll-area {
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
   display: block;
 }
 
@@ -109,6 +107,14 @@
   border-radius: 0;
   box-shadow: none;
   table-layout: fixed;
+}
+
+/* Horizontal scroll lives on the table wrapper, not the paginator.
+   This keeps the pagination footer fixed in place when the user scrolls
+   the table body sideways on narrow screens. */
+:host ::ng-deep .app-data-table .p-datatable-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 :host ::ng-deep .app-data-table .p-datatable-table {
@@ -291,6 +297,7 @@
   :host ::ng-deep .table-toolbar__filters app-select {
     flex: 0 0 auto;
     max-width: none;
+    min-width: 0;
     width: 100%;
   }
 
@@ -311,9 +318,43 @@
   }
 
   :host ::ng-deep .app-data-table .p-paginator {
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    gap: 0.15rem;
-    min-width: 44rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  :host ::ng-deep .app-data-table .p-paginator-current {
+    width: 100%;
+    text-align: center;
+    padding: 0 0 0.25rem;
+    white-space: nowrap;
+  }
+
+  :host ::ng-deep .app-data-table .p-paginator-page,
+  :host ::ng-deep .app-data-table .p-paginator-first,
+  :host ::ng-deep .app-data-table .p-paginator-prev,
+  :host ::ng-deep .app-data-table .p-paginator-next,
+  :host ::ng-deep .app-data-table .p-paginator-last {
+    min-width: 44px;
+    height: 44px;
+  }
+}
+
+/* Extra-small screens (< 24rem / 384px): tighter spacing and smaller buttons
+   so the paginator fits in very narrow viewports. */
+@media (max-width: 24rem) {
+  :host ::ng-deep .app-data-table .p-paginator {
+    gap: 0.2rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  :host ::ng-deep .app-data-table .p-paginator-page,
+  :host ::ng-deep .app-data-table .p-paginator-first,
+  :host ::ng-deep .app-data-table .p-paginator-prev,
+  :host ::ng-deep .app-data-table .p-paginator-next,
+  :host ::ng-deep .app-data-table .p-paginator-last {
+    min-width: 40px;
+    height: 40px;
   }
 }

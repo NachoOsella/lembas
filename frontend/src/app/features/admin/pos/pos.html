@@ -4,7 +4,7 @@
   <app-page-header
     eyebrow="Punto de venta"
     title="Venta presencial"
-    description="Busca un producto, agregalo al carrito y elegi el metodo de pago. F8 cobra la venta actual."
+    description="Busc&#xFA; un producto, agregalo al carrito y elegi el metodo de pago. F8 cobra la venta actual."
   >
     @if (cashSession(); as session) {
       <app-badge tone="success" icon="pi pi-check-circle" data-testid="cash-session-badge">
@@ -39,9 +39,31 @@
     }
   </app-page-header>
 
+  @if (isAdmin()) {
+    <div class="pos-page__branch-selector">
+      @if (loadingBranches()) {
+        <app-loading-spinner size="sm" />
+      } @else {
+        <app-control-field label="Sucursal" forId="pos-branch-select">
+          <app-select
+            inputId="pos-branch-select"
+            name="branch"
+            [options]="branchOptions()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccion&#xE1; una sucursal"
+            [value]="branchId()"
+            (valueChange)="onBranchSelected($event)"
+            data-testid="pos-branch-select"
+          />
+        </app-control-field>
+      }
+    </div>
+  }
+
   <div class="pos-page__grid">
     <section class="pos-page__left" aria-label="Busqueda de productos">
-      <app-pos-product-search [branchId]="resolvedBranchId()" />
+      <app-pos-product-search [branchId]="resolvedBranchIdForSession()" />
     </section>
     <section class="pos-page__right" aria-label="Carrito y cobro">
       <app-pos-cart

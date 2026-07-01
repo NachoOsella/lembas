@@ -76,6 +76,13 @@ export class OrderDetail implements OnInit {
     return status === 'PENDING_PAYMENT' || status === 'PAYMENT_FAILED';
   });
 
+  /** Active payments only (excludes cancelled attempts from previous retries). */
+  protected readonly activePayments = computed(() => {
+    const payments = this.order()?.payments;
+    if (!payments) return [];
+    return payments.filter((p) => p.status !== 'CANCELLED');
+  });
+
   /** Human-readable error message derived from the backend error code. */
   protected readonly errorMessage = computed(() => {
     const code = this.errorCode();

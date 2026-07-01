@@ -139,7 +139,7 @@ class PosSaleServiceTest {
                         new CreatePosSaleItemRequest(PRODUCT_ID, 1),
                         new CreatePosSaleItemRequest(PRODUCT_ID, 1)
                 ),
-                PaymentMethod.CASH, null, null);
+                PaymentMethod.CASH, null, null, null);
         service.createSale(req, cashier);
 
         // FEFO policy receives the merged quantity (3) and the stock_lot
@@ -275,12 +275,69 @@ class PosSaleServiceTest {
     // ---------------------------------------------------------------------------
 
     @Test
-    void createSale_rejectsWhenCashierHasNoBranch() {
-        User cashier = new User(null, "admin@x.com", "hash", "A", "B", null, Role.ADMIN);
+    void createSale_rejectsAdminWithoutBranchId() {
+        User admin = new User(null, "admin@x.com", "hash", "A", "B", null, Role.ADMIN);
         assertThatThrownBy(() ->
-                service.createSale(saleRequest(PRODUCT_ID, 1, PaymentMethod.CASH), cashier))
+                service.createSale(saleRequest(PRODUCT_ID, 1, PaymentMethod.CASH), admin))
                 .isInstanceOf(DomainException.class)
                 .extracting("code").isEqualTo("CASH_BRANCH_REQUIRED");
+    }
+
+    @Test
+    void createSale_acceptsAdminWithBranchId() {
+        User admin = new User(null, "admin@x.com", "hash", "Admin", "User", null, Role.ADMIN);
+        Branch branch = branch(BRANCH_ID, true);
+        Product product = product(PRODUCT_ID, "Aceite", new BigDecimal("2500.00"));
+        StockLot lot = stockLot(1L, new BigDecimal("10"));
+        DeductionPlan plan = new DeductionPlan(
+                List.of(new DeductionPlan.DeductionEntry(1L, new BigDecimal("3"), new BigDecimal("10"), new BigDecimal("7"))),
+                BigDecimal.valueOf(3), BigDecimal.valueOf(10), true);
+
+        when(cashService.getCurrentSession(eq(BRANCH_ID), eq(admin)))
+                .thenReturn(cashSessionDto(SESSION_ID, BRANCH_ID));
+        when(branchRepository.findById(BRANCH_ID)).thenReturn(Optional.of(branch));
+        when(orderNumberGenerator.next(OrderType.POS)).thenReturn("PS-20260630-000001");
+        when(productRepository.findByIdAndActiveTrue(PRODUCT_ID)).thenReturn(Optional.of(product));
+        when(stockLotRepository.findAvailableLotsForUpdate(PRODUCT_ID, BRANCH_ID))
+                .thenReturn(List.of(lot));
+        when(fefoPolicy.plan(anyList(), any(BigDecimal.class))).thenReturn(plan);
+        when(stockLotRepository.findByIdForUpdate(lot.getId())).thenReturn(Optional.of(lot));
+        when(stockMovementRepository.save(any(StockMovement.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(orderRepository.save(any(Order.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(orderMapper.toDetailDto(any(Order.class))).thenReturn(orderDetailDto());
+
+        CreatePosSaleRequest req = new CreatePosSaleRequest(
+                List.of(new CreatePosSaleItemRequest(PRODUCT_ID, 3)),
+                PaymentMethod.CASH, null, null, BRANCH_ID);
+        OrderDetailDto result = service.createSale(req, admin);
+
+        assertThat(result).isNotNull();
+        verify(cashService).getCurrentSession(BRANCH_ID, admin);
+    }
+
+    @Test
+    void createSale_employeeUsesAssignedBranch_ignoringRequestBranchId() {
+        User cashier = cashier();
+        Branch branch = branch(BRANCH_ID, true);
+        Product product = product(PRODUCT_ID, "Aceite", new BigDecimal("2500.00"));
+        StockLot lot = stockLot(1L, new BigDecimal("10"));
+        DeductionPlan plan = new DeductionPlan(
+                List.of(new DeductionPlan.DeductionEntry(1L, new BigDecimal("3"), new BigDecimal("10"), new BigDecimal("7"))),
+                BigDecimal.valueOf(3), BigDecimal.valueOf(10), true);
+
+        stubHappyPath(cashier, branch, product, lot, plan);
+        when(orderMapper.toDetailDto(any(Order.class))).thenReturn(orderDetailDto());
+
+        // Even though we pass branchId=99 in the request, the employee's
+        // assigned branch (BRANCH_ID=1) must be used.
+        CreatePosSaleRequest req = new CreatePosSaleRequest(
+                List.of(new CreatePosSaleItemRequest(PRODUCT_ID, 3)),
+                PaymentMethod.CASH, null, null, 99L);
+        service.createSale(req, cashier);
+
+        verify(cashService).getCurrentSession(BRANCH_ID, cashier);
     }
 
     @Test
@@ -390,7 +447,7 @@ class PosSaleServiceTest {
 
         CreatePosSaleRequest req = new CreatePosSaleRequest(
                 List.of(new CreatePosSaleItemRequest(PRODUCT_ID, 1)),
-                PaymentMethod.CASH, null, "   ");
+                PaymentMethod.CASH, null, "   ", null);
         service.createSale(req, cashier);
 
         ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
@@ -411,7 +468,7 @@ class PosSaleServiceTest {
 
         CreatePosSaleRequest req = new CreatePosSaleRequest(
                 List.of(new CreatePosSaleItemRequest(PRODUCT_ID, 1)),
-                PaymentMethod.CASH, null, "  cliente moroso  ");
+                PaymentMethod.CASH, null, "  cliente moroso  ", null);
         service.createSale(req, cashier);
 
         ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
@@ -495,14 +552,14 @@ class PosSaleServiceTest {
     private static CreatePosSaleRequest saleRequest(Long productId, int qty, PaymentMethod method) {
         return new CreatePosSaleRequest(
                 List.of(new CreatePosSaleItemRequest(productId, qty)),
-                method, null, null);
+                method, null, null, null);
     }
 
     private static CreatePosSaleRequest saleRequestWithCashReceived(
             Long productId, int qty, PaymentMethod method, BigDecimal cashReceived) {
         return new CreatePosSaleRequest(
                 List.of(new CreatePosSaleItemRequest(productId, qty)),
-                method, cashReceived, null);
+                method, cashReceived, null, null);
     }
 
     private static OrderDetailDto orderDetailDto() {

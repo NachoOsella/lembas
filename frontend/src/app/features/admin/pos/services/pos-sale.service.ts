@@ -20,6 +20,12 @@ export interface CreatePosSaleRequest {
   /** Optional, only meaningful for CASH payments. Null for QR/TRANSFER/CARD/OTHER. */
   readonly cashReceived: number | null;
   readonly notes: string | null;
+  /**
+   * Optional branch id for ADMIN users who need to specify which branch
+   * they are selling at. Ignored for MANAGER and EMPLOYEE (the backend
+   * derives the branch from the authenticated user).
+   */
+  readonly branchId?: number | null;
 }
 
 /**

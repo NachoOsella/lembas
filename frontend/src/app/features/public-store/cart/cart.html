@@ -1,13 +1,13 @@
-<section class="min-h-screen bg-canvas py-10 text-text sm:py-14">
-  <div class="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
+<section class="min-h-screen bg-canvas py-6 text-text sm:py-10 lg:py-14">
+  <div class="mx-auto w-full max-w-[1200px] px-5 sm:px-6 lg:px-10">
     <!-- Header -->
-    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <header class="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
       <div class="min-w-0">
         <app-eyebrow color="bark">Carrito</app-eyebrow>
-        <h1 class="mt-1.5 text-3xl font-semibold tracking-tight text-text sm:text-4xl">
+        <h1 class="mt-1.5 text-2xl font-semibold tracking-tight text-text sm:text-3xl lg:text-4xl">
           Tu carrito
         </h1>
-        <p class="mt-2 text-base text-text-muted">
+        <p class="mt-2 text-sm text-text-muted sm:text-base">
           Retirás en <strong class="font-semibold text-text">{{ branchLabel() }}</strong>.
         </p>
       </div>
@@ -33,15 +33,15 @@
 
     <!-- Cart items + summary -->
     @if (!cart.isEmpty()) {
-      <div class="grid gap-6 lg:grid-cols-[1fr_400px]">
+      <div class="flex flex-col gap-5 overflow-hidden lg:grid lg:grid-cols-[1fr_400px] lg:gap-6">
         <!-- Product list -->
-        <div class="space-y-4">
+        <div class="min-w-0 space-y-3 sm:space-y-4">
           @for (item of cart.items(); track item.productId) {
-            <div class="rounded-xl bg-white p-4 shadow-card sm:p-5">
-              <div class="flex gap-4 sm:gap-5">
+            <div class="overflow-hidden rounded-xl bg-white p-3 shadow-card sm:p-5">
+              <div class="flex gap-3 sm:gap-5">
                 <!-- Product image: always on the left, small square -->
                 <div
-                  class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-warm sm:h-28 sm:w-28"
+                  class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-warm sm:h-28 sm:w-28"
                 >
                   @if (item.imageUrl) {
                     <img
@@ -56,45 +56,45 @@
 
                 <!-- Product info: fills the rest of the row -->
                 <div class="flex min-w-0 flex-1 flex-col">
-                  <div class="flex items-start justify-between gap-3">
-                    <h2 class="text-base font-semibold leading-tight text-text">
+                  <div class="flex items-start justify-between gap-2">
+                    <h2 class="min-w-0 flex-1 text-sm font-semibold leading-tight text-text sm:text-base">
                       {{ item.name }}
                     </h2>
-                    <span class="shrink-0 text-base font-bold text-text">
+                    <span class="shrink-0 text-sm font-bold text-text sm:text-base">
                       {{ (item.price * item.quantity) | currencyAr }}
                     </span>
                   </div>
 
-                  <p class="mt-1 text-sm text-text-muted">
+                  <p class="mt-1 text-xs text-text-muted sm:text-sm">
                     {{ item.price | currencyAr }} por unidad
                   </p>
 
-                  <div class="mt-auto flex items-center justify-between gap-2 pt-3">
+                  <div class="mt-auto flex items-center justify-between gap-2 pt-2 sm:pt-3">
                     <button
                       type="button"
-                      class="flex items-center gap-1.5 text-sm font-semibold text-text-muted transition-colors hover:text-red"
+                      class="flex items-center gap-1.5 text-xs font-semibold text-text-muted transition-colors hover:text-red sm:text-sm"
                       (click)="removeItem(item.productId)"
                       [attr.aria-label]="'Quitar ' + item.name"
                     >
                       <i class="pi pi-trash text-xs"></i>
                       Quitar
                     </button>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1.5 sm:gap-2">
                       <button
                         type="button"
-                        class="flex h-9 w-9 items-center justify-center rounded-full border border-border-warm bg-white text-text transition-colors hover:bg-surface-warm disabled:opacity-40"
+                        class="flex h-8 w-8 items-center justify-center rounded-full border border-border-warm bg-white text-text transition-colors hover:bg-surface-warm disabled:opacity-40 sm:h-9 sm:w-9"
                         [disabled]="item.quantity <= 1"
                         (click)="updateQuantity(item, item.quantity - 1)"
                         [attr.aria-label]="'Reducir ' + item.name"
                       >
                         <i class="pi pi-minus text-xs"></i>
                       </button>
-                      <span class="w-7 text-center text-sm font-semibold tabular-nums">
+                      <span class="w-6 text-center text-xs font-semibold tabular-nums sm:w-7 sm:text-sm">
                         {{ item.quantity }}
                       </span>
                       <button
                         type="button"
-                        class="flex h-9 w-9 items-center justify-center rounded-full border border-border-warm bg-white text-text transition-colors hover:bg-surface-warm disabled:opacity-40"
+                        class="flex h-8 w-8 items-center justify-center rounded-full border border-border-warm bg-white text-text transition-colors hover:bg-surface-warm disabled:opacity-40 sm:h-9 sm:w-9"
                         [disabled]="item.quantity >= maxQuantity(item)"
                         (click)="updateQuantity(item, item.quantity + 1)"
                         [attr.aria-label]="'Aumentar ' + item.name"
@@ -110,50 +110,50 @@
         </div>
 
         <!-- Summary sidebar -->
-        <aside class="self-start">
-          <div class="rounded-xl bg-white p-6 shadow-card">
-            <h2 class="text-xl font-semibold text-text">Resumen</h2>
+        <aside class="w-full self-start overflow-hidden lg:w-auto">
+          <div class="rounded-xl bg-white p-4 shadow-card sm:p-6">
+            <h2 class="text-lg font-semibold text-text sm:text-xl">Resumen</h2>
 
-            <dl class="mt-5 space-y-3">
-              <div class="flex items-center justify-between text-base">
+            <dl class="mt-4 space-y-2.5 sm:mt-5 sm:space-y-3">
+              <div class="flex items-center justify-between text-sm sm:text-base">
                 <dt class="text-text-muted">Productos</dt>
                 <dd class="font-semibold text-text">{{ cart.totalItems() }} unidades</dd>
               </div>
-              <div class="flex items-center justify-between text-base">
+              <div class="flex items-center justify-between text-sm sm:text-base">
                 <dt class="text-text-muted">Subtotal</dt>
                 <dd class="font-semibold text-text">{{ cart.total() | currencyAr }}</dd>
               </div>
-              <div class="flex items-center justify-between text-base">
+              <div class="flex items-center justify-between text-sm sm:text-base">
                 <dt class="text-text-muted">Envío</dt>
                 <dd class="font-semibold text-primary">Gratis</dd>
               </div>
-              <div class="border-t border-border-warm pt-4">
+              <div class="border-t border-border-warm pt-3 sm:pt-4">
                 <div class="flex items-baseline justify-between">
-                  <dt class="text-lg font-semibold text-text">Total</dt>
-                  <dd class="text-right text-3xl font-bold tracking-tight text-text">
+                  <dt class="text-base font-semibold text-text sm:text-lg">Total</dt>
+                  <dd class="text-right text-2xl font-bold tracking-tight text-text sm:text-3xl">
                     {{ cart.total() | currencyAr }}
                   </dd>
                 </div>
               </div>
             </dl>
 
-            <div class="mt-5 space-y-3 border-t border-border-warm pt-5">
-              <div class="flex items-start gap-3">
-                <i class="pi pi-map-marker mt-0.5 text-primary" aria-hidden="true"></i>
-                <p class="text-sm text-text-muted">
+            <div class="mt-4 space-y-2.5 border-t border-border-warm pt-4 sm:mt-5 sm:space-y-3 sm:pt-5">
+              <div class="flex items-start gap-2.5">
+                <i class="pi pi-map-marker mt-0.5 text-sm text-primary" aria-hidden="true"></i>
+                <p class="text-xs text-text-muted sm:text-sm">
                   Retiro en <strong class="font-semibold text-text">{{ branchLabel() }}</strong>
                 </p>
               </div>
-              <div class="flex items-start gap-3">
-                <i class="pi pi-credit-card mt-0.5 text-primary" aria-hidden="true"></i>
-                <p class="text-sm text-text-muted">
+              <div class="flex items-start gap-2.5">
+                <i class="pi pi-credit-card mt-0.5 text-sm text-primary" aria-hidden="true"></i>
+                <p class="text-xs text-text-muted sm:text-sm">
                   Pago con <strong class="font-semibold text-text">Mercado Pago</strong>
                 </p>
               </div>
             </div>
 
             <app-button
-              class="mt-5 block w-full"
+              class="mt-4 block w-full sm:mt-5"
               variant="primary"
               icon="pi pi-lock"
               [disabled]="branchMissing()"
@@ -162,12 +162,12 @@
               {{ checkoutLabel() }}
             </app-button>
 
-            <p class="mt-3 text-center text-xs text-text-muted">
+            <p class="mt-2.5 text-center text-xs text-text-muted sm:mt-3">
               Al continuar, serás redirigido para iniciar sesión si aún no lo hiciste.
             </p>
 
             @if (branchMissing()) {
-              <p class="mt-3 text-center text-sm text-text-muted">
+              <p class="mt-2.5 text-center text-xs text-text-muted sm:mt-3 sm:text-sm">
                 Elegí una sucursal de retiro en el menú superior.
               </p>
             }

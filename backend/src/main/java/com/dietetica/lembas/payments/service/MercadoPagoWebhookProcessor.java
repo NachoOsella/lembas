@@ -170,6 +170,16 @@ public class MercadoPagoWebhookProcessor {
         if (externalReference == null) {
             return Optional.empty();
         }
+        // Prefer an active (PENDING/IN_PROCESS) payment when multiple records
+        // share the same external reference — this avoids resurrecting a
+        // previously cancelled payment after a customer retry.
+        Optional<Payment> activeByRef =
+                paymentRepository.findFirstByExternalReferenceAndStatusInOrderByIdAsc(
+                        externalReference,
+                        List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS));
+        if (activeByRef.isPresent()) {
+            return activeByRef;
+        }
         Optional<Payment> byStoredExternalReference =
                 paymentRepository.findFirstByExternalReferenceOrderByIdAsc(externalReference);
         if (byStoredExternalReference.isPresent()) {

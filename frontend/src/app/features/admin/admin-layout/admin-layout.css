@@ -316,8 +316,8 @@
   position: fixed;
   inset: 0;
   background: var(--color-overlay-black);
-  backdrop-filter: blur(2px);
   z-index: 40;
+  will-change: opacity;
 }
 
 /* ------------------------------------------------------------------ */
@@ -341,7 +341,8 @@
     width: 17rem;
     z-index: 50;
     transform: translateX(0);
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.2s ease-out;
+    will-change: transform;
   }
 
   .admin__sidebar--collapsed {
@@ -396,6 +397,23 @@
 
   .admin__user-name {
     max-width: 5rem;
+  }
+}
+
+/* Lock background scroll when the mobile sidebar is open so scrolling
+   inside the sidebar does not bubble to the page behind it. */
+@media (max-width: 48rem) {
+  .admin--sidebar-open {
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  .admin--sidebar-open .admin__main {
+    overflow: hidden;
+  }
+
+  .admin--sidebar-open .admin__content {
+    overflow: hidden;
   }
 }
 

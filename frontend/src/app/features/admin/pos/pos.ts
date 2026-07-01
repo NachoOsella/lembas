@@ -13,8 +13,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
+import { AuthService } from '../../../core/services/auth';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
+import { UserService } from '../../../core/services/user';
 import { getApiError } from '../../../shared/models/api-error';
+import { Branch } from '../../../shared/models/user';
 import { OrderDetail } from '../../../shared/models/order';
 import { CashSessionDto } from '../../../shared/models/cash-session';
 
@@ -22,8 +25,11 @@ import { CashService } from '../../../core/services/cash';
 
 import { AppBadge } from '../../../shared/components/app-badge/app-badge';
 import { AppButton } from '../../../shared/components/app-button/app-button';
+import { AppControlField } from '../../../shared/components/app-control-field/app-control-field';
 import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
+import { AppSelect } from '../../../shared/components/app-select/app-select';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
+import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
 
 import { PosCartComponent } from './components/pos-cart/pos-cart';
 import { PosCheckoutResultDialogComponent } from './components/pos-checkout-result-dialog/pos-checkout-result-dialog';
@@ -34,6 +40,11 @@ import {
   PosSaleService,
 } from './services/pos-sale.service';
 
+interface BranchOption {
+  readonly label: string;
+  readonly value: number;
+}
+
 /**
  * POS landing page (S3-US09, S3-US10, S3-US11).
  *
@@ -41,6 +52,10 @@ import {
  * + "Cobrar" action on the right. Probes the current cash session on load
  * to surface a clear warning when the cashier has no OPEN register;
  * a "Cobrar" action is also gated on the cart not being empty.</p>
+ *
+ * <p>ADMIN users are shown a branch selector at the top so they can choose
+ * which branch to operate on, since they have no assigned branch. MANAGER
+ * and EMPLOYEE always use their assigned branch.</p>
  *
  * <p>F8 is wired as a global quick-checkout shortcut, only active when the
  * page is in a chargeable state (cart not empty AND cash session open).</p>
@@ -53,8 +68,11 @@ import {
     RouterLink,
     AppBadge,
     AppButton,
+    AppControlField,
     AppPageHeader,
+    AppSelect,
     AppToast,
+    LoadingSpinner,
     PosCartComponent,
     PosCheckoutResultDialogComponent,
     PosProductSearchComponent,
@@ -63,9 +81,11 @@ import {
   styleUrl: './pos.css',
 })
 export class AdminPosPage implements OnInit {
+  private readonly auth = inject(AuthService);
   private readonly cart = inject(PosCartStore);
   private readonly posSale = inject(PosSaleService);
   private readonly cash = inject(CashService);
+  private readonly userService = inject(UserService);
   private readonly errorMapping = inject(ErrorMappingService);
   private readonly messageService = inject(MessageService);
   private readonly router = inject(Router);
@@ -79,14 +99,26 @@ export class AdminPosPage implements OnInit {
   protected readonly processing = signal(false);
   protected readonly lastResult = signal<OrderDetail | null>(null);
 
-  /**
-   * Branch id used by the product search to resolve per-product stock.
-   * Sourced from the active cash session; falls back to null when no
-   * session is open (search results then show "Verificar" badges).
-   */
-  protected readonly resolvedBranchId = computed<number | null>(
-    () => this.cashSession()?.branchId ?? null,
+  /** ADMIN-specific branch selection state. */
+  protected readonly isAdmin = computed(() => this.auth.getUserRole() === 'ADMIN');
+  protected readonly branches = signal<Branch[]>([]);
+  protected readonly branchId = signal<number | null>(null);
+  protected readonly loadingBranches = signal(false);
+
+  protected readonly branchOptions = computed<BranchOption[]>(() =>
+    this.branches().map((b) => ({ label: b.name, value: b.id })),
   );
+
+  /**
+   * The branch id to use for cash session lookups and POS sale requests.
+   * For ADMIN: the user-selected branch; for MANAGER/EMPLOYEE: their assigned branch.
+   */
+  protected readonly resolvedBranchIdForSession = computed<number | null>(() => {
+    if (this.isAdmin()) {
+      return this.branchId();
+    }
+    return this.auth.currentUser()?.branchId ?? null;
+  });
 
   /**
    * Whether the cashier can charge right now. Requires: items in the cart
@@ -100,7 +132,56 @@ export class AdminPosPage implements OnInit {
   private readonly cartComponent = viewChild<PosCartComponent>('cartComponent');
 
   ngOnInit(): void {
+    this.initializeBranch();
+  }
+
+  /** Resolves the branch to use, then loads the cash session. */
+  private initializeBranch(): void {
+    const user = this.auth.currentUser();
+    if (!user || user.role === 'CUSTOMER') {
+      void this.router.navigate(['/admin']);
+      return;
+    }
+
+    if (this.isAdmin()) {
+      this.loadBranches();
+      return;
+    }
+
+    // MANAGER / EMPLOYEE: use assigned branch, skip loading branches.
     this.refreshCashSession();
+  }
+
+  /** Loads active branches for the ADMIN branch selector. */
+  private loadBranches(): void {
+    this.loadingBranches.set(true);
+    this.userService.listBranches().subscribe({
+      next: (branches) => {
+        this.branches.set(branches);
+        this.loadingBranches.set(false);
+        // Auto-select when only one branch exists.
+        if (branches.length === 1) {
+          this.branchId.set(branches[0].id);
+        }
+        // Load the cash session (will pass the selected branchId).
+        this.refreshCashSession();
+      },
+      error: () => {
+        this.loadingBranches.set(false);
+        this.cashSessionLoading.set(false);
+      },
+    });
+  }
+
+  /**
+   * Triggered when ADMIN selects a branch from the dropdown.
+   * Re-probes the cash session for the newly selected branch.
+   */
+  protected onBranchSelected(value: number | null): void {
+    this.branchId.set(value);
+    if (value != null) {
+      this.refreshCashSession();
+    }
   }
 
   /**
@@ -171,6 +252,7 @@ export class AdminPosPage implements OnInit {
       return;
     }
     const lines = this.cartLines();
+    const branchId = this.resolvedBranchIdForSession();
 
     this.processing.set(true);
     const request: CreatePosSaleRequest = {
@@ -181,6 +263,8 @@ export class AdminPosPage implements OnInit {
       paymentMethod,
       cashReceived,
       notes: null,
+      // ADMIN passes branchId so the backend knows which branch to sell at.
+      branchId: this.isAdmin() ? branchId : null,
     };
 
     this.posSale.createSale(request).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -221,7 +305,7 @@ export class AdminPosPage implements OnInit {
     });
   }
 
-  /** "Nueva venta" handler — clears the cart, resets selection, closes the result. */
+  /** "Nueva venta" handler -- clears the cart, resets selection, closes the result. */
   startNewSale(): void {
     this.cart.clear();
     this.cartComponent()?.resetSelection();
@@ -244,9 +328,16 @@ export class AdminPosPage implements OnInit {
   }
 
   private loadCashSession(): void {
+    const branchId = this.resolvedBranchIdForSession();
+    // For ADMIN, do not probe until a branch is selected.
+    if (this.isAdmin() && branchId == null) {
+      this.cashSession.set(null);
+      this.cashSessionLoading.set(false);
+      return;
+    }
     this.cashSessionLoading.set(true);
     this.cash
-      .currentSession()
+      .currentSession(branchId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (session) => {

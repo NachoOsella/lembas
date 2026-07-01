@@ -30,6 +30,7 @@ import com.dietetica.lembas.pos.dto.CreatePosSaleRequest;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -128,7 +129,7 @@ public class PosSaleService {
      */
     @Transactional
     public OrderDetailDto createSale(CreatePosSaleRequest request, User currentUser) {
-        CashSessionDto session = resolveOpenCashSession(currentUser);
+        CashSessionDto session = resolveOpenCashSession(currentUser, request.branchId());
         Branch branch = resolveBranch(session.branchId());
 
         // 1) Merge duplicate productId lines (scanner may send the same barcode twice)
@@ -185,19 +186,35 @@ public class PosSaleService {
     // ---------------------------------------------------------------------------
 
     /**
-     * Resolves the OPEN cash session for the cashier. Throws
-     * {@code CASH_BRANCH_REQUIRED} if the cashier has no branch (ADMIN without
-     * assignment), and lets {@code CASH_SESSION_NOT_FOUND} propagate from
-     * {@code CashService.getCurrentSession} when there is no OPEN session.
+     * Resolves the OPEN cash session for the cashier.
+     *
+     * <p>For ADMIN users the {@code requestBranchId} is required because they
+     * have no assigned branch; for MANAGER and EMPLOYEE the branch is derived
+     * from the authenticated user and {@code requestBranchId} is ignored.</p>
+     *
+     * @throws DomainException {@code CASH_BRANCH_REQUIRED} (400) when ADMIN does
+     *         not provide a branch id, or when MANAGER/EMPLOYEE have no assigned
+     *         branch; lets {@code CASH_SESSION_NOT_FOUND} propagate from
+     *         {@code CashService.getCurrentSession} when there is no OPEN session
      */
-    private CashSessionDto resolveOpenCashSession(User currentUser) {
+    private CashSessionDto resolveOpenCashSession(User currentUser, Long requestBranchId) {
+        if (currentUser.getRole() == Role.ADMIN) {
+            if (requestBranchId == null) {
+                throw new DomainException(
+                        "CASH_BRANCH_REQUIRED",
+                        HttpStatus.BAD_REQUEST,
+                        "ADMIN must select a branch to make a POS sale");
+            }
+            return cashService.getCurrentSession(requestBranchId, currentUser);
+        }
+        // MANAGER / EMPLOYEE
         if (currentUser.getBranchId() == null) {
             throw new DomainException(
                     "CASH_BRANCH_REQUIRED",
                     HttpStatus.BAD_REQUEST,
                     "Cashier has no assigned branch and must open a cash session before selling");
         }
-        return cashService.getCurrentSession(null, currentUser);
+        return cashService.getCurrentSession(currentUser.getBranchId(), currentUser);
     }
 
     private Branch resolveBranch(Long branchId) {
