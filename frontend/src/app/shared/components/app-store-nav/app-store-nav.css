@@ -229,6 +229,8 @@
   border-top: 1px solid var(--color-border-neutral);
   background: rgba(255, 255, 255, 0.8);
   padding: 0.75rem;
+  /* Avoid backdrop-filter on mobile: the search bar is short, no need to blur behind it. */
+  backdrop-filter: none;
 }
 
 @media (min-width: 1024px) {
