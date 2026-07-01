@@ -218,13 +218,6 @@ import { Component } from '@angular/core';
       }
     }
 
-    /* -- Mobile: leaves render statically (no sway) to keep the GPU idle -- */
-    @media (max-width: 640px) {
-      .hero-flowers__anim {
-        animation: none !important;
-      }
-    }
-
     @media (max-width: 640px) {
       .hero-flowers__pos--4,
       .hero-flowers__pos--5,

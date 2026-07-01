@@ -239,7 +239,7 @@ import { ProductSummary } from '../../../shared/models/product';
                 [numVisible]="5"
                 [numScroll]="1"
                 [circular]="true"
-                [autoplayInterval]="6000"
+                [autoplayInterval]="3000"
                 [showIndicators]="true"
                 [showNavigators]="true"
                 [responsiveOptions]="carouselResponsiveOptions"
@@ -302,7 +302,7 @@ import { ProductSummary } from '../../../shared/models/product';
                   padding="2rem"
                   [showBlob]="false"
                   [clickable]="true"
-                  class="home-benefits-card home-benefits-card--dupe"
+                  class="home-benefits-card sm:hidden"
                   aria-hidden="true"
                 >
                   <div class="text-center">
@@ -394,7 +394,7 @@ import { ProductSummary } from '../../../shared/models/product';
                   padding="1.5rem"
                   [showBlob]="false"
                   [clickable]="true"
-                  class="home-reviews-card home-reviews-card--dupe"
+                  class="home-reviews-card sm:hidden"
                   aria-hidden="true"
                 >
                   <div class="flex items-center gap-4">

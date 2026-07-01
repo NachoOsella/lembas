@@ -109,28 +109,6 @@
   }
 }
 
-/* -- Mobile: disable all decorative infinite animations ---------------
-   On low-end Android the simultaneous ticket-float + ticket-sheen +
-   barcode-pulse + marquee + hero-flowers stack tanks frame rate.
-   The cards and ticket still show in their final state. */
-@media (max-width: 639px) {
-  .home-ticket,
-  .home-ticket__body::before,
-  .home-barcode > div,
-  .home-reveal,
-  .home-section-reveal,
-  .home-surface-reveal,
-  .home-card-rise {
-    animation: none !important;
-    opacity: 1;
-    transform: none;
-  }
-
-  .home-ticket-stage {
-    perspective: none;
-  }
-}
-
 @keyframes home-reveal-up {
   from {
     opacity: 0;
@@ -278,46 +256,9 @@
     flex-shrink: 1;
   }
 
-  /* Duplicated cards are desktop-only (they only exist to feed the marquee loop). */
-  .home-benefits-card--dupe,
-  .home-reviews-card--dupe {
-    display: none;
-  }
-}
-
-/* -- Mobile: marquees collapse to a static grid, duplicates hidden --- */
-@media (max-width: 639px) {
-  .home-benefits-marquee,
-  .home-reviews-marquee {
-    overflow: visible;
-  }
-
-  .home-benefits-marquee__track,
-  .home-reviews-marquee__track {
-    animation: none;
-    width: auto;
-    display: grid;
-    gap: 1rem;
-  }
-
-  .home-benefits-marquee__track {
-    grid-template-columns: 1fr;
-  }
-
-  .home-reviews-marquee__track {
-    grid-template-columns: 1fr;
-  }
-
-  .home-benefits-card,
-  .home-reviews-card {
-    min-width: 0;
-    flex-shrink: 1;
-    width: 100%;
-  }
-
-  /* Duplicates are not rendered on mobile: no marquee needs them. */
-  .home-benefits-card--dupe,
-  .home-reviews-card--dupe {
+  /* Hide duplicated cards for marquee effect */
+  .home-benefits-card[aria-hidden='true'],
+  .home-reviews-card[aria-hidden='true'] {
     display: none;
   }
 }
