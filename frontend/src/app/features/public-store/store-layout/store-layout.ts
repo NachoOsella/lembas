@@ -126,6 +126,7 @@ export class StoreLayout implements OnInit {
     const trimmed = query.trim();
     if (trimmed) {
       this.router.navigate(['/store/products'], { queryParams: { q: trimmed } });
+      this.scrollToCatalogResults();
       return;
     }
 
@@ -134,6 +135,20 @@ export class StoreLayout implements OnInit {
     if (this.router.url.startsWith('/store/products') && this.router.url.includes('q=')) {
       this.router.navigate(['/store/products'], { queryParams: {} });
     }
+  }
+
+  /**
+   * Scrolls the catalog results section into view. The router's
+   * `scrollPositionRestoration: 'top'` runs first, so the user briefly lands
+   * at the top and then a smooth scroll brings the results card into view.
+   * The setTimeout gives the catalog component a chance to mount (or re-render
+   * the existing instance) before we measure the target.
+   */
+  private scrollToCatalogResults(): void {
+    setTimeout(() => {
+      const target = document.getElementById('catalog-results');
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
   }
 
   /** Navigate to the public cart page. */

@@ -12,6 +12,7 @@
 
     @if (formField(); as ff) {
       <input
+        #input
         pInputText
         [formField]="ff"
         [id]="inputId()"
@@ -27,6 +28,7 @@
       />
     } @else {
       <input
+        #input
         pInputText
         [id]="inputId()"
         [type]="type()"
@@ -52,6 +54,7 @@
 } @else {
   @if (formField(); as ff) {
     <input
+      #input
       pInputText
       [formField]="ff"
       [id]="inputId()"
@@ -67,6 +70,7 @@
     />
   } @else {
     <input
+      #input
       pInputText
       [id]="inputId()"
       [type]="type()"

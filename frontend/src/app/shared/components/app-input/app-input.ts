@@ -1,4 +1,4 @@
-import { Component, computed, input, model, output } from '@angular/core';
+import { Component, ElementRef, computed, input, model, output, viewChild } from '@angular/core';
 import { InputText } from 'primeng/inputtext';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
@@ -11,6 +11,17 @@ import { FormField } from '@angular/forms/signals';
   styleUrl: './app-input.css',
 })
 export class AppInput {
+  /**
+   * Reference to the underlying native input. Used by parent components
+   * (e.g. {@link AppSearchBar}) to programmatically blur the field and
+   * dismiss the mobile soft keyboard after a submit.
+   */
+  protected readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('input');
+
+  /** Programmatically removes focus from the input (closes the mobile keyboard). */
+  blurInput(): void {
+    this.inputRef()?.nativeElement.blur();
+  }
   readonly inputId = input<string | null>(null);
   readonly type = input<string>('text');
   readonly placeholder = input<string>('');
