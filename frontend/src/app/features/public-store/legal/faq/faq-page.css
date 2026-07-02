@@ -1,0 +1,59 @@
+/* FAQ page styles. */
+
+.faq-group__title {
+  color: var(--color-primary, #2f8d72);
+}
+
+::ng-deep .faq-panel.p-panel {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0 0.5px rgba(0, 0, 0, 0.14), 0 1px 1px rgba(0, 0, 0, 0.24);
+  background: #ffffff;
+  overflow: hidden;
+}
+
+::ng-deep .faq-panel.p-panel .p-panel-header {
+  background: #ffffff;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 1.25rem 1.5rem;
+}
+
+::ng-deep .faq-panel.p-panel.p-panel-expanded .p-panel-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+::ng-deep .faq-panel.p-panel .p-panel-content {
+  background: #ffffff;
+  border: none;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+::ng-deep .faq-panel.p-panel .p-panel-toggleable .p-panel-header {
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+
+::ng-deep .faq-panel.p-panel .p-panel-toggleable:hover .p-panel-header {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+::ng-deep .faq-panel.p-panel .p-panel-icons {
+  color: var(--color-primary, #2f8d72);
+}
+
+.faq-panel__question {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.faq-panel__answer {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: rgba(0, 0, 0, 0.58);
+  margin: 0;
+}
