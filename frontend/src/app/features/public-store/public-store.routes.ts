@@ -23,6 +23,14 @@ export default [
         loadComponent: () => import('./cart/cart').then((m) => m.default),
       },
       {
+        path: 'terms',
+        loadComponent: () => import('./legal/terms/terms-page').then((m) => m.TermsPage),
+      },
+      {
+        path: 'faq',
+        loadComponent: () => import('./legal/faq/faq-page').then((m) => m.FaqPage),
+      },
+      {
         path: 'catalog',
         redirectTo: 'products',
         pathMatch: 'full',
