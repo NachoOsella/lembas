@@ -15,6 +15,19 @@ function fillField(fixture: ComponentFixture<Register>, selector: string, value:
   fixture.detectChanges();
 }
 
+/**
+ * Helper: checks the Terms and Conditions checkbox by clicking the underlying
+ * PrimeNG checkbox input. Triggers the same change events signal-forms listens to.
+ */
+function acceptTerms(fixture: ComponentFixture<Register>): void {
+  const checkbox = fixture.nativeElement.querySelector(
+    '#acceptTerms',
+  ) as HTMLInputElement;
+  expect(checkbox).toBeTruthy();
+  checkbox.click();
+  fixture.detectChanges();
+}
+
 /** Helper: types into an input without blurring it to verify real-time validation. */
 function typeField(fixture: ComponentFixture<Register>, selector: string, value: string): void {
   const el = fixture.nativeElement.querySelector(selector) as HTMLInputElement;
@@ -111,7 +124,14 @@ describe('Register component', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const requiredFields = ['firstName', 'lastName', 'email', 'password', 'confirmPassword'];
+    const requiredFields = [
+      'firstName',
+      'lastName',
+      'email',
+      'password',
+      'confirmPassword',
+      'acceptTerms',
+    ];
     for (const field of requiredFields) {
       const errEl = fixture.nativeElement.querySelector(`[data-testid="${field}-error"]`);
       expect(errEl).toBeTruthy();
@@ -210,6 +230,7 @@ describe('Register component', () => {
     fillField(fixture, '#password', 'StrongPass1');
     fillField(fixture, '#confirmPassword', 'StrongPass1');
     fillField(fixture, '#phone', '+54 351 1234567');
+    acceptTerms(fixture);
 
     const btn = fixture.nativeElement.querySelector(
       '[data-testid="submit-btn"]',
@@ -252,6 +273,7 @@ describe('Register component', () => {
     fillField(fixture, '#password', 'StrongPass1');
     fillField(fixture, '#confirmPassword', 'StrongPass1');
     // Do NOT fill phone -- it stays as empty string
+    acceptTerms(fixture);
 
     const btn = fixture.nativeElement.querySelector(
       '[data-testid="submit-btn"]',
@@ -277,6 +299,7 @@ describe('Register component', () => {
     fillField(fixture, '#email', 'existing@lembas.com');
     fillField(fixture, '#password', 'StrongPass1');
     fillField(fixture, '#confirmPassword', 'StrongPass1');
+    acceptTerms(fixture);
 
     const btn = fixture.nativeElement.querySelector(
       '[data-testid="submit-btn"]',
@@ -322,6 +345,7 @@ describe('Register component', () => {
     fillField(fixture, '#email', 'frodo@lembas.com');
     fillField(fixture, '#password', 'StrongPass1');
     fillField(fixture, '#confirmPassword', 'StrongPass1');
+    acceptTerms(fixture);
 
     const btn = fixture.nativeElement.querySelector(
       '[data-testid="submit-btn"]',
@@ -362,6 +386,7 @@ describe('Register component', () => {
     fillField(fixture, '#email', 'frodo@lembas.com');
     fillField(fixture, '#password', 'StrongPass1');
     fillField(fixture, '#confirmPassword', 'StrongPass1');
+    acceptTerms(fixture);
 
     const btn = fixture.nativeElement.querySelector(
       '[data-testid="submit-btn"]',
@@ -424,5 +449,106 @@ describe('Register component', () => {
     toggleBtn.click();
     fixture.detectChanges();
     expect(confirmInput.type).toBe('password');
+  });
+
+  // ---------------------------------------------------------------------------
+  // Terms and Conditions acceptance
+  // ---------------------------------------------------------------------------
+
+  /** Should render an unchecked Terms and Conditions checkbox by default. */
+  it('Should_renderUncheckedTermsCheckbox_byDefault', () => {
+    const checkbox = fixture.nativeElement.querySelector(
+      '#acceptTerms',
+    ) as HTMLInputElement;
+    expect(checkbox).toBeTruthy();
+    expect(checkbox.checked).toBe(false);
+  });
+
+  /** Should render a link to the Terms and Conditions page. */
+  it('Should_renderTermsLinkToStoreTermsPage', () => {
+    const link = fixture.nativeElement.querySelector(
+      '[data-testid="terms-link"]',
+    ) as HTMLAnchorElement;
+    expect(link).toBeTruthy();
+    expect(link.getAttribute('href')).toBe('/store/terms');
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(link.textContent?.trim()).toContain('Terminos y Condiciones');
+  });
+
+  /** Should keep the submit blocked until the Terms checkbox is checked. */
+  it('Should_blockSubmit_when_termsNotAccepted', async () => {
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    fillField(fixture, '#firstName', 'Frodo');
+    fillField(fixture, '#lastName', 'Baggins');
+    fillField(fixture, '#email', 'frodo@lembas.com');
+    fillField(fixture, '#password', 'StrongPass1');
+    fillField(fixture, '#confirmPassword', 'StrongPass1');
+    // Note: acceptTerms NOT ticked
+
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="submit-btn"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // No HTTP call should be made.
+    httpMock.expectNone('/api/auth/register');
+    expect(navigateSpy).not.toHaveBeenCalled();
+
+    // Validation error should be visible.
+    const errEl = fixture.nativeElement.querySelector('[data-testid="acceptTerms-error"]');
+    expect(errEl).toBeTruthy();
+    expect(errEl.textContent?.toLowerCase()).toContain('terminos');
+  });
+
+  /** Should clear the acceptance error once the checkbox is checked. */
+  it('Should_clearTermsError_when_checkboxIsChecked', async () => {
+    fillField(fixture, '#firstName', 'Frodo');
+    fillField(fixture, '#lastName', 'Baggins');
+    fillField(fixture, '#email', 'frodo@lembas.com');
+    fillField(fixture, '#password', 'StrongPass1');
+    fillField(fixture, '#confirmPassword', 'StrongPass1');
+
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="submit-btn"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="acceptTerms-error"]')).toBeTruthy();
+
+    acceptTerms(fixture);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="acceptTerms-error"]')).toBeNull();
+  });
+
+  /** Should send acceptTerms omitted from the request body so the backend keeps its current contract. */
+  it('Should_notSendAcceptTermsInRequest_when_submitting', async () => {
+    vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    fillField(fixture, '#firstName', 'Frodo');
+    fillField(fixture, '#lastName', 'Baggins');
+    fillField(fixture, '#email', 'frodo@lembas.com');
+    fillField(fixture, '#password', 'StrongPass1');
+    fillField(fixture, '#confirmPassword', 'StrongPass1');
+    acceptTerms(fixture);
+
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="submit-btn"]',
+    ) as HTMLButtonElement;
+    btn.click();
+    fixture.detectChanges();
+
+    const req = httpMock.expectOne('/api/auth/register');
+    expect(req.request.body.acceptTerms).toBeUndefined();
+    req.flush(successResponse);
   });
 });
