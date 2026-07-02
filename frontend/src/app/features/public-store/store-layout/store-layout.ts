@@ -88,6 +88,8 @@ export class StoreLayout implements OnInit {
   /** Flat footer links for app-store-footer. Only real, working links. */
   protected readonly footerLinks: readonly StoreFooterLink[] = [
     { label: 'Catálogo', path: '/store/products' },
+    { label: 'Preguntas frecuentes', path: '/store/faq' },
+    { label: 'Términos y condiciones', path: '/store/terms' },
     { label: 'Instagram', path: 'https://www.instagram.com/dietetica.lembas', external: true },
     { label: 'Facebook', path: 'https://www.facebook.com/dietetica.lembas', external: true },
   ];

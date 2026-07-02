@@ -40,6 +40,14 @@ GET /api/store/categories
 GET /api/store/branches
   Response: [ { id, name, address, phone, active } ]
   Notes:    Active pickup branches. Used by the public store branch selector.
+
+GET /api/store/terms
+  Response: TermsDto { title, lastUpdated, intro, sections: [ { title, paragraphs: [...], bullets: [...] } ] }
+  Notes:    Public, read-only terms and conditions. Sourced from LegalContentService.
+
+GET /api/store/faq
+  Response: FaqDto { title, intro, items: [ { id, question, answer, category } ] }
+  Notes:    Public, read-only FAQ. Sourced from LegalContentService.
 ```
 
 ## Customer (role CUSTOMER)

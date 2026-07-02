@@ -1,0 +1,68 @@
+<section class="faq-page min-h-screen bg-canvas py-10 text-text sm:py-14" aria-labelledby="faq-title">
+  <div class="mx-auto w-full max-w-[960px] px-4 sm:px-6 lg:px-8">
+    <header class="mb-8">
+      <app-eyebrow color="green">Ayuda</app-eyebrow>
+      @if (faq(); as doc) {
+        <h1
+          id="faq-title"
+          class="mt-3 text-3xl font-semibold tracking-tight text-text sm:text-4xl"
+        >
+          {{ doc.title }}
+        </h1>
+        @if (doc.intro) {
+          <p class="mt-3 max-w-3xl text-base leading-relaxed text-text-muted">
+            {{ doc.intro }}
+          </p>
+        }
+      } @else {
+        <h1
+          id="faq-title"
+          class="mt-3 text-3xl font-semibold tracking-tight text-text sm:text-4xl"
+        >
+          Preguntas frecuentes
+        </h1>
+      }
+    </header>
+
+    @if (loading()) {
+      <div class="rounded-xl bg-white p-12 shadow-card sm:p-16">
+        <app-loading-spinner label="Cargando preguntas frecuentes..." size="lg" surface="card" />
+      </div>
+    } @else if (error()) {
+      <app-error-alert
+        title="No pudimos cargar las preguntas frecuentes"
+        message="Intentalo de nuevo en unos segundos."
+        (retry)="retry()"
+      />
+    } @else if (faq(); as doc) {
+      <div class="faq-groups space-y-8">
+        @for (group of groups(); track group.category) {
+          <section [attr.aria-labelledby]="'faq-group-' + $index">
+            <h2
+              [id]="'faq-group-' + $index"
+              class="faq-group__title mb-3 text-xs font-bold uppercase tracking-[0.18em] text-primary"
+            >
+              {{ group.category }}
+            </h2>
+            <div class="space-y-3">
+              @for (item of group.items; track trackById($index, item)) {
+                <p-panel
+                  [id]="'faq-' + item.id"
+                  [toggleable]="true"
+                  [collapsed]="true"
+                  [transitionOptions]="transitionOptions"
+                  styleClass="faq-panel"
+                >
+                  <ng-template pTemplate="header">
+                    <span class="faq-panel__question">{{ item.question }}</span>
+                  </ng-template>
+                  <p class="faq-panel__answer">{{ item.answer }}</p>
+                </p-panel>
+              }
+            </div>
+          </section>
+        }
+      </div>
+    }
+  </div>
+</section>

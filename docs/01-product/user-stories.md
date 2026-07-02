@@ -63,6 +63,7 @@ Full detailed content with acceptance criteria for each story is available in th
 | S3-US10 | EP-08 | Create transactional in-store sale | 8 |
 | S3-US11 | EP-08 | Build complete POS screen | 8 |
 | S3-US12 | EP-00 | Test critical payment, cash and POS flows | 5 |
+| S3-US13 | EP-03 | Publish public Terms and Conditions and FAQ for store customers | 5 |
 
 ## Sprint 4 -- Orders, reports, security, deployment
 
