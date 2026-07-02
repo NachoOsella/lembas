@@ -224,6 +224,34 @@
             </div>
           </div>
 
+          <!-- Terms and Conditions acceptance (legally required, blocks submit). -->
+          <div class="field-group register-terms">
+            <app-checkbox
+              inputId="acceptTerms"
+              [binary]="true"
+              [value]="registrationModel().acceptTerms"
+              (valueChange)="onAcceptTermsChange($event)"
+            >
+              Acepto los
+              <a
+                routerLink="/store/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="register-terms__link"
+                data-testid="terms-link"
+              >
+                Terminos y Condiciones
+              </a>
+              de Lembas.
+            </app-checkbox>
+            @if (form.acceptTerms().touched() && form.acceptTerms().errors().length) {
+              <p class="register-error" data-testid="acceptTerms-error">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                {{ form.acceptTerms().errors()[0].message }}
+              </p>
+            }
+          </div>
+
           <!-- Submit -->
           <app-button
             type="submit"

@@ -18,12 +18,22 @@ import { getApiError } from '../../../shared/models/api-error';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { AppInput } from '../../../shared/components/app-input/app-input';
 import { AppButton } from '../../../shared/components/app-button/app-button';
+import { AppCheckbox } from '../../../shared/components/app-checkbox/app-checkbox';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
 import { PasswordToggle } from '../../../shared/components/password-toggle/password-toggle';
 
 @Component({
   selector: 'app-register',
-  imports: [ErrorAlert, AppToast, FormField, RouterLink, AppInput, AppButton, PasswordToggle],
+  imports: [
+    ErrorAlert,
+    AppToast,
+    FormField,
+    RouterLink,
+    AppInput,
+    AppButton,
+    AppCheckbox,
+    PasswordToggle,
+  ],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })
@@ -41,6 +51,7 @@ export class Register {
     password: '',
     confirmPassword: '',
     phone: '',
+    acceptTerms: false,
   });
 
   /** General (non-field-level) error message, e.g. 409/400 from the API. */
@@ -91,6 +102,16 @@ export class Register {
     validate(s.confirmPassword, ({ valueOf }) => {
       if (valueOf(s.password) !== valueOf(s.confirmPassword)) {
         return { kind: 'mismatch', message: 'Las contrasenas no coinciden' };
+      }
+      return undefined;
+    });
+
+    // The Terms and Conditions checkbox must be checked before submission.
+    // Using `validate` instead of `required` so we can express the stricter
+    // "must be true" rule required for the legal consent.
+    validate(s.acceptTerms, ({ value }) => {
+      if (value() !== true) {
+        return { kind: 'required', message: 'Debes aceptar los Terminos y Condiciones' };
       }
       return undefined;
     });
@@ -188,6 +209,14 @@ export class Register {
     };
 
     return labels[field] ?? field;
+  }
+
+  /**
+   * Updates the {@code acceptTerms} flag on the form model when the user
+   * toggles the Terms and Conditions checkbox.
+   */
+  protected onAcceptTermsChange(checked: boolean): void {
+    this.registrationModel.update((model) => ({ ...model, acceptTerms: checked }));
   }
 
   /**

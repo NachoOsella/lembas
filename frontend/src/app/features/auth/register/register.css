@@ -90,6 +90,35 @@
   line-height: 1.2;
 }
 
+/* Terms and Conditions checkbox row. The AppCheckbox wrapper already aligns
+   the input and label inline; we only style the text and the inline link. */
+.register-terms {
+  margin-top: 0.25rem;
+}
+
+.register-terms ::ng-deep .app-checkbox__row {
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.register-terms ::ng-deep .app-checkbox__label {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: rgba(0, 0, 0, 0.78);
+}
+
+.register-terms__link {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 150ms ease;
+}
+
+.register-terms__link:hover {
+  color: var(--color-primary-dark);
+}
+
 @media (max-width: 640px) {
   .register-card {
     border-radius: 22px;
