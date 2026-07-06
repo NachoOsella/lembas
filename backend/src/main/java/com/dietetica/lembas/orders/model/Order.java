@@ -143,6 +143,9 @@ public class Order {
     @Column(name = "prepared_at")
     private OffsetDateTime preparedAt;
 
+    @Column(name = "ready_at")
+    private OffsetDateTime readyAt;
+
     @Column(name = "delivered_at")
     private OffsetDateTime deliveredAt;
 

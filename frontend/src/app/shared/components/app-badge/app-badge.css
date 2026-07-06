@@ -15,6 +15,7 @@
   line-height: 1;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 :host ::ng-deep .app-badge--success {

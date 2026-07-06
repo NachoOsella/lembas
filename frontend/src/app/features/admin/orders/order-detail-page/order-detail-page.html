@@ -1,0 +1,290 @@
+<div class="admin-page order-detail-page">
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="order-detail-page__loading">
+      <app-loading-spinner label="Cargando pedido..." surface="card" />
+    </div>
+  }
+  <!-- Error -->
+  @else if (error()) {
+    <app-error-alert
+      variant="inline"
+      [title]="error()"
+      message=""
+    >
+      <app-button variant="secondary" size="sm" (click)="retry()">Reintentar</app-button>
+      <app-button variant="ghost" size="sm" icon="pi pi-arrow-left" routerLink="/admin/orders">
+        Volver
+      </app-button>
+    </app-error-alert>
+  }
+  <!-- Data -->
+  @else if (order(); as o) {
+    <!-- Header -->
+    <app-page-header
+      [eyebrow]="'Pedido ' + o.orderNumber"
+      [title]="typeLabel() + ' - ' + (o.customerName || 'Sin cliente')"
+    >
+      <app-button
+        variant="secondary"
+        size="sm"
+        icon="pi pi-arrow-left"
+        routerLink="/admin/orders"
+      >
+        Volver
+      </app-button>
+    </app-page-header>
+
+    <!-- Two-column grid -->
+    <div class="order-detail-grid">
+      <!-- ========================================================= -->
+      <!-- LEFT COLUMN: status + timeline + actions                  -->
+      <!-- ========================================================= -->
+      <div class="order-detail-left">
+        <!-- Status card -->
+        <app-section-card eyebrow="Estado" title="Estado actual">
+          <div class="order-detail-status-row">
+            <app-status-badge [status]="o.status" [config]="statusBadges" />
+            <span class="order-detail-type-pill order-detail-type-pill--{{ o.type.toLowerCase() }}">
+              {{ typeLabel() }}
+            </span>
+          </div>
+        </app-section-card>
+
+        <!-- Timeline card -->
+        <app-section-card eyebrow="Trazabilidad" title="Historial del pedido">
+          <ol class="order-timeline" role="list" aria-label="Historial de estados del pedido">
+            @for (step of buildTimeline(); track step.key; let last = $last) {
+              <li
+                class="order-timeline__step"
+                [class.order-timeline__step--completed]="step.state === 'completed'"
+                [class.order-timeline__step--active]="step.state === 'active'"
+                [class.order-timeline__step--cancelled]="step.state === 'cancelled'"
+                [class.order-timeline__step--last]="last"
+              >
+                <span class="order-timeline__dot" aria-hidden="true">
+                  @if (step.state === 'completed') {
+                    <i class="pi pi-check" aria-hidden="true"></i>
+                  } @else if (step.state === 'cancelled') {
+                    <i class="pi pi-times" aria-hidden="true"></i>
+                  } @else if (step.state === 'active') {
+                    <span class="order-timeline__pulse"></span>
+                  }
+                </span>
+
+                <div class="order-timeline__content">
+                  <span class="order-timeline__label">{{ step.label }}</span>
+                  <span class="order-timeline__description">{{ step.description }}</span>
+                  @if (step.timestamp) {
+                    <time class="order-timeline__time">{{ step.timestamp | shortDateAr }}</time>
+                  } @else {
+                    <span class="order-timeline__time order-timeline__time--pending">Pendiente</span>
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+        </app-section-card>
+
+        <!-- Action buttons (ONLINE orders only) -->
+        @if (isOnline() && availableTransition(); as action) {
+          <app-section-card eyebrow="Accion disponible" title="Avanza el estado del pedido">
+            <button
+              type="button"
+              class="order-detail-primary-action"
+              [class.order-detail-primary-action--loading]="actionLoading() === action.key"
+              [disabled]="actionLoading() !== null"
+              (click)="openConfirm(action)"
+            >
+              @if (actionLoading() === action.key) {
+                <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
+              } @else {
+                <i [class]="action.icon" aria-hidden="true"></i>
+              }
+              <span>{{ action.label }}</span>
+            </button>
+            <p class="order-detail-action-hint">
+              Confirma el cambio para notificar al cliente y avanzar el flujo de preparacion.
+            </p>
+          </app-section-card>
+        }
+        @else if (isOnline() && isDelivered()) {
+          <app-section-card eyebrow="Pedido finalizado" title="Ciclo completado">
+            <div class="order-detail-complete">
+              <div class="order-detail-complete__icon" aria-hidden="true">
+                <i class="pi pi-check-circle"></i>
+              </div>
+              <div class="order-detail-complete__body">
+                <strong>Pedido entregado</strong>
+                <p>Este pedido ya fue entregado al cliente. No requiere acciones adicionales.</p>
+              </div>
+            </div>
+          </app-section-card>
+        }
+        @else if (isOnline() && isAwaitingPayment()) {
+          <app-section-card eyebrow="Esperando confirmacion" title="Aun no se puede preparar">
+            <p class="order-detail-waiting">
+              Las acciones de preparacion estaran disponibles cuando el pago sea confirmado.
+            </p>
+          </app-section-card>
+        }
+        @else if (o.type === 'POS') {
+          <app-section-card eyebrow="Pedido POS" title="Sin flujo de preparacion">
+            <p class="order-detail-waiting">
+              Los pedidos presenciales se gestionan directamente desde el punto de venta y no requieren acciones de preparacion.
+            </p>
+          </app-section-card>
+        }
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- RIGHT COLUMN: order info + items + payments               -->
+      <!-- ========================================================= -->
+      <div class="order-detail-right">
+        <!-- Order info card -->
+        <app-section-card eyebrow="Informacion" title="Datos del pedido">
+          <dl class="order-detail-meta">
+            <div class="order-detail-meta__row">
+              <dt>Tipo</dt>
+              <dd>{{ o.type === 'ONLINE' ? 'Online' : 'Presencial (POS)' }}</dd>
+            </div>
+            <div class="order-detail-meta__row">
+              <dt>Sucursal</dt>
+              <dd>{{ o.branchName }}</dd>
+            </div>
+            <div class="order-detail-meta__row">
+              <dt>Cliente</dt>
+              <dd>{{ o.customerName || '---' }}</dd>
+            </div>
+            <div class="order-detail-meta__row">
+              <dt>Email</dt>
+              <dd>{{ o.customerEmail || '---' }}</dd>
+            </div>
+            @if (o.customerPhone) {
+              <div class="order-detail-meta__row">
+                <dt>Telefono</dt>
+                <dd>{{ o.customerPhone }}</dd>
+              </div>
+            }
+            <div class="order-detail-meta__row">
+              <dt>Retiro</dt>
+              <dd>{{ o.fulfillmentType === 'PICKUP' ? 'En sucursal' : o.fulfillmentType }}</dd>
+            </div>
+            @if (o.notes) {
+              <div class="order-detail-meta__row order-detail-meta__row--notes">
+                <dt>Notas</dt>
+                <dd>{{ o.notes }}</dd>
+              </div>
+            }
+            @if (o.cancellationReason) {
+              <div class="order-detail-meta__row order-detail-meta__row--cancellation">
+                <dt>Motivo cancelacion</dt>
+                <dd>{{ o.cancellationReason }}</dd>
+              </div>
+            }
+          </dl>
+        </app-section-card>
+
+        <!-- Items card -->
+        <app-section-card eyebrow="Productos" [title]="'Items (' + o.items.length + ')'">
+          @if (o.items.length === 0) {
+            <p class="order-detail-empty-text">Sin items registrados.</p>
+          } @else {
+            <div class="order-detail-items">
+              <div class="order-detail-items__header" aria-hidden="true">
+                <span>Producto</span>
+                <span>Cant.</span>
+                <span>Precio</span>
+                <span>Subtotal</span>
+              </div>
+              <ul class="order-detail-items__list" role="list">
+                @for (item of o.items; track item.id) {
+                  <li class="order-detail-items__row">
+                    <div class="order-detail-items__col order-detail-items__col--product">
+                      <strong>{{ item.productName }}</strong>
+                      @if (item.productBarcode) {
+                        <small>{{ item.productBarcode }}</small>
+                      }
+                    </div>
+                    <div class="order-detail-items__col order-detail-items__col--qty">
+                      <span class="order-detail-items__qty-pill">{{ item.quantity }}</span>
+                    </div>
+                    <div class="order-detail-items__col order-detail-items__col--price">
+                      {{ item.unitPrice | currencyAr }}
+                    </div>
+                    <div class="order-detail-items__col order-detail-items__col--subtotal">
+                      <strong>{{ item.subtotalAmount | currencyAr }}</strong>
+                    </div>
+                  </li>
+                }
+              </ul>
+            </div>
+
+            <!-- Totals -->
+            <div class="order-detail-totals" role="group" aria-label="Totales del pedido">
+              <div class="order-detail-totals__row">
+                <span>Subtotal</span>
+                <span>{{ o.subtotal | currencyAr }}</span>
+              </div>
+              @if (o.discountTotal > 0) {
+                <div class="order-detail-totals__row order-detail-totals__row--discount">
+                  <span>Descuento</span>
+                  <span>-{{ o.discountTotal | currencyAr }}</span>
+                </div>
+              }
+              <div class="order-detail-totals__row order-detail-totals__row--total">
+                <span>Total</span>
+                <strong>{{ o.total | currencyAr }}</strong>
+              </div>
+            </div>
+          }
+        </app-section-card>
+
+        <!-- Payments card -->
+        <app-section-card eyebrow="Cobros" [title]="'Pagos (' + o.payments.length + ')'">
+          @if (o.payments.length === 0) {
+            <p class="order-detail-empty-text">Sin pagos registrados.</p>
+          } @else {
+            <ul class="order-detail-payments" role="list">
+              @for (payment of o.payments; track payment.id) {
+                <li class="order-detail-payments__row">
+                  <div class="order-detail-payments__info">
+                    <span class="order-detail-payments__method">
+                      {{ formatPaymentMethod(payment.method) }}
+                    </span>
+                    <span class="order-detail-payments__provider">
+                      via {{ payment.provider === 'MERCADO_PAGO' ? 'Mercado Pago' : 'Manual' }}
+                    </span>
+                  </div>
+                  <div class="order-detail-payments__status">
+                    <app-status-badge
+                      [status]="payment.status"
+                      [config]="paymentStatusBadges"
+                    />
+                  </div>
+                  <div class="order-detail-payments__amount">
+                    <strong>{{ payment.amount | currencyAr }}</strong>
+                    @if (payment.approvedAt) {
+                      <small>Aprobado: {{ payment.approvedAt | shortDateAr }}</small>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </app-section-card>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Confirm dialog -->
+<app-confirm-dialog
+  [visible]="confirmVisible()"
+  [title]="pendingAction()?.confirmTitle ?? ''"
+  [message]="pendingAction()?.confirmMessage ?? ''"
+  [confirmLabel]="pendingAction()?.label ?? 'Confirmar'"
+  [destructive]="false"
+  (confirmed)="executeTransition()"
+  (cancelled)="cancelConfirm()"
+/>

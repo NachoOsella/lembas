@@ -1,1 +1,146 @@
-<p>orders works!</p>
+<div class="admin-page orders-page">
+  <app-page-header
+    eyebrow="Pedidos"
+    title="Gestion de pedidos"
+    description="Administra pedidos online y POS. Las ordenes online avanzan por estados de preparacion hasta la entrega."
+  />
+
+  @if (error()) {
+    <app-error-alert variant="inline" [title]="error()" message="">
+      <app-button variant="secondary" size="sm" (click)="loadOrders()">Reintentar</app-button>
+    </app-error-alert>
+  }
+
+  <app-data-table
+    [data]="orders()"
+    [columns]="columns"
+    [loading]="loading()"
+    [sortable]="true"
+    [paginated]="true"
+    [lazy]="true"
+    [totalRecords]="totalRecords()"
+    [first]="first()"
+    [rows]="pageSize()"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    [sortField]="sortField()"
+    [sortOrder]="sortOrder()"
+    (pageChange)="onPageChange($event)"
+    (sortChange)="onSort($event)"
+    emptyTitle="Aun no hay pedidos"
+    emptyDescription="Los pedidos de la tienda online y del POS apareceran aca."
+  >
+    <ng-template #toolbar>
+      <div class="orders-toolbar">
+        <div class="orders-toolbar__info">
+          <p class="orders-toolbar__kicker">Listado general</p>
+          <h2 class="orders-toolbar__title">Pedidos en curso</h2>
+        </div>
+        <div class="orders-toolbar__actions">
+          <app-select
+            [options]="statusOptions"
+            [value]="statusFilter()"
+            (valueChange)="onStatusChange($event)"
+            placeholder="Estado"
+            [showClear]="true"
+          />
+          <app-select
+            [options]="typeOptions"
+            [value]="typeFilter()"
+            (valueChange)="onTypeChange($event)"
+            placeholder="Tipo"
+            [showClear]="true"
+          />
+          <app-select
+            [options]="branchOptions()"
+            [value]="selectedBranchId()"
+            (valueChange)="onBranchChange($event)"
+            placeholder="Sucursal"
+            [showClear]="true"
+          />
+          <app-date-picker
+            inputId="orders-date-from"
+            [value]="dateFrom()"
+            (valueChange)="onDateFromChange($event)"
+            placeholder="Desde"
+            dateFormat="dd/mm/yy"
+          />
+          <app-date-picker
+            inputId="orders-date-to"
+            [value]="dateTo()"
+            (valueChange)="onDateToChange($event)"
+            placeholder="Hasta"
+            dateFormat="dd/mm/yy"
+          />
+          <app-button
+            variant="ghost"
+            size="sm"
+            icon="pi pi-filter-slash"
+            (click)="clearFilters()"
+          >
+            Limpiar
+          </app-button>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template #body let-item>
+      <tr>
+        <td class="orders-col--number">
+          <div class="orders-number-cell">
+            <span class="orders-number-cell__value">{{ item.orderNumber }}</span>
+            <span class="orders-number-cell__type orders-number-cell__type--{{ item.type.toLowerCase() }}">
+              {{ typeLabel(item.type) }}
+            </span>
+          </div>
+        </td>
+        <td>
+          <span class="orders-customer-name">{{ item.customerName }}</span>
+        </td>
+        <td class="orders-col--status">
+          <app-status-badge [status]="item.status" [config]="statusBadges" />
+        </td>
+        <td class="orders-col--branch">{{ item.branchName }}</td>
+        <td class="orders-col--total">
+          <strong>{{ item.total | currencyAr }}</strong>
+        </td>
+        <td class="orders-col--date">{{ item.createdAt | shortDateAr }}</td>
+        <td class="orders-col--actions">
+          <div class="orders-row-actions">
+            <!-- View detail -->
+            <button
+              type="button"
+              class="orders-icon-btn orders-icon-btn--view"
+              [attr.aria-label]="'Ver detalle del pedido ' + item.orderNumber"
+              (click)="viewOrder(item)"
+            >
+              <i class="pi pi-eye" aria-hidden="true"></i>
+            </button>
+
+            <!-- Quick transition button (ONLINE orders with valid next state) -->
+            @if (quickActionFor(item); as act) {
+              <button
+                type="button"
+                class="orders-icon-btn orders-icon-btn--action"
+                [attr.aria-label]="act.label + ' - Pedido ' + item.orderNumber"
+                (click)="openQuickConfirm(item, act)"
+              >
+                <i [class]="act.icon" aria-hidden="true"></i>
+              </button>
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </app-data-table>
+</div>
+
+<!-- Quick-action confirm dialog -->
+<app-confirm-dialog
+  [visible]="confirmVisible()"
+  [title]="pendingAction()?.label ?? ''"
+  [message]="pendingAction()?.description ?? ''"
+  [confirmLabel]="pendingAction()?.label ?? 'Confirmar'"
+  [destructive]="false"
+  (confirmed)="executeQuickTransition()"
+  (cancelled)="cancelQuickConfirm()"
+/>

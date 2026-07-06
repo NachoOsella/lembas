@@ -33,6 +33,7 @@ public record OrderDetailDto(
         List<PaymentSummaryDto> payments,
         OffsetDateTime paidAt,
         OffsetDateTime preparedAt,
+        OffsetDateTime readyAt,
         OffsetDateTime deliveredAt,
         OffsetDateTime cancelledAt,
         OffsetDateTime createdAt,

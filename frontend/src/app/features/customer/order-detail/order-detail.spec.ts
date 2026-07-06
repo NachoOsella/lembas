@@ -45,6 +45,7 @@ function detailPayload(overrides: Partial<OrderDetailData> = {}): OrderDetailDat
     payments: [],
     paidAt: null,
     preparedAt: null,
+    readyAt: null,
     deliveredAt: null,
     cancelledAt: null,
     createdAt: '2026-06-12T00:00:00Z',

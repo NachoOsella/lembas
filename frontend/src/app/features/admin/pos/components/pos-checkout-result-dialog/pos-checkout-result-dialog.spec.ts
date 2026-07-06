@@ -35,6 +35,7 @@ function buildOrder(overrides: Partial<OrderDetail> = {}): OrderDetail {
     ],
     paidAt: null,
     preparedAt: null,
+    readyAt: null,
     deliveredAt: null,
     cancelledAt: null,
     createdAt: '',

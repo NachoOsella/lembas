@@ -195,7 +195,7 @@ class PosSaleControllerTest {
                 new BigDecimal("2500.00"), BigDecimal.ZERO, new BigDecimal("2500.00"),
                 null, null,
                 List.of(), List.of(),
-                null, null, null, null, null, null
+                null, null, null, null, null, null, null
         );
     }
 }

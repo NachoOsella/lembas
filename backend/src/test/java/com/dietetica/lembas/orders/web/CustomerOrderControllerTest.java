@@ -221,7 +221,7 @@ class CustomerOrderControllerTest {
                 null, null,
                 new BigDecimal("200.00"), BigDecimal.ZERO, new BigDecimal("200.00"),
                 null, null, List.of(), List.of(),
-                null, null, null, null,
+                null, null, null, null, null,
                 OffsetDateTime.now(), OffsetDateTime.now()
         );
         when(customerOrderService.getCustomerOrder(42L, customer)).thenReturn(detail);

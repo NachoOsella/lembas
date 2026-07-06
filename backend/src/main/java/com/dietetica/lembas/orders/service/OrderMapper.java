@@ -78,6 +78,7 @@ public class OrderMapper {
                 payments,
                 order.getPaidAt(),
                 order.getPreparedAt(),
+                order.getReadyAt(),
                 order.getDeliveredAt(),
                 order.getCancelledAt(),
                 order.getCreatedAt(),

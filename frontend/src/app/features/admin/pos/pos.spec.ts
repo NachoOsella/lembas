@@ -62,6 +62,7 @@ function buildOrder(): OrderDetail {
     ],
     paidAt: null,
     preparedAt: null,
+    readyAt: null,
     deliveredAt: null,
     cancelledAt: null,
     createdAt: '',

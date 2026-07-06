@@ -34,7 +34,7 @@
             @for (col of columns; track col.field) {
               <th
                 [pSortableColumn]="col.sortable !== false && sortable() ? col.field : undefined"
-                [style.width]="col.width"
+                [style.min-width]="col.width"
               >
                 {{ col.header }}
                 @if (col.sortable !== false && sortable()) {

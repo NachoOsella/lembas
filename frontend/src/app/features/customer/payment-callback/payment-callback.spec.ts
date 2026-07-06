@@ -31,6 +31,7 @@ function detail(overrides: Partial<OrderDetail> = {}): OrderDetail {
     payments: [],
     paidAt: '2026-06-12T10:00:00Z',
     preparedAt: null,
+    readyAt: null,
     deliveredAt: null,
     cancelledAt: null,
     createdAt: '2026-06-12T09:00:00Z',

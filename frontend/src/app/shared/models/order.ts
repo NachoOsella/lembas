@@ -109,6 +109,7 @@ export interface OrderDetail {
   readonly payments: PaymentSummary[];
   readonly paidAt: string | null;
   readonly preparedAt: string | null;
+  readonly readyAt: string | null;
   readonly deliveredAt: string | null;
   readonly cancelledAt: string | null;
   readonly createdAt: string;

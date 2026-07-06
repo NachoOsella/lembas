@@ -77,7 +77,19 @@ export default [
       },
       {
         path: 'orders',
-        loadComponent: () => import('./orders/orders').then((m) => m.Orders),
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./orders/orders').then((m) => m.Orders),
+          },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./orders/order-detail-page/order-detail-page').then(
+                (m) => m.OrderDetailPage,
+              ),
+          },
+        ],
       },
       {
         path: 'pos',
