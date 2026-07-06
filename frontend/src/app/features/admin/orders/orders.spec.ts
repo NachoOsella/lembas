@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Orders } from './orders';
 import { AdminOrderService } from '../../../core/services/admin-order';
 import { UserService } from '../../../core/services/user';
+import { AuthService, AuthUser } from '../../../core/services/auth';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { OrderSummary, OrderStatus, OrderType, FulfillmentType } from '../../../shared/models/order';
 import { PageResponse } from '../../../shared/models/page';
@@ -62,7 +63,7 @@ describe('Orders (admin list)', () => {
   let router: { navigate: ReturnType<typeof vi.fn> };
   let messageService: { add: ReturnType<typeof vi.fn> };
 
-  function configure() {
+  function configure(role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'CUSTOMER' = 'ADMIN', userBranchId: number | null = null) {
     adminOrderService = {
       listOrders: vi.fn().mockReturnValue(of(mockPage([]))),
       prepare: vi.fn(),
@@ -74,6 +75,19 @@ describe('Orders (admin list)', () => {
     router = { navigate: vi.fn().mockResolvedValue(true) };
     messageService = { add: vi.fn() };
     const route = { snapshot: { paramMap: { get: () => null } } };
+    const authUser: AuthUser = {
+      id: 7,
+      email: `${role.toLowerCase()}@example.com`,
+      firstName: 'Test',
+      lastName: role,
+      role,
+      branchId: userBranchId,
+      branchName: null,
+    };
+    const authService = {
+      currentUser: vi.fn().mockReturnValue(authUser),
+      getUserRole: vi.fn().mockReturnValue(role),
+    };
 
     TestBed.configureTestingModule({
       imports: [Orders],
@@ -81,6 +95,7 @@ describe('Orders (admin list)', () => {
         provideNoopAnimations(),
         { provide: AdminOrderService, useValue: adminOrderService },
         { provide: UserService, useValue: userService },
+        { provide: AuthService, useValue: authService },
         {
           provide: ErrorMappingService,
           useValue: { getMessage: vi.fn().mockReturnValue('Error') },
@@ -420,6 +435,125 @@ describe('Orders (admin list)', () => {
       expect(messageService.add).toHaveBeenCalledWith(
         expect.objectContaining({ severity: 'error' }),
       );
+    });
+  });
+
+  // ----------------------------------------------------------------
+  // Search filter
+  // ----------------------------------------------------------------
+
+  describe('search filter', () => {
+    it('sends undefined search when query is empty', () => {
+      adminOrderService.listOrders.mockClear();
+      component.loadOrders();
+      const call = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(call?.search).toBeUndefined();
+    });
+
+    it('sends the trimmed search query to the service', () => {
+      (component as unknown as { onSearchChange: (v: string) => void }).onSearchChange('  ON-2026  ');
+      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(lastCall?.search).toBe('ON-2026');
+    });
+
+    it('clears the search and reloads when onSearchClear is called', () => {
+      (component as unknown as { onSearchChange: (v: string) => void }).onSearchChange('foo');
+      adminOrderService.listOrders.mockClear();
+      (component as unknown as { onSearchClear: () => void }).onSearchClear();
+      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(lastCall?.search).toBeUndefined();
+    });
+
+    it('does not send the query when it is only whitespace', () => {
+      (component as unknown as { onSearchChange: (v: string) => void }).onSearchChange('   ');
+      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(lastCall?.search).toBeUndefined();
+    });
+
+    it('resets the page to 0 when the search changes', () => {
+      (component as unknown as { first: { set: (v: number) => void } }).first.set(20);
+      (component as unknown as { onSearchChange: (v: string) => void }).onSearchChange('order');
+      expect(adminOrderService.listOrders).toHaveBeenCalled();
+      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(lastCall?.search).toBe('order');
+    });
+  });
+
+  // ----------------------------------------------------------------
+  // Branch restriction by role
+  // ----------------------------------------------------------------
+
+  describe('branch restriction by role', () => {
+    /** Reconfigures the TestBed for a different role/branch. */
+    function reconfigureForRole(
+      role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'CUSTOMER',
+      userBranchId: number | null,
+    ): void {
+      TestBed.resetTestingModule();
+      configure(role, userBranchId);
+      fixture = TestBed.createComponent(Orders);
+      component = fixture.componentInstance;
+    }
+
+    it('does NOT restrict branchId for ADMIN users', () => {
+      reconfigureForRole('ADMIN', null);
+      adminOrderService.listOrders.mockClear();
+      component.loadOrders();
+      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(lastCall?.branchId).toBeUndefined();
+    });
+
+    it('forces branchId to the user branch for MANAGER users', () => {
+      reconfigureForRole('MANAGER', 3);
+      adminOrderService.listOrders.mockClear();
+      component.loadOrders();
+      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(lastCall?.branchId).toBe(3);
+    });
+
+    it('forces branchId to the user branch for EMPLOYEE users', () => {
+      reconfigureForRole('EMPLOYEE', 5);
+      adminOrderService.listOrders.mockClear();
+      component.loadOrders();
+      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(lastCall?.branchId).toBe(5);
+    });
+
+    it('ignores onBranchChange that tries to switch branch for a restricted user', () => {
+      reconfigureForRole('EMPLOYEE', 5);
+      // The constructor of Orders calls loadOrders() once during init.
+      const initialCalls = adminOrderService.listOrders.mock.calls.length;
+      (component as unknown as { onBranchChange: (v: number | null) => void }).onBranchChange(99);
+      // No new call should have been made because the change is rejected.
+      expect(adminOrderService.listOrders.mock.calls.length).toBe(initialCalls);
+      // The last call (from the constructor) used the user's own branch.
+      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(lastCall?.branchId).toBe(5);
+    });
+
+    it('allows ADMIN to switch branch freely', () => {
+      reconfigureForRole('ADMIN', null);
+      adminOrderService.listOrders.mockClear();
+      (component as unknown as { onBranchChange: (v: number | null) => void }).onBranchChange(99);
+      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(lastCall?.branchId).toBe(99);
+    });
+
+    it('clearFilters leaves the branch locked for restricted users', () => {
+      reconfigureForRole('EMPLOYEE', 5);
+      adminOrderService.listOrders.mockClear();
+      (component as unknown as { clearFilters: () => void }).clearFilters();
+      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(lastCall?.branchId).toBe(5);
+    });
+
+    it('clearFilters clears the branch for ADMIN', () => {
+      reconfigureForRole('ADMIN', null);
+      (component as unknown as { onBranchChange: (v: number | null) => void }).onBranchChange(2);
+      adminOrderService.listOrders.mockClear();
+      (component as unknown as { clearFilters: () => void }).clearFilters();
+      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
+      expect(lastCall?.branchId).toBeUndefined();
     });
   });
 });

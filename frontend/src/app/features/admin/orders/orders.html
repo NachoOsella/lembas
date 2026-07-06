@@ -36,6 +36,15 @@
           <h2 class="orders-toolbar__title">Pedidos en curso</h2>
         </div>
         <div class="orders-toolbar__actions">
+          <app-input
+            inputId="orders-search"
+            [value]="searchQuery()"
+            (valueChange)="onSearchChange($event)"
+            placeholder="Buscar por numero de orden o cliente"
+            prefixIcon="pi pi-search"
+            ariaLabel="Buscar pedidos"
+            class="orders-toolbar__search"
+          />
           <app-select
             [options]="statusOptions"
             [value]="statusFilter()"
@@ -55,7 +64,8 @@
             [value]="selectedBranchId()"
             (valueChange)="onBranchChange($event)"
             placeholder="Sucursal"
-            [showClear]="true"
+            [showClear]="!isBranchRestricted()"
+            [disabled]="isBranchRestricted()"
           />
           <app-date-picker
             inputId="orders-date-from"

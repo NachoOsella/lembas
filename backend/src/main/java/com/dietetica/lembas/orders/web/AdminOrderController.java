@@ -43,6 +43,11 @@ public class AdminOrderController {
 
     /**
      * Returns a paginated, filterable list of orders.
+     *
+     * <p>For non-ADMIN users (MANAGER / EMPLOYEE) the {@code branchId} filter
+     * is always overridden server-side to the user's assigned branch. The
+     * {@code search} parameter matches the order number and customer name
+     * (case-insensitive LIKE).</p>
      */
     @GetMapping
     public PageResponse<OrderSummaryDto> list(
@@ -51,9 +56,10 @@ public class AdminOrderController {
             @RequestParam(required = false) OrderType type,
             @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String search,
             Pageable pageable
     ) {
-        return adminOrderService.listOrders(status, branchId, type, from, to, pageable);
+        return adminOrderService.listOrders(status, branchId, type, from, to, search, pageable);
     }
 
     /**

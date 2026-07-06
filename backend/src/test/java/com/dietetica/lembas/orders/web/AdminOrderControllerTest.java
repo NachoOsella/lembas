@@ -3,10 +3,12 @@ package com.dietetica.lembas.orders.web;
 import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.auth.service.LembasUserDetailsService;
 import com.dietetica.lembas.orders.dto.OrderDetailDto;
+import com.dietetica.lembas.orders.dto.OrderSummaryDto;
 import com.dietetica.lembas.orders.model.FulfillmentType;
 import com.dietetica.lembas.orders.model.OrderStatus;
 import com.dietetica.lembas.orders.model.OrderType;
 import com.dietetica.lembas.orders.service.AdminOrderService;
+import com.dietetica.lembas.shared.dto.PageResponse;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -241,6 +243,108 @@ class AdminOrderControllerTest {
                 now, null, null, null,
                 now,
                 now.minusHours(2),
+                now
+        );
+    }
+
+    // ----------------------------------------------------------------
+    // GET /api/admin/orders with filters
+    // ----------------------------------------------------------------
+
+    @Test
+    void shouldListOrdersWithFilters() throws Exception {
+        when(adminOrderService.listOrders(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(new PageResponse<>(
+                        java.util.List.of(dummySummary(1L)),
+                        1, 1, 0, 10, true, true, false));
+
+        mockMvc.perform(get("/api/admin/orders?status=PAID&type=ONLINE&search=ON-2026"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void shouldListOrdersWithoutFilters() throws Exception {
+        when(adminOrderService.listOrders(
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(new PageResponse<>(
+                        java.util.Collections.emptyList(),
+                        0, 0, 0, 10, true, true, true));
+
+        mockMvc.perform(get("/api/admin/orders"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    void shouldListOrdersWithDateRange() throws Exception {
+        when(adminOrderService.listOrders(
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.any(java.time.LocalDate.class),
+                org.mockito.ArgumentMatchers.any(java.time.LocalDate.class),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(new PageResponse<>(
+                        java.util.Collections.emptyList(),
+                        0, 0, 0, 10, true, true, true));
+
+        mockMvc.perform(get("/api/admin/orders?from=2026-07-01&to=2026-07-06"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldListOrdersWithBranchFilter() throws Exception {
+        when(adminOrderService.listOrders(
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.eq(7L),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(new PageResponse<>(
+                        java.util.Collections.emptyList(),
+                        0, 0, 0, 10, true, true, true));
+
+        mockMvc.perform(get("/api/admin/orders?branchId=7"))
+                .andExpect(status().isOk());
+    }
+
+    /** Builds a minimal {@link OrderSummaryDto} for list endpoint stubs. */
+    private OrderSummaryDto dummySummary(Long id) {
+        OffsetDateTime now = OffsetDateTime.now();
+        return new OrderSummaryDto(
+                id,
+                "ON-20260706-000001",
+                OrderType.ONLINE,
+                OrderStatus.PAID,
+                FulfillmentType.PICKUP,
+                1L, "Sucursal Centro",
+                10L, "Ignacio Osella",
+                null, null,
+                new BigDecimal("1500.00"),
+                new BigDecimal("0.00"),
+                new BigDecimal("1500.00"),
+                2,
+                now,
+                null,
                 now
         );
     }

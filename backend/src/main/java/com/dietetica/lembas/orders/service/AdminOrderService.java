@@ -195,11 +195,26 @@ public class AdminOrderService {
     /**
      * Returns a paginated, filtered list of orders for the admin panel.
      *
+     * <p>Applies the following filters:
+     * <ul>
+     *   <li>{@code status}, {@code type} -- exact match when provided.</li>
+     *   <li>{@code from} / {@code to} -- inclusive start / exclusive end of the
+     *       {@code createdAt} range, both optional.</li>
+     *   <li>{@code search} -- case-insensitive LIKE on {@code orderNumber} and
+     *       {@code customerNameSnapshot} when provided. Leading/trailing
+     *       whitespace is trimmed before matching.</li>
+     *   <li>{@code branchId} -- exact match when provided. For non-ADMIN users
+     *       (MANAGER / EMPLOYEE) the value is forced to the user's assigned
+     *       branch even if the caller supplied a different one. ADMIN can
+     *       pass any value or null to query all branches.</li>
+     * </ul></p>
+     *
      * @param status   optional filter by order status
-     * @param branchId optional filter by branch
+     * @param branchId optional filter by branch; ignored / overridden for non-ADMIN users
      * @param type     optional filter by order type
      * @param from     optional inclusive start date (createdAt >= from)
      * @param to       optional exclusive end date (createdAt < to + 1 day)
+     * @param search   optional free-text search on order number and customer name
      * @param pageable pagination and sort (defaults to createdAt DESC)
      * @return a page of order summaries
      */
@@ -210,12 +225,44 @@ public class AdminOrderService {
             OrderType type,
             LocalDate from,
             LocalDate to,
+            String search,
             Pageable pageable
     ) {
-        Specification<Order> spec = buildFilterSpec(status, branchId, type, from, to);
+        Long effectiveBranchId = resolveBranchFilter(branchId);
+        Specification<Order> spec = buildFilterSpec(status, effectiveBranchId, type, from, to, search);
         Pageable sortedPageable = ensureDefaultSort(pageable);
         Page<Order> page = orderRepository.findAll(spec, sortedPageable);
         return PageResponse.from(page.map(orderMapper::toSummaryDto));
+    }
+
+    /**
+     * Resolves the effective branch filter for the current request.
+     *
+     * <p>ADMIN users keep whatever branch filter they supplied (or null for all
+     * branches). MANAGER and EMPLOYEE users are always scoped to their assigned
+     * branch, even if they pass a different value or pass null. The override is
+     * applied silently because the UI for those roles also locks the filter.</p>
+     *
+     * @param requestedBranchId the branch id supplied by the caller
+     * @return the effective branch id to apply in the query
+     */
+    private Long resolveBranchFilter(Long requestedBranchId) {
+        var currentUser = securityContextHelper.getCurrentUser();
+        if (currentUser == null) {
+            return requestedBranchId;
+        }
+        com.dietetica.lembas.users.model.Role role = currentUser.getRole();
+        if (role == com.dietetica.lembas.users.model.Role.ADMIN) {
+            return requestedBranchId;
+        }
+        Long userBranchId = currentUser.getBranchId();
+        if (userBranchId == null) {
+            // Non-ADMIN user without a branch is a data integrity issue;
+            // restrict the listing to a non-existent branch so the result is empty
+            // instead of leaking other branches' data.
+            return -1L;
+        }
+        return userBranchId;
     }
 
     /**
@@ -255,10 +302,14 @@ public class AdminOrderService {
 
     /**
      * Builds a JPA {@link Specification} from the optional filter parameters.
+     *
+     * <p>When {@code search} is provided it is normalised (trimmed, lowercased)
+     * and matched as a case-insensitive LIKE on either {@code orderNumber} or
+     * {@code customerNameSnapshot}. Empty / blank input is treated as no filter.</p>
      */
     private Specification<Order> buildFilterSpec(
             OrderStatus status, Long branchId, OrderType type,
-            LocalDate from, LocalDate to
+            LocalDate from, LocalDate to, String search
     ) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -280,9 +331,40 @@ public class AdminOrderService {
                 OffsetDateTime toEnd = to.plusDays(1).atStartOfDay(ZoneOffset.UTC).toOffsetDateTime();
                 predicates.add(cb.lessThan(root.get("createdAt"), toEnd));
             }
+            if (search != null) {
+                String pattern = buildSearchPattern(search);
+                if (pattern != null) {
+                    Predicate orderNumberMatch = cb.like(
+                            cb.lower(root.get("orderNumber")), pattern);
+                    Predicate customerMatch = cb.like(
+                            cb.lower(root.get("customerNameSnapshot")), pattern);
+                    predicates.add(cb.or(orderNumberMatch, customerMatch));
+                }
+            }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    /**
+     * Normalises a search string into a SQL LIKE pattern, or null when empty.
+     * Trims surrounding whitespace and escapes literal LIKE wildcards
+     * ({@code %} and {@code _}) so they only match user input that contains
+     * the character explicitly.
+     */
+    private String buildSearchPattern(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String trimmed = raw.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        String escaped = trimmed
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+        return "%" + escaped.toLowerCase() + "%";
     }
 
     /**

@@ -52,14 +52,29 @@
   flex-wrap: wrap;
   gap: 0.65rem;
   align-items: center;
-  flex: 1 1 auto;
+  /* Items keep their intrinsic width (do not grow) so the row wraps cleanly
+     instead of stretching each control to fill the available space. */
+  flex: 0 1 auto;
   justify-content: flex-end;
   min-width: 0;
+  max-width: 100%;
 }
 
-.orders-toolbar__actions app-select,
+.orders-toolbar__actions app-select {
+  width: 11rem;
+  flex: 0 0 auto;
+}
+
 .orders-toolbar__actions app-date-picker {
-  min-width: 9rem;
+  width: 9.5rem;
+  flex: 0 0 auto;
+}
+
+.orders-toolbar__search {
+  width: 18rem;
+  flex: 0 1 auto;
+  min-width: 12rem;
+  max-width: 24rem;
 }
 
 /* ----------------------------------------------------------------
@@ -266,15 +281,28 @@
   }
 
   .orders-toolbar__actions {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
     align-items: stretch;
-    justify-content: flex-start;
+    justify-content: stretch;
   }
 
   .orders-toolbar__actions app-select,
   .orders-toolbar__actions app-date-picker {
     width: 100%;
     min-width: 0;
+  }
+
+  .orders-toolbar__search {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .orders-toolbar__actions app-button {
+    grid-column: 1 / -1;
   }
 
   .orders-col--number {

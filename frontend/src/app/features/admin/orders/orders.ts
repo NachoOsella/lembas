@@ -4,6 +4,7 @@ import { MessageService } from 'primeng/api';
 
 import { AdminOrderService, CancelOrderRequest } from '../../../core/services/admin-order';
 import { UserService } from '../../../core/services/user';
+import { AuthService } from '../../../core/services/auth';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { getApiError } from '../../../shared/models/api-error';
 import {
@@ -16,6 +17,7 @@ import {
 import { Branch } from '../../../shared/models/user';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
+import { AppInput } from '../../../shared/components/app-input/app-input';
 import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
 import { AppSelect } from '../../../shared/components/app-select/app-select';
 import { AppDatePicker } from '../../../shared/components/app-date-picker/app-date-picker';
@@ -116,6 +118,7 @@ const NON_CANCELLABLE_STATUSES: ReadonlySet<OrderStatus> = new Set<OrderStatus>(
   imports: [
     AppButton,
     AppDataTable,
+    AppInput,
     AppPageHeader,
     AppSelect,
     AppDatePicker,
@@ -132,6 +135,7 @@ const NON_CANCELLABLE_STATUSES: ReadonlySet<OrderStatus> = new Set<OrderStatus>(
 export class Orders {
   private readonly adminOrderService = inject(AdminOrderService);
   private readonly userService = inject(UserService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly errorMapping = inject(ErrorMappingService);
@@ -147,7 +151,16 @@ export class Orders {
   protected readonly selectedBranchId = signal<number | null>(null);
   protected readonly dateFrom = signal<Date | null>(null);
   protected readonly dateTo = signal<Date | null>(null);
+  protected readonly searchQuery = signal<string>('');
   protected readonly branches = signal<Branch[]>([]);
+
+  /** Effective role of the current user (ADMIN can see any branch; others are
+   *  restricted server-side, and locked in the UI to their own branch). */
+  protected readonly currentRole = computed(() => this.authService.getUserRole());
+  /** True when the current user is not ADMIN (and therefore restricted to one branch). */
+  protected readonly isBranchRestricted = computed(
+    () => this.currentRole() !== null && this.currentRole() !== 'ADMIN',
+  );
 
   // -- Lazy pagination + sorting ----------------------------------------------
   protected readonly first = signal(0);
@@ -233,7 +246,23 @@ export class Orders {
       next: (branches) => this.branches.set(branches),
       error: () => this.branches.set([]),
     });
+    this.autosetBranchForCurrentUser();
     this.loadOrders();
+  }
+
+  /**
+   * Locks the branch filter to the current user's assigned branch when the
+   * user is not an ADMIN. The backend enforces the same restriction server-
+   * side; this method only keeps the UI in sync and prevents the user from
+   * trying to query other branches.
+   */
+  private autosetBranchForCurrentUser(): void {
+    const user = this.authService.currentUser();
+    if (!user) return;
+    if (user.role === 'ADMIN' || user.role === 'CUSTOMER') return;
+    if (user.branchId != null) {
+      this.selectedBranchId.set(user.branchId);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -252,6 +281,7 @@ export class Orders {
         type: this.typeFilter() ?? undefined,
         from: this.formatDateParam(this.dateFrom()),
         to: this.formatDateParam(this.dateTo()),
+        search: this.normalizedSearch(),
         page,
         size: this.pageSize(),
         sort: this.buildSortParam(),
@@ -432,6 +462,11 @@ export class Orders {
   }
 
   protected onBranchChange(value: number | null): void {
+    // For non-ADMIN users the branch is forced to their own and the dropdown
+    // is disabled, but the value can still be set programmatically via clear.
+    if (this.isBranchRestricted() && value !== this.authService.currentUser()?.branchId) {
+      return;
+    }
     this.selectedBranchId.set(value);
     this.first.set(0);
     this.loadOrders();
@@ -449,13 +484,31 @@ export class Orders {
     this.loadOrders();
   }
 
+  /** Updates the search query and reloads. Trimmed; empty input clears the filter. */
+  protected onSearchChange(value: string | null): void {
+    this.searchQuery.set((value ?? '').trim());
+    this.first.set(0);
+    this.loadOrders();
+  }
+
+  /** Clears the search input and reloads. */
+  protected onSearchClear(): void {
+    this.searchQuery.set('');
+    this.first.set(0);
+    this.loadOrders();
+  }
+
   /** Clears all filters and reloads. */
   protected clearFilters(): void {
     this.statusFilter.set(null);
     this.typeFilter.set(null);
-    this.selectedBranchId.set(null);
+    // Branch is left as-is when restricted; only ADMIN clears it.
+    if (!this.isBranchRestricted()) {
+      this.selectedBranchId.set(null);
+    }
     this.dateFrom.set(null);
     this.dateTo.set(null);
+    this.searchQuery.set('');
     this.first.set(0);
     this.loadOrders();
   }
@@ -507,6 +560,12 @@ export class Orders {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  /** Returns the trimmed search query or undefined when empty (server ignores undefined). */
+  private normalizedSearch(): string | undefined {
+    const q = this.searchQuery().trim();
+    return q.length === 0 ? undefined : q;
   }
 
   private messageForError(error: unknown, fallback: string): string {

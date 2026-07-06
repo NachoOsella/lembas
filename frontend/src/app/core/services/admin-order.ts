@@ -12,6 +12,7 @@ export interface AdminOrdersQuery {
   readonly type?: OrderType;
   readonly from?: string;
   readonly to?: string;
+  readonly search?: string;
   readonly page?: number;
   readonly size?: number;
   readonly sort?: string;
@@ -42,6 +43,7 @@ export class AdminOrderService {
     if (params.type) httpParams = httpParams.set('type', params.type);
     if (params.from) httpParams = httpParams.set('from', params.from);
     if (params.to) httpParams = httpParams.set('to', params.to);
+    if (params.search) httpParams = httpParams.set('search', params.search);
     if (params.page != null) httpParams = httpParams.set('page', String(params.page));
     if (params.size != null) httpParams = httpParams.set('size', String(params.size));
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
