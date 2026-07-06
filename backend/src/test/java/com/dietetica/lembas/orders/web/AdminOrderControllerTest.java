@@ -145,6 +145,51 @@ class AdminOrderControllerTest {
     }
 
     // ----------------------------------------------------------------
+    // PATCH /api/admin/orders/{id}/cancel
+    // ----------------------------------------------------------------
+
+    @Test
+    void shouldCancelOrderWithValidReason() throws Exception {
+        when(adminOrderService.cancel(1L, "Cliente desiste del pedido"))
+                .thenReturn(dummyCancelledDetail(1L, "Cliente desiste del pedido"));
+
+        String body = objectMapper.writeValueAsString(
+                java.util.Map.of("reason", "Cliente desiste del pedido"));
+
+        mockMvc.perform(patch("/api/admin/orders/1/cancel")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.cancellationReason").value("Cliente desiste del pedido"));
+    }
+
+    @Test
+    void shouldReturn400WhenCancelReasonIsBlank() throws Exception {
+        String body = objectMapper.writeValueAsString(java.util.Map.of("reason", "   "));
+
+        mockMvc.perform(patch("/api/admin/orders/1/cancel")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn409WhenCancellingDeliveredOrder() throws Exception {
+        when(adminOrderService.cancel(1L, "Intento tardio"))
+                .thenThrow(new DomainException("ORDER_INVALID_STATE", HttpStatus.CONFLICT,
+                        "Cannot transition order ON-20260706-000001 from DELIVERED to CANCELLED"));
+
+        String body = objectMapper.writeValueAsString(java.util.Map.of("reason", "Intento tardio"));
+
+        mockMvc.perform(patch("/api/admin/orders/1/cancel")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ORDER_INVALID_STATE"));
+    }
+
+    // ----------------------------------------------------------------
     // helpers
     // ----------------------------------------------------------------
 
@@ -170,6 +215,31 @@ class AdminOrderControllerTest {
                 status == OrderStatus.READY ? now : null,
                 status == OrderStatus.DELIVERED ? now : null,
                 null,
+                now.minusHours(2),
+                now
+        );
+    }
+
+    /** Builds a CANCELLED order detail with the supplied cancellation reason. */
+    private OrderDetailDto dummyCancelledDetail(Long id, String reason) {
+        OffsetDateTime now = OffsetDateTime.now();
+        return new OrderDetailDto(
+                id,
+                "ON-20260706-000001",
+                OrderType.ONLINE,
+                OrderStatus.CANCELLED,
+                FulfillmentType.PICKUP,
+                1L, "Sucursal Centro",
+                10L, "Ignacio Osella", "ignacio@example.com", null,
+                null, null,
+                new BigDecimal("1500.00"),
+                new BigDecimal("0.00"),
+                new BigDecimal("1500.00"),
+                null, reason,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                now, null, null, null,
+                now,
                 now.minusHours(2),
                 now
         );

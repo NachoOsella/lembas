@@ -135,6 +135,24 @@
             </p>
           </app-section-card>
         }
+
+        <!-- Destructive action: cancellation (POS + ONLINE, not terminal) -->
+        @if (isCancellable()) {
+          <app-section-card eyebrow="Accion destructiva" title="Cancelar pedido">
+            <p class="order-detail-waiting">
+              La cancelacion revertira el stock descontado (si aplica) y marcara los pagos como cancelados.
+            </p>
+            <button
+              type="button"
+              class="order-detail-cancel-action"
+              [disabled]="actionLoading() !== null"
+              (click)="openCancelConfirm()"
+            >
+              <i class="pi pi-times-circle" aria-hidden="true"></i>
+              <span>Cancelar pedido</span>
+            </button>
+          </app-section-card>
+        }
       </div>
 
       <!-- ========================================================= -->
@@ -281,10 +299,16 @@
 <!-- Confirm dialog -->
 <app-confirm-dialog
   [visible]="confirmVisible()"
+  [mode]="confirmMode()"
   [title]="pendingAction()?.confirmTitle ?? ''"
   [message]="pendingAction()?.confirmMessage ?? ''"
   [confirmLabel]="pendingAction()?.label ?? 'Confirmar'"
-  [destructive]="false"
-  (confirmed)="executeTransition()"
+  [destructive]="!!pendingAction()?.destructive"
+  [reasonLabel]="'Motivo de cancelacion'"
+  [reasonPlaceholder]="'Ej: cliente desiste del pedido, mercaderia danada, etc.'"
+  [reasonMaxLength]="500"
+  [reasonRequired]="!!pendingAction()?.requiresReason"
+  [(reason)]="cancelReason"
+  (confirmed)="executeConfirmedAction()"
   (cancelled)="cancelConfirm()"
 />

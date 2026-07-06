@@ -498,6 +498,105 @@ class InventoryServiceTest {
         verify(stockMovementRepository, never()).save(any());
     }
 
+    // ----------------------------------------------------------------
+    // reverseMovementsForOrder
+    // ----------------------------------------------------------------
+
+    @Test
+    void reverseMovementsForOrder_noSaleMovements_returnsZero() {
+        when(stockMovementRepository.findSaleMovementsByOrderId(1L)).thenReturn(List.of());
+
+        int reversed = inventoryService.reverseMovementsForOrder(1L);
+
+        assertThat(reversed).isZero();
+        verify(stockLotRepository, never()).findByIdForUpdate(any());
+        verify(stockMovementRepository, never()).save(any());
+    }
+
+    @Test
+    void reverseMovementsForOrder_existingMovements_creditsLotsAndRecordsReturn() {
+        Product product = product(10L, "Yerba");
+        Branch branch = branch(20L, "Centro", true);
+        StockLot lot1 = lot(100L, "2.0");
+        lot1.setStatus(StockLotStatus.DEPLETED);
+        StockLot lot2 = lot(101L, "0.0");
+        lot2.setStatus(StockLotStatus.DEPLETED);
+        StockMovement sale1 = saleMovement(500L, lot1, product, branch, new BigDecimal("-3.0"), 1L);
+        StockMovement sale2 = saleMovement(501L, lot2, product, branch, new BigDecimal("-1.5"), 1L);
+        when(stockMovementRepository.findSaleMovementsByOrderId(1L)).thenReturn(List.of(sale1, sale2));
+        when(stockLotRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(lot1));
+        when(stockLotRepository.findByIdForUpdate(101L)).thenReturn(Optional.of(lot2));
+        when(stockMovementRepository.save(any(StockMovement.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        int reversed = inventoryService.reverseMovementsForOrder(1L);
+
+        assertThat(reversed).isEqualTo(2);
+        assertThat(lot1.getQuantityAvailable()).isEqualByComparingTo("5.0");
+        assertThat(lot1.getStatus()).isEqualTo(StockLotStatus.ACTIVE);
+        assertThat(lot2.getQuantityAvailable()).isEqualByComparingTo("1.5");
+        assertThat(lot2.getStatus()).isEqualTo(StockLotStatus.ACTIVE);
+
+        ArgumentCaptor<StockMovement> movementCaptor = ArgumentCaptor.forClass(StockMovement.class);
+        verify(stockMovementRepository, org.mockito.Mockito.times(2)).save(movementCaptor.capture());
+        List<StockMovement> saved = movementCaptor.getAllValues();
+        assertThat(saved).hasSize(2);
+        assertThat(saved.get(0).getType()).isEqualTo(StockMovementType.CANCELLATION_RETURN);
+        assertThat(saved.get(0).getQuantity()).isEqualByComparingTo("3.0");
+        assertThat(saved.get(0).getOrderId()).isEqualTo(1L);
+        assertThat(saved.get(0).getReferenceType()).isEqualTo("ORDER");
+        assertThat(saved.get(1).getType()).isEqualTo(StockMovementType.CANCELLATION_RETURN);
+        assertThat(saved.get(1).getQuantity()).isEqualByComparingTo("1.5");
+    }
+
+    @Test
+    void reverseMovementsForOrder_keepsActiveStatusWhenLotStillHasStock() {
+        Product product = product(10L, "Granola");
+        Branch branch = branch(20L, "Centro", true);
+        StockLot lot = lot(100L, "7.0");
+        lot.setStatus(StockLotStatus.ACTIVE);
+        StockMovement sale = saleMovement(500L, lot, product, branch, new BigDecimal("-2.0"), 1L);
+        when(stockMovementRepository.findSaleMovementsByOrderId(1L)).thenReturn(List.of(sale));
+        when(stockLotRepository.findByIdForUpdate(100L)).thenReturn(Optional.of(lot));
+        when(stockMovementRepository.save(any(StockMovement.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        inventoryService.reverseMovementsForOrder(1L);
+
+        assertThat(lot.getQuantityAvailable()).isEqualByComparingTo("9.0");
+        assertThat(lot.getStatus()).isEqualTo(StockLotStatus.ACTIVE);
+    }
+
+    @Test
+    void reverseMovementsForOrder_missingLot_throwsNotFound() {
+        Product product = product(10L, "Yerba");
+        Branch branch = branch(20L, "Centro", true);
+        StockLot lot = lot(100L, "0.0");
+        StockMovement sale = saleMovement(500L, lot, product, branch, new BigDecimal("-3.0"), 1L);
+        when(stockMovementRepository.findSaleMovementsByOrderId(1L)).thenReturn(List.of(sale));
+        when(stockLotRepository.findByIdForUpdate(100L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> inventoryService.reverseMovementsForOrder(1L))
+                .isInstanceOf(DomainException.class)
+                .extracting("code")
+                .isEqualTo("STOCK_LOT_NOT_FOUND");
+    }
+
+    /** Builds a stock movement matching the shape used by deductForOnlineOrder. */
+    private StockMovement saleMovement(Long id, StockLot lot, Product product, Branch branch,
+                                       BigDecimal quantity, Long orderId) {
+        StockMovement movement = new StockMovement();
+        movement.setId(id);
+        movement.setStockLot(lot);
+        movement.setProduct(product);
+        movement.setBranch(branch);
+        movement.setType(StockMovementType.ONLINE_SALE);
+        movement.setQuantity(quantity);
+        movement.setOrderId(orderId);
+        movement.setUnitCostSnapshot(lot.getUnitCost());
+        return movement;
+    }
+
     /** Creates a product with the minimum fields required by the service. */
     private Product product(Long id, String name) {
         Product product = new Product();
@@ -511,7 +610,7 @@ class InventoryServiceTest {
         Branch branch = mock(Branch.class);
         lenient().when(branch.getId()).thenReturn(id);
         lenient().when(branch.getName()).thenReturn(name);
-        when(branch.isActive()).thenReturn(active);
+        lenient().when(branch.isActive()).thenReturn(active);
         return branch;
     }
 

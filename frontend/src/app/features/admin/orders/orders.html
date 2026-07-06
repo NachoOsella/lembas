@@ -127,6 +127,18 @@
                 <i [class]="act.icon" aria-hidden="true"></i>
               </button>
             }
+
+            <!-- Cancel button (any non-terminal order) -->
+            @if (canCancel(item)) {
+              <button
+                type="button"
+                class="orders-icon-btn orders-icon-btn--cancel"
+                [attr.aria-label]="'Cancelar pedido ' + item.orderNumber"
+                (click)="openCancelConfirm(item, $event)"
+              >
+                <i class="pi pi-times-circle" aria-hidden="true"></i>
+              </button>
+            }
           </div>
         </td>
       </tr>
@@ -134,13 +146,19 @@
   </app-data-table>
 </div>
 
-<!-- Quick-action confirm dialog -->
+<!-- Quick-action / cancel confirm dialog -->
 <app-confirm-dialog
   [visible]="confirmVisible()"
+  [mode]="confirmMode()"
   [title]="pendingAction()?.label ?? ''"
   [message]="pendingAction()?.description ?? ''"
   [confirmLabel]="pendingAction()?.label ?? 'Confirmar'"
-  [destructive]="false"
-  (confirmed)="executeQuickTransition()"
+  [destructive]="!!pendingAction()?.destructive"
+  [reasonLabel]="'Motivo de cancelacion'"
+  [reasonPlaceholder]="'Ej: cliente desiste del pedido, mercaderia danada, etc.'"
+  [reasonMaxLength]="500"
+  [reasonRequired]="!!pendingAction()?.requiresReason"
+  [(reason)]="cancelReason"
+  (confirmed)="executeConfirmedAction()"
   (cancelled)="cancelQuickConfirm()"
 />

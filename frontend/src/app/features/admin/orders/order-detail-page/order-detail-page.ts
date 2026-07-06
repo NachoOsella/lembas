@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
-import { AdminOrderService } from '../../../../core/services/admin-order';
+import { AdminOrderService, CancelOrderRequest } from '../../../../core/services/admin-order';
 import { ErrorMappingService } from '../../../../core/services/error-mapping';
 import { getApiError } from '../../../../shared/models/api-error';
 import {
@@ -20,7 +20,7 @@ import {
   StatusBadge,
   StatusBadgeConfig,
 } from '../../../../shared/components/status-badge/status-badge';
-import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { ConfirmDialog, ConfirmDialogMode } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
 import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
 import { CurrencyArPipe } from '../../../../core/pipes/currency-ar.pipe';
@@ -29,13 +29,19 @@ import { ShortDateArPipe } from '../../../../core/pipes/short-date-ar.pipe';
 // ----------------------------------------------------------------
 // Transition action descriptors
 // ----------------------------------------------------------------
+type TransitionKey = 'prepare' | 'ready' | 'deliver' | 'cancel';
+
 interface TransitionAction {
-  readonly key: 'prepare' | 'ready' | 'deliver';
+  readonly key: TransitionKey;
   readonly label: string;
   readonly description: string;
   readonly confirmTitle: string;
   readonly confirmMessage: string;
   readonly icon: string;
+  /** When true, renders the dialog in destructive style (red icon, danger button). */
+  readonly destructive?: boolean;
+  /** When true, the dialog requires a reason text. */
+  readonly requiresReason?: boolean;
 }
 
 const PREPARE_ACTION: TransitionAction = {
@@ -65,6 +71,17 @@ const DELIVER_ACTION: TransitionAction = {
   icon: 'pi pi-box',
 };
 
+const CANCEL_ACTION: TransitionAction = {
+  key: 'cancel',
+  label: 'Cancelar pedido',
+  description: 'Anular y revertir stock',
+  confirmTitle: 'Cancelar pedido',
+  confirmMessage: 'Esta accion no se puede deshacer. Si el pedido ya desconto stock, sera devuelto a los lotes originales y los pagos quedaran marcados como cancelados.',
+  icon: 'pi pi-times-circle',
+  destructive: true,
+  requiresReason: true,
+};
+
 /** Maps the current ONLINE order status to its available transition action. */
 function transitionForStatus(status: OrderStatus): TransitionAction | null {
   switch (status) {
@@ -78,6 +95,20 @@ function transitionForStatus(status: OrderStatus): TransitionAction | null {
       return null;
   }
 }
+
+/** Statuses that disallow cancellation. */
+const NON_CANCELLABLE_STATUSES: ReadonlySet<OrderStatus> = new Set<OrderStatus>([
+  'DELIVERED',
+  'CANCELLED',
+]);
+
+/** Statuses where the order is essentially a finished pre-flight state — the UI
+ *  shows a "waiting" message instead of action buttons. */
+const AWAITING_PAYMENT_STATUSES: ReadonlySet<OrderStatus> = new Set<OrderStatus>([
+  'PENDING_PAYMENT',
+  'PAYMENT_FAILED',
+  'STOCK_CONFLICT',
+]);
 
 // ----------------------------------------------------------------
 // Order status badge config
@@ -158,11 +189,14 @@ export class OrderDetailPage implements OnInit {
   protected readonly error = signal('');
 
   // -- Transition action state ------------------------------------------------
-  protected readonly actionLoading = signal<'prepare' | 'ready' | 'deliver' | null>(null);
+  protected readonly actionLoading = signal<TransitionKey | null>(null);
 
   // -- Confirm dialog state ---------------------------------------------------
   protected readonly confirmVisible = signal(false);
+  protected readonly confirmMode = signal<ConfirmDialogMode>('confirm');
   protected readonly pendingAction = signal<TransitionAction | null>(null);
+  /** Reason text bound to the confirm dialog's two-way model in confirm-with-reason mode. */
+  protected readonly cancelReason = signal('');
 
   // -- Badge configs ----------------------------------------------------------
   protected readonly statusBadges = ORDER_STATUS_BADGES;
@@ -209,15 +243,30 @@ export class OrderDetailPage implements OnInit {
   // Transition logic
   // ---------------------------------------------------------------------------
 
-  /** The next valid transition action for this ONLINE order, or null. */
+  /** The next valid ONLINE transition action, or null. */
   protected availableTransition(): TransitionAction | null {
     const o = this.order();
     if (!o || o.type !== 'ONLINE') return null;
     return transitionForStatus(o.status);
   }
 
-  /** Opens the confirmation dialog for the next transition. */
+  /** Whether the order is currently in a cancellable state. */
+  protected isCancellable(): boolean {
+    const s = this.order()?.status;
+    return s != null && !NON_CANCELLABLE_STATUSES.has(s);
+  }
+
+  /** Opens the confirm dialog in confirm-with-reason mode for cancellation. */
+  protected openCancelConfirm(): void {
+    this.cancelReason.set('');
+    this.confirmMode.set('confirm-with-reason');
+    this.pendingAction.set(CANCEL_ACTION);
+    this.confirmVisible.set(true);
+  }
+
+  /** Opens the confirmation dialog for a non-cancellation transition. */
   protected openConfirm(action: TransitionAction): void {
+    this.confirmMode.set('confirm');
     this.pendingAction.set(action);
     this.confirmVisible.set(true);
   }
@@ -228,11 +277,21 @@ export class OrderDetailPage implements OnInit {
     this.pendingAction.set(null);
   }
 
-  /** Executes the confirmed transition via the API. */
-  protected executeTransition(): void {
+  /** Dispatches the confirmed action: either a state transition or cancellation. */
+  protected executeConfirmedAction(): void {
     const action = this.pendingAction();
+    if (!action) return;
+    if (action.key === 'cancel') {
+      this.executeCancel();
+    } else {
+      this.executeTransition(action);
+    }
+  }
+
+  /** Executes the confirmed transition via the API. */
+  private executeTransition(action: TransitionAction): void {
     const order = this.order();
-    if (!action || !order) return;
+    if (!order) return;
 
     this.confirmVisible.set(false);
     this.actionLoading.set(action.key);
@@ -245,8 +304,16 @@ export class OrderDetailPage implements OnInit {
           return this.adminOrderService.markReady(order.id);
         case 'deliver':
           return this.adminOrderService.deliver(order.id);
+        default:
+          return null;
       }
     })();
+
+    if (!call) {
+      this.actionLoading.set(null);
+      this.pendingAction.set(null);
+      return;
+    }
 
     call.subscribe({
       next: (updatedOrder) => {
@@ -264,15 +331,51 @@ export class OrderDetailPage implements OnInit {
       error: (err) => {
         this.actionLoading.set(null);
         this.pendingAction.set(null);
-        const apiError = getApiError(err);
-        const detail = apiError
-          ? this.errorMapping.getMessage(apiError.code, apiError.message)
-          : 'No se pudo completar la accion. Intenta nuevamente.';
+        const detail = this.errorMessageFor(err, 'No se pudo completar la accion. Intenta nuevamente.');
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
           detail,
           life: 5000,
+        });
+      },
+    });
+  }
+
+  /** Executes the confirmed cancellation. */
+  private executeCancel(): void {
+    const order = this.order();
+    if (!order) return;
+    const reason = this.cancelReason().trim();
+    if (reason.length === 0) {
+      // The dialog itself blocks the confirm emission; this is a safety net.
+      return;
+    }
+    this.confirmVisible.set(false);
+    this.actionLoading.set('cancel');
+    const body: CancelOrderRequest = { reason };
+    this.adminOrderService.cancel(order.id, body).subscribe({
+      next: (updatedOrder) => {
+        this.order.set(updatedOrder);
+        this.actionLoading.set(null);
+        this.pendingAction.set(null);
+        this.cancelReason.set('');
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Pedido cancelado',
+          detail: `Pedido ${updatedOrder.orderNumber} cancelado correctamente.`,
+          life: 4000,
+        });
+      },
+      error: (err) => {
+        this.actionLoading.set(null);
+        this.pendingAction.set(null);
+        const detail = this.errorMessageFor(err, 'No se pudo cancelar el pedido. Intenta nuevamente.');
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo cancelar',
+          detail,
+          life: 6000,
         });
       },
     });
@@ -357,7 +460,7 @@ export class OrderDetailPage implements OnInit {
   /** Whether the order is waiting for a payment confirmation. */
   protected isAwaitingPayment(): boolean {
     const s = this.order()?.status;
-    return s === 'PENDING_PAYMENT' || s === 'PAYMENT_FAILED' || s === 'STOCK_CONFLICT';
+    return s != null && AWAITING_PAYMENT_STATUSES.has(s);
   }
 
   /** Title prefix based on the order type. */
@@ -406,6 +509,10 @@ export class OrderDetailPage implements OnInit {
   private messageForError(error: unknown, fallback: string): string {
     const apiError = getApiError(error);
     return apiError ? this.errorMapping.getMessage(apiError.code, apiError.message) : fallback;
+  }
+
+  private errorMessageFor(error: unknown, fallback: string): string {
+    return this.messageForError(error, fallback);
   }
 }
 

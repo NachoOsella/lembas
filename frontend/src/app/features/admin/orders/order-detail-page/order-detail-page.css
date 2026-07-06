@@ -307,6 +307,65 @@
 }
 
 /* ===================================================================
+   Destructive action: cancel order
+   =================================================================== */
+
+.order-detail-cancel-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 3rem;
+  margin-top: 0.85rem;
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-red, #c82014);
+  background: transparent;
+  color: var(--color-red, #c82014);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.order-detail-cancel-action:hover:not(:disabled) {
+  background: var(--color-red, #c82014);
+  color: #ffffff;
+  box-shadow:
+    0 0 0.5px rgba(200, 32, 20, 0.18),
+    0 2px 4px rgba(200, 32, 20, 0.18);
+}
+
+.order-detail-cancel-action:focus-visible {
+  outline: 2px solid var(--color-red, #c82014);
+  outline-offset: 3px;
+}
+
+.order-detail-cancel-action:active:not(:disabled) {
+  transform: scale(0.97);
+  box-shadow:
+    0 0 0.5px rgba(200, 32, 20, 0.16),
+    0 1px 1px rgba(200, 32, 20, 0.14);
+}
+
+.order-detail-cancel-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.order-detail-cancel-action i {
+  font-size: 1rem;
+}
+
+/* ===================================================================
    Completion / waiting states
    =================================================================== */
 

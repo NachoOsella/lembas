@@ -17,6 +17,11 @@ export interface AdminOrdersQuery {
   readonly sort?: string;
 }
 
+/** Request body for cancelling an order. Reason is mandatory (1-500 chars). */
+export interface CancelOrderRequest {
+  readonly reason: string;
+}
+
 /**
  * HTTP service for admin-facing order operations.
  *
@@ -61,5 +66,17 @@ export class AdminOrderService {
   /** Transitions the order to DELIVERED. */
   deliver(id: number): Observable<OrderDetail> {
     return this.http.patch<OrderDetail>(`${this.baseUrl}/${id}/delivered`, {});
+  }
+
+  /**
+   * Cancels the order, reversing any deducted stock and marking payments as CANCELLED.
+   *
+   * <p>Rejects with {@code ORDER_INVALID_STATE} (409) for DELIVERED or already
+   * CANCELLED orders, with {@code CANCEL_REASON_REQUIRED} (400) when the reason
+   * is blank, and with {@code ORDER_REFUNDED_CONFLICT} (409) when any payment
+   * has already been refunded.</p>
+   */
+  cancel(id: number, body: CancelOrderRequest): Observable<OrderDetail> {
+    return this.http.patch<OrderDetail>(`${this.baseUrl}/${id}/cancel`, body);
   }
 }

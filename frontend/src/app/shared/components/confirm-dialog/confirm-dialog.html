@@ -3,11 +3,12 @@
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [dismissableMask]="true"
+  [dismissableMask]="!destructive()"
+  [closable]="!destructive()"
   [appendTo]="'body'"
-  [style]="{ width: 'min(92vw, 28rem)' }"
+  [style]="{ width: 'min(92vw, 30rem)' }"
   styleClass="confirm-dialog"
-  (onHide)="onCancel()"
+  (onHide)="onHide()"
 >
   <ng-template #header>
     <span class="confirm-dialog__eyebrow">
@@ -21,13 +22,51 @@
       [class.confirm-dialog__icon--danger]="destructive()"
       aria-hidden="true"
     >
-      <i class="pi" [class.pi-check]="!destructive()" [class.pi-trash]="destructive()"></i>
+      <i
+        class="pi"
+        [class.pi-check]="!destructive()"
+        [class.pi-trash]="destructive()"
+      ></i>
     </span>
 
     <div class="confirm-dialog__copy">
       <h2>{{ title() }}</h2>
       <p>{{ message() }}</p>
     </div>
+
+    @if (mode() === 'confirm-with-reason') {
+      <label class="confirm-dialog__field">
+        <span class="confirm-dialog__field-label">
+          {{ reasonLabel() }}
+          @if (reasonRequired()) {
+            <span class="confirm-dialog__field-required" aria-hidden="true">*</span>
+          }
+        </span>
+        <textarea
+          class="confirm-dialog__textarea"
+          [class.confirm-dialog__textarea--error]="!!reasonError()"
+          rows="3"
+          [placeholder]="reasonPlaceholder()"
+          [maxlength]="reasonMaxLength()"
+          [attr.aria-required]="reasonRequired()"
+          [attr.aria-invalid]="!!reasonError()"
+          [(ngModel)]="reason"
+          (ngModelChange)="onReasonInput()"
+        ></textarea>
+        <span class="confirm-dialog__field-meta">
+          @if (reasonError()) {
+            <span class="confirm-dialog__field-error">{{ reasonError() }}</span>
+          } @else {
+            <span class="confirm-dialog__field-hint">
+              Quedara registrado en la auditoria del pedido.
+            </span>
+          }
+          <span class="confirm-dialog__field-counter">
+            {{ reason().length }} / {{ reasonMaxLength() }}
+          </span>
+        </span>
+      </label>
+    }
   </div>
 
   <ng-template #footer>

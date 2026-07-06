@@ -57,6 +57,7 @@ describe('Orders (admin list)', () => {
     prepare: ReturnType<typeof vi.fn>;
     markReady: ReturnType<typeof vi.fn>;
     deliver: ReturnType<typeof vi.fn>;
+    cancel: ReturnType<typeof vi.fn>;
   };
   let router: { navigate: ReturnType<typeof vi.fn> };
   let messageService: { add: ReturnType<typeof vi.fn> };
@@ -67,6 +68,7 @@ describe('Orders (admin list)', () => {
       prepare: vi.fn(),
       markReady: vi.fn(),
       deliver: vi.fn(),
+      cancel: vi.fn(),
     };
     const userService = { listBranches: vi.fn().mockReturnValue(of([])) };
     router = { navigate: vi.fn().mockResolvedValue(true) };
@@ -310,6 +312,114 @@ describe('Orders (admin list)', () => {
       await fixture.whenStable();
 
       expect(adminOrderService.deliver).toHaveBeenCalledWith(1);
+    });
+  });
+
+  // ----------------------------------------------------------------
+  // Row-level cancel button
+  // ----------------------------------------------------------------
+
+  describe('row-level cancel button', () => {
+    it('shows the cancel button in the row for PAID ONLINE orders', async () => {
+      adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ status: 'PAID' })])));
+      component.loadOrders();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const el: HTMLElement = fixture.nativeElement;
+      const cancelBtn = el.querySelector('button.orders-icon-btn--cancel') as HTMLElement;
+      expect(cancelBtn).toBeTruthy();
+    });
+
+    it('does NOT show the cancel button for DELIVERED orders', async () => {
+      adminOrderService.listOrders.mockReturnValue(
+        of(mockPage([mockOrder({ status: 'DELIVERED' })])),
+      );
+      component.loadOrders();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const el: HTMLElement = fixture.nativeElement;
+      const cancelBtn = el.querySelector('button.orders-icon-btn--cancel') as HTMLElement;
+      expect(cancelBtn).toBeNull();
+    });
+
+    it('does NOT show the cancel button for already CANCELLED orders', async () => {
+      adminOrderService.listOrders.mockReturnValue(
+        of(mockPage([mockOrder({ status: 'CANCELLED' })])),
+      );
+      component.loadOrders();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const el: HTMLElement = fixture.nativeElement;
+      const cancelBtn = el.querySelector('button.orders-icon-btn--cancel') as HTMLElement;
+      expect(cancelBtn).toBeNull();
+    });
+
+    it('calls adminOrderService.cancel and reloads when the user confirms', async () => {
+      const cancelledOrder = mockOrder({ status: 'CANCELLED' });
+      adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ status: 'PAID' })])));
+      adminOrderService.cancel.mockReturnValue(of(cancelledOrder));
+      component.loadOrders();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const el: HTMLElement = fixture.nativeElement;
+      const cancelBtn = el.querySelector('button.orders-icon-btn--cancel') as HTMLElement;
+      expect(cancelBtn).toBeTruthy();
+      cancelBtn.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const confirmDe = fixture.debugElement.query(
+        (de) => de.nativeElement?.tagName?.toLowerCase() === 'app-confirm-dialog',
+      );
+      const cmp = confirmDe.componentInstance as {
+        reason: { set: (v: string) => void };
+        confirmed: { emit: () => void };
+      };
+      cmp.reason.set('Cliente desiste');
+      cmp.confirmed.emit();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(adminOrderService.cancel).toHaveBeenCalledWith(1, { reason: 'Cliente desiste' });
+      expect(messageService.add).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'success' }),
+      );
+    });
+
+    it('shows an error toast when cancel fails', async () => {
+      adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ status: 'PAID' })])));
+      adminOrderService.cancel.mockReturnValue(
+        throwError(() => ({
+          status: 409,
+          error: { code: 'ORDER_INVALID_STATE', message: 'Cannot transition' },
+        })),
+      );
+      component.loadOrders();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const el: HTMLElement = fixture.nativeElement;
+      const cancelBtn = el.querySelector('button.orders-icon-btn--cancel') as HTMLElement;
+      cancelBtn.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const confirmDe = fixture.debugElement.query(
+        (de) => de.nativeElement?.tagName?.toLowerCase() === 'app-confirm-dialog',
+      );
+      const cmp = confirmDe.componentInstance as {
+        reason: { set: (v: string) => void };
+        confirmed: { emit: () => void };
+      };
+      cmp.reason.set('Prueba');
+      cmp.confirmed.emit();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(messageService.add).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'error' }),
+      );
     });
   });
 });

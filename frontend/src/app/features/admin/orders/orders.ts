@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
-import { AdminOrderService } from '../../../core/services/admin-order';
+import { AdminOrderService, CancelOrderRequest } from '../../../core/services/admin-order';
 import { UserService } from '../../../core/services/user';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
 import { getApiError } from '../../../shared/models/api-error';
@@ -24,7 +24,7 @@ import {
   StatusBadge,
   StatusBadgeConfig,
 } from '../../../shared/components/status-badge/status-badge';
-import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
+import { ConfirmDialog, ConfirmDialogMode } from '../../../shared/components/confirm-dialog/confirm-dialog';
 import { CurrencyArPipe } from '../../../core/pipes/currency-ar.pipe';
 import { ShortDateArPipe } from '../../../core/pipes/short-date-ar.pipe';
 
@@ -57,10 +57,14 @@ const ORDER_STATUS_BADGES: Record<string, StatusBadgeConfig> = Object.fromEntrie
 // Quick transition action descriptor
 // ----------------------------------------------------------------
 interface QuickAction {
-  readonly key: 'prepare' | 'ready' | 'deliver';
+  readonly key: 'prepare' | 'ready' | 'deliver' | 'cancel';
   readonly label: string;
   readonly description: string;
   readonly icon: string;
+  /** When true, renders the dialog in destructive style (red icon, danger button). */
+  readonly destructive?: boolean;
+  /** When true, the dialog requires a reason text. */
+  readonly requiresReason?: boolean;
 }
 
 function quickActionForStatus(status: OrderStatus): QuickAction | null {
@@ -90,6 +94,22 @@ function quickActionForStatus(status: OrderStatus): QuickAction | null {
       return null;
   }
 }
+
+/** Quick action descriptor used by the row-level cancel button. */
+const CANCEL_ROW_ACTION: QuickAction = {
+  key: 'cancel',
+  label: 'Cancelar pedido',
+  description: 'Esta accion no se puede deshacer. Si hay stock descontado, sera devuelto a los lotes originales y los pagos quedaran como cancelados.',
+  icon: 'pi pi-times-circle',
+  destructive: true,
+  requiresReason: true,
+};
+
+/** Statuses that disallow row-level cancellation. */
+const NON_CANCELLABLE_STATUSES: ReadonlySet<OrderStatus> = new Set<OrderStatus>([
+  'DELIVERED',
+  'CANCELLED',
+]);
 
 @Component({
   selector: 'app-orders',
@@ -138,9 +158,12 @@ export class Orders {
 
   // -- Confirm dialog state (for quick row transitions) -----------------------
   protected readonly confirmVisible = signal(false);
+  protected readonly confirmMode = signal<ConfirmDialogMode>('confirm');
   protected readonly pendingOrderId = signal<number | null>(null);
   protected readonly pendingAction = signal<QuickAction | null>(null);
-  protected readonly actionLoading = signal<'prepare' | 'ready' | 'deliver' | null>(null);
+  protected readonly actionLoading = signal<'prepare' | 'ready' | 'deliver' | 'cancel' | null>(null);
+  /** Reason text bound to the confirm dialog's two-way model in confirm-with-reason mode. */
+  protected readonly cancelReason = signal('');
 
   // -- Column definition ------------------------------------------------------
   protected readonly columns: ColumnDef[] = [
@@ -150,7 +173,7 @@ export class Orders {
     { field: 'branchName', header: 'Sucursal', sortable: true },
     { field: 'total', header: 'Total', sortable: true, width: '8rem' },
     { field: 'createdAt', header: 'Fecha', sortable: true, width: '10rem' },
-    { field: 'actions', header: '', sortable: false, width: '9rem' },
+    { field: 'actions', header: '', sortable: false, width: '11rem' },
   ];
 
   // -- Filter options ---------------------------------------------------------
@@ -188,6 +211,11 @@ export class Orders {
   protected quickActionFor(order: OrderSummary): QuickAction | null {
     if (order.type !== 'ONLINE') return null;
     return quickActionForStatus(order.status);
+  }
+
+  /** Whether the row-level cancel button should be shown. */
+  protected canCancel(order: OrderSummary): boolean {
+    return !NON_CANCELLABLE_STATUSES.has(order.status);
   }
 
   /** Type chip label. */
@@ -249,6 +277,17 @@ export class Orders {
   protected openQuickConfirm(order: OrderSummary, action: QuickAction): void {
     this.pendingOrderId.set(order.id);
     this.pendingAction.set(action);
+    this.confirmMode.set('confirm');
+    this.confirmVisible.set(true);
+  }
+
+  /** Opens the confirm dialog in confirm-with-reason mode for a row-level cancellation. */
+  protected openCancelConfirm(order: OrderSummary, event: Event): void {
+    event.stopPropagation();
+    this.cancelReason.set('');
+    this.pendingOrderId.set(order.id);
+    this.pendingAction.set(CANCEL_ROW_ACTION);
+    this.confirmMode.set('confirm-with-reason');
     this.confirmVisible.set(true);
   }
 
@@ -257,6 +296,18 @@ export class Orders {
     this.confirmVisible.set(false);
     this.pendingAction.set(null);
     this.pendingOrderId.set(null);
+    this.cancelReason.set('');
+  }
+
+  /** Dispatches the confirmed action: either a state transition or a cancellation. */
+  protected executeConfirmedAction(): void {
+    const action = this.pendingAction();
+    if (!action) return;
+    if (action.key === 'cancel') {
+      this.executeCancel();
+    } else {
+      this.executeQuickTransition();
+    }
   }
 
   /** Executes the confirmed quick transition. */
@@ -276,8 +327,17 @@ export class Orders {
           return this.adminOrderService.markReady(orderId);
         case 'deliver':
           return this.adminOrderService.deliver(orderId);
+        default:
+          return null;
       }
     })();
+
+    if (!call) {
+      this.actionLoading.set(null);
+      this.pendingAction.set(null);
+      this.pendingOrderId.set(null);
+      return;
+    }
 
     call.subscribe({
       next: (updated) => {
@@ -305,6 +365,51 @@ export class Orders {
           summary: 'Error',
           detail,
           life: 5000,
+        });
+      },
+    });
+  }
+
+  /** Executes the confirmed row-level cancellation. */
+  protected executeCancel(): void {
+    const orderId = this.pendingOrderId();
+    if (!orderId) return;
+    const reason = this.cancelReason().trim();
+    if (reason.length === 0) {
+      // The dialog itself blocks the confirm emission; this is a safety net.
+      return;
+    }
+    this.confirmVisible.set(false);
+    this.actionLoading.set('cancel');
+    const body: CancelOrderRequest = { reason };
+    this.adminOrderService.cancel(orderId, body).subscribe({
+      next: (updated) => {
+        this.actionLoading.set(null);
+        this.pendingAction.set(null);
+        this.pendingOrderId.set(null);
+        this.cancelReason.set('');
+        this.loadOrders();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Pedido cancelado',
+          detail: `Pedido ${updated.orderNumber} cancelado correctamente.`,
+          life: 4000,
+        });
+      },
+      error: (err) => {
+        this.actionLoading.set(null);
+        this.pendingAction.set(null);
+        this.pendingOrderId.set(null);
+        this.cancelReason.set('');
+        const apiError = getApiError(err);
+        const detail = apiError
+          ? this.errorMapping.getMessage(apiError.code, apiError.message)
+          : 'No se pudo cancelar el pedido.';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se pudo cancelar',
+          detail,
+          life: 6000,
         });
       },
     });

@@ -72,7 +72,8 @@ Services may throw `DomainException` directly when a dedicated exception subclas
 | PURCHASE_RECEIPT_OVER_RECEIVED | Suppliers | 409 | Received quantity exceeds ordered quantity |
 | INSUFFICIENT_STOCK | Inventory | 409 | Total available stock is less than requested deduction quantity |
 | INVALID_DEDUCTION_QUANTITY | Inventory | 400 | Deduction quantity must be positive |
-| STOCK_LOT_NOT_FOUND | Inventory | 404 | Stock lot not found during deduction |
+| STOCK_LOT_NOT_FOUND | Inventory | 404 | Stock lot not found during deduction or stock reversal on cancellation |
+| CANCEL_REASON_REQUIRED | Orders | 400 | Cancellation request is missing the `reason` field or it is blank / over 500 characters |
 | CATEGORY_NOT_FOUND | Catalog | 404 | Category does not exist |
 | PARENT_NOT_FOUND | Catalog | 404 | Parent category does not exist |
 | PARENT_INVALID | Catalog | 409 | Category parent assignment is invalid |
@@ -88,6 +89,9 @@ Services may throw `DomainException` directly when a dedicated exception subclas
 | CASH_DIFFERENCE_REASON_REQUIRED | Cash | 400 | The close difference is non-zero and `cashDifferenceReason` is missing |
 | POS_QUERY_REQUIRED | POS | 400 | POS product search `q` parameter is missing or blank |
 | POS_QUERY_TOO_LONG | POS | 400 | POS product search `q` parameter exceeds 100 characters |
+| ORDER_NOT_FOUND | Orders | 404 | Order does not exist |
+| ORDER_INVALID_STATE | Orders | 409 | Order state transition is not allowed in the current status (e.g. cancelling a DELIVERED order) |
+| ORDER_REFUNDED_CONFLICT | Orders | 409 | Cannot cancel an order whose payments have already been REFUNDED |
 
 ### Global exception handler
 

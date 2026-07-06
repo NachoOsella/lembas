@@ -126,3 +126,98 @@
     width: 100%;
   }
 }
+
+/* ------------------------------------------------------------------
+   'confirm-with-reason' mode -- reason field layout
+   ------------------------------------------------------------------ */
+.confirm-dialog__body {
+  /* When the reason field is shown, switch the icon+copy row to a vertical stack. */
+  grid-template-rows: auto;
+}
+
+.confirm-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  text-align: left;
+}
+
+.confirm-dialog__field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.confirm-dialog__field-required {
+  color: var(--color-red);
+  margin-left: 0.15rem;
+}
+
+.confirm-dialog__textarea {
+  width: 100%;
+  min-height: 5rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  resize: vertical;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.confirm-dialog__textarea::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+.confirm-dialog__textarea:hover {
+  border-color: rgba(47, 141, 114, 0.3);
+}
+
+.confirm-dialog__textarea:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(47, 141, 114, 0.15);
+  background: var(--color-surface);
+}
+
+.confirm-dialog__textarea--error,
+.confirm-dialog__textarea--error:focus-visible {
+  border-color: var(--color-red);
+  box-shadow: 0 0 0 3px rgba(200, 32, 20, 0.12);
+}
+
+.confirm-dialog__field-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.confirm-dialog__field-hint {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.confirm-dialog__field-error {
+  flex: 1;
+  color: var(--color-red);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.confirm-dialog__field-counter {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}

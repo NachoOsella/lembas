@@ -137,6 +137,13 @@ PATCH  /api/admin/orders/{id}/prepare
 PATCH  /api/admin/orders/{id}/ready
 PATCH  /api/admin/orders/{id}/delivered
 PATCH  /api/admin/orders/{id}/cancel  Request: { reason }
+  Errors:   ORDER_NOT_FOUND (404), ORDER_INVALID_STATE (409),
+            CANCEL_REASON_REQUIRED (400), ORDER_REFUNDED_CONFLICT (409),
+            STOCK_LOT_NOT_FOUND (404) — only when reversal cannot find a lot
+  Notes:    Cancels the order from any non-terminal state (DELIVERED/CANCELLED excluded).
+            Reverses any deducted stock back to the same lots, recording CANCELLATION_RETURN
+            movements linked to the original order id. Marks PENDING/APPROVED payments as
+            CANCELLED. REFUNDED payments block the cancellation.
 ```
 
 ### POS (in-store sales)

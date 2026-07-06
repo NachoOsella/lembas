@@ -1,11 +1,15 @@
 package com.dietetica.lembas.orders.service;
 
+import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import com.dietetica.lembas.inventory.service.InventoryService;
 import com.dietetica.lembas.orders.dto.OrderDetailDto;
 import com.dietetica.lembas.orders.dto.OrderSummaryDto;
 import com.dietetica.lembas.orders.model.Order;
 import com.dietetica.lembas.orders.model.OrderStatus;
 import com.dietetica.lembas.orders.model.OrderType;
 import com.dietetica.lembas.orders.repository.OrderRepository;
+import com.dietetica.lembas.payments.model.Payment;
+import com.dietetica.lembas.payments.model.PaymentStatus;
 import com.dietetica.lembas.shared.dto.PageResponse;
 import com.dietetica.lembas.shared.exception.DomainException;
 import jakarta.persistence.criteria.Predicate;
@@ -30,24 +34,42 @@ import java.util.function.Consumer;
 /**
  * Admin-facing use cases for order lifecycle management.
  *
- * <p>Provides the preparation, ready, and delivery transitions for ONLINE
- * orders, plus filtered listing and detail retrieval. All write operations
- * delegate transition validation to {@link OrderStatePolicy}.</p>
+ * <p>Provides the preparation, ready, delivery, and cancellation transitions
+ * for ONLINE orders, plus filtered listing and detail retrieval. All write
+ * operations delegate transition validation to {@link OrderStatePolicy}.
+ * Cancellation additionally triggers stock reversal through
+ * {@link InventoryService#reverseMovementsForOrder(Long)} when the order had
+ * previously deducted stock.</p>
  */
 @Service
 public class AdminOrderService {
 
     private static final Logger log = LoggerFactory.getLogger(AdminOrderService.class);
-    private static final String CODE_ORDER_NOT_FOUND = "ORDER_NOT_FOUND";
+
+    /** Error code returned when an order is not found. */
+    public static final String CODE_ORDER_NOT_FOUND = "ORDER_NOT_FOUND";
+    /** Error code returned when cancellation reason is missing or invalid. */
+    public static final String CODE_CANCEL_REASON_REQUIRED = "CANCEL_REASON_REQUIRED";
+    /** Error code returned when a refund conflict prevents cancellation. */
+    public static final String CODE_REFUNDED_CONFLICT = "ORDER_REFUNDED_CONFLICT";
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final OrderStatePolicy statePolicy;
+    private final InventoryService inventoryService;
+    private final SecurityContextHelper securityContextHelper;
 
-    public AdminOrderService(OrderRepository orderRepository, OrderMapper orderMapper) {
+    public AdminOrderService(
+            OrderRepository orderRepository,
+            OrderMapper orderMapper,
+            InventoryService inventoryService,
+            SecurityContextHelper securityContextHelper
+    ) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.statePolicy = new OrderStatePolicy();
+        this.inventoryService = inventoryService;
+        this.securityContextHelper = securityContextHelper;
     }
 
     // ----------------------------------------------------------------
@@ -88,6 +110,82 @@ public class AdminOrderService {
     public OrderDetailDto deliver(Long orderId) {
         return transition(orderId, OrderStatus.DELIVERED,
                 order -> order.setDeliveredAt(OffsetDateTime.now()));
+    }
+
+    /**
+     * Cancels an order from any non-terminal state, reverses any deducted stock
+     * to the original lots, and marks payments as CANCELLED.
+     *
+     * <p>Allowed for ONLINE orders in PENDING_PAYMENT, PAID, PREPARING, READY,
+     * PAYMENT_FAILED, and STOCK_CONFLICT, and for POS orders in PAID. Rejected
+     * with {@code ORDER_INVALID_STATE} (409) when the order is DELIVERED or
+     * already CANCELLED, with {@code CANCEL_REASON_REQUIRED} (400) when the
+     * reason is blank, and with {@code ORDER_REFUNDED_CONFLICT} (409) when any
+     * payment has already been REFUNDED.</p>
+     *
+     * <p>Stock reversal is delegated to
+     * {@link InventoryService#reverseMovementsForOrder(Long)} and is a no-op for
+     * orders that never had stock deducted. Payments in PENDING or APPROVED
+     * are transitioned to CANCELLED; payments already in REJECTED, EXPIRED,
+     * CANCELLED, or REFUNDED are left untouched.</p>
+     *
+     * @param orderId the order id
+     * @param reason  the mandatory cancellation reason (1-500 characters)
+     * @return the updated order detail
+     */
+    @Transactional
+    public OrderDetailDto cancel(Long orderId, String reason) {
+        String normalizedReason = reason == null ? null : reason.trim();
+        if (normalizedReason == null || normalizedReason.isEmpty()) {
+            throw new DomainException(CODE_CANCEL_REASON_REQUIRED, HttpStatus.BAD_REQUEST,
+                    "Cancellation reason is required");
+        }
+        if (normalizedReason.length() > 500) {
+            throw new DomainException(CODE_CANCEL_REASON_REQUIRED, HttpStatus.BAD_REQUEST,
+                    "Reason must be 1-500 characters");
+        }
+
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new DomainException(CODE_ORDER_NOT_FOUND, HttpStatus.NOT_FOUND,
+                        "Order not found"));
+
+        // 1. State policy: rejects DELIVERED, CANCELLED, and null.
+        statePolicy.validateTransition(order, OrderStatus.CANCELLED);
+
+        // 2. Refund sanity: cannot cancel if any payment has been REFUNDED.
+        boolean hasRefundedPayment = order.getPayments().stream()
+                .anyMatch(p -> p.getStatus() == PaymentStatus.REFUNDED);
+        if (hasRefundedPayment) {
+            throw new DomainException(CODE_REFUNDED_CONFLICT, HttpStatus.CONFLICT,
+                    "Cannot cancel an order with refunded payments");
+        }
+
+        // 3. Stock reversal (no-op for orders that never deducted stock).
+        int reversedCount = inventoryService.reverseMovementsForOrder(order.getId());
+        if (reversedCount > 0) {
+            log.info("Reversed {} stock movements for order {}", reversedCount, order.getOrderNumber());
+        }
+
+        // 4. Update payment status: PENDING, APPROVED -> CANCELLED.
+        for (Payment payment : order.getPayments()) {
+            if (payment.getStatus() == PaymentStatus.PENDING
+                    || payment.getStatus() == PaymentStatus.APPROVED) {
+                payment.setStatus(PaymentStatus.CANCELLED);
+            }
+        }
+
+        // 5. Update order state.
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setCancelledAt(OffsetDateTime.now());
+        order.setCancellationReason(normalizedReason);
+        Order saved = orderRepository.save(order);
+
+        // 6. Audit.
+        Long userId = securityContextHelper.getCurrentUser() == null
+                ? null : securityContextHelper.getCurrentUser().getId();
+        log.info("Order {} cancelled by user {} (reason: {})",
+                saved.getOrderNumber(), userId, normalizedReason);
+        return orderMapper.toDetailDto(saved);
     }
 
     // ----------------------------------------------------------------

@@ -84,6 +84,7 @@ describe('OrderDetailPage', () => {
     prepare: ReturnType<typeof vi.fn>;
     markReady: ReturnType<typeof vi.fn>;
     deliver: ReturnType<typeof vi.fn>;
+    cancel: ReturnType<typeof vi.fn>;
   };
   let messageService: { add: ReturnType<typeof vi.fn> };
 
@@ -93,6 +94,7 @@ describe('OrderDetailPage', () => {
       prepare: vi.fn(),
       markReady: vi.fn(),
       deliver: vi.fn(),
+      cancel: vi.fn(),
     };
     messageService = { add: vi.fn() };
     const route = { snapshot: { paramMap: { get: (key: string) => params[key] ?? null } } };
@@ -467,6 +469,139 @@ describe('OrderDetailPage', () => {
       const el: HTMLElement = fixture.nativeElement;
       // The total is rendered as $ 1.500 by the currency pipe
       expect(el.textContent).toContain('1.500');
+    });
+  });
+
+  // ----------------------------------------------------------------
+  // Cancellation flow
+  // ----------------------------------------------------------------
+
+  describe('cancellation flow', () => {
+    /** Returns the destructive cancel button in the order detail template. */
+    function findCancelButton(): HTMLButtonElement | null {
+      const el: HTMLElement = fixture.nativeElement;
+      return el.querySelector('button.order-detail-cancel-action');
+    }
+
+    it('shows the cancel button for PAID ONLINE orders', async () => {
+      configure();
+      adminOrderService.getOrder.mockReturnValue(of(mockOrderDetail('PAID')));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(findCancelButton()).toBeTruthy();
+    });
+
+    it('shows the cancel button for PREPARING orders', async () => {
+      configure();
+      adminOrderService.getOrder.mockReturnValue(of(mockOrderDetail('PREPARING')));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(findCancelButton()).toBeTruthy();
+    });
+
+    it('shows the cancel button for READY orders', async () => {
+      configure();
+      adminOrderService.getOrder.mockReturnValue(of(mockOrderDetail('READY')));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(findCancelButton()).toBeTruthy();
+    });
+
+    it('does NOT show the cancel button for DELIVERED orders', async () => {
+      configure();
+      adminOrderService.getOrder.mockReturnValue(of(mockOrderDetail('DELIVERED')));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(findCancelButton()).toBeNull();
+    });
+
+    it('does NOT show the cancel button for already CANCELLED orders', async () => {
+      configure();
+      adminOrderService.getOrder.mockReturnValue(of(mockOrderDetail('CANCELLED')));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(findCancelButton()).toBeNull();
+    });
+
+    it('shows the cancel button for POS PAID orders', async () => {
+      configure();
+      adminOrderService.getOrder.mockReturnValue(
+        of(mockOrderDetail('PAID', { type: 'POS' as OrderType })),
+      );
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(findCancelButton()).toBeTruthy();
+    });
+
+    it('calls adminOrderService.cancel and updates the order when confirmed', async () => {
+      configure();
+      const cancelledOrder = mockOrderDetail('CANCELLED', {
+        cancellationReason: 'Cliente desiste del pedido',
+        cancelledAt: '2026-07-06T12:00:00Z',
+      });
+      adminOrderService.getOrder.mockReturnValue(of(mockOrderDetail('PAID')));
+      adminOrderService.cancel.mockReturnValue(of(cancelledOrder));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const btn = findCancelButton();
+      expect(btn).toBeTruthy();
+      btn?.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const confirmDialog = fixture.debugElement.query(
+        (de) => de.nativeElement?.tagName?.toLowerCase() === 'app-confirm-dialog',
+      );
+      const cmp = confirmDialog.componentInstance as {
+        reason: { set: (v: string) => void };
+        confirmed: { emit: () => void };
+      };
+      cmp.reason.set('Cliente desiste del pedido');
+      cmp.confirmed.emit();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(adminOrderService.cancel).toHaveBeenCalledWith(1, {
+        reason: 'Cliente desiste del pedido',
+      });
+      expect(messageService.add).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'success' }),
+      );
+    });
+
+    it('shows an error toast on cancel failure', async () => {
+      configure();
+      adminOrderService.getOrder.mockReturnValue(of(mockOrderDetail('PAID')));
+      adminOrderService.cancel.mockReturnValue(
+        throwError(() => ({
+          status: 409,
+          error: { code: 'ORDER_INVALID_STATE', message: 'Cannot transition' },
+        })),
+      );
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const btn = findCancelButton();
+      btn?.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const confirmDialog = fixture.debugElement.query(
+        (de) => de.nativeElement?.tagName?.toLowerCase() === 'app-confirm-dialog',
+      );
+      const cmp = confirmDialog.componentInstance as {
+        reason: { set: (v: string) => void };
+        confirmed: { emit: () => void };
+      };
+      cmp.reason.set('Prueba');
+      cmp.confirmed.emit();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(messageService.add).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'error' }),
+      );
     });
   });
 });
