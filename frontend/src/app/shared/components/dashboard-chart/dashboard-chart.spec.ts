@@ -73,16 +73,23 @@ describe('DashboardChart', () => {
     expect(legendItems[2].percentage).toBe('20.0');
   });
 
-  it('includes secondary dataset when secondaryData is provided', () => {
+  it('uses configured labels and a secondary axis when requested', () => {
     fixture.componentRef.setInput('type', 'bar');
     fixture.componentRef.setInput('labels', ['10', '11']);
     fixture.componentRef.setInput('data', [50, 100]);
     fixture.componentRef.setInput('secondaryData', [20, 40]);
+    fixture.componentRef.setInput('primaryLabel', 'Efectivo esperado');
+    fixture.componentRef.setInput('secondaryLabel', 'Efectivo contado');
+    fixture.componentRef.setInput('secondaryAxis', true);
     fixture.componentRef.setInput('loading', false);
     fixture.componentRef.setInput('empty', false);
     fixture.detectChanges();
     const chartData = component.chartData();
     expect(chartData.datasets.length).toBe(2);
+    expect(chartData.datasets[0].label).toBe('Efectivo esperado');
+    expect(chartData.datasets[1].label).toBe('Efectivo contado');
     expect(chartData.datasets[1].data).toEqual([20, 40]);
+    expect(chartData.datasets[1].yAxisID).toBe('y1');
+    expect(component.chartOptions().scales.x.stacked).toBe(false);
   });
 });

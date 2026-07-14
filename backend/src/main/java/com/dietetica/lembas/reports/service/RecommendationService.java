@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -38,6 +39,8 @@ import java.util.Objects;
  */
 @Service
 public class RecommendationService {
+
+    private static final ZoneId REPORT_ZONE = ReportQueryRepository.REPORT_ZONE;
 
     /** Error codes surfaced to the FE; documented in {@code docs/05-api/error-handling.md}. */
     public static final String CODE_BRANCH_NOT_FOUND = "BRANCH_NOT_FOUND";
@@ -174,8 +177,15 @@ public class RecommendationService {
             Long categoryId = row[2] == null ? null : ((Number) row[2]).longValue();
             String categoryName = (String) row[3];
             String barcode = (String) row[4];
-            Integer minimum = (Integer) row[5];
+            Integer minimum = ((Number) row[5]).intValue();
             BigDecimal stock = toBigDecimal(row[6]);
+            Long stockBranchId = branchId;
+            if (row.length > 7 && row[7] != null) {
+                stockBranchId = ((Number) row[7]).longValue();
+            }
+            String stockBranchName = row.length > 8 ? (String) row[8] : null;
+            String recommendationId = TYPE_LOW_STOCK + "-" + prodId
+                    + (stockBranchId == null ? "" : "-" + stockBranchId);
             if (minimum == null) {
                 continue;
             }
@@ -189,13 +199,14 @@ public class RecommendationService {
                 urgency = "LOW";
             }
 
-            String title = "Stock bajo: " + name;
+            String title = "Stock bajo: " + name
+                    + (stockBranchName == null ? "" : " - " + stockBranchName);
             String description = String.format(new Locale("es", "AR"),
                     "Stock actual: %s, minimo: %d. Reponer antes de que se agote.",
                     formatQuantity(stock), minimum);
 
             result.add(new RecommendationDto(
-                    TYPE_LOW_STOCK + "-" + prodId,
+                    recommendationId,
                     TYPE_LOW_STOCK,
                     title,
                     description,
@@ -233,7 +244,7 @@ public class RecommendationService {
      */
     private List<RecommendationDto> buildExpiringSoon(Long branchId, Long productId) {
         List<Object[]> rows = reportRepository.expiringLotCandidates(EXPIRING_HORIZON_DAYS, branchId);
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(REPORT_ZONE);
         List<RecommendationDto> result = new ArrayList<>(rows.size());
         for (Object[] row : rows) {
             Long lotId = ((Number) row[0]).longValue();
@@ -303,8 +314,8 @@ public class RecommendationService {
      * </ul>
      */
     private List<RecommendationDto> buildHighRotation(Long branchId, Long productId) {
-        OffsetDateTime since = LocalDate.now().minusDays(HIGH_ROTATION_LOOKBACK_DAYS)
-                .atStartOfDay().atOffset(ZoneOffset.UTC);
+        OffsetDateTime since = LocalDate.now(REPORT_ZONE).minusDays(HIGH_ROTATION_LOOKBACK_DAYS)
+                .atStartOfDay(REPORT_ZONE).toOffsetDateTime();
         List<Object[]> rows = reportRepository.highRotationCandidates(branchId, since);
         List<RecommendationDto> result = new ArrayList<>();
         for (Object[] row : rows) {
@@ -316,21 +327,36 @@ public class RecommendationService {
             Long categoryId = row[2] == null ? null : ((Number) row[2]).longValue();
             String categoryName = (String) row[3];
             int totalSold = ((Number) row[4]).intValue();
+            BigDecimal currentStock = row.length > 5 ? toBigDecimal(row[5]) : null;
             if (totalSold < HIGH_ROTATION_THRESHOLD) {
                 continue;
             }
+            BigDecimal dailyDemand = BigDecimal.valueOf(totalSold)
+                    .divide(BigDecimal.valueOf(HIGH_ROTATION_LOOKBACK_DAYS), 4, java.math.RoundingMode.HALF_UP);
+            BigDecimal coverageDays = currentStock == null || dailyDemand.signum() == 0
+                    ? null
+                    : currentStock.divide(dailyDemand, 1, java.math.RoundingMode.HALF_UP);
+            if (coverageDays != null && coverageDays.compareTo(BigDecimal.valueOf(14)) > 0) {
+                continue;
+            }
             String urgency;
-            if (totalSold >= 50) {
+            if (coverageDays == null) {
+                urgency = totalSold >= 50 ? "HIGH" : totalSold >= 25 ? "MEDIUM" : "LOW";
+            } else if (coverageDays.compareTo(BigDecimal.valueOf(3)) <= 0) {
                 urgency = "HIGH";
-            } else if (totalSold >= 25) {
+            } else if (coverageDays.compareTo(BigDecimal.valueOf(7)) <= 0) {
                 urgency = "MEDIUM";
             } else {
                 urgency = "LOW";
             }
-            String title = "Alta rotacion: " + name;
-            String description = String.format(new Locale("es", "AR"),
-                    "Vendio %d unidades en los ultimos %d dias. Asegurar stock.",
-                    totalSold, HIGH_ROTATION_LOOKBACK_DAYS);
+            String title = coverageDays == null ? "Alta rotacion: " + name : "Cobertura baja: " + name;
+            String description = coverageDays == null
+                    ? String.format(new Locale("es", "AR"),
+                            "Vendio %d unidades en los ultimos %d dias.",
+                            totalSold, HIGH_ROTATION_LOOKBACK_DAYS)
+                    : String.format(new Locale("es", "AR"),
+                            "Vendio %d unidades en %d dias y quedan %s dias de cobertura.",
+                            totalSold, HIGH_ROTATION_LOOKBACK_DAYS, coverageDays.toPlainString());
 
             result.add(new RecommendationDto(
                     TYPE_HIGH_ROTATION + "-" + prodId,
@@ -372,7 +398,7 @@ public class RecommendationService {
      */
     private List<RecommendationDto> buildNoMovement(Long branchId, Long productId) {
         List<Object[]> rows = reportRepository.noMovementCandidates(branchId, null);
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(REPORT_ZONE);
         List<RecommendationDto> result = new ArrayList<>();
         for (Object[] row : rows) {
             Long prodId = ((Number) row[0]).longValue();
@@ -385,27 +411,28 @@ public class RecommendationService {
             String barcode = (String) row[4];
             BigDecimal stock = toBigDecimal(row[5]);
             Object lastSaleRaw = row[6];
+            Object oldestStockRaw = row.length > 7 ? row[7] : null;
 
             if (stock.signum() <= 0) {
                 continue;
             }
 
             Integer daysWithoutSales = null;
-            if (lastSaleRaw != null) {
-                OffsetDateTime lastSale = toOffsetDateTime(lastSaleRaw);
-                if (lastSale != null) {
-                    LocalDate lastSaleDate = lastSale.toLocalDate();
-                    daysWithoutSales = Math.toIntExact(today.toEpochDay() - lastSaleDate.toEpochDay());
-                    if (daysWithoutSales < NO_MOVEMENT_LOOKBACK_DAYS) {
-                        continue;
-                    }
+            OffsetDateTime activityReference = toOffsetDateTime(lastSaleRaw != null
+                    ? lastSaleRaw
+                    : oldestStockRaw);
+            if (activityReference != null) {
+                LocalDate activityDate = activityReference.atZoneSameInstant(REPORT_ZONE).toLocalDate();
+                daysWithoutSales = Math.toIntExact(today.toEpochDay() - activityDate.toEpochDay());
+                if (daysWithoutSales < NO_MOVEMENT_LOOKBACK_DAYS) {
+                    continue;
                 }
             }
 
             String urgency;
-            if (daysWithoutSales == null) {
-                urgency = "LOW";
-            } else if (daysWithoutSales >= 90) {
+            if (daysWithoutSales == null || daysWithoutSales >= 90) {
+                urgency = "HIGH";
+            } else if (daysWithoutSales >= 60) {
                 urgency = "HIGH";
             } else if (daysWithoutSales >= 60) {
                 urgency = "MEDIUM";
@@ -582,7 +609,7 @@ public class RecommendationService {
             return instant.atOffset(ZoneOffset.UTC);
         }
         if (value instanceof LocalDate ld) {
-            return ld.atStartOfDay().atOffset(ZoneOffset.UTC);
+            return ld.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
         }
         return null;
     }

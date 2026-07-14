@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 /**
  * One entry in the dashboard "top products" table (S4-US04).
  *
- * <p>Ranked by total quantity sold in the report period. The list is capped at
+ * <p>Ranked by net revenue in the report period. The list is capped at
  * 10 rows by the repository query; the FE expects {@code position} to be 1-based
  * so the first row shows {@code #1}.</p>
  */
@@ -20,7 +20,7 @@ public record TopProductDto(
         Long categoryId,
         String categoryName,
         String brandName,
-        Long quantitySold,
+        BigDecimal quantitySold,
         BigDecimal totalRevenue,
         BigDecimal averagePrice,
         String imageUrl

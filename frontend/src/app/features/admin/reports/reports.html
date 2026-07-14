@@ -51,9 +51,6 @@
           <span class="report-card__icon" aria-hidden="true">
             <i [class]="card.icon"></i>
           </span>
-          <app-badge [tone]="card.highlight === 'Nuevo' ? 'info' : 'neutral'">
-            {{ card.highlight }}
-          </app-badge>
         </header>
         <p class="report-card__cadence">{{ card.cadence }}</p>
         <h3 class="report-card__title">{{ card.title }}</h3>

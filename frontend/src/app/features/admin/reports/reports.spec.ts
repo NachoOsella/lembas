@@ -35,7 +35,7 @@ describe('Reports', () => {
     expect(available.length).toBe(5);
     const routes = component.cards.map((c) => c.route);
     expect(routes).toContain('/admin/dashboard');
-    expect(routes).toContain('/admin/cash/history');
+    expect(routes).toContain('/admin/reports/cash');
     expect(routes).toContain('/admin/reports/sales');
     expect(routes).toContain('/admin/reports/inventory');
     expect(routes).toContain('/admin/reports/suppliers');

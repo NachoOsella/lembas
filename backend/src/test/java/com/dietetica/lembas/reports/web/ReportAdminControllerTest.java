@@ -3,6 +3,9 @@ package com.dietetica.lembas.reports.web;
 import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.auth.service.LembasUserDetailsService;
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import com.dietetica.lembas.reports.dto.CashMethodTotalDto;
+import com.dietetica.lembas.reports.dto.CashOverviewDailyDto;
+import com.dietetica.lembas.reports.dto.CashOverviewDto;
 import com.dietetica.lembas.reports.dto.CashReportDto;
 import com.dietetica.lembas.reports.dto.CashSessionHistoryDto;
 import com.dietetica.lembas.reports.dto.CashSessionSummaryDto;
@@ -77,6 +80,21 @@ class ReportAdminControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    void cashOverviewReturnsRawOperationalFacts() throws Exception {
+        when(reportService.getCashOverview(any(), any(), eq(null))).thenReturn(sampleCashOverview());
+
+        mockMvc.perform(get("/api/admin/reports/cash-overview")
+                        .param("from", "2026-07-01")
+                        .param("to", "2026-07-13"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.closedSessions").value(12))
+                .andExpect(jsonPath("$.expectedCashTotal").value(4500))
+                .andExpect(jsonPath("$.dailyCloseSeries[0].date").value("2026-07-13"))
+                .andExpect(jsonPath("$.paymentMethods[0].method").value("CASH"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     void cashSessionHistoryReturns200() throws Exception {
         when(reportService.getCashSessionHistory(
                 any(), any(), any(), any(), any(), any(), anyInt(), anyInt(), any()))
@@ -137,6 +155,20 @@ class ReportAdminControllerTest {
                 List.of(),
                 List.of(),
                 new BigDecimal("12.5"), new BigDecimal("8.0"), new BigDecimal("3.0")
+        );
+    }
+
+    private CashOverviewDto sampleCashOverview() {
+        return new CashOverviewDto(
+                LocalDate.parse("2026-07-01"), LocalDate.parse("2026-07-13"), null, null,
+                OffsetDateTime.now(), 12, 1, 10, 2,
+                new BigDecimal("4500.00"), new BigDecimal("4490.00"),
+                new BigDecimal("-10.00"), new BigDecimal("30.00"),
+                List.of(new CashOverviewDailyDto(
+                        LocalDate.parse("2026-07-13"), 2,
+                        new BigDecimal("800.00"), new BigDecimal("790.00"), new BigDecimal("-10.00"))),
+                List.of(new CashMethodTotalDto("CASH", new BigDecimal("3200.00"), 20)),
+                List.of()
         );
     }
 

@@ -4,6 +4,7 @@ import { AppPageHeader } from '../../../../shared/components/app-page-header/app
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppToast } from '../../../../shared/components/app-toast/app-toast';
 import { AppDatePicker } from '../../../../shared/components/app-date-picker/app-date-picker';
+import { AppSelect } from '../../../../shared/components/app-select/app-select';
 import { AppReportFilterBar } from '../../../../shared/components/app-report-filter-bar/app-report-filter-bar';
 import { AppReportSectionHead } from '../../../../shared/components/app-report-section-head/app-report-section-head';
 import { DashboardStatCard } from '../../../../shared/components/dashboard-stat-card/dashboard-stat-card';
@@ -14,6 +15,8 @@ import { ErrorAlert } from '../../../../shared/components/error-alert/error-aler
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
 
 import { ReportsService } from '../../../../core/services/reports';
+import { UserService } from '../../../../core/services/user';
+import { Branch } from '../../../../shared/models/user';
 import { DashboardStatCardDto } from '../../../../shared/models/dashboard';
 import {
   ReportBreakdownDto,
@@ -35,6 +38,7 @@ import {
     AppButton,
     AppToast,
     AppDatePicker,
+    AppSelect,
     AppReportFilterBar,
     AppReportSectionHead,
     DashboardStatCard,
@@ -49,9 +53,15 @@ import {
 })
 export class SalesReportPageComponent implements OnInit {
   private readonly reports = inject(ReportsService);
+  private readonly userService = inject(UserService);
 
   protected readonly fromDate = signal<Date | null>(null);
   protected readonly toDate = signal<Date | null>(null);
+  protected readonly branchId = signal<number | null>(null);
+  protected readonly branches = signal<Branch[]>([]);
+  protected readonly branchOptions = computed(() =>
+    this.branches().map((branch) => ({ label: branch.name, value: branch.id })),
+  );
 
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
@@ -125,6 +135,10 @@ export class SalesReportPageComponent implements OnInit {
     const now = new Date();
     this.fromDate.set(new Date(now.getFullYear(), now.getMonth(), 1));
     this.toDate.set(now);
+    this.userService.listBranches().subscribe({
+      next: (branches) => this.branches.set(branches),
+      error: () => this.branches.set([]),
+    });
     this.load();
   }
 
@@ -140,10 +154,16 @@ export class SalesReportPageComponent implements OnInit {
     this.load();
   }
 
+  protected onBranchChange(branchId: number | null): void {
+    this.branchId.set(branchId);
+    this.load();
+  }
+
   protected onClearFilters(): void {
     const now = new Date();
     this.fromDate.set(new Date(now.getFullYear(), now.getMonth(), 1));
     this.toDate.set(now);
+    this.branchId.set(null);
     this.load();
   }
 
@@ -154,18 +174,36 @@ export class SalesReportPageComponent implements OnInit {
   // -- Export -------------------------------------------------------------
 
   protected exportData(): ExportData {
-    const kpis = this.data()?.kpis ?? [];
+    const report = this.data();
     return {
-      filename: 'reporte_ventas',
+      filename: 'reporte_ventas_diarias',
       columns: [
-        { key: 'kpi', label: 'Indicador' },
-        { key: 'value', label: 'Valor' },
-        { key: 'subtitle', label: 'Detalle' },
+        { key: 'date', label: 'Fecha' },
+        { key: 'branch', label: 'Sucursal' },
+        { key: 'revenue', label: 'Facturacion' },
       ],
-      rows: kpis.map((kpi: ReportKpiDto) => ({
-        kpi: kpi.label,
-        value: kpi.value,
-        subtitle: kpi.subtitle ?? '',
+      rows: (report?.series ?? []).map((point) => ({
+        date: point.date,
+        branch: report?.branchName ?? 'Todas',
+        revenue: point.value,
+      })),
+    };
+  }
+
+  protected topProductsExport(): ExportData {
+    return {
+      filename: 'reporte_ventas_productos',
+      columns: [
+        { key: 'product', label: 'Producto' },
+        { key: 'category', label: 'Categoria historica' },
+        { key: 'revenue', label: 'Facturacion neta' },
+        { key: 'quantity', label: 'Cantidad' },
+      ],
+      rows: (this.data()?.topProducts ?? []).map((row) => ({
+        product: row.primary,
+        category: row.secondary ?? 'Sin categoria',
+        revenue: row.metric,
+        quantity: row.submetric ?? '',
       })),
     };
   }
@@ -176,7 +214,7 @@ export class SalesReportPageComponent implements OnInit {
     this.loading.set(true);
     this.errorMessage.set(null);
     this.reports
-      .getSalesReport(toIsoDate(this.fromDate()), toIsoDate(this.toDate()))
+      .getSalesReport(toIsoDate(this.fromDate()), toIsoDate(this.toDate()), this.branchId())
       .subscribe({
         next: (data) => {
           this.data.set(data);

@@ -2,7 +2,6 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppBadge } from '../../../shared/components/app-badge/app-badge';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
 import { RecommendationService } from '../../../core/services/recommendation';
@@ -14,7 +13,6 @@ interface ReportCard {
   readonly icon: string;
   readonly route: string;
   readonly status: 'available' | 'soon';
-  readonly highlight: string;
   /** Visual accent for the card top stripe. */
   readonly accent: 'leaf' | 'forest' | 'orange' | 'amber' | 'sage' | 'blue';
   /** Short tag shown above the title (e.g. "Diario", "Mensual"). */
@@ -32,7 +30,7 @@ interface ReportCard {
  */
 @Component({
   selector: 'app-reports',
-  imports: [AppPageHeader, AppBadge, AppToast, RouterLink],
+  imports: [AppPageHeader, AppToast, RouterLink],
   templateUrl: './reports.html',
   styleUrl: './reports.css',
 })
@@ -50,19 +48,17 @@ export class Reports implements OnInit {
       icon: 'pi pi-chart-pie',
       route: '/admin/dashboard',
       status: 'available',
-      highlight: 'S4-US04',
       accent: 'leaf',
       cadence: 'Diario',
     },
     {
       title: 'Reporte de cierres de caja',
-      description: 'Historial de sesiones y reporte completo de cada cierre.',
+      description: 'Conciliacion, diferencias, medios de pago y evolucion diaria de los cierres.',
       icon: 'pi pi-wallet',
-      route: '/admin/cash/history',
+      route: '/admin/reports/cash',
       status: 'available',
-      highlight: 'S4-US05',
       accent: 'forest',
-      cadence: 'Por sesion',
+      cadence: 'Por periodo',
     },
     {
       title: 'Reporte de ventas',
@@ -70,7 +66,6 @@ export class Reports implements OnInit {
       icon: 'pi pi-chart-line',
       route: '/admin/reports/sales',
       status: 'available',
-      highlight: 'Nuevo',
       accent: 'orange',
       cadence: 'Por periodo',
     },
@@ -80,7 +75,6 @@ export class Reports implements OnInit {
       icon: 'pi pi-warehouse',
       route: '/admin/reports/inventory',
       status: 'available',
-      highlight: 'Nuevo',
       accent: 'sage',
       cadence: 'Al instante',
     },
@@ -90,7 +84,6 @@ export class Reports implements OnInit {
       icon: 'pi pi-truck',
       route: '/admin/reports/suppliers',
       status: 'available',
-      highlight: 'Nuevo',
       accent: 'amber',
       cadence: 'Por periodo',
     },

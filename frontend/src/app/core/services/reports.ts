@@ -27,10 +27,15 @@ export class ReportsService {
    * ISO {@code yyyy-MM-dd}. Both arguments are optional; an empty
    * call returns the report for "the trailing 30 days" on the backend.
    */
-  getSalesReport(from?: string | null, to?: string | null): Observable<SalesReportDto | null> {
+  getSalesReport(
+    from?: string | null,
+    to?: string | null,
+    branchId?: number | null,
+  ): Observable<SalesReportDto | null> {
     let params = new HttpParams();
     if (from) params = params.set('from', from);
     if (to) params = params.set('to', to);
+    if (branchId != null) params = params.set('branchId', String(branchId));
     return this.http.get<SalesReportDto>(`${this.baseUrl}/sales`, { params }).pipe(
       catchError((err: HttpErrorResponse) => this.handleError(err)),
     );
@@ -46,10 +51,15 @@ export class ReportsService {
   }
 
   /** Suppliers performance over the optional date range. */
-  getSuppliersReport(from?: string | null, to?: string | null): Observable<SuppliersReportDto | null> {
+  getSuppliersReport(
+    from?: string | null,
+    to?: string | null,
+    branchId?: number | null,
+  ): Observable<SuppliersReportDto | null> {
     let params = new HttpParams();
     if (from) params = params.set('from', from);
     if (to) params = params.set('to', to);
+    if (branchId != null) params = params.set('branchId', String(branchId));
     return this.http.get<SuppliersReportDto>(`${this.baseUrl}/suppliers`, { params }).pipe(
       catchError((err: HttpErrorResponse) => this.handleError(err)),
     );

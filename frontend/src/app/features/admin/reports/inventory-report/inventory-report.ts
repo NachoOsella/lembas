@@ -2,6 +2,10 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
 import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
 import { AppButton } from '../../../../shared/components/app-button/app-button';
+import {
+  AppDataTable,
+  ColumnDef,
+} from '../../../../shared/components/app-data-table/app-data-table';
 import { AppToast } from '../../../../shared/components/app-toast/app-toast';
 import { AppSelect } from '../../../../shared/components/app-select/app-select';
 import { AppReportFilterBar } from '../../../../shared/components/app-report-filter-bar/app-report-filter-bar';
@@ -34,6 +38,7 @@ import {
   imports: [
     AppPageHeader,
     AppButton,
+    AppDataTable,
     AppToast,
     AppSelect,
     AppReportFilterBar,
@@ -67,11 +72,7 @@ export class InventoryReportPageComponent implements OnInit {
     if (!data) {
       return false;
     }
-    return (
-      data.kpis.length > 0 ||
-      data.stockByCategory.length > 0 ||
-      data.topByValue.length > 0
-    );
+    return data.kpis.length > 0 || data.stockByCategory.length > 0 || data.topByValue.length > 0;
   });
 
   /** Projects the backend KPIs into the shape the stat card expects. */
@@ -91,18 +92,32 @@ export class InventoryReportPageComponent implements OnInit {
     }));
   });
 
-  protected readonly stockLabels = computed(() =>
-    this.data()?.stockByCategory.map((c: ReportBreakdownDto) => c.label) ?? [],
+  /** Paginated client table definition for potentially long low-stock lists. */
+  protected readonly lowStockColumns: ColumnDef[] = [
+    { field: 'primary', header: 'Producto', sortable: true, width: '240px' },
+    { field: 'secondary', header: 'Detalle', sortable: false, width: '280px' },
+    { field: 'metric', header: 'Stock actual', sortable: true, width: '140px' },
+    { field: 'submetric', header: 'Minimo', sortable: true, width: '120px' },
+  ];
+
+  /** Mutable view for the generic table, derived from the readonly API DTO. */
+  protected readonly lowStockRows = computed(() => [...(this.data()?.lowStock ?? [])]);
+
+  protected readonly stockLabels = computed(
+    () => this.data()?.stockByCategory.map((c: ReportBreakdownDto) => c.label) ?? [],
   );
-  protected readonly stockAmounts = computed(() =>
-    this.data()?.stockByCategory.map((c: ReportBreakdownDto) => c.amount) ?? [],
+  protected readonly stockAmounts = computed(
+    () => this.data()?.stockByCategory.map((c: ReportBreakdownDto) => c.amount) ?? [],
   );
 
-  protected readonly expiringLabels = computed(() =>
-    this.data()?.expiringByMonth.map((p: ReportSeriesPointDto) => p.label) ?? [],
+  protected readonly expiringLabels = computed(
+    () => this.data()?.expiringByMonth.map((p: ReportSeriesPointDto) => p.label) ?? [],
   );
-  protected readonly expiringValues = computed(() =>
-    this.data()?.expiringByMonth.map((p: ReportSeriesPointDto) => p.value) ?? [],
+  protected readonly expiringValues = computed(
+    () => this.data()?.expiringByMonth.map((p: ReportSeriesPointDto) => p.value) ?? [],
+  );
+  protected readonly expiringUnits = computed(
+    () => this.data()?.expiringByMonth.map((p: ReportSeriesPointDto) => p.secondaryValue ?? 0) ?? [],
   );
 
   ngOnInit(): void {
@@ -123,18 +138,22 @@ export class InventoryReportPageComponent implements OnInit {
   }
 
   protected exportData(): ExportData {
-    const kpis = this.data()?.kpis ?? [];
+    const report = this.data();
     return {
-      filename: 'reporte_inventario',
+      filename: 'reporte_inventario_categorias',
       columns: [
-        { key: 'kpi', label: 'Indicador' },
-        { key: 'value', label: 'Valor' },
-        { key: 'subtitle', label: 'Detalle' },
+        { key: 'branch', label: 'Sucursal' },
+        { key: 'category', label: 'Categoria' },
+        { key: 'value', label: 'Stock valorizado' },
+        { key: 'units', label: 'Unidades' },
+        { key: 'percentage', label: 'Participacion (%)' },
       ],
-      rows: kpis.map((kpi: ReportKpiDto) => ({
-        kpi: kpi.label,
-        value: kpi.value,
-        subtitle: kpi.subtitle ?? '',
+      rows: (report?.stockByCategory ?? []).map((category) => ({
+        branch: report?.branchName ?? 'Todas',
+        category: category.label,
+        value: category.amount,
+        units: category.count,
+        percentage: category.percentage,
       })),
     };
   }
@@ -145,8 +164,8 @@ export class InventoryReportPageComponent implements OnInit {
       columns: [
         { key: 'primary', label: 'Producto' },
         { key: 'secondary', label: 'Categoria' },
-        { key: 'metric', label: 'Stock' },
-        { key: 'submetric', label: 'Valor' },
+        { key: 'metric', label: 'Valor' },
+        { key: 'submetric', label: 'Stock' },
       ],
       rows: (this.data()?.topByValue ?? []).map((row: ReportTopRowDto) => ({
         primary: row.primary,

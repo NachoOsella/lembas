@@ -1,7 +1,7 @@
 <app-page-header
   eyebrow="Reportes"
   title="Reporte de proveedores"
-  description="Compras, lead time, puntualidad de entrega y desempeno por proveedor en el periodo seleccionado."
+  description="Recepciones, costo real, lead time y puntualidad por proveedor en el periodo seleccionado."
   tone="light"
 />
 
@@ -26,6 +26,13 @@
       [minDate]="fromDate()"
       (valueChange)="onToChange($event)"
       selectionMode="single"
+    />
+    <app-select
+      slot="fields"
+      [options]="branchOptions()"
+      placeholder="Todas las sucursales"
+      [value]="branchId()"
+      (valueChange)="onBranchChange($event)"
     />
     <app-button
       slot="actions"
@@ -80,8 +87,8 @@
       <article class="suppliers-report__chart-card">
         <app-report-section-head
           eyebrow="Tendencia"
-          title="Compras y ordenes por mes"
-          description="Facturacion de compras y cantidad de ordenes agrupadas mensualmente."
+          title="Costo y recepciones por mes"
+          description="Costo real recibido y cantidad de recepciones confirmadas por mes."
         />
         <app-dashboard-chart
           type="bar"
@@ -93,6 +100,9 @@
           emptyMessage="Aun no hay compras en el periodo."
           [height]="'320px'"
           [currency]="true"
+          primaryLabel="Costo recibido"
+          secondaryLabel="Recepciones"
+          [secondaryAxis]="true"
         />
       </article>
     </section>
@@ -103,8 +113,10 @@
           <app-report-section-head
             eyebrow="Volumen"
             title="Top proveedores por compra"
-            description="Proveedores con mayor facturacion en el periodo."
-          />
+            description="Proveedores con mayor costo de mercaderia recibida en el periodo."
+          >
+            <app-data-export slot="actions" [data]="topSuppliersExport()" />
+          </app-report-section-head>
           <div class="suppliers-report__list">
             @if ((data()?.topByVolume ?? []).length === 0) {
               <p class="suppliers-report__empty">Sin proveedores destacados.</p>

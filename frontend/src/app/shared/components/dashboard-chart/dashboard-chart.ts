@@ -46,8 +46,13 @@ export class DashboardChart implements OnInit, OnDestroy {
   readonly type = input<'bar' | 'doughnut'>('bar');
   readonly labels = input.required<string[]>();
   readonly data = input.required<number[]>();
-  /** Optional secondary series for stacked bars. */
+  /** Optional secondary bar series. */
   readonly secondaryData = input<number[] | null>(null);
+  readonly primaryLabel = input('Valor');
+  readonly secondaryLabel = input('Comparacion');
+  readonly stacked = input(false);
+  readonly secondaryAxis = input(false);
+  readonly secondaryCurrency = input(false);
   /** Optional per-bar colors. When omitted the Lembas palette is used. */
   readonly colors = input<string[] | null>(null);
   readonly loading = input(false);
@@ -75,12 +80,20 @@ export class DashboardChart implements OnInit, OnDestroy {
       const data = this.data();
       const secondaryData = this.secondaryData();
       const colors = this.colors();
+      const primaryLabel = this.primaryLabel();
+      const secondaryLabel = this.secondaryLabel();
+      const stacked = this.stacked();
+      const secondaryAxis = this.secondaryAxis();
+      const secondaryCurrency = this.secondaryCurrency();
       const centerLabel = this.centerLabel();
       const centerSubLabel = this.centerSubLabel();
 
       // Only build chart in browser (Chart.js requires DOM)
       if (isPlatformBrowser(this.platformId)) {
-        this.buildChart(type, labels, data, secondaryData, colors, centerLabel, centerSubLabel);
+        this.buildChart(
+          type, labels, data, secondaryData, colors, primaryLabel, secondaryLabel,
+          stacked, secondaryAxis, secondaryCurrency, centerLabel, centerSubLabel,
+        );
       }
     });
   }
@@ -94,6 +107,11 @@ export class DashboardChart implements OnInit, OnDestroy {
         this.data(),
         this.secondaryData(),
         this.colors(),
+        this.primaryLabel(),
+        this.secondaryLabel(),
+        this.stacked(),
+        this.secondaryAxis(),
+        this.secondaryCurrency(),
         this.centerLabel(),
         this.centerSubLabel(),
       );
@@ -110,11 +128,19 @@ export class DashboardChart implements OnInit, OnDestroy {
     data: number[],
     secondaryData: number[] | null,
     colors: string[] | null,
+    primaryLabel: string,
+    secondaryLabel: string,
+    stacked: boolean,
+    secondaryAxis: boolean,
+    secondaryCurrency: boolean,
     centerLabel: string | null,
     centerSubLabel: string | null,
   ): void {
     if (type === 'bar') {
-      this.buildBarChart(labels, data, secondaryData, colors);
+      this.buildBarChart(
+        labels, data, secondaryData, colors, primaryLabel, secondaryLabel,
+        stacked, secondaryAxis, secondaryCurrency,
+      );
     } else {
       this.buildDoughnutChart(labels, data, colors, centerLabel, centerSubLabel);
     }
@@ -125,29 +151,31 @@ export class DashboardChart implements OnInit, OnDestroy {
     data: number[],
     secondaryData: number[] | null,
     colors: string[] | null,
+    primaryLabel: string,
+    secondaryLabel: string,
+    stacked: boolean,
+    secondaryAxis: boolean,
+    secondaryCurrency: boolean,
   ): void {
-    const hourLabels = labels.map((l) => (/^\d{1,2}$/.test(l) ? `${l}h` : l));
-
-    const datasets: any[] = [];
-
-    // Primary dataset (online orders)
-    datasets.push({
-      label: 'Online',
-      data: data,
-      backgroundColor: colors ? data.map((_, i) => colors[i % colors.length]) : this.palette[0],
-      borderColor: colors ? data.map((_, i) => colors[i % colors.length]) : this.palette[0],
+    const hourLabels = labels.map((label) => (/^\d{1,2}$/.test(label) ? `${label}h` : label));
+    const datasets: any[] = [{
+      label: primaryLabel,
+      data,
+      yAxisID: 'y',
+      backgroundColor: colors ? data.map((_, index) => colors[index % colors.length]) : this.palette[0],
+      borderColor: colors ? data.map((_, index) => colors[index % colors.length]) : this.palette[0],
       borderWidth: 0,
       borderRadius: 4,
       barPercentage: 0.7,
       categoryPercentage: 0.8,
-    });
+    }];
 
-    // Secondary dataset (POS orders) if present
     if (secondaryData && secondaryData.length > 0) {
       datasets.push({
-        label: 'POS',
+        label: secondaryLabel,
         data: secondaryData,
-        backgroundColor: this.palette[4], // Amber for POS
+        yAxisID: secondaryAxis ? 'y1' : 'y',
+        backgroundColor: this.palette[4],
         borderColor: this.palette[4],
         borderWidth: 0,
         borderRadius: 4,
@@ -156,110 +184,76 @@ export class DashboardChart implements OnInit, OnDestroy {
       });
     }
 
-    this.chartData.set({
-      labels: hourLabels,
-      datasets: datasets,
-    });
-
+    this.chartData.set({ labels: hourLabels, datasets });
     this.chartOptions.set({
       responsive: true,
       maintainAspectRatio: false,
-      interaction: {
-        mode: 'index',
-        intersect: false,
-      },
+      interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: {
-          display: secondaryData && secondaryData.length > 0,
+          display: Boolean(secondaryData?.length),
           position: 'top',
           align: 'end',
           labels: {
             usePointStyle: true,
             pointStyle: 'circle',
             padding: 16,
-            font: {
-              family: 'Plus Jakarta Sans, system-ui, sans-serif',
-              size: 12,
-              weight: '600',
-            },
+            font: { family: 'Plus Jakarta Sans, system-ui, sans-serif', size: 12, weight: '600' },
             color: 'rgba(0, 0, 0, 0.58)',
           },
         },
         tooltip: {
           enabled: true,
           backgroundColor: 'rgba(36, 58, 49, 0.95)',
-          titleFont: {
-            family: 'Plus Jakarta Sans, system-ui, sans-serif',
-            size: 13,
-            weight: '700',
-          },
-          bodyFont: {
-            family: 'Plus Jakarta Sans, system-ui, sans-serif',
-            size: 12,
-            weight: '500',
-          },
           padding: 12,
           cornerRadius: 8,
           displayColors: true,
-          boxPadding: 4,
           callbacks: {
             label: (context: any) => {
               const value = context.parsed.y;
-              if (this.currency()) {
-                return `${context.dataset.label}: $${value.toLocaleString('es-AR')}`;
-              }
-              return `${context.dataset.label}: ${value.toLocaleString('es-AR')}`;
+              const usesCurrency = context.datasetIndex === 0 ? this.currency() : secondaryCurrency;
+              const formatted = usesCurrency
+                ? new Intl.NumberFormat('es-AR', {
+                    style: 'currency', currency: 'ARS', maximumFractionDigits: 0,
+                  }).format(value)
+                : value.toLocaleString('es-AR');
+              return `${context.dataset.label}: ${formatted}`;
             },
           },
         },
       },
       scales: {
         x: {
-          stacked: true,
-          grid: {
-            display: false,
-          },
-          border: {
-            display: false,
-          },
-          ticks: {
-            font: {
-              family: 'Plus Jakarta Sans, system-ui, sans-serif',
-              size: 11,
-              weight: '600',
-            },
-            color: 'rgba(0, 0, 0, 0.45)',
-          },
+          stacked,
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: 'rgba(0, 0, 0, 0.45)' },
         },
         y: {
-          stacked: true,
+          stacked,
           beginAtZero: true,
-          grid: {
-            color: 'rgba(0, 0, 0, 0.04)',
-            drawBorder: false,
-          },
-          border: {
-            display: false,
-          },
+          grid: { color: 'rgba(0, 0, 0, 0.04)' },
+          border: { display: false },
           ticks: {
-            font: {
-              family: 'Plus Jakarta Sans, system-ui, sans-serif',
-              size: 11,
-            },
             color: 'rgba(0, 0, 0, 0.45)',
-            callback: (value: any) => {
-              if (this.currency()) {
-                return `$${value.toLocaleString('es-AR')}`;
-              }
-              return value.toLocaleString('es-AR');
-            },
+            callback: (value: any) => this.currency()
+              ? new Intl.NumberFormat('es-AR', {
+                  style: 'currency', currency: 'ARS', maximumFractionDigits: 0,
+                }).format(value)
+              : value.toLocaleString('es-AR'),
           },
         },
+        ...(secondaryAxis ? {
+          y1: {
+            beginAtZero: true,
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            border: { display: false },
+            ticks: { color: 'rgba(0, 0, 0, 0.45)' },
+          },
+        } : {}),
       },
-      animation: {
-        duration: 600,
-        easing: 'easeOutQuart',
-      },
+      animation: { duration: 600, easing: 'easeOutQuart' },
     });
   }
 

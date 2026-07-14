@@ -3,6 +3,8 @@ package com.dietetica.lembas.reports.repository;
 import com.dietetica.lembas.cash.dto.CashMovementDto;
 import com.dietetica.lembas.cash.model.CashSession;
 import com.dietetica.lembas.cash.model.CashSessionStatus;
+import com.dietetica.lembas.reports.dto.CashMethodTotalDto;
+import com.dietetica.lembas.reports.dto.CashOverviewDailyDto;
 import com.dietetica.lembas.reports.dto.CashSessionSummaryDto;
 import com.dietetica.lembas.reports.dto.SalesByHourDto;
 import com.dietetica.lembas.reports.dto.SalesByMethodDto;
@@ -16,7 +18,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +41,9 @@ import java.util.List;
 @Repository
 public class ReportQueryRepository {
 
+    /** Business timezone used to assign transactions to local reporting days. */
+    public static final ZoneId REPORT_ZONE = ZoneId.of("America/Argentina/Buenos_Aires");
+
     @PersistenceContext
     private EntityManager em;
 
@@ -60,7 +65,8 @@ public class ReportQueryRepository {
                   and o.paidAt < :end
                   and o.status not in (
                       com.dietetica.lembas.orders.model.OrderStatus.CANCELLED,
-                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED
+                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED,
+                      com.dietetica.lembas.orders.model.OrderStatus.STOCK_CONFLICT
                   )
                   and (:branchId is null or o.branch.id = :branchId)
                 """;
@@ -83,7 +89,8 @@ public class ReportQueryRepository {
                   and o.paidAt < :end
                   and o.status not in (
                       com.dietetica.lembas.orders.model.OrderStatus.CANCELLED,
-                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED
+                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED,
+                      com.dietetica.lembas.orders.model.OrderStatus.STOCK_CONFLICT
                   )
                   and (:branchId is null or o.branch.id = :branchId)
                 """;
@@ -109,7 +116,8 @@ public class ReportQueryRepository {
                   and o.paidAt < :end
                   and o.status not in (
                       com.dietetica.lembas.orders.model.OrderStatus.CANCELLED,
-                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED
+                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED,
+                      com.dietetica.lembas.orders.model.OrderStatus.STOCK_CONFLICT
                   )
                   and (:branchId is null or o.branch.id = :branchId)
                 group by o.type
@@ -126,12 +134,14 @@ public class ReportQueryRepository {
         String jpql = """
                 select count(o)
                 from Order o
-                where o.status in (
-                    com.dietetica.lembas.orders.model.OrderStatus.PENDING_PAYMENT,
-                    com.dietetica.lembas.orders.model.OrderStatus.PAID,
-                    com.dietetica.lembas.orders.model.OrderStatus.PREPARING
-                )
-                and (:branchId is null or o.branch.id = :branchId)
+                where o.type = com.dietetica.lembas.orders.model.OrderType.ONLINE
+                  and o.status in (
+                      com.dietetica.lembas.orders.model.OrderStatus.PENDING_PAYMENT,
+                      com.dietetica.lembas.orders.model.OrderStatus.PAID,
+                      com.dietetica.lembas.orders.model.OrderStatus.PREPARING,
+                      com.dietetica.lembas.orders.model.OrderStatus.READY
+                  )
+                  and (:branchId is null or o.branch.id = :branchId)
                 """;
         return em.createQuery(jpql, Long.class)
                 .setParameter("branchId", branchId)
@@ -145,31 +155,25 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<Object[]> lowStockProducts(Long branchId) {
-        String jpql = """
-                select p.id, p.name,
-                       coalesce((select sum(l.quantityAvailable)
-                                 from StockLot l
-                                 where l.product.id = p.id
-                                   and l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
-                                   and (:branchId is null or l.branch.id = :branchId)
-                       ), 0),
-                       p.minimumStock
-                from Product p
+        String sql = """
+                select p.id, p.name, coalesce(sum(l.quantity_available), 0),
+                       p.minimum_stock, b.id, b.name
+                from products p
+                cross join branches b
+                left join stock_lots l on l.product_id = p.id
+                                      and l.branch_id = b.id
+                                      and l.status = 'ACTIVE'
                 where p.active = true
-                  and p.minimumStock is not null
+                  and p.minimum_stock is not null
+                  and b.active = true
+                  and (cast(?1 as bigint) is null or b.id = cast(?1 as bigint))
+                group by p.id, p.name, p.minimum_stock, b.id, b.name
+                having coalesce(sum(l.quantity_available), 0) < p.minimum_stock
+                order by b.name, p.name
                 """;
-        List<Object[]> rows = em.createQuery(jpql)
-                .setParameter("branchId", branchId)
+        return em.createNativeQuery(sql)
+                .setParameter(1, branchId)
                 .getResultList();
-        List<Object[]> result = new ArrayList<>(rows.size());
-        for (Object[] row : rows) {
-            BigDecimal stock = toBigDecimal(row[2]);
-            Integer min = (Integer) row[3];
-            if (min != null && stock.compareTo(BigDecimal.valueOf(min)) < 0) {
-                result.add(new Object[]{row[0], row[1], stock, min});
-            }
-        }
-        return result;
     }
 
     /**
@@ -194,8 +198,8 @@ public class ReportQueryRepository {
                 order by l.expirationDate asc, l.id asc
                 """;
         return em.createQuery(jpql)
-                .setParameter("today", LocalDate.now())
-                .setParameter("limit", LocalDate.now().plusDays(daysAhead))
+                .setParameter("today", LocalDate.now(REPORT_ZONE))
+                .setParameter("limit", LocalDate.now(REPORT_ZONE).plusDays(daysAhead))
                 .setParameter("branchId", branchId)
                 .getResultList();
     }
@@ -210,24 +214,30 @@ public class ReportQueryRepository {
     @SuppressWarnings("unchecked")
     public List<TopProductDto> topProducts(OffsetDateTime start, OffsetDateTime end, Long branchId, int limit) {
         String jpql = """
-                select oi.product.id, p.name, p.barcode,
+                select oi.product.id, oi.productNameSnapshot, oi.productBarcodeSnapshot,
                        p.imageUrl, p.brandName,
-                       c.id, c.name,
-                       sum(oi.quantity), sum(oi.subtotalAmount)
+                       oi.categoryIdSnapshot, oi.categoryNameSnapshot,
+                       sum(oi.quantity),
+                       sum(case when o.subtotal > 0
+                                then oi.subtotalAmount * o.total / o.subtotal
+                                else oi.subtotalAmount end)
                 from OrderItem oi
                 join oi.order o
-                join oi.product p
-                left join p.category c
+                left join oi.product p
                 where o.paidAt >= :start
                   and o.paidAt < :end
                   and o.status not in (
                       com.dietetica.lembas.orders.model.OrderStatus.CANCELLED,
-                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED
+                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED,
+                      com.dietetica.lembas.orders.model.OrderStatus.STOCK_CONFLICT
                   )
                   and (:branchId is null or o.branch.id = :branchId)
-                group by oi.product.id, p.name, p.barcode, p.imageUrl, p.brandName,
-                         c.id, c.name
-                order by sum(oi.quantity) desc
+                group by oi.product.id, oi.productNameSnapshot, oi.productBarcodeSnapshot,
+                         p.imageUrl, p.brandName, oi.categoryIdSnapshot, oi.categoryNameSnapshot
+                order by sum(case when o.subtotal > 0
+                                  then oi.subtotalAmount * o.total / o.subtotal
+                                  else oi.subtotalAmount end) desc,
+                         sum(oi.quantity) desc
                 """;
         List<Object[]> rows = em.createQuery(jpql)
                 .setParameter("start", start)
@@ -252,7 +262,7 @@ public class ReportQueryRepository {
                     row[5] == null ? null : ((Number) row[5]).longValue(),
                     (String) row[6],
                     (String) row[4],
-                    qty.setScale(0, RoundingMode.HALF_UP).longValue(),
+                    qty.stripTrailingZeros(),
                     revenue,
                     avgPrice,
                     (String) row[3]
@@ -270,10 +280,10 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<SalesByHourDto> salesByHour(LocalDate date, Long branchId) {
-        OffsetDateTime start = date.atStartOfDay().atOffset(ZoneOffset.UTC);
+        OffsetDateTime start = date.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
         OffsetDateTime end = start.plusDays(1);
         String sql = """
-                select extract(hour from o.paid_at) as hour,
+                select extract(hour from o.paid_at at time zone 'America/Argentina/Buenos_Aires') as hour,
                        count(*) as order_count,
                        coalesce(sum(o.total), 0) as revenue,
                        sum(case when o.type = 'ONLINE' then 1 else 0 end) as online,
@@ -281,9 +291,9 @@ public class ReportQueryRepository {
                 from orders o
                 where o.paid_at >= ?1
                   and o.paid_at < ?2
-                  and o.status not in ('CANCELLED', 'PAYMENT_FAILED')
+                  and o.status not in ('CANCELLED', 'PAYMENT_FAILED', 'STOCK_CONFLICT')
                   and o.branch_id = coalesce(cast(?3 as bigint), o.branch_id)
-                group by extract(hour from o.paid_at)
+                group by extract(hour from o.paid_at at time zone 'America/Argentina/Buenos_Aires')
                 order by hour
                 """;
         List<Object[]> rows = em.createNativeQuery(sql)
@@ -329,6 +339,11 @@ public class ReportQueryRepository {
                 where p.status = com.dietetica.lembas.payments.model.PaymentStatus.APPROVED
                   and p.approvedAt >= :start
                   and p.approvedAt < :end
+                  and o.status not in (
+                      com.dietetica.lembas.orders.model.OrderStatus.CANCELLED,
+                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED,
+                      com.dietetica.lembas.orders.model.OrderStatus.STOCK_CONFLICT
+                  )
                   and (:branchId is null or o.branch.id = :branchId)
                 group by p.method
                 """;
@@ -379,6 +394,157 @@ public class ReportQueryRepository {
                         "select count(s) from Supplier s where s.active = true",
                         Long.class)
                 .getSingleResult();
+    }
+
+    // ---------------------------------------------------------------------------
+    // Cash overview
+    // ---------------------------------------------------------------------------
+
+    /**
+     * Aggregates closed and open sessions created in the requested period.
+     * The row contains only raw numeric facts; presentation is handled by the client.
+     */
+    public Object[] cashOverviewTotals(OffsetDateTime start, OffsetDateTime end, Long branchId) {
+        String sql = """
+                select count(*) filter (where cs.status = 'CLOSED'),
+                       count(*) filter (where cs.status = 'OPEN'),
+                       count(*) filter (where cs.status = 'CLOSED'
+                                          and coalesce(cs.cash_difference_amount, 0) = 0),
+                       count(*) filter (where cs.status = 'CLOSED'
+                                          and coalesce(cs.cash_difference_amount, 0) <> 0),
+                       coalesce(sum(cs.expected_cash_amount) filter (where cs.status = 'CLOSED'), 0),
+                       coalesce(sum(cs.counted_cash_amount) filter (where cs.status = 'CLOSED'), 0),
+                       coalesce(sum(cs.cash_difference_amount) filter (where cs.status = 'CLOSED'), 0),
+                       coalesce(sum(abs(cs.cash_difference_amount)) filter (where cs.status = 'CLOSED'), 0)
+                from cash_sessions cs
+                where (
+                      (cs.status = 'CLOSED' and cs.closed_at >= ?1 and cs.closed_at < ?2)
+                   or (cs.status = 'OPEN' and cs.opened_at >= ?1 and cs.opened_at < ?2)
+                )
+                  and (cast(?3 as bigint) is null or cs.branch_id = cast(?3 as bigint))
+                """;
+        return (Object[]) em.createNativeQuery(sql)
+                .setParameter(1, start)
+                .setParameter(2, end)
+                .setParameter(3, branchId)
+                .getSingleResult();
+    }
+
+    /** Returns a gap-free daily series based on the sessions' close timestamp. */
+    @SuppressWarnings("unchecked")
+    public List<CashOverviewDailyDto> cashOverviewDailySeries(
+            LocalDate from, LocalDate to, Long branchId
+    ) {
+        OffsetDateTime start = from.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        OffsetDateTime end = to.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        String sql = """
+                select cast(cs.closed_at at time zone
+                            'America/Argentina/Buenos_Aires' as date), count(*),
+                       coalesce(sum(cs.expected_cash_amount), 0),
+                       coalesce(sum(cs.counted_cash_amount), 0),
+                       coalesce(sum(cs.cash_difference_amount), 0)
+                from cash_sessions cs
+                where cs.status = 'CLOSED'
+                  and cs.closed_at >= ?1
+                  and cs.closed_at < ?2
+                  and (cast(?3 as bigint) is null or cs.branch_id = cast(?3 as bigint))
+                group by cast(cs.closed_at at time zone
+                         'America/Argentina/Buenos_Aires' as date)
+                order by cast(cs.closed_at at time zone
+                         'America/Argentina/Buenos_Aires' as date)
+                """;
+        List<Object[]> rows = em.createNativeQuery(sql)
+                .setParameter(1, start)
+                .setParameter(2, end)
+                .setParameter(3, branchId)
+                .getResultList();
+        java.util.Map<LocalDate, Object[]> byDate = new java.util.HashMap<>();
+        for (Object[] row : rows) {
+            LocalDate date = ((java.sql.Date) row[0]).toLocalDate();
+            byDate.put(date, row);
+        }
+        List<CashOverviewDailyDto> result = new ArrayList<>();
+        for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
+            Object[] row = byDate.get(date);
+            result.add(new CashOverviewDailyDto(
+                    date,
+                    row == null ? 0 : ((Number) row[1]).longValue(),
+                    row == null ? BigDecimal.ZERO : toBigDecimal(row[2]),
+                    row == null ? BigDecimal.ZERO : toBigDecimal(row[3]),
+                    row == null ? BigDecimal.ZERO : toBigDecimal(row[4])
+            ));
+        }
+        return result;
+    }
+
+    /** Approved payment-method totals for sessions opened in the requested period. */
+    @SuppressWarnings("unchecked")
+    public List<CashMethodTotalDto> cashOverviewPaymentMethods(
+            OffsetDateTime start, OffsetDateTime end, Long branchId
+    ) {
+        String sql = """
+                select p.method, coalesce(sum(p.amount), 0), count(*)
+                from payments p
+                join cash_sessions cs on cs.id = p.cash_session_id
+                where p.status = 'APPROVED'
+                  and cs.status = 'CLOSED'
+                  and cs.closed_at >= ?1
+                  and cs.closed_at < ?2
+                  and (cast(?3 as bigint) is null or cs.branch_id = cast(?3 as bigint))
+                group by p.method
+                order by sum(p.amount) desc
+                """;
+        List<Object[]> rows = em.createNativeQuery(sql)
+                .setParameter(1, start)
+                .setParameter(2, end)
+                .setParameter(3, branchId)
+                .getResultList();
+        List<CashMethodTotalDto> result = new ArrayList<>(rows.size());
+        for (Object[] row : rows) {
+            result.add(new CashMethodTotalDto(
+                    row[0] == null ? "OTHER" : row[0].toString(),
+                    toBigDecimal(row[1]),
+                    ((Number) row[2]).longValue()
+            ));
+        }
+        return result;
+    }
+
+    /** Returns the most recent closed sessions with a cash discrepancy. */
+    public List<CashSessionSummaryDto> cashSessionsWithDiscrepancy(
+            Long branchId, OffsetDateTime from, OffsetDateTime to, int limit
+    ) {
+        String jpql = """
+                select new com.dietetica.lembas.reports.dto.CashSessionSummaryDto(
+                    cs.id, b.id, b.name,
+                    concat(coalesce(o.firstName, ''), ' ', coalesce(o.lastName, '')),
+                    concat(coalesce(c.firstName, ''), ' ', coalesce(c.lastName, '')),
+                    cs.openedAt, cs.closedAt, cs.openingCashAmount,
+                    cs.expectedCashAmount, cs.countedCashAmount,
+                    cs.cashDifferenceAmount, cs.cashDifferenceReason,
+                    cs.status,
+                    coalesce((select count(p) from Payment p
+                              where p.cashSessionId = cs.id
+                                and p.status = com.dietetica.lembas.payments.model.PaymentStatus.APPROVED), 0),
+                    coalesce((select count(m) from CashMovement m where m.cashSession.id = cs.id), 0)
+                )
+                from CashSession cs
+                join cs.branch b
+                join cs.openedByUser o
+                left join cs.closedByUser c
+                where cs.status = com.dietetica.lembas.cash.model.CashSessionStatus.CLOSED
+                  and cs.closedAt >= :from
+                  and cs.closedAt < :to
+                  and cs.cashDifferenceAmount <> 0
+                  and (:branchId is null or cs.branch.id = :branchId)
+                order by abs(cs.cashDifferenceAmount) desc, cs.closedAt desc
+                """;
+        return em.createQuery(jpql, CashSessionSummaryDto.class)
+                .setParameter("branchId", branchId)
+                .setParameter("from", from)
+                .setParameter("to", to)
+                .setMaxResults(limit)
+                .getResultList();
     }
 
     // ---------------------------------------------------------------------------
@@ -488,6 +654,7 @@ public class ReportQueryRepository {
                         select count(o) from Order o
                         where o.cashSessionId = :sid
                           and o.type = com.dietetica.lembas.orders.model.OrderType.POS
+                          and o.status <> com.dietetica.lembas.orders.model.OrderStatus.CANCELLED
                         """, Long.class)
                 .setParameter("sid", sessionId)
                 .getSingleResult();
@@ -555,18 +722,18 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<Object[]> salesByDay(LocalDate from, LocalDate to, Long branchId) {
-        OffsetDateTime start = from.atStartOfDay().atOffset(ZoneOffset.UTC);
-        OffsetDateTime end = to.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC);
+        OffsetDateTime start = from.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        OffsetDateTime end = to.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
         String sql = """
-                select cast(o.paid_at as date) as day,
+                select cast(o.paid_at at time zone 'America/Argentina/Buenos_Aires' as date) as day,
                        coalesce(sum(o.total), 0) as revenue,
                        count(*) as order_count
                 from orders o
                 where o.paid_at >= ?1
                   and o.paid_at < ?2
-                  and o.status not in ('CANCELLED', 'PAYMENT_FAILED')
+                  and o.status not in ('CANCELLED', 'PAYMENT_FAILED', 'STOCK_CONFLICT')
                   and o.branch_id = coalesce(cast(?3 as bigint), o.branch_id)
-                group by cast(o.paid_at as date)
+                group by cast(o.paid_at at time zone 'America/Argentina/Buenos_Aires' as date)
                 order by day
                 """;
         return em.createNativeQuery(sql)
@@ -574,6 +741,26 @@ public class ReportQueryRepository {
                 .setParameter(2, end)
                 .setParameter(3, branchId)
                 .getResultList();
+    }
+
+    /** Returns cost of goods sold from immutable stock-movement cost snapshots. */
+    public BigDecimal costOfGoodsSold(OffsetDateTime start, OffsetDateTime end, Long branchId) {
+        String sql = """
+                select coalesce(sum(abs(sm.quantity) * sm.unit_cost_snapshot), 0)
+                from stock_movements sm
+                join orders o on o.id = sm.order_id
+                where sm.type in ('POS_SALE', 'ONLINE_SALE')
+                  and sm.unit_cost_snapshot is not null
+                  and o.paid_at >= ?1
+                  and o.paid_at < ?2
+                  and o.status not in ('CANCELLED', 'PAYMENT_FAILED', 'STOCK_CONFLICT')
+                  and (cast(?3 as bigint) is null or o.branch_id = cast(?3 as bigint))
+                """;
+        return toBigDecimal(em.createNativeQuery(sql)
+                .setParameter(1, start)
+                .setParameter(2, end)
+                .setParameter(3, branchId)
+                .getSingleResult()).setScale(2, RoundingMode.HALF_UP);
     }
 
     /**
@@ -586,20 +773,26 @@ public class ReportQueryRepository {
     @SuppressWarnings("unchecked")
     public List<Object[]> salesByCategory(OffsetDateTime start, OffsetDateTime end, Long branchId) {
         String jpql = """
-                select p.category.id, p.category.name, coalesce(sum(oi.subtotalAmount), 0), count(oi)
+                select oi.categoryIdSnapshot,
+                       coalesce(oi.categoryNameSnapshot, 'Sin categoria'),
+                       coalesce(sum(case when o.subtotal > 0
+                                         then oi.subtotalAmount * o.total / o.subtotal
+                                         else oi.subtotalAmount end), 0),
+                       count(oi)
                 from OrderItem oi
                 join oi.order o
-                join oi.product p
                 where o.paidAt >= :start
                   and o.paidAt < :end
                   and o.status not in (
                       com.dietetica.lembas.orders.model.OrderStatus.CANCELLED,
-                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED
+                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED,
+                      com.dietetica.lembas.orders.model.OrderStatus.STOCK_CONFLICT
                   )
                   and (:branchId is null or o.branch.id = :branchId)
-                  and p.category is not null
-                group by p.category.id, p.category.name
-                order by sum(oi.subtotalAmount) desc
+                group by oi.categoryIdSnapshot, oi.categoryNameSnapshot
+                order by sum(case when o.subtotal > 0
+                                  then oi.subtotalAmount * o.total / o.subtotal
+                                  else oi.subtotalAmount end) desc
                 """;
         return em.createQuery(jpql)
                 .setParameter("start", start)
@@ -616,8 +809,8 @@ public class ReportQueryRepository {
         String jpql = """
                 select count(o)
                 from Order o
-                where o.paidAt >= :start
-                  and o.paidAt < :end
+                where o.cancelledAt >= :start
+                  and o.cancelledAt < :end
                   and o.status = com.dietetica.lembas.orders.model.OrderStatus.CANCELLED
                   and (:branchId is null or o.branch.id = :branchId)
                 """;
@@ -641,7 +834,7 @@ public class ReportQueryRepository {
     @SuppressWarnings("unchecked")
     public List<Object[]> stockValueByCategory(Long branchId) {
         String jpql = """
-                select p.category.id, p.category.name,
+                select p.category.id, coalesce(p.category.name, 'Sin categoria'),
                        coalesce(sum(l.quantityAvailable * l.unitCost), 0),
                        coalesce(sum(l.quantityAvailable), 0)
                 from StockLot l
@@ -649,7 +842,6 @@ public class ReportQueryRepository {
                 where l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
                   and l.quantityAvailable > 0
                   and (:branchId is null or l.branch.id = :branchId)
-                  and p.category is not null
                 group by p.category.id, p.category.name
                 order by sum(l.quantityAvailable * l.unitCost) desc
                 """;
@@ -667,8 +859,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<Object[]> expiringLotsByMonth(int monthsAhead, Long branchId) {
-        LocalDate today = LocalDate.now();
-        LocalDate limit = today.plusMonths(monthsAhead);
+        LocalDate today = LocalDate.now(REPORT_ZONE);
+        LocalDate limit = today.withDayOfMonth(1).plusMonths(monthsAhead);
         String sql = """
                 select cast(date_trunc('month', l.expiration_date) as date) as month,
                        count(*) as lot_count,
@@ -677,7 +869,7 @@ public class ReportQueryRepository {
                 join products p on p.id = l.product_id
                 where l.expiration_date is not null
                   and l.expiration_date >= ?1
-                  and l.expiration_date <= ?2
+                  and l.expiration_date < ?2
                   and l.quantity_available > 0
                   and l.status = 'ACTIVE'
                   and (cast(?3 as bigint) is null or l.branch_id = cast(?3 as bigint))
@@ -692,26 +884,18 @@ public class ReportQueryRepository {
 
         // Fill in the gaps so the chart is continuous.
         List<Object[]> result = new ArrayList<>();
-        java.util.Map<LocalDate, long[]> bucket = new java.util.HashMap<>();
-        for (int i = 0; i < monthsAhead; i++) {
-            LocalDate month = today.plusMonths(i).withDayOfMonth(1);
-            bucket.put(month, new long[]{0, 0});
-        }
+        java.util.Map<LocalDate, Long> lotCounts = new java.util.HashMap<>();
+        java.util.Map<LocalDate, BigDecimal> unitsByMonth = new java.util.HashMap<>();
         for (Object[] row : rows) {
-            java.sql.Date d = (java.sql.Date) row[0];
-            LocalDate month = d.toLocalDate().withDayOfMonth(1);
-            long[] current = bucket.get(month);
-            if (current == null) {
-                current = new long[]{0, 0};
-                bucket.put(month, current);
-            }
-            current[0] += ((Number) row[1]).longValue();
-            current[1] += toBigDecimal(row[2]).longValue();
+            LocalDate month = ((java.sql.Date) row[0]).toLocalDate().withDayOfMonth(1);
+            lotCounts.put(month, ((Number) row[1]).longValue());
+            unitsByMonth.put(month, toBigDecimal(row[2]).stripTrailingZeros());
         }
         for (int i = 0; i < monthsAhead; i++) {
             LocalDate month = today.plusMonths(i).withDayOfMonth(1);
-            long[] current = bucket.get(month);
-            result.add(new Object[]{month, current[0], BigDecimal.valueOf(current[1])});
+            result.add(new Object[]{month,
+                    lotCounts.getOrDefault(month, 0L),
+                    unitsByMonth.getOrDefault(month, BigDecimal.ZERO)});
         }
         return result;
     }
@@ -749,50 +933,49 @@ public class ReportQueryRepository {
     // ---------------------------------------------------------------------------
 
     /**
-     * Q-SP1: purchase totals grouped by month. Uses the order's
-     * {@code orderDate} and the SUM of the items' subtotals so the
-     * chart reflects the actual commitment, regardless of cancellations
-     * on individual items.
+     * Q-SP1: actual received cost grouped by the confirmed receipt month.
+     * Uses received quantities and immutable receipt unit costs, excluding
+     * draft and cancelled receipts.
      *
      * @return list of arrays {@code [firstOfMonth, total, orderCount]}.
      */
     @SuppressWarnings("unchecked")
-    public List<Object[]> purchasesByMonth(OffsetDateTime from, OffsetDateTime to) {
+    public List<Object[]> purchasesByMonth(OffsetDateTime from, OffsetDateTime to, Long branchId) {
         String sql = """
-                select cast(date_trunc('month', po.order_date) as date) as month,
-                       coalesce(sum(poi.quantity_ordered * poi.unit_cost), 0),
-                       count(distinct po.id)
-                from purchase_orders po
-                join purchase_order_items poi on poi.purchase_order_id = po.id
-                where po.order_date >= ?1
-                  and po.order_date < ?2
-                  and po.status <> 'CANCELLED'
-                group by cast(date_trunc('month', po.order_date) as date)
+                select cast(date_trunc('month', pr.received_at at time zone
+                            'America/Argentina/Buenos_Aires') as date) as month,
+                       coalesce(sum(pri.quantity_received * pri.unit_cost), 0),
+                       count(distinct pr.id)
+                from purchase_receipts pr
+                join purchase_receipt_items pri on pri.purchase_receipt_id = pr.id
+                where pr.status = 'CONFIRMED'
+                  and pr.received_at >= ?1
+                  and pr.received_at < ?2
+                  and (cast(?3 as bigint) is null or pr.branch_id = cast(?3 as bigint))
+                group by cast(date_trunc('month', pr.received_at at time zone
+                         'America/Argentina/Buenos_Aires') as date)
                 order by month
                 """;
         List<Object[]> rows = em.createNativeQuery(sql)
                 .setParameter(1, from)
                 .setParameter(2, to)
+                .setParameter(3, branchId)
                 .getResultList();
 
-        // Fill in the months in range so the chart is gap-free.
         List<Object[]> result = new ArrayList<>();
-        LocalDate start = from.toLocalDate().withDayOfMonth(1);
-        LocalDate end = to.toLocalDate().withDayOfMonth(1);
-        java.util.Map<LocalDate, long[]> bucket = new java.util.HashMap<>();
-        for (LocalDate m = start; !m.isAfter(end); m = m.plusMonths(1)) {
-            bucket.put(m, new long[]{0, 0});
-        }
+        LocalDate start = from.atZoneSameInstant(REPORT_ZONE).toLocalDate().withDayOfMonth(1);
+        LocalDate end = to.minusNanos(1).atZoneSameInstant(REPORT_ZONE).toLocalDate().withDayOfMonth(1);
+        java.util.Map<LocalDate, BigDecimal> amounts = new java.util.HashMap<>();
+        java.util.Map<LocalDate, Long> receipts = new java.util.HashMap<>();
         for (Object[] row : rows) {
-            java.sql.Date d = (java.sql.Date) row[0];
-            LocalDate month = d.toLocalDate().withDayOfMonth(1);
-            long[] current = bucket.computeIfAbsent(month, k -> new long[]{0, 0});
-            current[0] += toBigDecimal(row[1]).longValue();
-            current[1] += ((Number) row[2]).longValue();
+            LocalDate month = ((java.sql.Date) row[0]).toLocalDate().withDayOfMonth(1);
+            amounts.put(month, toBigDecimal(row[1]).setScale(2, RoundingMode.HALF_UP));
+            receipts.put(month, ((Number) row[2]).longValue());
         }
-        for (LocalDate m = start; !m.isAfter(end); m = m.plusMonths(1)) {
-            long[] current = bucket.get(m);
-            result.add(new Object[]{m, current[0], BigDecimal.valueOf(current[1])});
+        for (LocalDate month = start; !month.isAfter(end); month = month.plusMonths(1)) {
+            result.add(new Object[]{month,
+                    amounts.getOrDefault(month, BigDecimal.ZERO.setScale(2)),
+                    BigDecimal.valueOf(receipts.getOrDefault(month, 0L))});
         }
         return result;
     }
@@ -803,53 +986,66 @@ public class ReportQueryRepository {
      * @return list of arrays {@code [supplierId, supplierName, total, orderCount]}.
      */
     @SuppressWarnings("unchecked")
-    public List<Object[]> topSuppliersByVolume(OffsetDateTime from, OffsetDateTime to, int limit) {
+    public List<Object[]> topSuppliersByVolume(
+            OffsetDateTime from, OffsetDateTime to, Long branchId, int limit
+    ) {
         String sql = """
                 select s.id, s.name,
-                       coalesce(sum(poi.quantity_ordered * poi.unit_cost), 0),
-                       count(distinct po.id)
-                from purchase_orders po
-                join suppliers s on s.id = po.supplier_id
-                join purchase_order_items poi on poi.purchase_order_id = po.id
-                where po.order_date >= ?1
-                  and po.order_date < ?2
-                  and po.status <> 'CANCELLED'
+                       coalesce(sum(pri.quantity_received * pri.unit_cost), 0),
+                       count(distinct pr.id)
+                from purchase_receipts pr
+                join suppliers s on s.id = pr.supplier_id
+                join purchase_receipt_items pri on pri.purchase_receipt_id = pr.id
+                where pr.status = 'CONFIRMED'
+                  and pr.received_at >= ?1
+                  and pr.received_at < ?2
+                  and (cast(?3 as bigint) is null or pr.branch_id = cast(?3 as bigint))
                 group by s.id, s.name
-                order by sum(poi.quantity_ordered * poi.unit_cost) desc
+                order by sum(pri.quantity_received * pri.unit_cost) desc
                 """;
         return em.createNativeQuery(sql)
                 .setParameter(1, from)
                 .setParameter(2, to)
+                .setParameter(3, branchId)
                 .setMaxResults(limit)
                 .getResultList();
     }
 
     /**
-     * Q-SP3: average lead time per supplier. Lead time is the gap
-     * between the order's {@code orderDate} and {@code confirmedAt}, in
-     * days. Only CONFIRMED+ orders are considered.
+     * Q-SP3: average delivery lead time per supplier. Lead time is the gap
+     * between order emission and its final confirmed receipt, so partial
+     * deliveries do not make an incomplete order appear completed.
      *
      * @return list of arrays {@code [supplierId, supplierName, avgDays, orderCount]}.
      */
     @SuppressWarnings("unchecked")
-    public List<Object[]> avgLeadTimeBySupplier(OffsetDateTime from, OffsetDateTime to, int limit) {
+    public List<Object[]> avgLeadTimeBySupplier(
+            OffsetDateTime from, OffsetDateTime to, Long branchId, int limit
+    ) {
         String sql = """
+                with completed_deliveries as (
+                    select po.id, po.supplier_id, po.order_date,
+                           max(pr.received_at) as completed_at
+                    from purchase_orders po
+                    join purchase_receipts pr on pr.purchase_order_id = po.id
+                                              and pr.status = 'CONFIRMED'
+                    where pr.received_at >= ?1
+                      and pr.received_at < ?2
+                      and (cast(?3 as bigint) is null or pr.branch_id = cast(?3 as bigint))
+                    group by po.id, po.supplier_id, po.order_date
+                )
                 select s.id, s.name,
-                       coalesce(avg(extract(epoch from (po.confirmed_at - po.order_date)) / 86400.0), 0),
-                       count(po.id)
-                from purchase_orders po
-                join suppliers s on s.id = po.supplier_id
-                where po.order_date >= ?1
-                  and po.order_date < ?2
-                  and po.confirmed_at is not null
-                  and po.status <> 'CANCELLED'
+                       avg(extract(epoch from (d.completed_at - d.order_date)) / 86400.0),
+                       count(d.id)
+                from completed_deliveries d
+                join suppliers s on s.id = d.supplier_id
                 group by s.id, s.name
-                having count(po.id) > 0
-                order by avg(extract(epoch from (po.confirmed_at - po.order_date)) / 86400.0) asc
+                order by avg(extract(epoch from (d.completed_at - d.order_date)) / 86400.0) asc
                 """;
         return em.createNativeQuery(sql)
                 .setParameter(1, from)
                 .setParameter(2, to)
+                .setParameter(3, branchId)
                 .setMaxResults(limit)
                 .getResultList();
     }
@@ -858,33 +1054,46 @@ public class ReportQueryRepository {
      * Q-SP4: high-level purchase aggregates for the suppliers report
      * KPIs.
      *
-     * @return array {@code [totalPurchases, orderCount, avgLeadDays, activeSuppliers]}.
+     * @return array {@code [receivedCost, receiptCount, avgLeadDays, onTimePercentage]}.
      */
-    public Object[] purchaseAggregates(OffsetDateTime from, OffsetDateTime to) {
+    public Object[] purchaseAggregates(OffsetDateTime from, OffsetDateTime to, Long branchId) {
         String sql = """
-                select coalesce(sum(poi.quantity_ordered * poi.unit_cost), 0),
-                       count(distinct po.id),
-                       coalesce(avg(case when po.confirmed_at is not null
-                                          then extract(epoch from (po.confirmed_at - po.order_date)) / 86400.0
-                                          else null end), 0)
-                from purchase_orders po
-                join purchase_order_items poi on poi.purchase_order_id = po.id
-                where po.order_date >= ?1
-                  and po.order_date < ?2
-                  and po.status <> 'CANCELLED'
+                with period_receipts as (
+                    select pr.*
+                    from purchase_receipts pr
+                    where pr.status = 'CONFIRMED'
+                      and pr.received_at >= ?1
+                      and pr.received_at < ?2
+                      and (cast(?3 as bigint) is null or pr.branch_id = cast(?3 as bigint))
+                ), completed_deliveries as (
+                    select po.id, po.order_date, po.expected_delivery_date,
+                           max(pr.received_at) as completed_at
+                    from purchase_orders po
+                    join period_receipts pr on pr.purchase_order_id = po.id
+                    group by po.id, po.order_date, po.expected_delivery_date
+                ), receipt_totals as (
+                    select coalesce(sum(pri.quantity_received * pri.unit_cost), 0) as amount,
+                           count(distinct pr.id) as receipt_count
+                    from period_receipts pr
+                    join purchase_receipt_items pri on pri.purchase_receipt_id = pr.id
+                )
+                select rt.amount, rt.receipt_count,
+                       coalesce((select avg(extract(epoch from (completed_at - order_date)) / 86400.0)
+                                 from completed_deliveries), 0),
+                       coalesce((select 100.0 * count(*) filter (
+                                             where expected_delivery_date is not null
+                                               and cast(completed_at at time zone
+                                                   'America/Argentina/Buenos_Aires' as date)
+                                                   <= expected_delivery_date)
+                                        / nullif(count(*) filter (where expected_delivery_date is not null), 0)
+                                 from completed_deliveries), 0)
+                from receipt_totals rt
                 """;
-        Object[] main = (Object[]) em.createNativeQuery(sql)
+        return (Object[]) em.createNativeQuery(sql)
                 .setParameter(1, from)
                 .setParameter(2, to)
+                .setParameter(3, branchId)
                 .getSingleResult();
-
-        Long activeSuppliers = em.createQuery(
-                        "select count(s) from Supplier s where s.active = true",
-                        Long.class)
-                .getSingleResult();
-
-        return new Object[]{toBigDecimal(main[0]), ((Number) main[1]).longValue(),
-                toBigDecimal(main[2]), activeSuppliers};
     }
 
     /**
@@ -904,6 +1113,38 @@ public class ReportQueryRepository {
                 .getSingleResult());
     }
 
+    /** Capital at risk in active stock expiring within the requested horizon. */
+    public BigDecimal expiringStockValue(int daysAhead, Long branchId) {
+        LocalDate today = LocalDate.now(REPORT_ZONE);
+        String jpql = """
+                select coalesce(sum(l.quantityAvailable * l.unitCost), 0)
+                from StockLot l
+                where l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
+                  and l.quantityAvailable > 0
+                  and l.expirationDate between :today and :limit
+                  and (:branchId is null or l.branch.id = :branchId)
+                """;
+        return toBigDecimal(em.createQuery(jpql, BigDecimal.class)
+                .setParameter("today", today)
+                .setParameter("limit", today.plusDays(daysAhead))
+                .setParameter("branchId", branchId)
+                .getSingleResult());
+    }
+
+    /** Counts active lots with positive stock whose expiration date has passed. */
+    public long countExpiredLots(Long branchId) {
+        return em.createQuery("""
+                        select count(l) from StockLot l
+                        where l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
+                          and l.quantityAvailable > 0
+                          and l.expirationDate < :today
+                          and (:branchId is null or l.branch.id = :branchId)
+                        """, Long.class)
+                .setParameter("today", LocalDate.now(REPORT_ZONE))
+                .setParameter("branchId", branchId)
+                .getSingleResult();
+    }
+
     // ---------------------------------------------------------------------------
     // Recommendations
     // ---------------------------------------------------------------------------
@@ -911,33 +1152,26 @@ public class ReportQueryRepository {
     /** Q12: products with stock below the configured minimum. */
     @SuppressWarnings("unchecked")
     public List<Object[]> lowStockCandidates(Long branchId) {
-        String jpql = """
-                select p.id, p.name, p.category.id, c.name, p.barcode,
-                       p.minimumStock,
-                       coalesce((select sum(l.quantityAvailable)
-                                 from StockLot l
-                                 where l.product.id = p.id
-                                   and l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
-                                   and (:branchId is null or l.branch.id = :branchId)
-                       ), 0)
-                from Product p
-                left join p.category c
+        String sql = """
+                select p.id, p.name, c.id, c.name, p.barcode, p.minimum_stock,
+                       coalesce(sum(l.quantity_available), 0), b.id, b.name
+                from products p
+                left join categories c on c.id = p.category_id
+                cross join branches b
+                left join stock_lots l on l.product_id = p.id
+                                      and l.branch_id = b.id
+                                      and l.status = 'ACTIVE'
                 where p.active = true
-                  and p.minimumStock is not null
-                order by p.name asc
+                  and p.minimum_stock is not null
+                  and b.active = true
+                  and (cast(?1 as bigint) is null or b.id = cast(?1 as bigint))
+                group by p.id, p.name, c.id, c.name, p.barcode, p.minimum_stock, b.id, b.name
+                having coalesce(sum(l.quantity_available), 0) < p.minimum_stock
+                order by b.name, p.name
                 """;
-        List<Object[]> rows = em.createQuery(jpql)
-                .setParameter("branchId", branchId)
+        return em.createNativeQuery(sql)
+                .setParameter(1, branchId)
                 .getResultList();
-        List<Object[]> result = new ArrayList<>();
-        for (Object[] row : rows) {
-            BigDecimal stock = toBigDecimal(row[6]);
-            Integer min = (Integer) row[5];
-            if (min != null && stock.compareTo(BigDecimal.valueOf(min)) < 0) {
-                result.add(row);
-            }
-        }
-        return result;
     }
 
     /** Q13: lots expiring within 30 days, with positive available stock. */
@@ -958,8 +1192,8 @@ public class ReportQueryRepository {
                 order by l.expirationDate asc, l.id asc
                 """;
         return em.createQuery(jpql)
-                .setParameter("today", LocalDate.now())
-                .setParameter("limit", LocalDate.now().plusDays(daysAhead))
+                .setParameter("today", LocalDate.now(REPORT_ZONE))
+                .setParameter("limit", LocalDate.now(REPORT_ZONE).plusDays(daysAhead))
                 .setParameter("branchId", branchId)
                 .getResultList();
     }
@@ -968,7 +1202,11 @@ public class ReportQueryRepository {
     @SuppressWarnings("unchecked")
     public List<Object[]> highRotationCandidates(Long branchId, OffsetDateTime since) {
         String jpql = """
-                select oi.product.id, p.name, p.category.id, c.name, sum(oi.quantity)
+                select oi.product.id, p.name, p.category.id, c.name, sum(oi.quantity),
+                       coalesce((select sum(l.quantityAvailable) from StockLot l
+                                 where l.product.id = p.id
+                                   and l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
+                                   and (:branchId is null or l.branch.id = :branchId)), 0)
                 from OrderItem oi
                 join oi.order o
                 join oi.product p
@@ -976,7 +1214,8 @@ public class ReportQueryRepository {
                 where o.paidAt >= :since
                   and o.status not in (
                       com.dietetica.lembas.orders.model.OrderStatus.CANCELLED,
-                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED
+                      com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED,
+                      com.dietetica.lembas.orders.model.OrderStatus.STOCK_CONFLICT
                   )
                   and (:branchId is null or o.branch.id = :branchId)
                 group by oi.product.id, p.name, p.category.id, c.name
@@ -1011,9 +1250,15 @@ public class ReportQueryRepository {
                                  where oi2.product.id = p.id
                                    and o.status not in (
                                        com.dietetica.lembas.orders.model.OrderStatus.CANCELLED,
-                                       com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED
+                                       com.dietetica.lembas.orders.model.OrderStatus.PAYMENT_FAILED,
+                                       com.dietetica.lembas.orders.model.OrderStatus.STOCK_CONFLICT
                                    )
-                                   and (:branchId is null or o.branch.id = :branchId))
+                                   and (:branchId is null or o.branch.id = :branchId)),
+                       (select min(l.createdAt) from StockLot l
+                                 where l.product.id = p.id
+                                   and l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
+                                   and l.quantityAvailable > 0
+                                   and (:branchId is null or l.branch.id = :branchId))
                 from Product p
                 left join p.category c
                 where p.active = true
@@ -1088,18 +1333,18 @@ public class ReportQueryRepository {
     }
 
     /**
-     * Convenience to convert a {@link LocalDate} window start to an
-     * {@link OffsetDateTime} in UTC. Visible for tests.
+     * Converts a business date to its Argentina start-of-day instant.
+     * Visible for tests; the legacy method name is retained for compatibility.
      */
     public static OffsetDateTime startOfDayUtc(LocalDate date) {
-        return date.atStartOfDay().atOffset(ZoneOffset.UTC);
+        return date.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
     }
 
     /**
-     * Convenience to convert a {@link LocalDate} window end to an
-     * {@link OffsetDateTime} in UTC. Visible for tests.
+     * Converts an inclusive business date to the following Argentina
+     * start-of-day instant. Visible for tests.
      */
     public static OffsetDateTime endOfDayUtc(LocalDate date) {
-        return date.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC);
+        return date.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
     }
 }

@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import {
+  CashOverviewDto,
   CashReportDto,
   CashSessionHistoryDto,
   CashSessionSummaryDto,
@@ -20,6 +21,19 @@ import { CashSessionStatus } from '../../shared/models/cash-session';
 export class CashReportService {
   private readonly http = inject(HttpClient);
   private readonly reportsUrl = '/api/admin/reports';
+
+  /** Fetches the operational cash dashboard for the selected period and branch. */
+  getCashOverview(
+    from?: string | null,
+    to?: string | null,
+    branchId?: number | null,
+  ): Observable<CashOverviewDto> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    if (branchId != null) params = params.set('branchId', String(branchId));
+    return this.http.get<CashOverviewDto>(`${this.reportsUrl}/cash-overview`, { params });
+  }
 
   /**
    * Fetches the paginated, filtered list of cash sessions.

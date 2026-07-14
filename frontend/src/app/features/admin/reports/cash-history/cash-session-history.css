@@ -3,6 +3,11 @@
   padding: clamp(0.75rem, 1.6vw, 1.4rem);
 }
 
+:host > app-page-header {
+  display: block;
+  margin-bottom: 1rem;
+}
+
 .cash-history {
   display: flex;
   flex-direction: column;

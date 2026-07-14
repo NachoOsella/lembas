@@ -7,6 +7,7 @@ import com.dietetica.lembas.cash.dto.CashTotalsByMethodDto;
 import com.dietetica.lembas.cash.model.CashSession;
 import com.dietetica.lembas.cash.model.CashSessionStatus;
 import com.dietetica.lembas.cash.service.CashService;
+import com.dietetica.lembas.reports.dto.CashOverviewDto;
 import com.dietetica.lembas.reports.dto.CashReportDto;
 import com.dietetica.lembas.reports.dto.CashSessionHistoryDto;
 import com.dietetica.lembas.reports.dto.CashSessionSummaryDto;
@@ -38,12 +39,9 @@ import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Use cases for the operational dashboard and the cash session history
@@ -56,6 +54,8 @@ import java.util.Optional;
  */
 @Service
 public class ReportService {
+
+    private static final ZoneId REPORT_ZONE = ReportQueryRepository.REPORT_ZONE;
 
     /** Error codes used by the reports module; documented in {@code docs/05-api/error-handling.md}. */
     public static final String CODE_CASH_SESSION_NOT_FOUND = "CASH_SESSION_NOT_FOUND";
@@ -119,8 +119,8 @@ public class ReportService {
                         .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
                         .orElse(null);
 
-        LocalDate reportDate = date != null ? date : LocalDate.now();
-        OffsetDateTime start = reportDate.atStartOfDay().atOffset(ZoneOffset.UTC);
+        LocalDate reportDate = date != null ? date : LocalDate.now(REPORT_ZONE);
+        OffsetDateTime start = reportDate.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
         OffsetDateTime end = start.plusDays(1);
 
         // Current-period aggregations
@@ -205,7 +205,7 @@ public class ReportService {
                         "pi pi-clock",
                         "WARNING",
                         "/admin/orders?status=PENDING",
-                        "Pedidos en estado PENDING_PAYMENT, PAID o PREPARING."
+                        "Pedidos ONLINE pendientes de pago, preparacion o retiro."
                 ),
                 buildStatCard(
                         "Stock bajo",
@@ -279,6 +279,61 @@ public class ReportService {
                 percentageDiff(totalRevenue, prevTotalAndAvg[0]),
                 percentageDiff(BigDecimal.valueOf(orderCount), BigDecimal.valueOf(prevCount)),
                 percentageDiff(avgOrderValue, prevTotalAndAvg[1])
+        );
+    }
+
+    // ---------------------------------------------------------------------------
+    // Cash overview
+    // ---------------------------------------------------------------------------
+
+    /** Default date window for the cash overview when no dates are supplied. */
+    private static final int DEFAULT_CASH_WINDOW_DAYS = 30;
+
+    /** Number of discrepancy sessions shown in the operational queue. */
+    private static final int CASH_DISCREPANCY_LIMIT = 10;
+
+    /**
+     * Builds an operational cash dashboard for a date range and branch scope.
+     * Amounts remain numeric in the response; the frontend owns formatting and labels.
+     */
+    @Transactional(readOnly = true)
+    public CashOverviewDto getCashOverview(LocalDate from, LocalDate to, Long branchId) {
+        User currentUser = securityContextHelper.getCurrentUser();
+        ensureInternalUser(currentUser);
+
+        Long effectiveBranchId = resolveBranchForUser(branchId, currentUser);
+        String branchName = effectiveBranchId == null ? null : branchRepository.findById(effectiveBranchId)
+                .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
+                .orElse(null);
+
+        LocalDate effectiveTo = to != null ? to : LocalDate.now(REPORT_ZONE);
+        LocalDate effectiveFrom = from != null ? from : effectiveTo.minusDays(DEFAULT_CASH_WINDOW_DAYS - 1L);
+        if (effectiveFrom.isAfter(effectiveTo)) {
+            effectiveFrom = effectiveTo;
+        }
+
+        OffsetDateTime start = effectiveFrom.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        OffsetDateTime end = effectiveTo.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        Object[] totals = reportRepository.cashOverviewTotals(start, end, effectiveBranchId);
+
+        return new CashOverviewDto(
+                effectiveFrom,
+                effectiveTo,
+                effectiveBranchId,
+                branchName,
+                OffsetDateTime.now(),
+                ((Number) totals[0]).longValue(),
+                ((Number) totals[1]).longValue(),
+                ((Number) totals[2]).longValue(),
+                ((Number) totals[3]).longValue(),
+                toBigDecimal(totals[4]).setScale(2, RoundingMode.HALF_UP),
+                toBigDecimal(totals[5]).setScale(2, RoundingMode.HALF_UP),
+                toBigDecimal(totals[6]).setScale(2, RoundingMode.HALF_UP),
+                toBigDecimal(totals[7]).setScale(2, RoundingMode.HALF_UP),
+                reportRepository.cashOverviewDailySeries(effectiveFrom, effectiveTo, effectiveBranchId),
+                reportRepository.cashOverviewPaymentMethods(start, end, effectiveBranchId),
+                reportRepository.cashSessionsWithDiscrepancy(
+                        effectiveBranchId, start, end, CASH_DISCREPANCY_LIMIT)
         );
     }
 
@@ -391,14 +446,14 @@ public class ReportService {
                         .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
                         .orElse(null);
 
-        LocalDate effectiveTo = to != null ? to : LocalDate.now();
+        LocalDate effectiveTo = to != null ? to : LocalDate.now(REPORT_ZONE);
         LocalDate effectiveFrom = from != null ? from : effectiveTo.minusDays(DEFAULT_SALES_WINDOW_DAYS - 1L);
         if (effectiveFrom.isAfter(effectiveTo)) {
             effectiveFrom = effectiveTo;
         }
 
-        OffsetDateTime start = effectiveFrom.atStartOfDay().atOffset(ZoneOffset.UTC);
-        OffsetDateTime end = effectiveTo.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC);
+        OffsetDateTime start = effectiveFrom.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        OffsetDateTime end = effectiveTo.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
 
         // -- KPIs ---------------------------------------------------------
         BigDecimal[] totalAndAvg = reportRepository.totalAndAverageRevenue(start, end, effectiveBranchId);
@@ -406,13 +461,19 @@ public class ReportService {
         BigDecimal avgOrderValue = totalAndAvg[1];
         long orderCount = reportRepository.countConfirmedOrders(start, end, effectiveBranchId);
         long cancelled = reportRepository.countCancelledOrders(start, end, effectiveBranchId);
+        BigDecimal costOfGoodsSold = reportRepository.costOfGoodsSold(start, end, effectiveBranchId);
+        BigDecimal grossProfit = totalRevenue.subtract(costOfGoodsSold);
+        BigDecimal grossMargin = totalRevenue.signum() == 0
+                ? BigDecimal.ZERO
+                : grossProfit.multiply(BigDecimal.valueOf(100))
+                        .divide(totalRevenue, 1, RoundingMode.HALF_UP);
 
         // Trend vs the previous period of equal length.
         long days = java.time.temporal.ChronoUnit.DAYS.between(effectiveFrom, effectiveTo) + 1;
         LocalDate prevFrom = effectiveFrom.minusDays(days);
         LocalDate prevTo = effectiveFrom.minusDays(1);
-        OffsetDateTime prevStart = prevFrom.atStartOfDay().atOffset(ZoneOffset.UTC);
-        OffsetDateTime prevEnd = effectiveFrom.atStartOfDay().atOffset(ZoneOffset.UTC);
+        OffsetDateTime prevStart = prevFrom.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        OffsetDateTime prevEnd = effectiveFrom.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
         BigDecimal[] prevTotalAndAvg = reportRepository.totalAndAverageRevenue(prevStart, prevEnd, effectiveBranchId);
         BigDecimal prevRevenue = prevTotalAndAvg[0];
         long prevCount = reportRepository.countConfirmedOrders(prevStart, prevEnd, effectiveBranchId);
@@ -446,9 +507,23 @@ public class ReportService {
                 percentageDiff(avgOrderValue, prevTotalAndAvg[1])
         ));
         kpis.add(new ReportKpiDto(
+                "Margen bruto",
+                formatCurrency(grossProfit),
+                grossMargin.toPlainString() + "% sobre facturacion",
+                "pi pi-percentage",
+                grossProfit.signum() >= 0 ? "SUCCESS" : "DANGER",
+                "FLAT",
+                null
+        ));
+        long resolvedOrders = orderCount + cancelled;
+        BigDecimal cancellationRate = resolvedOrders == 0
+                ? BigDecimal.ZERO
+                : BigDecimal.valueOf(cancelled).multiply(BigDecimal.valueOf(100))
+                        .divide(BigDecimal.valueOf(resolvedOrders), 1, RoundingMode.HALF_UP);
+        kpis.add(new ReportKpiDto(
                 "Cancelaciones",
                 NumberFormat.getInstance(new Locale("es", "AR")).format(cancelled),
-                "Pedidos cancelados en el periodo",
+                cancellationRate.toPlainString() + "% de pedidos resueltos",
                 "pi pi-times-circle",
                 cancelled > 0 ? "WARNING" : "NEUTRAL",
                 "FLAT",
@@ -460,8 +535,8 @@ public class ReportService {
         // Re-shape the dashboard hourly series into daily buckets for the FE.
         java.util.Map<LocalDate, BigDecimal> revenueByDay = new java.util.HashMap<>();
         for (Object[] row : reportRepository.salesByDay(effectiveFrom, effectiveTo, effectiveBranchId)) {
-            LocalDate d = (LocalDate) row[0];
-            revenueByDay.put(d, toBigDecimal(row[1]).setScale(2, RoundingMode.HALF_UP));
+            LocalDate date = toLocalDate(row[0]);
+            revenueByDay.put(date, toBigDecimal(row[1]).setScale(2, RoundingMode.HALF_UP));
         }
         for (LocalDate d = effectiveFrom; !d.isAfter(effectiveTo); d = d.plusDays(1)) {
             BigDecimal value = revenueByDay.getOrDefault(d, BigDecimal.ZERO.setScale(2));
@@ -481,7 +556,7 @@ public class ReportService {
                     m.method(),
                     m.methodLabel(),
                     m.totalAmount(),
-                    m.transactionCount(),
+                    BigDecimal.valueOf(m.transactionCount()),
                     m.percentage()
             ));
         }
@@ -497,7 +572,7 @@ public class ReportService {
                     String.valueOf(categoryId),
                     categoryName,
                     amount,
-                    count,
+                    BigDecimal.valueOf(count),
                     BigDecimal.ZERO
             ));
         }
@@ -573,9 +648,10 @@ public class ReportService {
 
         BigDecimal totalStockValue = reportRepository.totalStockValue(effectiveBranchId)
                 .setScale(2, RoundingMode.HALF_UP);
-        long activeProducts = reportRepository.countActiveProducts();
+        BigDecimal expiringStockValue = reportRepository.expiringStockValue(
+                DASHBOARD_EXPIRING_HORIZON_DAYS, effectiveBranchId).setScale(2, RoundingMode.HALF_UP);
         long lowStock = reportRepository.lowStockProducts(effectiveBranchId).size();
-        long expiring = reportRepository.expiringLots(DASHBOARD_EXPIRING_HORIZON_DAYS, effectiveBranchId).size();
+        long expired = reportRepository.countExpiredLots(effectiveBranchId);
 
         List<ReportKpiDto> kpis = new ArrayList<>();
         kpis.add(new ReportKpiDto(
@@ -588,11 +664,11 @@ public class ReportService {
                 null
         ));
         kpis.add(new ReportKpiDto(
-                "Productos activos",
-                NumberFormat.getInstance(new Locale("es", "AR")).format(activeProducts),
-                "Catalogo disponible",
-                "pi pi-tag",
-                "INFO",
+                "Capital por vencer",
+                formatCurrency(expiringStockValue),
+                "Costo del stock que vence en los proximos 30 dias",
+                "pi pi-money-bill",
+                expiringStockValue.signum() > 0 ? "WARNING" : "NEUTRAL",
                 "FLAT",
                 null
         ));
@@ -606,12 +682,12 @@ public class ReportService {
                 null
         ));
         kpis.add(new ReportKpiDto(
-                "Lotes por vencer",
-                NumberFormat.getInstance(new Locale("es", "AR")).format(expiring),
-                "Proximos 30 dias",
+                "Lotes vencidos",
+                NumberFormat.getInstance(new Locale("es", "AR")).format(expired),
+                "Stock activo que requiere retiro inmediato",
                 "pi pi-calendar-times",
-                expiring > 0 ? "WARNING" : "NEUTRAL",
-                expiring > 0 ? "UP" : "FLAT",
+                expired > 0 ? "DANGER" : "NEUTRAL",
+                expired > 0 ? "UP" : "FLAT",
                 null
         ));
 
@@ -628,7 +704,7 @@ public class ReportService {
                     String.valueOf(categoryId),
                     name,
                     value,
-                    units.longValue(),
+                    units.stripTrailingZeros(),
                     BigDecimal.ZERO
             ));
             grandTotal = grandTotal.add(value);
@@ -650,9 +726,9 @@ public class ReportService {
         // -- Expiring by month -------------------------------------------
         List<ReportSeriesPointDto> expiringByMonth = new ArrayList<>();
         for (Object[] row : reportRepository.expiringLotsByMonth(INVENTORY_EXPIRATION_HORIZON_MONTHS, effectiveBranchId)) {
-            LocalDate month = (LocalDate) row[0];
+            LocalDate month = toLocalDate(row[0]);
             long lotCount = ((Number) row[1]).longValue();
-            BigDecimal units = toBigDecimal(row[2]).setScale(0, RoundingMode.HALF_UP);
+            BigDecimal units = toBigDecimal(row[2]).stripTrailingZeros();
             String label = month.getMonth().getDisplayName(java.time.format.TextStyle.SHORT,
                     new Locale("es", "AR"));
             label = label.substring(0, 1).toUpperCase() + label.substring(1);
@@ -677,7 +753,7 @@ public class ReportService {
                     productName,
                     categoryName,
                     formatCurrency(value),
-                    NumberFormat.getInstance(new Locale("es", "AR")).format(units.longValue()) + " u.",
+                    units.stripTrailingZeros().toPlainString() + " u.",
                     null
             ));
         }
@@ -688,13 +764,16 @@ public class ReportService {
             Long productId = ((Number) row[0]).longValue();
             String productName = (String) row[1];
             BigDecimal stock = toBigDecimal(row[2]);
-            Integer min = (Integer) row[3];
+            Integer min = ((Number) row[3]).intValue();
+            String branchLabel = row.length > 5 ? (String) row[5] : null;
             String badge = min != null && stock.signum() == 0
                     ? "Sin stock"
                     : "Bajo minimo";
             lowStockList.add(new ReportTopRowDto(
                     productId,
-                    productName,
+                    effectiveBranchId == null && branchLabel != null
+                            ? productName + " - " + branchLabel
+                            : productName,
                     "Stock actual: " + stock.stripTrailingZeros().toPlainString()
                             + " u. - Minimo: " + (min == null ? "-" : min.toString()) + " u.",
                     NumberFormat.getInstance(new Locale("es", "AR")).format(stock) + " u.",
@@ -728,39 +807,46 @@ public class ReportService {
      * @return the fully populated suppliers report DTO
      */
     @Transactional(readOnly = true)
-    public SuppliersReportDto getSuppliersReport(LocalDate from, LocalDate to) {
+    public SuppliersReportDto getSuppliersReport(LocalDate from, LocalDate to, Long branchId) {
         User currentUser = securityContextHelper.getCurrentUser();
         ensureInternalUser(currentUser);
 
-        LocalDate effectiveTo = to != null ? to : LocalDate.now();
+        Long effectiveBranchId = resolveBranchForUser(branchId, currentUser);
+        String branchName = effectiveBranchId == null
+                ? null
+                : branchRepository.findById(effectiveBranchId)
+                        .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
+                        .orElse(null);
+
+        LocalDate effectiveTo = to != null ? to : LocalDate.now(REPORT_ZONE);
         LocalDate effectiveFrom = from != null ? from : effectiveTo.minusDays(DEFAULT_SUPPLIERS_WINDOW_DAYS - 1L);
         if (effectiveFrom.isAfter(effectiveTo)) {
             effectiveFrom = effectiveTo;
         }
 
-        OffsetDateTime start = effectiveFrom.atStartOfDay().atOffset(ZoneOffset.UTC);
-        OffsetDateTime end = effectiveTo.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC);
+        OffsetDateTime start = effectiveFrom.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        OffsetDateTime end = effectiveTo.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
 
-        Object[] aggregates = reportRepository.purchaseAggregates(start, end);
+        Object[] aggregates = reportRepository.purchaseAggregates(start, end, effectiveBranchId);
         BigDecimal totalPurchases = toBigDecimal(aggregates[0]).setScale(2, RoundingMode.HALF_UP);
-        long orderCount = ((Number) aggregates[1]).longValue();
+        long receiptCount = ((Number) aggregates[1]).longValue();
         BigDecimal avgLeadDays = toBigDecimal(aggregates[2]).setScale(2, RoundingMode.HALF_UP);
-        long activeSuppliers = ((Number) aggregates[3]).longValue();
+        BigDecimal onTimePercentage = toBigDecimal(aggregates[3]).setScale(1, RoundingMode.HALF_UP);
 
         List<ReportKpiDto> kpis = new ArrayList<>();
         kpis.add(new ReportKpiDto(
                 "Compras del periodo",
                 formatCurrency(totalPurchases),
-                "Total facturado en ordenes de compra",
+                "Costo real de mercaderia recibida",
                 "pi pi-shopping-bag",
                 "SUCCESS",
                 "FLAT",
                 null
         ));
         kpis.add(new ReportKpiDto(
-                "Ordenes",
-                NumberFormat.getInstance(new Locale("es", "AR")).format(orderCount),
-                "Emitidas en el periodo",
+                "Recepciones",
+                NumberFormat.getInstance(new Locale("es", "AR")).format(receiptCount),
+                "Recepciones confirmadas en el periodo",
                 "pi pi-file",
                 "INFO",
                 "FLAT",
@@ -769,26 +855,26 @@ public class ReportService {
         kpis.add(new ReportKpiDto(
                 "Lead time promedio",
                 avgLeadDays.setScale(1, RoundingMode.HALF_UP).toPlainString() + " d.",
-                "Entre emision y confirmacion",
+                "Entre emision y recepcion final",
                 "pi pi-stopwatch",
                 "WARNING",
                 "FLAT",
                 null
         ));
         kpis.add(new ReportKpiDto(
-                "Proveedores activos",
-                NumberFormat.getInstance(new Locale("es", "AR")).format(activeSuppliers),
-                "Cartera vigente",
-                "pi pi-truck",
-                "NEUTRAL",
+                "Entregas a tiempo",
+                onTimePercentage.toPlainString() + "%",
+                "Ordenes completadas dentro de la fecha prevista",
+                "pi pi-calendar-clock",
+                onTimePercentage.compareTo(BigDecimal.valueOf(80)) >= 0 ? "SUCCESS" : "WARNING",
                 "FLAT",
                 null
         ));
 
         // -- Purchases by month ------------------------------------------
         List<ReportSeriesPointDto> purchasesByMonth = new ArrayList<>();
-        for (Object[] row : reportRepository.purchasesByMonth(start, end)) {
-            LocalDate month = (LocalDate) row[0];
+        for (Object[] row : reportRepository.purchasesByMonth(start, end, effectiveBranchId)) {
+            LocalDate month = toLocalDate(row[0]);
             BigDecimal total = toBigDecimal(row[1]).setScale(2, RoundingMode.HALF_UP);
             long orders = toBigDecimal(row[2]).longValue();
             String label = month.getMonth().getDisplayName(java.time.format.TextStyle.SHORT,
@@ -804,7 +890,8 @@ public class ReportService {
 
         // -- Top by volume -----------------------------------------------
         List<ReportTopRowDto> topByVolume = new ArrayList<>();
-        for (Object[] row : reportRepository.topSuppliersByVolume(start, end, REPORT_TOP_LIMIT)) {
+        for (Object[] row : reportRepository.topSuppliersByVolume(
+                start, end, effectiveBranchId, REPORT_TOP_LIMIT)) {
             Long supplierId = ((Number) row[0]).longValue();
             String name = (String) row[1];
             BigDecimal total = toBigDecimal(row[2]).setScale(2, RoundingMode.HALF_UP);
@@ -821,7 +908,8 @@ public class ReportService {
 
         // -- Lead time by supplier ---------------------------------------
         List<ReportTopRowDto> leadTime = new ArrayList<>();
-        for (Object[] row : reportRepository.avgLeadTimeBySupplier(start, end, REPORT_TOP_LIMIT)) {
+        for (Object[] row : reportRepository.avgLeadTimeBySupplier(
+                start, end, effectiveBranchId, REPORT_TOP_LIMIT)) {
             Long supplierId = ((Number) row[0]).longValue();
             String name = (String) row[1];
             BigDecimal days = toBigDecimal(row[2]).setScale(1, RoundingMode.HALF_UP);
@@ -839,6 +927,8 @@ public class ReportService {
         return new SuppliersReportDto(
                 effectiveFrom,
                 effectiveTo,
+                effectiveBranchId,
+                branchName,
                 OffsetDateTime.now(),
                 kpis,
                 purchasesByMonth,
@@ -879,8 +969,8 @@ public class ReportService {
 
         int effectivePage = Math.max(page, 0);
         int effectiveSize = clampPageSize(size);
-        OffsetDateTime fromTs = from == null ? FAR_PAST : from.atStartOfDay().atOffset(ZoneOffset.UTC);
-        OffsetDateTime toTs = to == null ? FAR_FUTURE : to.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC);
+        OffsetDateTime fromTs = from == null ? FAR_PAST : from.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        OffsetDateTime toTs = to == null ? FAR_FUTURE : to.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
 
         List<CashSessionSummaryDto> rows = reportRepository.cashSessionHistory(
                 effectiveBranchId, fromTs, toTs,
@@ -1033,5 +1123,16 @@ public class ReportService {
             return BigDecimal.valueOf(n.doubleValue());
         }
         return new BigDecimal(value.toString());
+    }
+
+    /** Normalizes date values returned by JPQL and PostgreSQL native queries. */
+    private static LocalDate toLocalDate(Object value) {
+        if (value instanceof LocalDate date) {
+            return date;
+        }
+        if (value instanceof java.sql.Date date) {
+            return date.toLocalDate();
+        }
+        throw new IllegalArgumentException("Expected a SQL date result but received: " + value);
     }
 }

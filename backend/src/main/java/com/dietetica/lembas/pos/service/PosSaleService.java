@@ -299,6 +299,8 @@ public class PosSaleService {
         item.setSubtotalAmount(lineSubtotal);
         item.setProductNameSnapshot(product.getName());
         item.setProductBarcodeSnapshot(product.getBarcode());
+        item.setCategoryIdSnapshot(product.getCategory() == null ? null : product.getCategory().getId());
+        item.setCategoryNameSnapshot(product.getCategory() == null ? null : product.getCategory().getName());
         // costPriceSnapshot intentionally left null for POS: it is admin/COGS
         // information that the cashier should not see in the response.
         order.addItem(item);

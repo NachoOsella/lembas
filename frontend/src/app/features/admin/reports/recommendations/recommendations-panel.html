@@ -7,11 +7,9 @@
 
 <div class="recommendations">
   <app-report-filter-bar
-    caption="Alertas"
-    title="Recomendaciones"
-    [description]="
-      flatItems().length + ' en total. Usa los filtros para acotar el listado.'
-    "
+    caption="Filtros"
+    title="Alertas operativas"
+    [description]="recommendations().length + ' recomendaciones encontradas.'"
   >
     <app-select
       slot="fields"
@@ -58,44 +56,53 @@
       title="No se pudieron cargar las recomendaciones"
       [message]="errorMessage() ?? ''"
     />
-  } @else if (loading() && recommendations().length === 0) {
-    <app-loading-spinner label="Cargando recomendaciones..." surface="card" />
-  } @else if (recommendations().length === 0) {
-    <app-empty-state
-      icon="pi pi-check-circle"
-      title="Sin recomendaciones"
-      description="Todo en orden. No hay alertas activas para los filtros seleccionados."
-    />
   } @else {
-    @for (group of pagedGroups(); track group.type) {
-      <section class="recommendations__section" [attr.aria-label]="group.label">
-        <header class="recommendations__section-head">
-          <div class="recommendations__section-text">
-            <p class="recommendations__section-eyebrow">{{ group.type }}</p>
-            <h2 class="recommendations__section-title">
-              {{ group.label }}
-              <span class="recommendations__section-count">{{ group.count }}</span>
-            </h2>
-          </div>
-        </header>
-        <div class="recommendations__list">
-          @for (rec of group.items; track rec.id) {
-            <app-recommendation-card [recommendation]="rec" />
-          }
-        </div>
-      </section>
-    }
-
-    @if (totalPages() > 1) {
-      <app-pagination
-        [totalRecords]="flatItems().length"
-        [rows]="pageSize"
-        [(first)]="first"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="Pagina {currentPage} de {totalPages}"
-        (pageChange)="onPageChange($event)"
-      />
-    }
+    <app-data-table
+      [data]="recommendations()"
+      [columns]="columns"
+      [loading]="loading()"
+      [sortable]="false"
+      [paginated]="true"
+      [rows]="10"
+      emptyTitle="Sin recomendaciones"
+      emptyDescription="Todo en orden. No hay alertas activas para los filtros seleccionados."
+    >
+      <ng-template #body let-row>
+        <tr class="recommendations__row">
+          <td>
+            <span class="recommendations__type">
+              <i [class]="row.iconName" aria-hidden="true"></i>
+              {{ typeLabel(row.type) }}
+            </span>
+          </td>
+          <td>
+            <app-badge [tone]="urgencyTone(row.urgency)">
+              {{ urgencyLabel(row.urgency) }}
+            </app-badge>
+          </td>
+          <td>
+            <div class="recommendations__product">
+              <strong>{{ row.productName }}</strong>
+              @if (row.categoryName) {
+                <span>{{ row.categoryName }}</span>
+              }
+            </div>
+          </td>
+          <td class="recommendations__description">{{ row.description }}</td>
+          <td class="recommendations__context">{{ context(row) }}</td>
+          <td>
+            <app-button
+              [variant]="'ghost'"
+              [size]="'sm'"
+              [icon]="row.iconName"
+              (click)="openRecommendation(row)"
+            >
+              {{ row.actionLabel }}
+            </app-button>
+          </td>
+        </tr>
+      </ng-template>
+    </app-data-table>
   }
 </div>
 

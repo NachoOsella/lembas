@@ -1,7 +1,7 @@
 <app-page-header
   eyebrow="Reportes"
   title="Reporte de inventario"
-  description="Stock valorizado, rotacion, cobertura y lotes por vencer para la sucursal o conjunto de sucursales seleccionadas."
+  description="Stock valorizado, capital en riesgo, faltantes y vencimientos para la sucursal seleccionada."
   tone="light"
 />
 
@@ -32,10 +32,7 @@
   </app-report-filter-bar>
 
   @if (errorMessage() && !data()) {
-    <app-error-alert
-      title="Sin datos por ahora"
-      [message]="errorMessage() ?? ''"
-    />
+    <app-error-alert title="Sin datos por ahora" [message]="errorMessage() ?? ''" />
   } @else if (loading() && !data()) {
     <app-loading-spinner label="Cargando reporte de inventario..." surface="card" />
   } @else if (!hasData()) {
@@ -49,7 +46,7 @@
       <app-report-section-head
         eyebrow="Stock"
         title="Indicadores clave"
-        description="Valorizacion, rotacion, stock bajo y vencimiento en un vistazo."
+        description="Valorizacion, capital por vencer, stock bajo y mercaderia vencida."
       />
       <div class="inventory-report__kpis">
         @for (card of statCards(); track card.label) {
@@ -87,6 +84,10 @@
             type="bar"
             [labels]="expiringLabels()"
             [data]="expiringValues()"
+            [secondaryData]="expiringUnits()"
+            primaryLabel="Lotes"
+            secondaryLabel="Unidades"
+            [secondaryAxis]="true"
             [loading]="loading()"
             [empty]="expiringValues().every((v) => v === 0)"
             emptyMessage="No hay lotes proximos a vencer."
@@ -138,31 +139,28 @@
             title="Productos con stock bajo"
             description="Aquellos cuyo stock actual se encuentra por debajo del minimo operativo."
           />
-          <div class="inventory-report__list">
-            @if ((data()?.lowStock ?? []).length === 0) {
-              <p class="inventory-report__empty">No hay productos por debajo del minimo.</p>
-            } @else {
-              <ul class="inventory-report__low-list">
-                @for (row of data()?.lowStock ?? []; track row.id) {
-                  <li class="inventory-report__low-item">
+          <app-data-table
+            [data]="lowStockRows()"
+            [columns]="lowStockColumns"
+            [paginated]="true"
+            [rows]="10"
+            [emptyTitle]="'Sin productos con stock bajo'"
+            [emptyDescription]="'No hay productos por debajo del minimo operativo.'"
+          >
+            <ng-template #body let-row>
+              <tr class="inventory-report__low-row">
+                <td>
+                  <span class="inventory-report__low-product">
                     <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
-                    <div class="inventory-report__low-body">
-                      <strong>{{ row.primary }}</strong>
-                      @if (row.secondary) {
-                        <span>{{ row.secondary }}</span>
-                      }
-                    </div>
-                    <div class="inventory-report__low-metric">
-                      <strong>{{ row.metric }}</strong>
-                      @if (row.submetric) {
-                        <span>{{ row.submetric }}</span>
-                      }
-                    </div>
-                  </li>
-                }
-              </ul>
-            }
-          </div>
+                    {{ row.primary }}
+                  </span>
+                </td>
+                <td>{{ row.secondary ?? '—' }}</td>
+                <td class="inventory-report__low-stock">{{ row.metric }}</td>
+                <td>{{ row.submetric ?? '—' }}</td>
+              </tr>
+            </ng-template>
+          </app-data-table>
         </article>
       </div>
     </section>

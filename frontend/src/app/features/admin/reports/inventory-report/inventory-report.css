@@ -3,6 +3,11 @@
   padding: clamp(0.75rem, 1.6vw, 1.4rem);
 }
 
+:host > app-page-header {
+  display: block;
+  margin-bottom: 1rem;
+}
+
 .inventory-report {
   display: flex;
   flex-direction: column;
@@ -160,6 +165,25 @@
 
 .inventory-report__low-metric strong {
   color: var(--color-amber);
+}
+
+.inventory-report__low-row {
+  vertical-align: middle;
+}
+
+.inventory-report__low-product {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-primary-darkest);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.inventory-report__low-product i,
+.inventory-report__low-stock {
+  color: var(--color-amber);
+  font-weight: 700;
 }
 
 .inventory-report__top-metric span,

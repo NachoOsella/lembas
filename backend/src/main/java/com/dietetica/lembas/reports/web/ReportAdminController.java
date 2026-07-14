@@ -1,6 +1,7 @@
 package com.dietetica.lembas.reports.web;
 
 import com.dietetica.lembas.cash.model.CashSessionStatus;
+import com.dietetica.lembas.reports.dto.CashOverviewDto;
 import com.dietetica.lembas.reports.dto.CashReportDto;
 import com.dietetica.lembas.reports.dto.CashSessionHistoryDto;
 import com.dietetica.lembas.reports.dto.DashboardDto;
@@ -50,6 +51,19 @@ public class ReportAdminController {
     }
 
     /**
+     * Operational cash dashboard for a date range. The response contains raw
+     * amounts, daily close facts, payment-method totals and a discrepancy queue.
+     */
+    @GetMapping("/cash-overview")
+    public CashOverviewDto getCashOverview(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long branchId
+    ) {
+        return reportService.getCashOverview(from, to, branchId);
+    }
+
+    /**
      * Paginated, filterable history of cash sessions.
      *
      * <p>All filters are optional; when omitted the list is the most recent
@@ -96,8 +110,8 @@ public class ReportAdminController {
     }
 
     /**
-     * Dedicated inventory report (Reportes / Inventario). Always runs
-     * against the full catalog and returns the stock value per category,
+     * Dedicated inventory report (Reportes / Inventario). Runs against
+     * the authorized branch scope and returns stock value per category,
      * the expiring-lots distribution by month, the top products by stock
      * value and the current low-stock list.
      */
@@ -109,15 +123,16 @@ public class ReportAdminController {
     }
 
     /**
-     * Dedicated suppliers report (Reportes / Proveedores). Surfaces KPIs,
-     * monthly purchase totals, top suppliers by volume and the lead time
+     * Dedicated suppliers report (Reportes / Proveedores). Surfaces actual
+     * confirmed receipt costs, top suppliers, punctuality and delivery lead time
      * ranking per supplier for the requested window.
      */
     @GetMapping("/suppliers")
     public SuppliersReportDto getSuppliersReport(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long branchId
     ) {
-        return reportService.getSuppliersReport(from, to);
+        return reportService.getSuppliersReport(from, to, branchId);
     }
 }

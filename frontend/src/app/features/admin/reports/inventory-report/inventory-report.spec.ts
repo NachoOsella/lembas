@@ -11,6 +11,8 @@ interface TestableInventory {
   branches: { set: (val: unknown[]) => void; (): unknown[] };
   /** Branch options computed signal. */
   branchOptions: () => ReadonlyArray<{ label: string; value: number | null }>;
+  /** Column definition used to paginate long low-stock results. */
+  lowStockColumns: ReadonlyArray<{ field: string; header: string }>;
 }
 
 describe('InventoryReportPageComponent', () => {
@@ -39,6 +41,16 @@ describe('InventoryReportPageComponent', () => {
   it('starts with an empty branch list (loaded dynamically from API)', () => {
     const testable = component as unknown as TestableInventory;
     expect(testable.branchOptions()).toEqual([]);
+  });
+
+  it('uses a table definition for paginated low-stock results', () => {
+    const testable = component as unknown as TestableInventory;
+    expect(testable.lowStockColumns.map((column) => column.field)).toEqual([
+      'primary',
+      'secondary',
+      'metric',
+      'submetric',
+    ]);
   });
 
   it('reflects branch changes through the computed options', () => {

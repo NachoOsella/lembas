@@ -85,9 +85,7 @@ export default [
           {
             path: ':id',
             loadComponent: () =>
-              import('./orders/order-detail-page/order-detail-page').then(
-                (m) => m.OrderDetailPage,
-              ),
+              import('./orders/order-detail-page/order-detail-page').then((m) => m.OrderDetailPage),
           },
         ],
       },
@@ -162,11 +160,14 @@ export default [
         // NOT in the sidebar nav: they are only reachable through the reports
         // hub at /admin/reports so the navigation stays focused on the main
         // admin views.
+        path: 'reports/cash',
+        loadComponent: () =>
+          import('./reports/cash-overview/cash-overview').then((m) => m.CashOverviewPageComponent),
+      },
+      {
         path: 'reports/sales',
         loadComponent: () =>
-          import('./reports/sales-report/sales-report').then(
-            (m) => m.SalesReportPageComponent,
-          ),
+          import('./reports/sales-report/sales-report').then((m) => m.SalesReportPageComponent),
       },
       {
         path: 'reports/inventory',

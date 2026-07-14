@@ -73,6 +73,8 @@ export interface InventoryReportDto {
 export interface SuppliersReportDto {
   readonly from: string;
   readonly to: string;
+  readonly branchId: number | null;
+  readonly branchName: string | null;
   readonly generatedAt: string;
   readonly kpis: ReadonlyArray<ReportKpiDto>;
   readonly purchasesByMonth: ReadonlyArray<ReportSeriesPointDto>;

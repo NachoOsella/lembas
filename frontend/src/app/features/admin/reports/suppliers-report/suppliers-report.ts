@@ -4,6 +4,7 @@ import { AppPageHeader } from '../../../../shared/components/app-page-header/app
 import { AppButton } from '../../../../shared/components/app-button/app-button';
 import { AppToast } from '../../../../shared/components/app-toast/app-toast';
 import { AppDatePicker } from '../../../../shared/components/app-date-picker/app-date-picker';
+import { AppSelect } from '../../../../shared/components/app-select/app-select';
 import { AppReportFilterBar } from '../../../../shared/components/app-report-filter-bar/app-report-filter-bar';
 import { AppReportSectionHead } from '../../../../shared/components/app-report-section-head/app-report-section-head';
 import { DashboardStatCard } from '../../../../shared/components/dashboard-stat-card/dashboard-stat-card';
@@ -14,6 +15,8 @@ import { ErrorAlert } from '../../../../shared/components/error-alert/error-aler
 import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
 
 import { ReportsService } from '../../../../core/services/reports';
+import { UserService } from '../../../../core/services/user';
+import { Branch } from '../../../../shared/models/user';
 import { DashboardStatCardDto } from '../../../../shared/models/dashboard';
 import {
   ReportKpiDto,
@@ -33,6 +36,7 @@ import {
     AppButton,
     AppToast,
     AppDatePicker,
+    AppSelect,
     AppReportFilterBar,
     AppReportSectionHead,
     DashboardStatCard,
@@ -47,9 +51,15 @@ import {
 })
 export class SuppliersReportPageComponent implements OnInit {
   private readonly reports = inject(ReportsService);
+  private readonly userService = inject(UserService);
 
   protected readonly fromDate = signal<Date | null>(null);
   protected readonly toDate = signal<Date | null>(null);
+  protected readonly branchId = signal<number | null>(null);
+  protected readonly branches = signal<Branch[]>([]);
+  protected readonly branchOptions = computed(() =>
+    this.branches().map((branch) => ({ label: branch.name, value: branch.id })),
+  );
 
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
@@ -61,9 +71,9 @@ export class SuppliersReportPageComponent implements OnInit {
       return false;
     }
     return (
-      data.kpis.length > 0 ||
-      data.purchasesByMonth.some((p) => p.value > 0) ||
-      data.topByVolume.length > 0
+      data.purchasesByMonth.some((point) => point.value > 0 || (point.secondaryValue ?? 0) > 0) ||
+      data.topByVolume.length > 0 ||
+      data.leadTimeBySupplier.length > 0
     );
   });
 
@@ -101,6 +111,10 @@ export class SuppliersReportPageComponent implements OnInit {
     from.setDate(from.getDate() - 89);
     this.fromDate.set(from);
     this.toDate.set(now);
+    this.userService.listBranches().subscribe({
+      next: (branches) => this.branches.set(branches),
+      error: () => this.branches.set([]),
+    });
     this.load();
   }
 
@@ -114,12 +128,18 @@ export class SuppliersReportPageComponent implements OnInit {
     this.load();
   }
 
+  protected onBranchChange(branchId: number | null): void {
+    this.branchId.set(branchId);
+    this.load();
+  }
+
   protected onClearFilters(): void {
     const now = new Date();
     const from = new Date(now);
     from.setDate(from.getDate() - 89);
     this.fromDate.set(from);
     this.toDate.set(now);
+    this.branchId.set(null);
     this.load();
   }
 
@@ -128,18 +148,36 @@ export class SuppliersReportPageComponent implements OnInit {
   }
 
   protected exportData(): ExportData {
-    const kpis = this.data()?.kpis ?? [];
+    const report = this.data();
     return {
-      filename: 'reporte_proveedores',
+      filename: 'reporte_proveedores_recepciones',
       columns: [
-        { key: 'kpi', label: 'Indicador' },
-        { key: 'value', label: 'Valor' },
-        { key: 'subtitle', label: 'Detalle' },
+        { key: 'month', label: 'Mes' },
+        { key: 'branch', label: 'Sucursal' },
+        { key: 'amount', label: 'Costo recibido' },
+        { key: 'receipts', label: 'Recepciones' },
       ],
-      rows: kpis.map((kpi: ReportKpiDto) => ({
-        kpi: kpi.label,
-        value: kpi.value,
-        subtitle: kpi.subtitle ?? '',
+      rows: (report?.purchasesByMonth ?? []).map((point) => ({
+        month: point.date,
+        branch: report?.branchName ?? 'Todas',
+        amount: point.value,
+        receipts: point.secondaryValue ?? 0,
+      })),
+    };
+  }
+
+  protected topSuppliersExport(): ExportData {
+    return {
+      filename: 'proveedores_por_volumen',
+      columns: [
+        { key: 'supplier', label: 'Proveedor' },
+        { key: 'amount', label: 'Costo recibido' },
+        { key: 'receipts', label: 'Recepciones' },
+      ],
+      rows: (this.data()?.topByVolume ?? []).map((row) => ({
+        supplier: row.primary,
+        amount: row.metric,
+        receipts: row.submetric ?? '',
       })),
     };
   }
@@ -166,7 +204,7 @@ export class SuppliersReportPageComponent implements OnInit {
     this.loading.set(true);
     this.errorMessage.set(null);
     this.reports
-      .getSuppliersReport(toIsoDate(this.fromDate()), toIsoDate(this.toDate()))
+      .getSuppliersReport(toIsoDate(this.fromDate()), toIsoDate(this.toDate()), this.branchId())
       .subscribe({
         next: (data) => {
           this.data.set(data);

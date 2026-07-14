@@ -16,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -101,6 +103,27 @@ class ReportServiceTest {
     void percentageDiffReturnsHundredWhenPreviousZeroAndCurrentPositive() {
         BigDecimal diff = ReportService.percentageDiff(new BigDecimal("10"), new BigDecimal("0"));
         assertThat(diff).isEqualByComparingTo(new BigDecimal("100.0000"));
+    }
+
+    @Test
+    void salesReportAcceptsSqlDatesReturnedByPostgresNativeQuery() {
+        when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+        when(reportRepository.totalAndAverageRevenue(any(), any(), isNull()))
+                .thenReturn(new BigDecimal[]{new BigDecimal("150.00"), new BigDecimal("75.00")});
+        when(reportRepository.countConfirmedOrders(any(), any(), isNull())).thenReturn(2L);
+        when(reportRepository.countCancelledOrders(any(), any(), isNull())).thenReturn(0L);
+        when(reportRepository.costOfGoodsSold(any(), any(), isNull())).thenReturn(new BigDecimal("90.00"));
+        when(reportRepository.salesByDay(any(), any(), isNull())).thenReturn(List.<Object[]>of(
+                new Object[]{java.sql.Date.valueOf("2026-07-01"), new BigDecimal("150.00"), 2L}));
+        when(reportRepository.salesByMethod(any(), any(), isNull())).thenReturn(List.of());
+        when(reportRepository.salesByCategory(any(), any(), isNull())).thenReturn(List.of());
+        when(reportRepository.topProducts(any(), any(), isNull(), anyInt())).thenReturn(List.of());
+
+        var report = reportService.getSalesReport(
+                LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 1), null);
+
+        assertThat(report.series()).hasSize(1);
+        assertThat(report.series().getFirst().value()).isEqualByComparingTo("150.00");
     }
 
     // ---------------------------------------------------------------------------

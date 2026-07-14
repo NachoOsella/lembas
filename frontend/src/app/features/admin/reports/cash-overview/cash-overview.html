@@ -1,0 +1,171 @@
+<app-page-header
+  eyebrow="Reportes"
+  title="Resumen de caja"
+  description="Controla cierres, diferencias y medios de pago antes de revisar el detalle de cada sesion."
+  tone="light"
+/>
+
+<div class="cash-overview">
+  <app-report-filter-bar
+    caption="Alcance"
+    title="Operacion de caja"
+    description="Analiza los cierres realizados dentro del periodo seleccionado."
+  >
+    <app-date-picker
+      slot="fields"
+      placeholder="Desde"
+      [value]="fromDate()"
+      [maxDate]="toDate()"
+      (valueChange)="onFromChange($event)"
+      selectionMode="single"
+    />
+    <app-date-picker
+      slot="fields"
+      placeholder="Hasta"
+      [value]="toDate()"
+      [minDate]="fromDate()"
+      (valueChange)="onToChange($event)"
+      selectionMode="single"
+    />
+    <app-select
+      slot="fields"
+      [options]="branchOptions()"
+      placeholder="Todas las sucursales"
+      [value]="branchId()"
+      (valueChange)="onBranchChange($event)"
+    />
+    <app-button
+      slot="actions"
+      variant="ghost"
+      size="sm"
+      icon="pi pi-filter-slash"
+      (click)="resetFilters()"
+    >
+      Restablecer
+    </app-button>
+    <app-button
+      slot="actions"
+      variant="primary"
+      size="sm"
+      icon="pi pi-refresh"
+      [loading]="loading()"
+      (click)="onToChange(toDate())"
+    >
+      Actualizar
+    </app-button>
+    <app-data-export slot="actions" [data]="exportData()" />
+  </app-report-filter-bar>
+
+  @if (errorMessage() && !data()) {
+    <app-error-alert title="No se pudo cargar el resumen" [message]="errorMessage() ?? ''" />
+  } @else if (loading() && !data()) {
+    <app-loading-spinner label="Cargando resumen de caja..." surface="card" />
+  } @else if (data(); as report) {
+    <section class="cash-overview__metrics" aria-label="Indicadores de caja">
+      @for (card of metricCards(); track card.label) {
+        <app-dashboard-stat-card [card]="card" />
+      }
+    </section>
+
+    <section class="cash-overview__summary" aria-label="Conciliacion de efectivo">
+      <div>
+        <span>Efectivo esperado</span>
+        <strong>{{ report.expectedCashTotal | currencyAr }}</strong>
+      </div>
+      <i class="pi pi-arrow-right" aria-hidden="true"></i>
+      <div>
+        <span>Efectivo contado</span>
+        <strong>{{ report.countedCashTotal | currencyAr }}</strong>
+      </div>
+      <i class="pi pi-equals" aria-hidden="true"></i>
+      <div [class]="differenceClass(report.netDifferenceTotal)">
+        <span>Diferencia neta</span>
+        <strong>{{ report.netDifferenceTotal | currencyAr }}</strong>
+      </div>
+    </section>
+
+    <section class="cash-overview__grid" aria-label="Graficos de caja">
+      <article class="cash-overview__panel">
+        <header>
+          <div>
+            <h2>Efectivo esperado y contado</h2>
+            <p>Comparacion diaria de los cierres realizados.</p>
+          </div>
+        </header>
+        <app-dashboard-chart
+          type="bar"
+          [labels]="dailyLabels()"
+          [data]="dailyExpected()"
+          [secondaryData]="dailyCounted()"
+          primaryLabel="Efectivo esperado"
+          secondaryLabel="Efectivo contado"
+          [secondaryCurrency]="true"
+          [loading]="loading()"
+          [empty]="dailyExpected().every((amount) => amount === 0) && dailyCounted().every((amount) => amount === 0)"
+          emptyMessage="No hay cierres en el periodo seleccionado."
+          height="320px"
+          [currency]="true"
+        />
+      </article>
+      <article class="cash-overview__panel">
+        <header>
+          <div>
+            <h2>Medios de pago</h2>
+            <p>Distribucion de las ventas cobradas en las sesiones analizadas.</p>
+          </div>
+        </header>
+        <app-dashboard-chart
+          type="doughnut"
+          [labels]="paymentLabels()"
+          [data]="paymentAmounts()"
+          [loading]="loading()"
+          [empty]="!hasPaymentData()"
+          emptyMessage="No hay pagos aprobados en el periodo."
+          height="320px"
+          [currency]="true"
+        />
+      </article>
+    </section>
+
+    <section class="cash-overview__panel" aria-label="Diferencias que requieren revision">
+      <header class="cash-overview__panel-header">
+        <div>
+          <h2>Diferencias que requieren revision</h2>
+          <p>Los cierres con mayor diferencia absoluta aparecen primero.</p>
+        </div>
+        <a routerLink="/admin/cash/history">Ver historial completo</a>
+      </header>
+      @if (discrepancies().length === 0) {
+        <app-empty-state
+          icon="pi pi-check-circle"
+          title="Todos los cierres estan conciliados"
+          description="No hay diferencias de efectivo dentro del periodo seleccionado."
+        />
+      } @else {
+        <app-data-table [data]="discrepancies()" [columns]="discrepancyColumns" [paginated]="false">
+          <ng-template #body let-row>
+            <tr [routerLink]="['/admin/cash/history', row.id]" class="cash-overview__row">
+              <td>{{ row.closedAt | shortDateAr }}</td>
+              <td>{{ row.branchName }}</td>
+              <td>{{ row.closedByUserName ?? '-' }}</td>
+              <td>{{ row.expectedCashAmount | currencyAr }}</td>
+              <td>{{ row.countedCashAmount | currencyAr }}</td>
+              <td [class]="differenceClass(row.cashDifferenceAmount)">
+                {{ row.cashDifferenceAmount | currencyAr }}
+              </td>
+              <td>{{ row.cashDifferenceReason ?? 'Sin motivo registrado' }}</td>
+            </tr>
+          </ng-template>
+        </app-data-table>
+      }
+    </section>
+  } @else {
+    <app-empty-state
+      icon="pi pi-wallet"
+      title="Sin cierres para analizar"
+      description="Cuando se cierren sesiones de caja, el resumen va a mostrar su evolucion y diferencias."
+    />
+  }
+</div>
+
+<app-toast />
