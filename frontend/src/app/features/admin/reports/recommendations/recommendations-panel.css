@@ -1,0 +1,94 @@
+:host {
+  display: block;
+  padding: clamp(0.75rem, 1.6vw, 1.4rem);
+}
+
+/* Proper spacing below the page header — no overlap with hero. */
+:host > app-page-header {
+  margin-bottom: 0.5rem;
+}
+
+/* Lighter appearance for the filter bar so it doesn't compete with the hero. */
+:host > .recommendations > app-report-filter-bar {
+  box-shadow: none;
+  border-color: rgba(7, 95, 54, 0.12);
+}
+
+.recommendations {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+/* Section headers on canvas --------------------------------------------- */
+
+.recommendations__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.recommendations__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.recommendations__section-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.recommendations__section-eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-bark);
+}
+
+.recommendations__section-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary-darkest);
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.recommendations__section-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.85rem;
+  height: 1.5rem;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  background: var(--color-mint-wash-light);
+  border: 1px solid rgba(7, 95, 54, 0.18);
+  color: var(--color-primary-darkest);
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Recommendation cards list --------------------------------------------- */
+
+.recommendations__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+/* Keep paginator aligned with the list */
+.recommendations app-pagination {
+  display: block;
+  margin-top: 0.25rem;
+}

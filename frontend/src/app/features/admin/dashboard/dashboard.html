@@ -1,1 +1,171 @@
-<p>dashboard works!</p>
+<app-page-header
+  eyebrow="Operaciones"
+  title="Dashboard operativo"
+  [description]="
+    'Resumen diario de ventas, stock y alertas.' +
+    (branchName() ? ' Sucursal: ' + branchName() : ' Todas las sucursales.')
+  "
+  tone="light"
+/>
+
+<div class="dashboard">
+  @if (error()) {
+    <app-error-alert title="No se pudo cargar el dashboard" [message]="friendlyError" />
+  } @else {
+    @if (loading() && !data()) {
+      <app-loading-spinner label="Cargando dashboard..." surface="card" />
+    } @else if (data()) {
+      <!-- Date + refresh toolbar ---------------------------------------- -->
+      <app-report-filter-bar
+        caption="Resumen"
+        title="Dashboard operativo"
+        [description]="
+          (branchName() ? branchName() + ' - ' : 'Todas las sucursales - ') + reportDate()
+        "
+      >
+        <app-date-picker
+          slot="fields"
+          placeholder="Fecha del reporte"
+          [value]="selectedDateAsDate()"
+          (valueChange)="onDateChange($event)"
+          [maxDate]="today()"
+          selectionMode="single"
+        />
+        <app-button
+          slot="actions"
+          [variant]="'ghost'"
+          [size]="'sm'"
+          [icon]="'pi pi-calendar'"
+          (click)="onGoToToday()"
+        >
+          Hoy
+        </app-button>
+        <app-button
+          slot="actions"
+          [variant]="'primary'"
+          [size]="'sm'"
+          [icon]="'pi pi-refresh'"
+          [loading]="loading()"
+          (click)="onRefresh()"
+        >
+          Actualizar
+        </app-button>
+        <div
+          slot="actions"
+          class="dashboard__refreshed"
+          [class.dashboard__refreshed--live]="liveRefresh()"
+        >
+          <i class="pi pi-circle-fill" aria-hidden="true"></i>
+          <span>
+            @if (lastRefreshed()) {
+              Actualizado {{ lastRefreshed() | date: 'HH:mm:ss' }}
+            } @else {
+              Esperando primera carga
+            }
+          </span>
+        </div>
+      </app-report-filter-bar>
+
+      <!-- Stat cards (6 core KPIs) ---------------------------------------- -->
+      <section class="dashboard__section" aria-label="Indicadores">
+        <app-report-section-head
+          eyebrow="Hoy"
+          title="Indicadores del dia"
+          description="Resumen consolidado de ventas, transacciones y alertas operativas."
+        />
+        <div class="dashboard__cards-row">
+          @for (card of compactCards(); track card.label) {
+            <app-dashboard-stat-card [card]="card" />
+          }
+        </div>
+      </section>
+
+      <!-- Charts: sales by hour + payment methods ------------------------- -->
+      @if (hasChartData()) {
+        <section class="dashboard__section" aria-label="Graficos">
+          <app-report-section-head
+            eyebrow="Distribucion"
+            title="Ventas y metodos de pago"
+            description="Ventas por hora del dia y la participacion de cada medio de pago en la facturacion."
+          />
+          <div class="dashboard__charts">
+            <div class="dashboard__chart-wrap">
+              <app-dashboard-chart
+                type="bar"
+                [labels]="hourLabels()"
+                [data]="hourOnlineOrders()"
+                [secondaryData]="hourPosOrders()"
+                [loading]="loading()"
+                [empty]="hourRevenue().every((v) => v === 0)"
+                emptyMessage="Aun no se registraron ventas en el dia."
+                [height]="'300px'"
+              />
+            </div>
+            <div class="dashboard__chart-wrap">
+              <app-dashboard-chart
+                type="doughnut"
+                [labels]="methodLabels()"
+                [data]="methodAmounts()"
+                [loading]="loading()"
+                [empty]="methodAmounts().length === 0"
+                emptyMessage="Sin pagos registrados en el dia."
+                [height]="'300px'"
+                [centerLabel]="data()?.todaySales?.value ?? null"
+                centerSubLabel="Total facturado"
+              />
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- Top products ---------------------------------------------------- -->
+      @if (topProducts().length > 0) {
+        <section class="dashboard__section" aria-label="Top productos">
+          <app-report-section-head
+            eyebrow="Hoy"
+            title="Top productos del dia"
+            description="Los 10 productos con mayor volumen de venta."
+          >
+            <app-data-export slot="actions" [data]="topProductsExport()" />
+          </app-report-section-head>
+          <app-top-products-table [products]="topProducts()" [loading]="loading()" />
+        </section>
+      }
+
+      <!-- Recommendations ------------------------------------------------- -->
+      <section class="dashboard__section" aria-label="Recomendaciones">
+        <app-report-section-head
+          eyebrow="Alertas"
+          title="Recomendaciones"
+          description="Sugerencias automaticas segun reglas de stock y rotacion."
+        >
+          <app-button
+            slot="actions"
+            [variant]="'ghost'"
+            [size]="'sm'"
+            [icon]="'pi pi-arrow-right'"
+            (click)="onGoToRecommendations()"
+          >
+            Ver todas
+          </app-button>
+        </app-report-section-head>
+        @if (recommendationsLoading()) {
+          <app-loading-spinner label="Cargando recomendaciones..." surface="card" />
+        } @else if (dashboardRecommendations().length === 0) {
+          <div class="dashboard__recommendations-empty">
+            <i class="pi pi-check-circle" aria-hidden="true"></i>
+            <span>Todo en orden. No hay alertas activas en este momento.</span>
+          </div>
+        } @else {
+          <div class="dashboard__recommendations">
+            @for (rec of dashboardRecommendations(); track rec.id) {
+              <app-recommendation-card [recommendation]="rec" />
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+</div>
+
+<app-toast />

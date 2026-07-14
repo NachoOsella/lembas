@@ -1,0 +1,192 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.chart__header {
+  margin-bottom: 0.9rem;
+}
+
+/* DESING.md eyebrow = Brown Bark, not orange */
+.chart__eyebrow {
+  margin: 0 0 0.2rem;
+  color: var(--color-bark);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chart__title {
+  margin: 0;
+  color: var(--color-primary-darkest);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.chart__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+}
+
+.chart__skeleton {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ----- PrimeNG Chart wrapper -------------------------------------------- */
+
+.chart__prime-chart {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/* PrimeNG chart container styling */
+.chart__prime-chart :deep(.p-chart) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ----- Doughnut chart --------------------------------------------------- */
+
+.chart__doughnut {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.85fr) minmax(140px, 1.15fr);
+  gap: 1.25rem;
+  align-items: center;
+  height: 100%;
+}
+
+.chart__doughnut-visual {
+  position: relative;
+  width: 100%;
+  max-width: 180px;
+  margin-inline: auto;
+  aspect-ratio: 1 / 1;
+}
+
+/* PrimeNG chart container inside doughnut visual */
+.chart__doughnut-visual :deep(.p-chart) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.chart__doughnut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  padding: 1.2rem;
+  z-index: 1;
+}
+
+.chart__doughnut-center strong {
+  color: var(--color-primary-darkest);
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart__doughnut-center span {
+  margin-top: 0.2rem;
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ----- Legend (custom for doughnut) ------------------------------------- */
+
+.chart__legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.chart__legend li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+  cursor: pointer;
+}
+
+.chart__legend li:hover {
+  background: var(--color-mint-wash-pale);
+  transform: translateX(2px);
+}
+
+.chart__legend-swatch {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: transform 0.15s ease;
+}
+
+.chart__legend li:hover .chart__legend-swatch {
+  transform: scale(1.25);
+}
+
+.chart__legend-label {
+  color: var(--color-text);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chart__legend-value {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* ----- Responsive ------------------------------------------------------- */
+
+@media (max-width: 48rem) {
+  .chart__doughnut {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    gap: 1rem;
+  }
+
+  .chart__doughnut-visual {
+    max-width: 180px;
+    margin-inline: auto;
+  }
+}

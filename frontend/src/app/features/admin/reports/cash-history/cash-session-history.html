@@ -1,0 +1,111 @@
+<app-page-header
+  eyebrow="Reportes"
+  title="Reporte de cierres de caja"
+  description="Historial de sesiones de caja con filtros por fecha, sucursal y operario."
+  tone="light"
+/>
+
+<div class="cash-history">
+  <app-report-filter-bar
+    caption="Filtros"
+    title="Historial de sesiones"
+    [description]="(data()?.totalCount ?? 0) + ' sesiones encontradas para los filtros aplicados.'"
+  >
+    <app-date-picker
+      slot="fields"
+      placeholder="Desde"
+      [value]="fromDate()"
+      [maxDate]="toDate()"
+      (valueChange)="onFromChange($event)"
+      selectionMode="single"
+    />
+    <app-date-picker
+      slot="fields"
+      placeholder="Hasta"
+      [value]="toDate()"
+      [minDate]="fromDate()"
+      (valueChange)="onToChange($event)"
+      selectionMode="single"
+    />
+    <app-select
+      slot="fields"
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Estado"
+      [value]="statusFilter()"
+      (valueChange)="onStatusChange($event)"
+    />
+    <app-button
+      slot="actions"
+      [variant]="'ghost'"
+      [size]="'sm'"
+      [icon]="'pi pi-filter-slash'"
+      (click)="clearFilters()"
+    >
+      Limpiar
+    </app-button>
+    <app-data-export slot="actions" [data]="exportData()" />
+  </app-report-filter-bar>
+
+  <section class="cash-history__section" aria-label="Listado de sesiones">
+    <header class="cash-history__section-head">
+      <div class="cash-history__section-text">
+        <p class="cash-history__section-eyebrow">Listado</p>
+        <h2 class="cash-history__section-title">Sesiones de caja</h2>
+      </div>
+    </header>
+
+    @if (errorMessage()) {
+      <app-error-alert
+        title="No se pudo cargar el historial"
+        [message]="errorMessage() ?? 'Error desconocido.'"
+      />
+    } @else if (loading() && rows().length === 0) {
+      <app-loading-spinner label="Cargando sesiones..." surface="card" />
+    } @else if (rows().length === 0) {
+      <app-empty-state
+        icon="pi pi-receipt"
+        title="Aun no hay sesiones"
+        description="Cuando se abran o cierren sesiones de caja apareceran aqui."
+      />
+    } @else {
+      <app-data-table
+        [data]="rows()"
+        [columns]="columns"
+        [paginated]="true"
+        [lazy]="true"
+        [totalRecords]="data()?.totalCount ?? 0"
+        [rows]="pageSize()"
+        [first]="page() * pageSize()"
+        [emptyTitle]="'Sin sesiones en este rango'"
+        [emptyDescription]="'Ajusta los filtros para ampliar la busqueda.'"
+        (rowClick)="onRowClick($event)"
+        (pageChange)="onPage($event)"
+      >
+        <ng-template #body let-row let-columns="columns">
+          <tr class="cash-history__row" (click)="onRowClick(row)">
+            <td>{{ row.openedAt | shortDateAr }}</td>
+            <td>{{ row.closedAt ? (row.closedAt | shortDateAr) : '-' }}</td>
+            <td>{{ row.branchName }}</td>
+            <td>{{ row.openedByUserName }}</td>
+            <td>{{ row.closedByUserName ?? '-' }}</td>
+            <td>{{ row.expectedCashAmount | currencyAr }}</td>
+            <td>{{ row.countedCashAmount | currencyAr }}</td>
+            <td [ngClass]="differenceClass(row.cashDifferenceAmount)">
+              {{ row.cashDifferenceAmount | currencyAr }}
+            </td>
+            <td>{{ row.totalPayments }}</td>
+            <td>
+              <app-badge [tone]="statusTone(row.status)">
+                {{ statusLabel(row.status) }}
+              </app-badge>
+            </td>
+          </tr>
+        </ng-template>
+      </app-data-table>
+    }
+  </section>
+</div>
+
+<app-toast />

@@ -1,0 +1,19 @@
+<header class="report-head">
+  @if (icon()) {
+    <span class="report-head__icon" aria-hidden="true">
+      <i [class]="icon() ?? ''"></i>
+    </span>
+  }
+  <div class="report-head__copy">
+    @if (eyebrow()) {
+      <p class="report-head__eyebrow">{{ eyebrow() }}</p>
+    }
+    <h2 class="report-head__title">{{ title() }}</h2>
+    @if (description()) {
+      <p class="report-head__description">{{ description() }}</p>
+    }
+  </div>
+  <div class="report-head__actions">
+    <ng-content select="[slot=actions]" />
+  </div>
+</header>

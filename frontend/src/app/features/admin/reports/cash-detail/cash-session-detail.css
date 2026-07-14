@@ -1,0 +1,208 @@
+:host {
+  display: block;
+  padding: clamp(1rem, 2vw, 1.6rem);
+}
+
+.cash-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.cash-detail__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Section headers on canvas --------------------------------------------- */
+
+.cash-detail__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.cash-detail__section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.cash-detail__section-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary-darkest);
+  letter-spacing: -0.01em;
+}
+
+.cash-detail__section-desc {
+  margin: 0;
+  font-size: 0.87rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+/* Session metadata grid -------------------------------------------------- */
+
+.cash-detail__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 0;
+  background: var(--color-surface);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: var(--radius-card, 12px);
+  padding: clamp(1rem, 2vw, 1.35rem);
+  box-shadow: var(--shadow-card);
+}
+
+.cash-detail__meta div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.35rem 0.15rem;
+}
+
+.cash-detail__meta dt {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-bark);
+}
+
+.cash-detail__meta dd {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.cash-detail__meta dd strong {
+  color: var(--color-primary-darkest);
+  font-weight: 700;
+}
+
+/* Financial stat cards --------------------------------------------------- */
+
+.cash-detail__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.9rem;
+}
+
+.cash-detail__stat {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--color-sage-wash);
+  border: 1px solid rgba(47, 141, 114, 0.12);
+  border-radius: var(--radius-card, 12px);
+  padding: 1.15rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  box-shadow:
+    0 0 0.5px rgba(0, 0, 0, 0.08),
+    0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.cash-detail__stat::before {
+  content: '';
+  position: absolute;
+  inset: auto -2.5rem -2.75rem auto;
+  z-index: -1;
+  width: 6.5rem;
+  height: 6.5rem;
+  border-radius: 999px;
+  background: rgba(47, 141, 114, 0.07);
+}
+
+.cash-detail__stat--info {
+  background: var(--color-mint-wash-pale);
+  border-color: rgba(47, 141, 114, 0.12);
+}
+
+.cash-detail__stat--success {
+  background: var(--color-mint-wash-minimal);
+  border-color: rgba(47, 141, 114, 0.18);
+}
+
+.cash-detail__stat--success::before {
+  background: rgba(47, 141, 114, 0.1);
+}
+
+.cash-detail__stat--danger {
+  background: var(--color-red-surface);
+  border-color: rgba(200, 32, 20, 0.16);
+}
+
+.cash-detail__stat--danger::before {
+  background: rgba(200, 32, 20, 0.08);
+}
+
+.cash-detail__stat-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.cash-detail__stat-value {
+  font-size: clamp(1.35rem, 2.4vw, 1.65rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-primary-darkest);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.cash-detail__stat--success .cash-detail__stat-value {
+  color: var(--color-primary);
+}
+
+.cash-detail__stat--danger .cash-detail__stat-value {
+  color: var(--color-red);
+}
+
+.cash-detail__stat-sub {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* Chart container -------------------------------------------------------- */
+
+.cash-detail__chart-wrap {
+  background: var(--color-surface);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: var(--radius-card, 12px);
+  padding: clamp(1rem, 2vw, 1.35rem);
+  box-shadow: var(--shadow-card);
+}
+
+/* Cell helpers ----------------------------------------------------------- */
+
+.cash-detail__cell--positive {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cash-detail__cell--negative {
+  color: var(--color-red);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cash-detail__cell--neutral {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}

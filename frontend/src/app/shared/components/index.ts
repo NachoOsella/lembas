@@ -16,6 +16,8 @@ export * from './app-menu/app-menu';
 export * from './app-modal/app-modal';
 export * from './app-page-header/app-page-header';
 export * from './app-pagination/app-pagination';
+export * from './app-report-filter-bar/app-report-filter-bar';
+export * from './app-report-section-head/app-report-section-head';
 export * from './app-product-selector/app-product-selector';
 export * from './app-search-bar/app-search-bar';
 export * from './app-section-card/app-section-card';

@@ -1,0 +1,172 @@
+<app-page-header
+  eyebrow="Reportes"
+  title="Reporte de inventario"
+  description="Stock valorizado, rotacion, cobertura y lotes por vencer para la sucursal o conjunto de sucursales seleccionadas."
+  tone="light"
+/>
+
+<div class="inventory-report">
+  <app-report-filter-bar
+    caption="Filtros"
+    title="Reporte de inventario"
+    description="Refina el alcance por sucursal."
+  >
+    <app-select
+      slot="fields"
+      [options]="branchOptions()"
+      placeholder="Sucursal"
+      [value]="branchFilter()"
+      (valueChange)="onBranchChange($event)"
+    />
+    <app-button
+      slot="actions"
+      [variant]="'primary'"
+      [size]="'sm'"
+      [icon]="'pi pi-refresh'"
+      [loading]="loading()"
+      (click)="onRefresh()"
+    >
+      Actualizar
+    </app-button>
+    <app-data-export slot="actions" [data]="exportData()" />
+  </app-report-filter-bar>
+
+  @if (errorMessage() && !data()) {
+    <app-error-alert
+      title="Sin datos por ahora"
+      [message]="errorMessage() ?? ''"
+    />
+  } @else if (loading() && !data()) {
+    <app-loading-spinner label="Cargando reporte de inventario..." surface="card" />
+  } @else if (!hasData()) {
+    <app-empty-state
+      icon="pi pi-warehouse"
+      title="Sin stock registrado"
+      description="Cuando haya productos cargados y stock disponible apareceran aqui los indicadores."
+    />
+  } @else {
+    <section class="inventory-report__section" aria-label="Indicadores">
+      <app-report-section-head
+        eyebrow="Stock"
+        title="Indicadores clave"
+        description="Valorizacion, rotacion, stock bajo y vencimiento en un vistazo."
+      />
+      <div class="inventory-report__kpis">
+        @for (card of statCards(); track card.label) {
+          <app-dashboard-stat-card [card]="card" />
+        }
+      </div>
+    </section>
+
+    <section class="inventory-report__section" aria-label="Distribucion">
+      <div class="inventory-report__charts">
+        <article class="inventory-report__chart-card">
+          <app-report-section-head
+            eyebrow="Composicion"
+            title="Stock valorizado por categoria"
+            description="Distribucion del capital detenido en mercaderia."
+          />
+          <app-dashboard-chart
+            type="doughnut"
+            [labels]="stockLabels()"
+            [data]="stockAmounts()"
+            [loading]="loading()"
+            [empty]="stockAmounts().length === 0"
+            emptyMessage="Aun no hay stock valorizado."
+            [height]="'300px'"
+            [currency]="true"
+          />
+        </article>
+        <article class="inventory-report__chart-card">
+          <app-report-section-head
+            eyebrow="Vencimientos"
+            title="Lotes por vencer"
+            description="Cantidad de lotes y unidades proximas a vencer, agrupadas por mes."
+          />
+          <app-dashboard-chart
+            type="bar"
+            [labels]="expiringLabels()"
+            [data]="expiringValues()"
+            [loading]="loading()"
+            [empty]="expiringValues().every((v) => v === 0)"
+            emptyMessage="No hay lotes proximos a vencer."
+            [height]="'300px'"
+          />
+        </article>
+      </div>
+    </section>
+
+    <section class="inventory-report__section" aria-label="Top y stock bajo">
+      <div class="inventory-report__split">
+        <article class="inventory-report__table-card">
+          <app-report-section-head
+            eyebrow="Capital"
+            title="Productos con mayor stock valorizado"
+            description="Top 10 productos por capital inmovilizado."
+          >
+            <app-data-export slot="actions" [data]="topByValueExport()" />
+          </app-report-section-head>
+          <div class="inventory-report__list">
+            @if ((data()?.topByValue ?? []).length === 0) {
+              <p class="inventory-report__empty">Sin productos destacados en este momento.</p>
+            } @else {
+              <ol class="inventory-report__top-list">
+                @for (row of data()?.topByValue ?? []; track row.id) {
+                  <li class="inventory-report__top-item">
+                    <span class="inventory-report__top-rank">{{ $index + 1 }}</span>
+                    <div class="inventory-report__top-body">
+                      <strong>{{ row.primary }}</strong>
+                      @if (row.secondary) {
+                        <span>{{ row.secondary }}</span>
+                      }
+                    </div>
+                    <div class="inventory-report__top-metric">
+                      <strong>{{ row.metric }}</strong>
+                      @if (row.submetric) {
+                        <span>{{ row.submetric }}</span>
+                      }
+                    </div>
+                  </li>
+                }
+              </ol>
+            }
+          </div>
+        </article>
+        <article class="inventory-report__table-card inventory-report__table-card--warning">
+          <app-report-section-head
+            eyebrow="Atencion"
+            title="Productos con stock bajo"
+            description="Aquellos cuyo stock actual se encuentra por debajo del minimo operativo."
+          />
+          <div class="inventory-report__list">
+            @if ((data()?.lowStock ?? []).length === 0) {
+              <p class="inventory-report__empty">No hay productos por debajo del minimo.</p>
+            } @else {
+              <ul class="inventory-report__low-list">
+                @for (row of data()?.lowStock ?? []; track row.id) {
+                  <li class="inventory-report__low-item">
+                    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                    <div class="inventory-report__low-body">
+                      <strong>{{ row.primary }}</strong>
+                      @if (row.secondary) {
+                        <span>{{ row.secondary }}</span>
+                      }
+                    </div>
+                    <div class="inventory-report__low-metric">
+                      <strong>{{ row.metric }}</strong>
+                      @if (row.submetric) {
+                        <span>{{ row.submetric }}</span>
+                      }
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </article>
+      </div>
+    </section>
+  }
+</div>
+
+<app-toast />
