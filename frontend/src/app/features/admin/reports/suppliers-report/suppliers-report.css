@@ -42,6 +42,7 @@
   border: 1px solid rgba(7, 95, 54, 0.1);
   border-radius: var(--radius-card, 12px);
   box-shadow: var(--shadow-card);
+  overflow: hidden;
 }
 
 .suppliers-report__table-card--accent {
@@ -194,6 +195,10 @@
 }
 
 @media (max-width: 48rem) {
+  :host {
+    padding: 0;
+  }
+
   .suppliers-report__kpis {
     grid-template-columns: 1fr;
   }

@@ -105,3 +105,23 @@
 .adjustment-form__stock-info i {
   font-size: 1rem;
 }
+
+@media (max-width: 48rem) {
+  .supplier-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .supplier-form__actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .supplier-form__actions app-button {
+    width: 100%;
+  }
+
+  .inventory-expiring-toggle {
+    justify-content: space-between;
+    width: 100%;
+  }
+}

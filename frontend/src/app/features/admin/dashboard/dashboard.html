@@ -17,8 +17,8 @@
     } @else if (data()) {
       <!-- Date + refresh toolbar ---------------------------------------- -->
       <app-report-filter-bar
-        caption="Resumen"
-        title="Dashboard operativo"
+        caption="Operaciones"
+        title="Resumen del dia"
         [description]="
           (branchName() ? branchName() + ' - ' : 'Todas las sucursales - ') + reportDate()
         "
@@ -50,20 +50,6 @@
         >
           Actualizar
         </app-button>
-        <div
-          slot="actions"
-          class="dashboard__refreshed"
-          [class.dashboard__refreshed--live]="liveRefresh()"
-        >
-          <i class="pi pi-circle-fill" aria-hidden="true"></i>
-          <span>
-            @if (lastRefreshed()) {
-              Actualizado {{ lastRefreshed() | date: 'HH:mm:ss' }}
-            } @else {
-              Esperando primera carga
-            }
-          </span>
-        </div>
       </app-report-filter-bar>
 
       <!-- Stat cards (6 core KPIs) ---------------------------------------- -->

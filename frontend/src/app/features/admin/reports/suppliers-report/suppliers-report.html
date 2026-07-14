@@ -71,11 +71,6 @@
     />
   } @else {
     <section class="suppliers-report__section" aria-label="Indicadores">
-      <app-report-section-head
-        eyebrow="Periodo"
-        title="Indicadores clave"
-        description="Resumen de compras, ordenes, lead time y proveedores activos."
-      />
       <div class="suppliers-report__kpis">
         @for (card of statCards(); track card.label) {
           <app-dashboard-stat-card [card]="card" />

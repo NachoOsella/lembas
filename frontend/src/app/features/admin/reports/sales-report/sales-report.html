@@ -71,11 +71,6 @@
     />
   } @else {
     <section class="sales-report__section" aria-label="Indicadores">
-      <app-report-section-head
-        eyebrow="Periodo"
-        title="Indicadores clave"
-        description="Resumen consolidado del periodo seleccionado."
-      />
       <div class="sales-report__kpis">
         @for (card of statCards(); track card.label) {
           <app-dashboard-stat-card [card]="card" />

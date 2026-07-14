@@ -158,3 +158,31 @@
     flex-wrap: wrap;
   }
 }
+
+@media (max-width: 48rem) {
+  .filter-bar {
+    gap: 0.85rem;
+    padding: 0.85rem;
+  }
+
+  .filter-bar__fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
+  .filter-bar__fields ::ng-deep app-date-picker,
+  .filter-bar__fields ::ng-deep app-select,
+  .filter-bar__fields ::ng-deep app-input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .filter-bar__actions {
+    justify-content: stretch;
+  }
+
+  .filter-bar__actions ::ng-deep app-button {
+    flex: 1 1 auto;
+  }
+}

@@ -196,6 +196,21 @@
 
 .admin-page > * {
   min-width: 0;
+  max-width: 100%;
+}
+
+/* Admin pages must never create viewport-wide overflow. Dense content such as
+   tables owns its horizontal scroll container instead. */
+.admin-page,
+.admin-page * {
+  box-sizing: border-box;
+}
+
+@media (max-width: 48rem) {
+  .admin-page {
+    gap: 0.85rem;
+    padding-bottom: 1.25rem;
+  }
 }
 
 /* ---------------------------------------------------------------------------

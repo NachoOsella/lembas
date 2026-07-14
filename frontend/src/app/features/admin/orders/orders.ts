@@ -26,7 +26,10 @@ import {
   StatusBadge,
   StatusBadgeConfig,
 } from '../../../shared/components/status-badge/status-badge';
-import { ConfirmDialog, ConfirmDialogMode } from '../../../shared/components/confirm-dialog/confirm-dialog';
+import {
+  ConfirmDialog,
+  ConfirmDialogMode,
+} from '../../../shared/components/confirm-dialog/confirm-dialog';
 import { CurrencyArPipe } from '../../../core/pipes/currency-ar.pipe';
 import { ShortDateArPipe } from '../../../core/pipes/short-date-ar.pipe';
 
@@ -101,7 +104,8 @@ function quickActionForStatus(status: OrderStatus): QuickAction | null {
 const CANCEL_ROW_ACTION: QuickAction = {
   key: 'cancel',
   label: 'Cancelar pedido',
-  description: 'Esta accion no se puede deshacer. Si hay stock descontado, sera devuelto a los lotes originales y los pagos quedaran como cancelados.',
+  description:
+    'Esta accion no se puede deshacer. Si hay stock descontado, sera devuelto a los lotes originales y los pagos quedaran como cancelados.',
   icon: 'pi pi-times-circle',
   destructive: true,
   requiresReason: true,
@@ -174,7 +178,9 @@ export class Orders {
   protected readonly confirmMode = signal<ConfirmDialogMode>('confirm');
   protected readonly pendingOrderId = signal<number | null>(null);
   protected readonly pendingAction = signal<QuickAction | null>(null);
-  protected readonly actionLoading = signal<'prepare' | 'ready' | 'deliver' | 'cancel' | null>(null);
+  protected readonly actionLoading = signal<'prepare' | 'ready' | 'deliver' | 'cancel' | null>(
+    null,
+  );
   /** Reason text bound to the confirm dialog's two-way model in confirm-with-reason mode. */
   protected readonly cancelReason = signal('');
 
@@ -226,7 +232,7 @@ export class Orders {
     return quickActionForStatus(order.status);
   }
 
-  /** Whether the row-level cancel button should be shown. */
+  /** Whether the row-level cancel button should be shown for a non-terminal order. */
   protected canCancel(order: OrderSummary): boolean {
     return !NON_CANCELLABLE_STATUSES.has(order.status);
   }
