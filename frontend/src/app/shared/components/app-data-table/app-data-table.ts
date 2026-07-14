@@ -1,5 +1,6 @@
 import { Component, input, model, output, TemplateRef, contentChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { Paginator } from 'primeng/paginator';
 import { TableModule } from 'primeng/table';
 import { Skeleton } from 'primeng/skeleton';
 import { EmptyState } from '../empty-state/empty-state';
@@ -25,7 +26,7 @@ function defaultRowTrackBy<T>(index: number, item: T): unknown {
 
 @Component({
   selector: 'app-data-table',
-  imports: [NgTemplateOutlet, TableModule, EmptyState, LoadingSpinner],
+  imports: [NgTemplateOutlet, Paginator, TableModule, EmptyState, LoadingSpinner],
   templateUrl: './app-data-table.html',
   styleUrl: './app-data-table.css',
 })
@@ -37,7 +38,7 @@ export class AppDataTable<T = unknown> {
   readonly paginated = input(false);
   readonly lazy = input(false);
   readonly totalRecords = input<number | null>(null);
-  readonly rows = input(10);
+  readonly rows = model(10);
   readonly first = model(0);
   readonly rowsPerPageOptions = input<number[]>([10, 20, 50]);
   readonly emptyTitle = input('No hay resultados');
@@ -73,6 +74,7 @@ export class AppDataTable<T = unknown> {
     const first = event.first ?? 0;
     const rows = event.rows ?? this.rows();
     this.first.set(first);
+    this.rows.set(rows);
     this.pageChange.emit({ first, rows, page: event.page, pageCount: event.pageCount });
   }
 
