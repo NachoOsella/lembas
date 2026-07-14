@@ -2,6 +2,7 @@ package com.dietetica.lembas.pos.web;
 
 import com.dietetica.lembas.pos.dto.PosProductSearchItemDto;
 import com.dietetica.lembas.pos.service.PosProductSearchService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +19,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/pos/products")
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
 public class PosProductController {
 
     private final PosProductSearchService searchService;

@@ -76,9 +76,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                         .requestMatchers("/api/store/**", "/api/webhooks/**", "/uploads/**").permitAll()
+                        .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
                         // POS endpoints are restricted to internal staff (ADMIN/MANAGER/EMPLOYEE).
                         // CUSTOMER is explicitly excluded: the POS is in-store only.
                         .requestMatchers("/api/pos/**").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+                        // Every admin endpoint requires an internal role. Individual controllers
+                        // further restrict management operations with @PreAuthorize.
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
                         .requestMatchers("/actuator/health", "/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(originValidationFilter, UsernamePasswordAuthenticationFilter.class)

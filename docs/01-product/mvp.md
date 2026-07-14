@@ -25,7 +25,9 @@ EMPLOYEE:
     ↓
   Record manual cash movements
     ↓
-  Prepare online orders, mark ready and hand over
+  Prepare/cancel online orders and mark ready for handover
+    ↓
+  Register merchandise receipts, create lots, and adjust stock
     ↓
   Close cash register comparing expected vs counted cash
 
