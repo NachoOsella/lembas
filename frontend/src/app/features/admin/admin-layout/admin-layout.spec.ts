@@ -184,18 +184,17 @@ describe('AdminLayout', () => {
     expect(component['hasOpenCashSession']()).toBe(true);
   });
 
-  /** Should hide Usuarios but keep pricing in sidebar when role is EMPLOYEE. */
-  it('Should_hideUsersFromSidebar_when_roleIsEmployee', () => {
+  /** Should expose operational sections plus merchandise receipts to EMPLOYEE users. */
+  it('Should_showOperationalSectionsOnly_when_roleIsEmployee', () => {
     setup(employeeUser);
 
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
     );
-    expect(navLinks.length).toBe(15);
+    expect(navLinks.length).toBe(6);
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );
-    expect(labels).toContain('Precios');
-    expect(labels).not.toContain('Usuarios');
+    expect(labels).toEqual(['POS', 'Pedidos', 'Caja', 'Inventario', 'Movimientos', 'Recepciones']);
   });
 });

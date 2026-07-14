@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { AppDatePicker } from '../../../shared/components/app-date-picker/app-date-picker';
 import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
 
+import { AuthService } from '../../../core/services/auth';
 import { InventoryService } from '../../../core/services/inventory';
 import { ProductService } from '../../../core/services/product';
 import { UserService } from '../../../core/services/user';
@@ -50,6 +51,7 @@ import { FormSection } from '../../../shared/components/form-section/form-sectio
   styleUrl: './inventory.css',
 })
 export class Inventory {
+  private readonly authService = inject(AuthService);
   private readonly inventoryService = inject(InventoryService);
   private readonly productService = inject(ProductService);
   private readonly userService = inject(UserService);
@@ -111,13 +113,27 @@ export class Inventory {
 
   protected readonly minDate = computed(() => new Date());
 
-  protected readonly columns: ColumnDef[] = [
-    { field: 'productName', header: 'Producto', sortable: true },
-    { field: 'branchName', header: 'Sucursal', sortable: true },
-    { field: 'totalAvailable', header: 'Total disponible', sortable: false, width: '9rem' },
-    { field: 'nearestExpirationDate', header: 'Proximo vencimiento', sortable: false },
-    { field: 'actions', header: 'Acciones', sortable: false, width: '7rem' },
-  ];
+  protected readonly canManageInventory = computed(() => {
+    const role = this.authService.getUserRole();
+    return role === 'ADMIN' || role === 'MANAGER' || role === 'EMPLOYEE';
+  });
+
+  protected readonly isBranchRestricted = computed(
+    () => this.authService.getUserRole() !== 'ADMIN',
+  );
+
+  protected readonly columns = computed<ColumnDef[]>(() => {
+    const columns: ColumnDef[] = [
+      { field: 'productName', header: 'Producto', sortable: true },
+      { field: 'branchName', header: 'Sucursal', sortable: true },
+      { field: 'totalAvailable', header: 'Total disponible', sortable: false, width: '9rem' },
+      { field: 'nearestExpirationDate', header: 'Proximo vencimiento', sortable: false },
+    ];
+    if (this.canManageInventory()) {
+      columns.push({ field: 'actions', header: 'Acciones', sortable: false, width: '7rem' });
+    }
+    return columns;
+  });
 
   constructor() {
     this.userService.listBranches().subscribe({
@@ -205,7 +221,11 @@ export class Inventory {
 
   protected viewLots(item: StockProductSummaryDto): void {
     this.router.navigate(['/admin/inventory/product', item.productId, 'lots'], {
-      queryParams: { branchId: item.branchId, productName: item.productName, branchName: item.branchName },
+      queryParams: {
+        branchId: item.branchId,
+        productName: item.productName,
+        branchName: item.branchName,
+      },
     });
   }
 
@@ -219,7 +239,9 @@ export class Inventory {
 
   protected openCreateDialog(): void {
     this.newProduct.set(null);
-    this.newBranchId.set(null);
+    this.newBranchId.set(
+      this.isBranchRestricted() ? (this.authService.currentUser()?.branchId ?? null) : null,
+    );
     this.newQuantity.set(null);
     this.newLotCode.set('');
     this.newExpirationDate.set(null);
@@ -266,7 +288,11 @@ export class Inventory {
         next: () => {
           this.saving.set(false);
           this.dialogVisible.set(false);
-          this.messageService.add({ severity: 'success', summary: 'Lote creado', detail: 'El lote de stock fue registrado correctamente.' });
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Lote creado',
+            detail: 'El lote de stock fue registrado correctamente.',
+          });
           this.loadProducts();
         },
         error: (err) => {
@@ -334,14 +360,20 @@ export class Inventory {
 
   private updateAdjStockLabel(productId: number, branchId: number): void {
     const productName = this.adjSelectedProduct()?.name ?? 'Producto';
-    this.inventoryService.listProductSummaries({ search: productName, branchId, size: 20 }).subscribe({
-      next: (page) => {
-        const summary = page.content.find((item) => item.productId === productId && item.branchId === branchId);
-        const available = summary?.totalAvailable ?? 0;
-        this.adjCurrentStockLabel.set(`Stock actual: ${this.formatQuantity(available)} unidades de ${productName}`);
-      },
-      error: () => this.adjCurrentStockLabel.set(''),
-    });
+    this.inventoryService
+      .listProductSummaries({ search: productName, branchId, size: 20 })
+      .subscribe({
+        next: (page) => {
+          const summary = page.content.find(
+            (item) => item.productId === productId && item.branchId === branchId,
+          );
+          const available = summary?.totalAvailable ?? 0;
+          this.adjCurrentStockLabel.set(
+            `Stock actual: ${this.formatQuantity(available)} unidades de ${productName}`,
+          );
+        },
+        error: () => this.adjCurrentStockLabel.set(''),
+      });
   }
 
   protected get canSubmitAdjustment(): boolean {
@@ -402,7 +434,10 @@ export class Inventory {
   // ---------------------------------------------------------------------------
 
   protected formatQuantity(value: number): string {
-    return Number(value).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+    return Number(value).toLocaleString('es-AR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 3,
+    });
   }
 
   protected formatDate(value: string | null | undefined): string {
@@ -414,7 +449,11 @@ export class Inventory {
   // Internal helpers
   // ---------------------------------------------------------------------------
 
-  private buildSortParam(field: string | undefined, order: number | undefined, defaultField: string): string | undefined {
+  private buildSortParam(
+    field: string | undefined,
+    order: number | undefined,
+    defaultField: string,
+  ): string | undefined {
     if (!field || ![1, -1].includes(order ?? 0)) {
       return `${defaultField},asc`;
     }

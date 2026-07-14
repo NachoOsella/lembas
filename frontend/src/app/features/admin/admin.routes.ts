@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '../../core/guards/auth-guard';
-import { adminGuard, adminOnlyGuard } from '../../core/guards/admin-guard';
+import { adminGuard, adminOnlyGuard, roleGuard } from '../../core/guards/admin-guard';
 
 export default [
   {
@@ -15,14 +15,17 @@ export default [
       },
       {
         path: 'dashboard',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () => import('./dashboard/dashboard').then((m) => m.Dashboard),
       },
       {
         path: 'categories',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () => import('./categories/categories').then((m) => m.Categories),
       },
       {
         path: 'products',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () => import('./products/products').then((m) => m.Products),
         children: [
           {
@@ -73,6 +76,7 @@ export default [
       },
       {
         path: 'receipts',
+        canActivate: [roleGuard('ADMIN', 'MANAGER', 'EMPLOYEE')],
         loadComponent: () => import('./stock-entry/stock-entry').then((m) => m.StockEntry),
       },
       {
@@ -112,6 +116,7 @@ export default [
         // /admin/cash/:id route so Angular's first-match router picks these
         // when navigating to /admin/cash/history or /admin/cash/history/:id.
         path: 'cash/history',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () =>
           import('./reports/cash-history/cash-session-history').then(
             (m) => m.CashSessionHistoryPageComponent,
@@ -119,6 +124,7 @@ export default [
       },
       {
         path: 'cash/history/:sessionId',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () =>
           import('./reports/cash-detail/cash-session-detail').then(
             (m) => m.CashSessionDetailReportPageComponent,
@@ -135,24 +141,29 @@ export default [
       },
       {
         path: 'suppliers',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () => import('./suppliers/suppliers').then((m) => m.Suppliers),
       },
       {
         path: 'suppliers/:id/products',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () => import('./suppliers/suppliers').then((m) => m.Suppliers),
       },
       {
         path: 'purchase-orders',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () =>
           import('./purchase-orders/purchase-orders').then((m) => m.PurchaseOrders),
       },
       {
         path: 'pricing',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () =>
           import('./pricing/price-update-workflow').then((m) => m.PriceUpdateWorkflow),
       },
       {
         path: 'reports',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () => import('./reports/reports').then((m) => m.Reports),
       },
       {
@@ -161,16 +172,27 @@ export default [
         // hub at /admin/reports so the navigation stays focused on the main
         // admin views.
         path: 'reports/cash',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () =>
           import('./reports/cash-overview/cash-overview').then((m) => m.CashOverviewPageComponent),
       },
       {
         path: 'reports/sales',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () =>
           import('./reports/sales-report/sales-report').then((m) => m.SalesReportPageComponent),
       },
       {
+        path: 'reports/employees',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
+        loadComponent: () =>
+          import('./reports/employees-report/employees-report').then(
+            (m) => m.EmployeesReportPageComponent,
+          ),
+      },
+      {
         path: 'reports/inventory',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () =>
           import('./reports/inventory-report/inventory-report').then(
             (m) => m.InventoryReportPageComponent,
@@ -178,6 +200,7 @@ export default [
       },
       {
         path: 'reports/suppliers',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () =>
           import('./reports/suppliers-report/suppliers-report').then(
             (m) => m.SuppliersReportPageComponent,
@@ -186,6 +209,7 @@ export default [
       {
         // Recommendations page (S4-US06).
         path: 'recommendations',
+        canActivate: [roleGuard('ADMIN', 'MANAGER')],
         loadComponent: () =>
           import('./reports/recommendations/recommendations-panel').then(
             (m) => m.RecommendationsPanelComponent,

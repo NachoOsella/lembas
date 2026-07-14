@@ -9,29 +9,73 @@ import { AuthService } from '../../../core/services/auth';
 import { CashService } from '../../../core/services/cash';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
+type StaffRole = 'ADMIN' | 'MANAGER' | 'EMPLOYEE';
+
 interface AdminNavItem {
   readonly label: string;
   readonly icon: string;
   readonly route: string;
+  readonly roles: readonly StaffRole[];
 }
 
+const ALL_STAFF_ROLES: readonly StaffRole[] = ['ADMIN', 'MANAGER', 'EMPLOYEE'];
+const MANAGEMENT_ROLES: readonly StaffRole[] = ['ADMIN', 'MANAGER'];
+
 const NAV_ITEMS: readonly AdminNavItem[] = [
-  { label: 'Dashboard', icon: 'pi pi-chart-pie', route: '/admin/dashboard' },
-  { label: 'Categorias', icon: 'pi pi-tags', route: '/admin/categories' },
-  { label: 'Productos', icon: 'pi pi-box', route: '/admin/products' },
-  { label: 'Inventario', icon: 'pi pi-warehouse', route: '/admin/inventory' },
-  { label: 'Movimientos', icon: 'pi pi-list', route: '/admin/stock/movements' },
-  { label: 'Recepciones', icon: 'pi pi-plus-circle', route: '/admin/receipts' },
-  { label: 'Pedidos', icon: 'pi pi-receipt', route: '/admin/orders' },
-  { label: 'POS', icon: 'pi pi-shopping-cart', route: '/admin/pos' },
-  { label: 'Caja', icon: 'pi pi-dollar', route: '/admin/cash' },
-  { label: 'Proveedores', icon: 'pi pi-truck', route: '/admin/suppliers' },
-  { label: 'Ordenes compra', icon: 'pi pi-file', route: '/admin/purchase-orders' },
-  { label: 'Precios', icon: 'pi pi-percentage', route: '/admin/pricing' },
-  { label: 'Reportes', icon: 'pi pi-chart-bar', route: '/admin/reports' },
-  { label: 'Recomendaciones', icon: 'pi pi-lightbulb', route: '/admin/recommendations' },
-  { label: 'Cierres de caja', icon: 'pi pi-wallet', route: '/admin/cash/history' },
-  { label: 'Usuarios', icon: 'pi pi-users', route: '/admin/users' },
+  // Daily operation: sell, prepare, collect, and inspect stock.
+  {
+    label: 'Dashboard',
+    icon: 'pi pi-chart-pie',
+    route: '/admin/dashboard',
+    roles: MANAGEMENT_ROLES,
+  },
+  { label: 'POS', icon: 'pi pi-shopping-cart', route: '/admin/pos', roles: ALL_STAFF_ROLES },
+  { label: 'Pedidos', icon: 'pi pi-receipt', route: '/admin/orders', roles: ALL_STAFF_ROLES },
+  { label: 'Caja', icon: 'pi pi-dollar', route: '/admin/cash', roles: ALL_STAFF_ROLES },
+  {
+    label: 'Inventario',
+    icon: 'pi pi-warehouse',
+    route: '/admin/inventory',
+    roles: ALL_STAFF_ROLES,
+  },
+  {
+    label: 'Movimientos',
+    icon: 'pi pi-list',
+    route: '/admin/stock/movements',
+    roles: ALL_STAFF_ROLES,
+  },
+  // Management: catalog, suppliers, purchasing, and pricing.
+  {
+    label: 'Recepciones',
+    icon: 'pi pi-plus-circle',
+    route: '/admin/receipts',
+    roles: ALL_STAFF_ROLES,
+  },
+  { label: 'Productos', icon: 'pi pi-box', route: '/admin/products', roles: MANAGEMENT_ROLES },
+  { label: 'Categorias', icon: 'pi pi-tags', route: '/admin/categories', roles: MANAGEMENT_ROLES },
+  { label: 'Proveedores', icon: 'pi pi-truck', route: '/admin/suppliers', roles: MANAGEMENT_ROLES },
+  {
+    label: 'Ordenes compra',
+    icon: 'pi pi-file',
+    route: '/admin/purchase-orders',
+    roles: MANAGEMENT_ROLES,
+  },
+  { label: 'Precios', icon: 'pi pi-percentage', route: '/admin/pricing', roles: MANAGEMENT_ROLES },
+  // Analysis and administration.
+  { label: 'Reportes', icon: 'pi pi-chart-bar', route: '/admin/reports', roles: MANAGEMENT_ROLES },
+  {
+    label: 'Recomendaciones',
+    icon: 'pi pi-lightbulb',
+    route: '/admin/recommendations',
+    roles: MANAGEMENT_ROLES,
+  },
+  {
+    label: 'Cierres de caja',
+    icon: 'pi pi-wallet',
+    route: '/admin/cash/history',
+    roles: MANAGEMENT_ROLES,
+  },
+  { label: 'Usuarios', icon: 'pi pi-users', route: '/admin/users', roles: ['ADMIN'] },
 ];
 
 const LABEL_MAP: Record<string, string> = {
@@ -72,12 +116,10 @@ export class AdminLayout implements OnInit, OnDestroy {
   /** True when an open cash session exists for the current user's branch (S3-US06 sidebar indicator). */
   protected readonly hasOpenCashSession = signal(false);
 
-  /** Sidebar nav items filtered by role: "Usuarios" is ADMIN-only. */
+  /** Sidebar nav items filtered according to the documented access matrix. */
   protected readonly navItems = computed(() => {
-    if (this.auth.getUserRole() === 'ADMIN') {
-      return NAV_ITEMS;
-    }
-    return NAV_ITEMS.filter((item) => item.route !== '/admin/users');
+    const role = this.auth.getUserRole();
+    return role == null ? [] : NAV_ITEMS.filter((item) => item.roles.includes(role as StaffRole));
   });
 
   /** Display name shown in the topbar. */

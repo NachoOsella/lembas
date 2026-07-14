@@ -16,7 +16,7 @@ describe('UserService', () => {
   let httpMock: HttpTestingController;
 
   const usersUrl = '/api/admin/users';
-  const branchesUrl = '/api/admin/branches';
+  const branchesUrl = '/api/store/branches';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -176,7 +176,7 @@ describe('UserService', () => {
   // listBranches
   // ---------------------------------------------------------------------------
   describe('listBranches', () => {
-    it('should fetch branches from /api/admin/branches', () => {
+    it('should fetch branches from the public store endpoint', () => {
       const expected: Branch[] = [
         { id: 1, name: 'Centro', active: true },
         { id: 2, name: 'Nueva Cordoba', active: true },

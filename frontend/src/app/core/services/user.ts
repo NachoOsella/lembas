@@ -11,16 +11,17 @@ import {
 } from '../../shared/models/user';
 
 /**
- * CRUD service for admin user management and branch listing.
+ * CRUD service for admin user management and active branch listing.
  *
- * <p>All methods require the caller to be authenticated with ADMIN role;
- * the backend enforces this via {@code @PreAuthorize}.</p>
+ * <p>User CRUD methods require ADMIN access. Branches are read through the
+ * public store endpoint because staff screens (including EMPLOYEE) also use
+ * them for branch selectors.</p>
  */
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly http = inject(HttpClient);
   private readonly usersUrl = '/api/admin/users';
-  private readonly branchesUrl = '/api/admin/branches';
+  private readonly branchesUrl = '/api/store/branches';
 
   /**
    * Returns a paginated list of internal users, optionally filtered by role or branch.
@@ -82,9 +83,7 @@ export class UserService {
     return this.http.patch<UserResponse>(`${this.usersUrl}/${id}/status`, { enabled });
   }
 
-  /**
-   * Fetches all active branches for the branch dropdown.
-   */
+  /** Fetches all active branches for staff and admin branch selectors. */
   listBranches(): Observable<Branch[]> {
     return this.http.get<Branch[]>(this.branchesUrl);
   }
