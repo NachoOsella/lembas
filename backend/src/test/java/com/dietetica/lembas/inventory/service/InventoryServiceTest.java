@@ -18,6 +18,7 @@ import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.Test;
@@ -628,6 +629,7 @@ class InventoryServiceTest {
     private User user(Long id) {
         User user = mock(User.class);
         lenient().when(user.getId()).thenReturn(id);
+        lenient().when(user.getRole()).thenReturn(Role.ADMIN);
         return user;
     }
 }

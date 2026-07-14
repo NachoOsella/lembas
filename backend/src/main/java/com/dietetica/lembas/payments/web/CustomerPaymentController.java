@@ -6,6 +6,7 @@ import com.dietetica.lembas.payments.dto.PaymentSummaryDto;
 import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.payments.service.PreferenceService;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +22,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/customer/orders/{orderId}/payments")
+@PreAuthorize("hasRole('CUSTOMER')")
 public class CustomerPaymentController {
 
     private final PreferenceService preferenceService;

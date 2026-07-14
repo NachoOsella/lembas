@@ -20,6 +20,7 @@ import com.dietetica.lembas.suppliers.model.PurchaseReceiptStatus;
 import com.dietetica.lembas.suppliers.repository.PurchaseOrderRepository;
 import com.dietetica.lembas.suppliers.repository.PurchaseReceiptItemRepository;
 import com.dietetica.lembas.suppliers.repository.PurchaseReceiptRepository;
+import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -68,6 +69,7 @@ public class PurchaseReceiptService {
     public PurchaseReceiptDto confirm(PurchaseReceiptRequest request) {
         PurchaseOrder order = purchaseOrderRepository.findWithItemsById(request.purchaseOrderId())
                 .orElseThrow(() -> new DomainException("PURCHASE_ORDER_NOT_FOUND", HttpStatus.NOT_FOUND, "Purchase order not found"));
+        ensureBranchAccess(order);
         ensureReceivable(order);
 
         Map<Long, PurchaseOrderItem> orderItems = orderItemsById(order);
@@ -107,6 +109,20 @@ public class PurchaseReceiptService {
 
         order.setStatus(resolveOrderStatus(order));
         return toDto(savedReceipt, order.getStatus());
+    }
+
+    /** Restricts branch-scoped staff to receipts for their assigned branch. */
+    private void ensureBranchAccess(PurchaseOrder order) {
+        User currentUser = currentUserOrNull();
+        if (currentUser == null || currentUser.getRole() == null || currentUser.getRole() == Role.ADMIN) {
+            return;
+        }
+        if (currentUser.getBranchId() == null
+                || order.getBranch() == null
+                || !currentUser.getBranchId().equals(order.getBranch().getId())) {
+            throw new DomainException("ACCESS_DENIED", HttpStatus.FORBIDDEN,
+                    "Purchase order belongs to another branch");
+        }
     }
 
     /** Validates that the purchase order can still receive merchandise. */

@@ -35,6 +35,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -108,6 +109,19 @@ class StockLotAdminControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.totalAvailableForProductBranch").value(8.5));
+    }
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void Should_return201_when_employeeCreatesLot() throws Exception {
+        CreateStockLotRequest request = new CreateStockLotRequest(
+                10L, 20L, BigDecimal.ONE, "L-EMP", LocalDate.now().plusDays(30), BigDecimal.valueOf(500));
+        when(inventoryService.createStockLot(any(CreateStockLotRequest.class))).thenReturn(aLot());
+
+        mockMvc.perform(post("/api/admin/stock/lots")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -203,16 +217,29 @@ class StockLotAdminControllerTest {
 
     @Test
     @WithMockUser(roles = "EMPLOYEE")
-    void Should_return200_when_employeeDeductsStock() throws Exception {
-        DeductionPlan plan = new DeductionPlan(List.of(), BigDecimal.ZERO, BigDecimal.ZERO, false);
-        when(inventoryService.deductStock(eq(10L), eq(20L), eq(BigDecimal.valueOf(1)), eq(StockMovementType.MANUAL_ADJUSTMENT)))
-                .thenReturn(plan);
+    void Should_return200_when_employeeAdjustsStock() throws Exception {
+        String json = """
+                {"productId": 10, "branchId": 20, "quantity": -1, "reason": "Merma", "type": "WASTE"}
+                """;
 
+        mockMvc.perform(post("/api/admin/stock/adjustments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk());
+
+        verify(inventoryService).adjustStock(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void Should_return403_when_employeeDeductsStock() throws Exception {
         String json = "{\"productId\": 10, \"branchId\": 20, \"quantity\": 1}";
         mockMvc.perform(post("/api/admin/stock/deductions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
+
+        verify(inventoryService, never()).deductStock(any(), any(), any(), any());
     }
 
     @Test

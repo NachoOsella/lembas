@@ -10,6 +10,7 @@ import com.dietetica.lembas.shared.dto.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -33,6 +34,7 @@ import java.time.LocalDate;
  */
 @RestController
 @RequestMapping("/api/admin/orders")
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
 public class AdminOrderController {
 
     private final AdminOrderService adminOrderService;
@@ -102,6 +104,7 @@ public class AdminOrderController {
      * for DELIVERED and already-CANCELLED orders.</p>
      */
     @PatchMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
     public OrderDetailDto cancel(@PathVariable Long id, @Valid @RequestBody CancelOrderRequest request) {
         return adminOrderService.cancel(id, request.reason());
     }

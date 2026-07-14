@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -56,6 +57,20 @@ class SecurityConfigTest {
     /**
      * Verifies public auth endpoints remain reachable without credentials.
      */
+    @Test
+    @WithMockUser(roles = "CUSTOMER")
+    void Should_forbidCustomerAccess_when_callingAdminEndpoint() throws Exception {
+        mockMvc.perform(get("/api/admin/unknown"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void Should_forbidEmployeeAccess_when_callingCustomerEndpoint() throws Exception {
+        mockMvc.perform(get("/api/customer/unknown"))
+                .andExpect(status().isForbidden());
+    }
+
     @Test
     void Should_allowAnonymousAccess_when_callingPublicAuthEndpoints() throws Exception {
         mockMvc.perform(post("/api/auth/login")
