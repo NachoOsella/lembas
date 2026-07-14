@@ -275,7 +275,22 @@ class PosSaleServiceTest {
     // ---------------------------------------------------------------------------
 
     @Test
-    void createSale_rejectsWhenCashierHasNoBranch() {
+    void createSale_allowsAdminToSellAgainstSelectedBranch() {
+        User admin = new User(null, "admin@x.com", "hash", "A", "B", null, Role.ADMIN);
+        Branch branch = branch(BRANCH_ID, true);
+        Product product = product(PRODUCT_ID, "Aceite", new BigDecimal("2500.00"));
+        StockLot lot = stockLot(1L, new BigDecimal("10"));
+        DeductionPlan plan = planOf(new BigDecimal("1"), 1L, new BigDecimal("10"), new BigDecimal("9"));
+        stubHappyPath(admin, branch, product, lot, plan);
+        when(orderMapper.toDetailDto(any(Order.class))).thenReturn(orderDetailDto());
+
+        service.createSale(saleRequest(PRODUCT_ID, 1, PaymentMethod.CASH), admin, BRANCH_ID);
+
+        verify(cashService).getCurrentSession(BRANCH_ID, admin);
+    }
+
+    @Test
+    void createSale_rejectsAdminWithoutSelectedBranch() {
         User cashier = new User(null, "admin@x.com", "hash", "A", "B", null, Role.ADMIN);
         assertThatThrownBy(() ->
                 service.createSale(saleRequest(PRODUCT_ID, 1, PaymentMethod.CASH), cashier))

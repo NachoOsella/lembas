@@ -17,6 +17,7 @@ import com.dietetica.lembas.suppliers.model.SupplierProduct;
 import com.dietetica.lembas.suppliers.repository.PurchaseOrderRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierProductRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierRepository;
+import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -58,13 +59,16 @@ public class PurchaseOrderService {
     /** Lists purchase orders with optional supplier, branch, and status filters. */
     @Transactional(readOnly = true)
     public Page<PurchaseOrderSummaryDto> list(Long supplierId, Long branchId, PurchaseOrderStatus status, Pageable pageable) {
-        return purchaseOrderRepository.search(supplierId, branchId, status, mapSort(pageable)).map(this::toSummaryDto);
+        Long effectiveBranchId = resolveBranchForUser(branchId);
+        return purchaseOrderRepository.search(supplierId, effectiveBranchId, status, mapSort(pageable)).map(this::toSummaryDto);
     }
 
     /** Returns a detailed purchase order for view, edit, or PDF preview. */
     @Transactional(readOnly = true)
     public PurchaseOrderDetailDto get(Long id) {
-        return toDetailDto(findOrder(id));
+        PurchaseOrder order = findOrder(id);
+        ensureBranchAccess(order);
+        return toDetailDto(order);
     }
 
     /** Creates a draft purchase order and snapshots item costs. */
@@ -194,6 +198,33 @@ public class PurchaseOrderService {
     private PurchaseOrder findOrder(Long id) {
         return purchaseOrderRepository.findWithItemsById(id)
                 .orElseThrow(() -> new DomainException("PURCHASE_ORDER_NOT_FOUND", HttpStatus.NOT_FOUND, "Purchase order not found"));
+    }
+
+    /** Restricts branch-scoped staff to purchase orders for their assigned branch. */
+    private void ensureBranchAccess(PurchaseOrder order) {
+        User currentUser = currentUserOrNull();
+        if (currentUser == null || currentUser.getRole() == null || currentUser.getRole() == Role.ADMIN) {
+            return;
+        }
+        if (currentUser.getBranchId() == null
+                || order.getBranch() == null
+                || !currentUser.getBranchId().equals(order.getBranch().getId())) {
+            throw new DomainException("ACCESS_DENIED", HttpStatus.FORBIDDEN,
+                    "Purchase order belongs to another branch");
+        }
+    }
+
+    /** Resolves branch filters for the current role without leaking other branches. */
+    private Long resolveBranchForUser(Long requestedBranchId) {
+        User currentUser = currentUserOrNull();
+        if (currentUser == null || currentUser.getRole() == Role.ADMIN) {
+            return requestedBranchId;
+        }
+        if (currentUser.getBranchId() == null) {
+            throw new DomainException("INVALID_USER_BRANCH", HttpStatus.BAD_REQUEST,
+                    "User has no assigned branch");
+        }
+        return currentUser.getBranchId();
     }
 
     /** Validates the exact expected state for a transition. */

@@ -1,0 +1,180 @@
+<app-page-header
+  eyebrow="Reportes"
+  title="Reporte de empleados"
+  description="Rendimiento de operadores, facturación POS y control de caja para el periodo seleccionado."
+  tone="light"
+/>
+
+<div class="employees-report">
+  <app-report-filter-bar
+    caption="Filtros"
+    title="Reporte de empleados"
+    description="Las ventas online no se incluyen porque no tienen vendedor asignado."
+  >
+    <app-date-picker
+      slot="fields"
+      placeholder="Desde"
+      [value]="fromDate()"
+      [maxDate]="toDate()"
+      (valueChange)="onFromChange($event)"
+      selectionMode="single"
+    />
+    <app-date-picker
+      slot="fields"
+      placeholder="Hasta"
+      [value]="toDate()"
+      [minDate]="fromDate()"
+      (valueChange)="onToChange($event)"
+      selectionMode="single"
+    />
+    <app-select
+      slot="fields"
+      [options]="branchOptions()"
+      placeholder="Todas las sucursales"
+      [value]="branchId()"
+      (valueChange)="onBranchChange($event)"
+    />
+    <app-button
+      slot="actions"
+      [variant]="'ghost'"
+      [size]="'sm'"
+      [icon]="'pi pi-filter-slash'"
+      (click)="onClearFilters()"
+    >
+      Limpiar
+    </app-button>
+    <app-button
+      slot="actions"
+      [variant]="'primary'"
+      [size]="'sm'"
+      [icon]="'pi pi-refresh'"
+      [loading]="loading()"
+      (click)="onRefresh()"
+    >
+      Actualizar
+    </app-button>
+    <app-data-export slot="actions" [data]="exportData()" />
+  </app-report-filter-bar>
+
+  @if (errorMessage() && !data()) {
+    <app-error-alert title="Sin datos por ahora" [message]="errorMessage() ?? ''" />
+  } @else if (loading() && !data()) {
+    <app-loading-spinner label="Cargando reporte de empleados..." surface="card" />
+  } @else if (!hasData()) {
+    <app-empty-state
+      icon="pi pi-users"
+      title="No hay actividad atribuible en este periodo"
+      description="Aparecerán operadores cuando haya ventas POS o aperturas y cierres de caja."
+    />
+  } @else {
+    <section class="employees-report__section" aria-label="Indicadores de empleados">
+      <div class="employees-report__kpis">
+        @for (card of statCards(); track card.label) {
+          <app-dashboard-stat-card [card]="card" />
+        }
+      </div>
+    </section>
+
+    <section class="employees-report__section" aria-label="Rendimiento del equipo">
+      <div class="employees-report__charts">
+        <article class="employees-report__chart-card">
+          <app-report-section-head
+            eyebrow="Rendimiento"
+            title="Facturación por operador"
+            description="Compará la facturación POS y la cantidad de ventas de cada operador."
+          />
+          <app-dashboard-chart
+            type="bar"
+            [labels]="employeeLabels()"
+            [data]="revenueValues()"
+            [secondaryData]="salesValues()"
+            primaryLabel="Facturación POS"
+            secondaryLabel="Ventas POS"
+            [secondaryAxis]="true"
+            [loading]="loading()"
+            [empty]="!hasPerformanceData()"
+            emptyMessage="No hay ventas POS en el periodo."
+            [height]="'300px'"
+            [currency]="true"
+          />
+        </article>
+        <article class="employees-report__chart-card">
+          <app-report-section-head
+            eyebrow="Participación"
+            title="Aporte a la facturación"
+            description="Participación de cada operador sobre la facturación POS total."
+          />
+          <app-dashboard-chart
+            type="doughnut"
+            [labels]="employeeLabels()"
+            [data]="revenueValues()"
+            [loading]="loading()"
+            [empty]="!hasPerformanceData()"
+            emptyMessage="No hay facturación POS para distribuir."
+            [height]="'300px'"
+            [currency]="true"
+            [centerLabel]="totalRevenue()"
+            centerSubLabel="Facturación POS"
+          />
+        </article>
+      </div>
+    </section>
+
+    <section class="employees-report__section" aria-label="Detalle por operador">
+      <article class="employees-report__table-card">
+        <app-report-section-head
+          eyebrow="Detalle operativo"
+          title="Actividad por operador"
+          description="Ventas POS, movimientos de caja y desvíos absolutos del periodo."
+        >
+          <app-data-export slot="actions" [data]="exportData()" />
+        </app-report-section-head>
+        <app-data-table
+          [data]="rows()"
+          [columns]="columns"
+          [loading]="loading()"
+          [paginated]="false"
+          [emptyTitle]="'Sin actividad en este periodo'"
+          [emptyDescription]="'Ajustá los filtros para ampliar la búsqueda.'"
+        >
+          <ng-template #body let-row>
+            <tr class="app-data-table__row">
+              <td>
+                <span class="employees-report__person">
+                  <span class="employees-report__person-icon" aria-hidden="true">
+                    <i class="pi pi-user"></i>
+                  </span>
+                  <strong>{{ row.employeeName }}</strong>
+                </span>
+              </td>
+              <td>
+                <span class="employees-report__role">{{ roleLabel(row.role) }}</span>
+              </td>
+              <td>{{ row.posSalesCount }}</td>
+              <td class="employees-report__money">{{ row.posRevenue | currencyAr }}</td>
+              <td class="employees-report__money">{{ row.averageTicket | currencyAr }}</td>
+              <td>{{ row.cashSessionsOpened }}</td>
+              <td>{{ row.cashSessionsClosed }}</td>
+              <td>
+                <span
+                  class="employees-report__difference"
+                  [class.employees-report__difference--warning]="row.cashDifferenceAbsolute > 0"
+                >
+                  {{ row.cashDifferenceAbsolute | currencyAr }}
+                </span>
+              </td>
+            </tr>
+          </ng-template>
+        </app-data-table>
+        @if (!hasCashDifferenceData()) {
+          <p class="employees-report__note">
+            <i class="pi pi-check-circle" aria-hidden="true"></i>
+            No se registraron desvíos absolutos de caja en el periodo.
+          </p>
+        }
+      </article>
+    </section>
+  }
+</div>
+
+<app-toast />

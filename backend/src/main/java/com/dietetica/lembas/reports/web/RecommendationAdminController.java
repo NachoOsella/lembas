@@ -2,6 +2,7 @@ package com.dietetica.lembas.reports.web;
 
 import com.dietetica.lembas.reports.dto.RecommendationDto;
 import com.dietetica.lembas.reports.service.RecommendationService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +16,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/admin/recommendations")
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
 public class RecommendationAdminController {
 
     private final RecommendationService recommendationService;

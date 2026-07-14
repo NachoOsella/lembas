@@ -13,6 +13,8 @@ import com.dietetica.lembas.reports.dto.CashSessionHistoryDto;
 import com.dietetica.lembas.reports.dto.CashSessionSummaryDto;
 import com.dietetica.lembas.reports.dto.DashboardDto;
 import com.dietetica.lembas.reports.dto.DashboardStatCardDto;
+import com.dietetica.lembas.reports.dto.EmployeePerformanceDto;
+import com.dietetica.lembas.reports.dto.EmployeeReportDto;
 import com.dietetica.lembas.reports.dto.InventoryReportDto;
 import com.dietetica.lembas.reports.dto.ReportBreakdownDto;
 import com.dietetica.lembas.reports.dto.ReportKpiDto;
@@ -34,6 +36,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -935,6 +940,121 @@ public class ReportService {
                 topByVolume,
                 leadTime
         );
+    }
+
+    // ---------------------------------------------------------------------------
+    // Employee report
+    // ---------------------------------------------------------------------------
+
+    /**
+     * Builds an employee-focused report from attributable POS sales and cash
+     * sessions. Online orders are intentionally excluded because they do not
+     * have a selling employee.
+     */
+    @Transactional(readOnly = true)
+    public EmployeeReportDto getEmployeeReport(LocalDate from, LocalDate to, Long branchId) {
+        User currentUser = securityContextHelper.getCurrentUser();
+        ensureInternalUser(currentUser);
+
+        Long effectiveBranchId = resolveBranchForUser(branchId, currentUser);
+        String branchName = effectiveBranchId == null
+                ? null
+                : branchRepository.findById(effectiveBranchId)
+                        .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
+                        .orElse(null);
+        LocalDate effectiveFrom = from == null ? LocalDate.now(REPORT_ZONE).minusDays(29) : from;
+        LocalDate effectiveTo = to == null ? LocalDate.now(REPORT_ZONE) : to;
+        OffsetDateTime start = effectiveFrom.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        OffsetDateTime end = effectiveTo.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        Map<Long, EmployeeMetrics> metricsByEmployee = new HashMap<>();
+
+        for (Object[] row : reportRepository.employeePosPerformance(start, end, effectiveBranchId)) {
+            EmployeeMetrics metrics = metricsFor(metricsByEmployee, row);
+            metrics.posSalesCount = toBigDecimal(row[4]).longValue();
+            metrics.posRevenue = toBigDecimal(row[5]).setScale(2, RoundingMode.HALF_UP);
+            metrics.averageTicket = toBigDecimal(row[6]).setScale(2, RoundingMode.HALF_UP);
+        }
+        for (Object[] row : reportRepository.employeeCashOpenPerformance(start, end, effectiveBranchId)) {
+            metricsFor(metricsByEmployee, row).cashSessionsOpened = toBigDecimal(row[4]).longValue();
+        }
+        for (Object[] row : reportRepository.employeeCashClosePerformance(start, end, effectiveBranchId)) {
+            EmployeeMetrics metrics = metricsFor(metricsByEmployee, row);
+            metrics.cashSessionsClosed = toBigDecimal(row[4]).longValue();
+            metrics.cashDifferenceAbsolute = toBigDecimal(row[5]).setScale(2, RoundingMode.HALF_UP);
+        }
+
+        List<EmployeePerformanceDto> employees = metricsByEmployee.values().stream()
+                .map(EmployeeMetrics::toDto)
+                .sorted(Comparator.comparing(EmployeePerformanceDto::posRevenue).reversed()
+                        .thenComparing(EmployeePerformanceDto::posSalesCount, Comparator.reverseOrder())
+                        .thenComparing(EmployeePerformanceDto::employeeName))
+                .toList();
+        long posSalesCount = employees.stream().mapToLong(EmployeePerformanceDto::posSalesCount).sum();
+        BigDecimal posRevenue = employees.stream()
+                .map(EmployeePerformanceDto::posRevenue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal cashDifferenceAbsolute = employees.stream()
+                .map(EmployeePerformanceDto::cashDifferenceAbsolute)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long cashSessionsClosed = employees.stream().mapToLong(EmployeePerformanceDto::cashSessionsClosed).sum();
+
+        List<ReportKpiDto> kpis = List.of(
+                new ReportKpiDto("Operadores con actividad", String.valueOf(employees.size()),
+                        "Ventas POS o actividad de caja", "pi pi-users", "INFO", null, null),
+                new ReportKpiDto("Facturacion POS", formatCurrency(posRevenue),
+                        NumberFormat.getInstance(new Locale("es", "AR")).format(posSalesCount) + " ventas",
+                        "pi pi-shopping-bag", "SUCCESS", null, null),
+                new ReportKpiDto("Cierres de caja", String.valueOf(cashSessionsClosed),
+                        "Cierres realizados en el periodo", "pi pi-wallet", "NEUTRAL", null, null),
+                new ReportKpiDto("Desvios absolutos", formatCurrency(cashDifferenceAbsolute),
+                        "Suma de diferencias de caja, sin compensarlas", "pi pi-exclamation-triangle",
+                        cashDifferenceAbsolute.signum() == 0 ? "SUCCESS" : "WARNING", null, null)
+        );
+
+        return new EmployeeReportDto(
+                effectiveFrom, effectiveTo, effectiveBranchId, branchName,
+                OffsetDateTime.now(), kpis, employees);
+    }
+
+    private static EmployeeMetrics metricsFor(Map<Long, EmployeeMetrics> metricsByEmployee, Object[] row) {
+        Long employeeId = ((Number) row[0]).longValue();
+        return metricsByEmployee.computeIfAbsent(employeeId, ignored -> new EmployeeMetrics(
+                employeeId,
+                fullName((String) row[1], (String) row[2]),
+                row[3] == null ? "EMPLOYEE" : row[3].toString()
+        ));
+    }
+
+    private static String fullName(String firstName, String lastName) {
+        String first = firstName == null ? "" : firstName.trim();
+        String last = lastName == null ? "" : lastName.trim();
+        String name = (first + " " + last).trim();
+        return name.isBlank() ? "Usuario interno" : name;
+    }
+
+    /** Mutable accumulator used only while merging independent report queries. */
+    private static final class EmployeeMetrics {
+        private final Long employeeId;
+        private final String employeeName;
+        private final String role;
+        private long posSalesCount;
+        private BigDecimal posRevenue = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        private BigDecimal averageTicket = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        private long cashSessionsOpened;
+        private long cashSessionsClosed;
+        private BigDecimal cashDifferenceAbsolute = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+
+        private EmployeeMetrics(Long employeeId, String employeeName, String role) {
+            this.employeeId = employeeId;
+            this.employeeName = employeeName;
+            this.role = role;
+        }
+
+        private EmployeePerformanceDto toDto() {
+            return new EmployeePerformanceDto(
+                    employeeId, employeeName, role, posSalesCount, posRevenue, averageTicket,
+                    cashSessionsOpened, cashSessionsClosed, cashDifferenceAbsolute);
+        }
     }
 
     // ---------------------------------------------------------------------------

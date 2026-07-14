@@ -1270,6 +1270,90 @@ public class ReportQueryRepository {
     }
 
     // ---------------------------------------------------------------------------
+    // Employee report aggregations
+    // ---------------------------------------------------------------------------
+
+    /**
+     * Aggregates completed POS sales by the internal user who created them.
+     *
+     * @return rows of {@code [userId, firstName, lastName, role, saleCount, revenue, averageTicket]}
+     */
+    @SuppressWarnings("unchecked")
+    public List<Object[]> employeePosPerformance(
+            OffsetDateTime start, OffsetDateTime end, Long branchId
+    ) {
+        String jpql = """
+                select u.id, u.firstName, u.lastName, u.role,
+                       count(o), coalesce(sum(o.total), 0), coalesce(avg(o.total), 0)
+                from Order o
+                join o.createdByUser u
+                where o.type = com.dietetica.lembas.orders.model.OrderType.POS
+                  and o.status = com.dietetica.lembas.orders.model.OrderStatus.PAID
+                  and o.paidAt >= :start
+                  and o.paidAt < :end
+                  and (:branchId is null or o.branch.id = :branchId)
+                group by u.id, u.firstName, u.lastName, u.role
+                """;
+        return em.createQuery(jpql)
+                .setParameter("start", start)
+                .setParameter("end", end)
+                .setParameter("branchId", branchId)
+                .getResultList();
+    }
+
+    /**
+     * Counts cash sessions opened by each internal user in the report period.
+     *
+     * @return rows of {@code [userId, firstName, lastName, role, openedCount]}
+     */
+    @SuppressWarnings("unchecked")
+    public List<Object[]> employeeCashOpenPerformance(
+            OffsetDateTime start, OffsetDateTime end, Long branchId
+    ) {
+        String jpql = """
+                select u.id, u.firstName, u.lastName, u.role, count(cs)
+                from CashSession cs
+                join cs.openedByUser u
+                where cs.openedAt >= :start
+                  and cs.openedAt < :end
+                  and (:branchId is null or cs.branch.id = :branchId)
+                group by u.id, u.firstName, u.lastName, u.role
+                """;
+        return em.createQuery(jpql)
+                .setParameter("start", start)
+                .setParameter("end", end)
+                .setParameter("branchId", branchId)
+                .getResultList();
+    }
+
+    /**
+     * Counts cash sessions closed by each user and sums their absolute discrepancies.
+     *
+     * @return rows of {@code [userId, firstName, lastName, role, closedCount, absoluteDifference]}
+     */
+    @SuppressWarnings("unchecked")
+    public List<Object[]> employeeCashClosePerformance(
+            OffsetDateTime start, OffsetDateTime end, Long branchId
+    ) {
+        String jpql = """
+                select u.id, u.firstName, u.lastName, u.role,
+                       count(cs), coalesce(sum(abs(cs.cashDifferenceAmount)), 0)
+                from CashSession cs
+                join cs.closedByUser u
+                where cs.status = com.dietetica.lembas.cash.model.CashSessionStatus.CLOSED
+                  and cs.closedAt >= :start
+                  and cs.closedAt < :end
+                  and (:branchId is null or cs.branch.id = :branchId)
+                group by u.id, u.firstName, u.lastName, u.role
+                """;
+        return em.createQuery(jpql)
+                .setParameter("start", start)
+                .setParameter("end", end)
+                .setParameter("branchId", branchId)
+                .getResultList();
+    }
+
+    // ---------------------------------------------------------------------------
     // Internal helpers
     // ---------------------------------------------------------------------------
 

@@ -92,7 +92,13 @@
   vertical-align: top;
 }
 
-:host ::ng-deep .purchase-order-items-table .app-data-table .p-datatable-tbody > tr > td:nth-child(4) {
+:host
+  ::ng-deep
+  .purchase-order-items-table
+  .app-data-table
+  .p-datatable-tbody
+  > tr
+  > td:nth-child(4) {
   color: var(--color-primary-dark);
   font-weight: 700;
 }
@@ -128,7 +134,20 @@
     grid-template-columns: 1fr;
   }
 
+  .purchase-order-item-picker__action {
+    min-width: 0;
+  }
+
   .purchase-order-form__actions {
-    justify-content: stretch;
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .purchase-order-form__actions app-button {
+    width: 100%;
+  }
+
+  .purchase-order-total {
+    justify-content: space-between;
   }
 }

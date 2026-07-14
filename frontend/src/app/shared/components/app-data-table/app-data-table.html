@@ -73,5 +73,20 @@
         </ng-template>
       </p-table>
     </div>
+
+    @if (paginated()) {
+      <div class="app-data-table__paginator">
+        <p-paginator
+          [totalRecords]="totalRecords() ?? data().length"
+          [rows]="rows()"
+          [first]="first()"
+          [rowsPerPageOptions]="rowsPerPageOptions()"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{first}-{last} de {totalRecords}"
+          [appendTo]="'body'"
+          (onPageChange)="onPageChange($event)"
+        />
+      </div>
+    }
   }
 </div>

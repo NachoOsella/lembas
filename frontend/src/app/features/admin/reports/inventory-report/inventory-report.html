@@ -43,11 +43,6 @@
     />
   } @else {
     <section class="inventory-report__section" aria-label="Indicadores">
-      <app-report-section-head
-        eyebrow="Stock"
-        title="Indicadores clave"
-        description="Valorizacion, capital por vencer, stock bajo y mercaderia vencida."
-      />
       <div class="inventory-report__kpis">
         @for (card of statCards(); track card.label) {
           <app-dashboard-stat-card [card]="card" />

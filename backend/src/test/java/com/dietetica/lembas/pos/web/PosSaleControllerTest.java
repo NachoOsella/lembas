@@ -56,7 +56,7 @@ class PosSaleControllerTest {
         User cashier = new User(1L, "e@x.com", "h", "Carla", "Cajero", null, Role.EMPLOYEE);
         when(securityContextHelper.getCurrentUser()).thenReturn(cashier);
         OrderDetailDto dto = orderDetailDto();
-        when(posSaleService.createSale(any(), eq(cashier))).thenReturn(dto);
+        when(posSaleService.createSale(any(), eq(cashier), eq(null))).thenReturn(dto);
 
         String body = """
                 {
@@ -75,7 +75,26 @@ class PosSaleControllerTest {
                 .andExpect(jsonPath("$.status").value("PAID"))
                 .andExpect(jsonPath("$.total").value(2500.00));
 
-        verify(posSaleService).createSale(any(), eq(cashier));
+        verify(posSaleService).createSale(any(), eq(cashier), eq(null));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void createPassesSelectedBranchForAdmin() throws Exception {
+        User admin = new User(null, "admin@x.com", "h", "Admin", "User", null, Role.ADMIN);
+        when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+        when(posSaleService.createSale(any(), eq(admin), eq(5L))).thenReturn(orderDetailDto());
+
+        String body = """
+                { "items": [ { "productId": 100, "quantity": 1 } ], "paymentMethod": "CASH" }
+                """;
+
+        mockMvc.perform(post("/api/pos/sales?branchId=5")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated());
+
+        verify(posSaleService).createSale(any(), eq(admin), eq(5L));
     }
 
     @Test
@@ -134,7 +153,7 @@ class PosSaleControllerTest {
     void createMapsInsufficientStockTo409() throws Exception {
         User cashier = new User(1L, "e@x.com", "h", "C", "C", null, Role.EMPLOYEE);
         when(securityContextHelper.getCurrentUser()).thenReturn(cashier);
-        when(posSaleService.createSale(any(), eq(cashier)))
+        when(posSaleService.createSale(any(), eq(cashier), eq(null)))
                 .thenThrow(new DomainException("INSUFFICIENT_STOCK", HttpStatus.CONFLICT, "Insufficient stock"));
 
         String body = """
@@ -153,7 +172,7 @@ class PosSaleControllerTest {
     void createMapsNoCashSessionTo404() throws Exception {
         User cashier = new User(1L, "e@x.com", "h", "C", "C", null, Role.EMPLOYEE);
         when(securityContextHelper.getCurrentUser()).thenReturn(cashier);
-        when(posSaleService.createSale(any(), eq(cashier)))
+        when(posSaleService.createSale(any(), eq(cashier), eq(null)))
                 .thenThrow(new DomainException("CASH_SESSION_NOT_FOUND", HttpStatus.NOT_FOUND, "No open session"));
 
         String body = """
@@ -172,7 +191,7 @@ class PosSaleControllerTest {
     void createMapsProductNotFoundTo404() throws Exception {
         User cashier = new User(1L, "e@x.com", "h", "C", "C", null, Role.EMPLOYEE);
         when(securityContextHelper.getCurrentUser()).thenReturn(cashier);
-        when(posSaleService.createSale(any(), eq(cashier)))
+        when(posSaleService.createSale(any(), eq(cashier), eq(null)))
                 .thenThrow(new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
 
         String body = """

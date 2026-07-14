@@ -46,6 +46,7 @@
 }
 
 .page-header__copy {
+  min-width: 0;
   max-width: 46rem;
 }
 
@@ -85,9 +86,10 @@
   max-width: 42rem;
   margin: 1rem 0 0;
   color: var(--color-text-muted);
-  font-size: 19px;
+  font-size: clamp(0.95rem, 1.5vw, 1.1875rem);
   font-weight: 400;
-  line-height: 1.75;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 
 .page-header--dark .page-header__description {
@@ -111,8 +113,17 @@
     padding: clamp(1.15rem, 5vw, 1.5rem);
   }
 
-  .page-header__actions,
-  .page-header__actions > * {
+  .page-header__actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .page-header__actions > app-button,
+  .page-header__actions > app-button > button {
+    width: 100%;
+  }
+
+  .page-header__actions > .header-actions {
     width: 100%;
   }
 }

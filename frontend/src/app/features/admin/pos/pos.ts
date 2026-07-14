@@ -13,7 +13,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
+import { AuthService } from '../../../core/services/auth';
 import { ErrorMappingService } from '../../../core/services/error-mapping';
+import { UserService } from '../../../core/services/user';
+import { Branch } from '../../../shared/models/user';
 import { getApiError } from '../../../shared/models/api-error';
 import { OrderDetail } from '../../../shared/models/order';
 import { CashSessionDto } from '../../../shared/models/cash-session';
@@ -23,16 +26,14 @@ import { CashService } from '../../../core/services/cash';
 import { AppBadge } from '../../../shared/components/app-badge/app-badge';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
+import { AppSelect } from '../../../shared/components/app-select/app-select';
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
 
 import { PosCartComponent } from './components/pos-cart/pos-cart';
 import { PosCheckoutResultDialogComponent } from './components/pos-checkout-result-dialog/pos-checkout-result-dialog';
 import { PosProductSearchComponent } from './components/pos-product-search/pos-product-search';
 import { PosCartStore } from './state/pos-cart.store';
-import {
-  CreatePosSaleRequest,
-  PosSaleService,
-} from './services/pos-sale.service';
+import { CreatePosSaleRequest, PosSaleService } from './services/pos-sale.service';
 
 /**
  * POS landing page (S3-US09, S3-US10, S3-US11).
@@ -54,6 +55,7 @@ import {
     AppBadge,
     AppButton,
     AppPageHeader,
+    AppSelect,
     AppToast,
     PosCartComponent,
     PosCheckoutResultDialogComponent,
@@ -63,6 +65,8 @@ import {
   styleUrl: './pos.css',
 })
 export class AdminPosPage implements OnInit {
+  private readonly auth = inject(AuthService);
+  private readonly userService = inject(UserService);
   private readonly cart = inject(PosCartStore);
   private readonly posSale = inject(PosSaleService);
   private readonly cash = inject(CashService);
@@ -73,6 +77,12 @@ export class AdminPosPage implements OnInit {
 
   protected readonly cartLines = this.cart.lines;
   protected readonly hasItems = computed(() => this.cartLines().length > 0);
+  protected readonly isAdmin = computed(() => this.auth.getUserRole() === 'ADMIN');
+  protected readonly branches = signal<Branch[]>([]);
+  protected readonly selectedBranchId = signal<number | null>(null);
+  protected readonly branchOptions = computed(() =>
+    this.branches().map((branch) => ({ label: branch.name, value: branch.id })),
+  );
 
   protected readonly cashSession = signal<CashSessionDto | null>(null);
   protected readonly cashSessionLoading = signal(true);
@@ -92,15 +102,28 @@ export class AdminPosPage implements OnInit {
    * Whether the cashier can charge right now. Requires: items in the cart
    * AND an open cash session resolved.
    */
-  protected readonly canCheckout = computed(
-    () => this.hasItems() && this.cashSession() != null,
-  );
+  protected readonly canCheckout = computed(() => this.hasItems() && this.cashSession() != null);
 
   /** Reference to the cart panel so the page can read its selection state. */
   private readonly cartComponent = viewChild<PosCartComponent>('cartComponent');
 
   ngOnInit(): void {
+    if (this.isAdmin()) {
+      this.loadAdminBranches();
+      return;
+    }
     this.refreshCashSession();
+  }
+
+  /** Selects the operating branch used by an ADMIN for cash and stock. */
+  protected onBranchSelected(branchId: number | null): void {
+    this.selectedBranchId.set(branchId);
+    this.cashSession.set(null);
+    if (branchId != null) {
+      this.refreshCashSession();
+    } else {
+      this.cashSessionLoading.set(false);
+    }
   }
 
   /**
@@ -183,42 +206,45 @@ export class AdminPosPage implements OnInit {
       notes: null,
     };
 
-    this.posSale.createSale(request).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (order) => {
-        this.processing.set(false);
-        this.lastResult.set(order);
-        this.cart.clear();
-        cart.resetSelection();
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Venta registrada',
-          detail: `Orden ${order.orderNumber} - ${this.formatMoney(order.total)}`,
-          life: 4000,
-        });
-      },
-      error: (err) => {
-        this.processing.set(false);
-        const apiError = getApiError(err);
-        const code = apiError?.code ?? 'INTERNAL_ERROR';
-        const message = this.errorMapping.getMessage(
-          code,
-          'No se pudo registrar la venta. Reintentá.',
-        );
-        this.messageService.add({
-          severity: 'error',
-          summary: 'No se pudo cobrar',
-          detail: message,
-          life: 6000,
-        });
-        // When the backend reports a missing or closed cash session, the
-        // cached page state is stale: re-probe so the badge and the
-        // canCheckout gate update immediately (and the cashier sees why
-        // the next attempt is blocked).
-        if (code === 'CASH_SESSION_NOT_FOUND' || code === 'CASH_BRANCH_REQUIRED') {
-          this.refreshCashSession();
-        }
-      },
-    });
+    this.posSale
+      .createSale(request, this.selectedBranchId())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (order) => {
+          this.processing.set(false);
+          this.lastResult.set(order);
+          this.cart.clear();
+          cart.resetSelection();
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Venta registrada',
+            detail: `Orden ${order.orderNumber} - ${this.formatMoney(order.total)}`,
+            life: 4000,
+          });
+        },
+        error: (err) => {
+          this.processing.set(false);
+          const apiError = getApiError(err);
+          const code = apiError?.code ?? 'INTERNAL_ERROR';
+          const message = this.errorMapping.getMessage(
+            code,
+            'No se pudo registrar la venta. Reintentá.',
+          );
+          this.messageService.add({
+            severity: 'error',
+            summary: 'No se pudo cobrar',
+            detail: message,
+            life: 6000,
+          });
+          // When the backend reports a missing or closed cash session, the
+          // cached page state is stale: re-probe so the badge and the
+          // canCheckout gate update immediately (and the cashier sees why
+          // the next attempt is blocked).
+          if (code === 'CASH_SESSION_NOT_FOUND' || code === 'CASH_BRANCH_REQUIRED') {
+            this.refreshCashSession();
+          }
+        },
+      });
   }
 
   /** "Nueva venta" handler — clears the cart, resets selection, closes the result. */
@@ -243,10 +269,35 @@ export class AdminPosPage implements OnInit {
     return this.cashSession()?.branchName ?? '';
   }
 
+  private loadAdminBranches(): void {
+    this.cashSessionLoading.set(true);
+    this.userService
+      .listBranches()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (branches) => {
+          this.branches.set(branches);
+          if (branches.length === 1) {
+            this.onBranchSelected(branches[0].id);
+            return;
+          }
+          this.cashSessionLoading.set(false);
+        },
+        error: () => this.cashSessionLoading.set(false),
+      });
+  }
+
   private loadCashSession(): void {
+    const branchId = this.selectedBranchId();
+    if (this.isAdmin() && branchId == null) {
+      this.cashSession.set(null);
+      this.cashSessionLoading.set(false);
+      return;
+    }
+
     this.cashSessionLoading.set(true);
     this.cash
-      .currentSession()
+      .currentSession(branchId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (session) => {

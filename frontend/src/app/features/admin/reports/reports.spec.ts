@@ -29,16 +29,17 @@ describe('Reports', () => {
     expect(component).toBeTruthy();
   });
 
-  it('exposes the five report cards (dashboard, cash, sales, inventory, suppliers)', () => {
-    expect(component.cards.length).toBe(5);
+  it('exposes the six report cards including employees', () => {
+    expect(component.cards.length).toBe(6);
     const available = component.cards.filter((c) => c.status === 'available');
-    expect(available.length).toBe(5);
+    expect(available.length).toBe(6);
     const routes = component.cards.map((c) => c.route);
     expect(routes).toContain('/admin/dashboard');
     expect(routes).toContain('/admin/reports/cash');
     expect(routes).toContain('/admin/reports/sales');
     expect(routes).toContain('/admin/reports/inventory');
     expect(routes).toContain('/admin/reports/suppliers');
+    expect(routes).toContain('/admin/reports/employees');
   });
 
   it('does not expose recommendations as a report card', () => {

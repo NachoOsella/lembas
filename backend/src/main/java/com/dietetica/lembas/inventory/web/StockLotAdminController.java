@@ -65,6 +65,7 @@ public class StockLotAdminController {
 
     /** Registers a new stock lot and its PURCHASE_ENTRY movement. */
     @PostMapping("/lots")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
     @ResponseStatus(HttpStatus.CREATED)
     public StockLotDto create(@Valid @RequestBody CreateStockLotRequest request) {
         return inventoryService.createStockLot(request);
@@ -72,6 +73,7 @@ public class StockLotAdminController {
 
     /** Deducts stock using FEFO policy. Records a MANUAL_ADJUSTMENT movement. */
     @PostMapping("/deductions")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @ResponseStatus(HttpStatus.OK)
     public DeductionPlan deduct(@Valid @RequestBody StockDeductionRequest request) {
         return inventoryService.deductStock(
@@ -87,6 +89,7 @@ public class StockLotAdminController {
      * Positive quantity increases stock, negative decreases it using FEFO.
      */
     @PostMapping("/adjustments")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
     @ResponseStatus(HttpStatus.OK)
     public void adjust(@Valid @RequestBody StockAdjustmentRequest request) {
         inventoryService.adjustStock(request);

@@ -9,6 +9,9 @@
    ==================================================================== */
 
 .admin {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
   background: var(--color-canvas);
   color: var(--color-text);
   font-family: var(--font-sans);
@@ -169,6 +172,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  min-width: 0;
   height: 3.8rem;
   min-height: 3.8rem;
   padding: 0 var(--spacing-xl);
@@ -229,6 +233,7 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  min-width: 0;
   flex-shrink: 0;
 }
 
@@ -394,8 +399,18 @@
     padding: 0.85rem;
   }
 
+  .admin__user-area {
+    gap: 0.25rem;
+  }
+
   .admin__user-name {
-    max-width: 5rem;
+    display: none;
+  }
+
+  .admin__avatar {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.85rem;
   }
 }
 

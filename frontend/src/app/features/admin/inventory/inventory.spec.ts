@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { AuthService } from '../../../core/services/auth';
 import { InventoryService } from '../../../core/services/inventory';
 import { ProductService } from '../../../core/services/product';
 import { UserService } from '../../../core/services/user';
@@ -59,6 +60,10 @@ describe('Inventory', () => {
         provideRouter([]),
         provideNoopAnimations(),
         MessageService,
+        {
+          provide: AuthService,
+          useValue: { getUserRole: vi.fn(() => 'MANAGER') },
+        },
         { provide: InventoryService, useValue: inventoryService },
         { provide: UserService, useValue: userService },
         ProductService,
@@ -162,9 +167,8 @@ describe('Inventory', () => {
 
     (component as any).viewLots(item);
 
-    expect(navigateSpy).toHaveBeenCalledWith(
-      ['/admin/inventory/product', 10, 'lots'],
-      { queryParams: { branchId: 20, productName: 'Granola', branchName: 'Centro' } },
-    );
+    expect(navigateSpy).toHaveBeenCalledWith(['/admin/inventory/product', 10, 'lots'], {
+      queryParams: { branchId: 20, productName: 'Granola', branchName: 'Centro' },
+    });
   });
 });

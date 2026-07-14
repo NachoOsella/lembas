@@ -12,6 +12,8 @@ import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.payments.model.PaymentStatus;
 import com.dietetica.lembas.shared.dto.PageResponse;
 import com.dietetica.lembas.shared.exception.DomainException;
+import com.dietetica.lembas.users.model.Role;
+import com.dietetica.lembas.users.model.User;
 import jakarta.persistence.criteria.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,6 +150,7 @@ public class AdminOrderService {
         Order order = orderRepository.findWithItemsById(orderId)
                 .orElseThrow(() -> new DomainException(CODE_ORDER_NOT_FOUND, HttpStatus.NOT_FOUND,
                         "Order not found"));
+        ensureBranchAccess(order);
 
         // 1. State policy: rejects DELIVERED, CANCELLED, and null.
         statePolicy.validateTransition(order, OrderStatus.CANCELLED);
@@ -277,6 +280,7 @@ public class AdminOrderService {
         Order order = orderRepository.findWithItemsById(orderId)
                 .orElseThrow(() -> new DomainException(CODE_ORDER_NOT_FOUND, HttpStatus.NOT_FOUND,
                         "Order not found"));
+        ensureBranchAccess(order);
         return orderMapper.toDetailDto(order);
     }
 
@@ -292,12 +296,36 @@ public class AdminOrderService {
         Order order = orderRepository.findWithItemsById(orderId)
                 .orElseThrow(() -> new DomainException(CODE_ORDER_NOT_FOUND, HttpStatus.NOT_FOUND,
                         "Order not found"));
+        ensureBranchAccess(order);
         statePolicy.validateTransition(order, target);
         order.setStatus(target);
         timestampSetter.accept(order);
         Order saved = orderRepository.save(order);
         log.info("Order {} transitioned to {} by admin", saved.getOrderNumber(), target);
         return orderMapper.toDetailDto(saved);
+    }
+
+    /** Restricts branch-scoped staff from reading or mutating another branch's order. */
+    private void ensureBranchAccess(Order order) {
+        User currentUser = currentUserOrNull();
+        if (currentUser == null || currentUser.getRole() == null || currentUser.getRole() == Role.ADMIN) {
+            return;
+        }
+        if (currentUser.getBranchId() == null
+                || order.getBranch() == null
+                || !currentUser.getBranchId().equals(order.getBranch().getId())) {
+            throw new DomainException("ACCESS_DENIED", HttpStatus.FORBIDDEN,
+                    "Order belongs to another branch");
+        }
+    }
+
+    /** Reads the current user when available; isolated service tests can run without a principal. */
+    private User currentUserOrNull() {
+        try {
+            return securityContextHelper.getCurrentUser();
+        } catch (IllegalStateException ignored) {
+            return null;
+        }
     }
 
     /**

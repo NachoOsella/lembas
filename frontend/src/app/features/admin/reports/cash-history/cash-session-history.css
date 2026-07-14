@@ -76,3 +76,9 @@
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
 }
+
+@media (max-width: 48rem) {
+  :host {
+    padding: 0;
+  }
+}

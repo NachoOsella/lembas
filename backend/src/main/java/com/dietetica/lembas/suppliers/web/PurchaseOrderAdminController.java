@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Admin REST controller for supplier purchase orders and PDF download. */
 @RestController
 @RequestMapping("/api/admin/purchase-orders")
-@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
 @SecurityRequirement(name = "bearerAuth")
 public class PurchaseOrderAdminController {
     private final PurchaseOrderService purchaseOrderService;
@@ -63,6 +63,7 @@ public class PurchaseOrderAdminController {
 
     /** Creates a draft purchase order. */
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     public PurchaseOrderDetailDto create(@Valid @RequestBody PurchaseOrderRequest request) {
         return purchaseOrderService.create(request);
@@ -70,30 +71,35 @@ public class PurchaseOrderAdminController {
 
     /** Updates a draft purchase order. */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public PurchaseOrderDetailDto update(@PathVariable Long id, @Valid @RequestBody PurchaseOrderRequest request) {
         return purchaseOrderService.update(id, request);
     }
 
     /** Confirms a draft purchase order. */
     @PatchMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public PurchaseOrderDetailDto confirm(@PathVariable Long id) {
         return purchaseOrderService.confirm(id);
     }
 
     /** Marks a confirmed purchase order as sent manually. */
     @PatchMapping("/{id}/send")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public PurchaseOrderDetailDto send(@PathVariable Long id) {
         return purchaseOrderService.send(id);
     }
 
     /** Cancels a purchase order before reception. */
     @PatchMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public PurchaseOrderDetailDto cancel(@PathVariable Long id, @Valid @RequestBody PurchaseOrderCancelRequest request) {
         return purchaseOrderService.cancel(id, request.reason());
     }
 
     /** Generates the purchase order PDF on demand for manual sending. */
     @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id) {
         PurchaseOrder order = purchaseOrderService.getForPdf(id);
         byte[] pdf = purchaseOrderPdfService.generate(order);

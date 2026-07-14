@@ -80,6 +80,13 @@ POST /api/customer/orders/{orderId}/checkout/mp
 
 ## Admin (roles ADMIN, MANAGER, EMPLOYEE)
 
+The URL space is restricted to internal roles, and controllers apply the operation-level matrix:
+
+- `EMPLOYEE`: POS, cash register, order preparation/cancellation, stock operations, and merchandise receipts in the assigned branch.
+- `MANAGER`: employee operations plus branch-scoped management, suppliers, purchasing, pricing, and reports.
+- `ADMIN`: global access, user/branch management, and all administrative operations.
+- Reports and recommendations are not available to `EMPLOYEE`; catalog, supplier, purchasing-order, pricing, and user administration remain restricted to management roles.
+
 ### Products
 
 ```
@@ -164,8 +171,10 @@ GET /api/pos/products/search?q=<query>&branchId=<id>
             omitted (e.g. no cash session is open yet), availableStock is null
             and the UI renders the row as "stock: —".
 
-POST /api/pos/sales
+POST /api/pos/sales?branchId=<id>
   Auth:     roles ADMIN, MANAGER, EMPLOYEE
+  Params:   branchId required for ADMIN; selects the branch and OPEN cash session.
+            Ignored for MANAGER/EMPLOYEE, whose assigned branch is enforced server-side.
   Request:  {
               items:         [ { productId: number, quantity: integer >= 1 } ] (1-100 lines),
               paymentMethod: CASH | QR | TRANSFER | DEBIT_CARD | CREDIT_CARD | OTHER,
@@ -173,8 +182,8 @@ POST /api/pos/sales
               notes:         string | null  (optional, <= 500 chars)
             }
   Response: OrderDetailDto (201)
-  Errors:   CASH_BRANCH_REQUIRED (400)    - cashier has no assigned branch
-            CASH_SESSION_NOT_FOUND (404)  - no OPEN cash session for the cashier's branch
+  Errors:   CASH_BRANCH_REQUIRED (400)    - cashier has no assigned branch, or ADMIN omitted branchId
+            CASH_SESSION_NOT_FOUND (404)  - no OPEN cash session for the resolved branch
             BRANCH_NOT_FOUND (404)         - resolved branch is missing or inactive
             PRODUCT_NOT_FOUND (404)        - product id is missing or inactive
             INSUFFICIENT_STOCK (409)       - FEFO cannot cover the requested quantity
@@ -284,6 +293,12 @@ GET /api/admin/reports/sales?from=&to=&branchId=
          order totals and immutable category snapshots; gross margin uses
          stock-movement cost snapshots. Cancelled and stock-conflict orders are
          excluded from revenue.
+
+GET /api/admin/reports/employees?from=&to=&branchId=
+  Response: { from, to, branchId, branchName, kpis, employees }
+  Notes: Includes attributable POS sales, POS revenue and average ticket,
+         plus cash sessions opened/closed and absolute cash discrepancies.
+         Online sales are excluded because they have no selling employee.
 
 GET /api/admin/reports/inventory?branchId=
   Response: { branchId, branchName, kpis, stockByCategory, expiringByMonth,

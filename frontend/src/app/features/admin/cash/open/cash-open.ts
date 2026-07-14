@@ -96,8 +96,6 @@ export class CashOpen implements OnInit {
     return this.auth.currentUser()?.branchName ?? null;
   });
 
-
-
   /** True when the form is ready to be shown (branch resolved + no open session). */
   protected readonly formReady = computed(() => this.branchId() != null);
 
@@ -151,9 +149,12 @@ export class CashOpen implements OnInit {
       next: (branches) => {
         this.branches.set(branches);
         this.loadingBranches.set(false);
-        if (branches.length === 1) {
-          this.branchId.set(branches[0].id);
-          this.checkOpenSession(branches[0].id);
+        const requestedBranchId = Number(this.route.snapshot.queryParamMap.get('branchId'));
+        const requestedBranchExists = branches.some((branch) => branch.id === requestedBranchId);
+        if (requestedBranchExists || branches.length === 1) {
+          const branchId = requestedBranchExists ? requestedBranchId : branches[0].id;
+          this.branchId.set(branchId);
+          this.checkOpenSession(branchId);
         } else {
           this.loading.set(false);
         }

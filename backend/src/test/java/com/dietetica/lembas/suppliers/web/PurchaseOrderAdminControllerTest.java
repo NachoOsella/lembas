@@ -77,6 +77,34 @@ class PurchaseOrderAdminControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void Should_return200_when_employeeListsPurchaseOrders() throws Exception {
+        when(purchaseOrderService.list(isNull(), isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(summary()), PageRequest.of(0, 10), 1));
+
+        mockMvc.perform(get("/api/admin/purchase-orders"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(1L));
+    }
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void Should_return403_when_employeeCreatesPurchaseOrder() throws Exception {
+        String json = """
+                {
+                  "supplierId": 10,
+                  "branchId": 20,
+                  "items": [{"supplierProductId": 30, "quantityOrdered": 2}]
+                }
+                """;
+
+        mockMvc.perform(post("/api/admin/purchase-orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(roles = "MANAGER")
     void Should_return201_when_managerCreatesPurchaseOrder() throws Exception {
         when(purchaseOrderService.create(any())).thenReturn(detail("DRAFT"));

@@ -8,6 +8,7 @@ import com.dietetica.lembas.orders.dto.OrderSummaryDto;
 import com.dietetica.lembas.orders.service.CustomerOrderService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +22,7 @@ import java.util.List;
 /** REST endpoints used by authenticated customers to create and inspect their online orders. */
 @RestController
 @RequestMapping("/api/customer/orders")
+@PreAuthorize("hasRole('CUSTOMER')")
 public class CustomerOrderController {
 
     private final CustomerOrderService customerOrderService;

@@ -17,7 +17,7 @@
 |---|---|---|
 | ADMIN | Full system access | Optional (null = global) |
 | MANAGER | Operational management of a branch | Required |
-| EMPLOYEE | Sales, preparation, stock query, cash register | Required |
+| EMPLOYEE | Sales, preparation/cancellation, stock operations, receipts, cash register | Required |
 | CUSTOMER | Registered customer who purchases online | Must be null |
 
 ### Access matrix
@@ -27,10 +27,10 @@
 | Public catalog | Yes | Yes | Yes | Yes |
 | Online purchase | -- | -- | -- | Yes |
 | Products (CRUD) | Yes | Partial | No | No |
-| Stock (management) | Yes | Yes | Query only | No |
+| Stock (management) | Yes | Yes | Yes (assigned branch) | No |
 | Cash register (open/close) | Yes | Yes | Yes | No |
 | In-store sales (POS) | Yes | Yes | Yes | No |
-| Orders | Yes | Yes | Preparation | Own only |
+| Orders | Yes | Yes | Preparation/cancellation | Own only |
 | Suppliers | Yes | Query only | No | No |
 | Reports | Yes (global) | Yes (branch) | No | No |
 | Internal users | Yes | Partial | Own profile only | No |
@@ -50,7 +50,8 @@ SecurityFilterChain
 Public routes:   POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, POST /api/auth/logout, /api/store/**, /api/webhooks/**, /uploads/**
 Authenticated:   GET /api/auth/me
 Customer routes: /api/customer/** (role CUSTOMER)
-Admin routes:    /api/admin/** (roles ADMIN, MANAGER, EMPLOYEE)
+Admin routes:    /api/admin/** (roles ADMIN, MANAGER, EMPLOYEE; each controller applies the access matrix below)
+POS routes:      /api/pos/** (roles ADMIN, MANAGER, EMPLOYEE)
 ```
 
 ### @PreAuthorize annotations
@@ -63,7 +64,11 @@ Admin routes:    /api/admin/** (roles ADMIN, MANAGER, EMPLOYEE)
 @PreAuthorize("hasRole('CUSTOMER')") on /api/customer/**
 
 // Admin
-@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')") on /api/admin/**
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')") on shared operational admin endpoints
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')") on reports, recommendations, catalog management, purchasing-order writes, suppliers, and pricing
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')") on stock writes, merchandise receipts, and order cancellation
+@PreAuthorize("hasRole('ADMIN')") on user and branch management
+@PreAuthorize("hasRole('CUSTOMER')") on /api/customer/**
 
 // ADMIN only
 @PreAuthorize("hasRole('ADMIN')") on user management, configuration

@@ -290,12 +290,15 @@
   min-width: 0;
 }
 
-:host ::ng-deep app-data-table .app-data-table__scroll-area,
-:host ::ng-deep app-data-table .p-datatable-wrapper,
-:host ::ng-deep app-data-table .p-datatable-table-container {
+:host ::ng-deep app-data-table .app-data-table__scroll-area {
   overflow-x: auto !important;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+}
+
+:host ::ng-deep app-data-table .p-datatable-wrapper,
+:host ::ng-deep app-data-table .p-datatable-table-container {
+  overflow: visible !important;
 }
 
 :host ::ng-deep .app-data-table .p-datatable-table {

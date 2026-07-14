@@ -5,6 +5,7 @@ import { AuthService } from '../services/auth';
 
 /** Guard result supported by Angular route guards. */
 type GuardResult = boolean | UrlTree;
+type StaffRole = 'ADMIN' | 'MANAGER' | 'EMPLOYEE';
 
 /** Returns true when the injected auth service can hydrate HttpOnly cookie sessions. */
 function canHydrateSession(authService: AuthService): boolean {
@@ -86,6 +87,36 @@ export const guestGuard: CanActivateFn = (_route, _state) => {
   return ensureSession(authService).pipe(
     map((authenticated) => (authenticated ? redirectAuthenticated() : true)),
   );
+};
+
+/** Allows access only to users with one of the supplied staff roles. */
+export const roleGuard = (...allowedRoles: readonly StaffRole[]): CanActivateFn => {
+  return (_route, state) => {
+    const authService = inject(AuthService);
+    const router = inject(Router);
+
+    const decide = (): GuardResult => {
+      const role = authService.getUserRole();
+      return role != null && allowedRoles.includes(role as StaffRole)
+        ? true
+        : router.createUrlTree(['/admin/pos']);
+    };
+
+    if (authService.isAuthenticated()) {
+      return decide();
+    }
+    if (!canHydrateSession(authService)) {
+      return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } });
+    }
+
+    return ensureSession(authService).pipe(
+      map((authenticated) =>
+        authenticated
+          ? decide()
+          : router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } }),
+      ),
+    );
+  };
 };
 
 /** Allows access only to ADMIN users within the admin area. */

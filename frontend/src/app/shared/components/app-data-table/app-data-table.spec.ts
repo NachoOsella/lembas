@@ -33,4 +33,11 @@ describe('AppDataTable', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('updates the active page size when the paginator selection changes', () => {
+    component['onPageChange']({ first: 10, rows: 20, page: 1, pageCount: 3 });
+
+    expect(component.first()).toBe(10);
+    expect(component.rows()).toBe(20);
+  });
 });

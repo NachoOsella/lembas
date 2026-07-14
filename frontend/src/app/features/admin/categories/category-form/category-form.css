@@ -81,4 +81,8 @@
   .category-form__actions {
     flex-direction: column-reverse;
   }
+
+  .category-form__actions app-button {
+    width: 100%;
+  }
 }

@@ -120,4 +120,8 @@
   .user-form__actions {
     flex-direction: column-reverse;
   }
+
+  .user-form__actions app-button {
+    width: 100%;
+  }
 }

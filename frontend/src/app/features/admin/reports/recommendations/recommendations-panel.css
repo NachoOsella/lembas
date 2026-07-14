@@ -60,3 +60,9 @@
 .recommendations__context {
   min-width: 9rem;
 }
+
+@media (max-width: 48rem) {
+  :host {
+    padding: 0;
+  }
+}

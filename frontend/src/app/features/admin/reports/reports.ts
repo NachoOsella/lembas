@@ -70,6 +70,15 @@ export class Reports implements OnInit {
       cadence: 'Por periodo',
     },
     {
+      title: 'Reporte de empleados',
+      description: 'Ventas POS y actividad de caja atribuible a cada operador.',
+      icon: 'pi pi-users',
+      route: '/admin/reports/employees',
+      status: 'available',
+      accent: 'blue',
+      cadence: 'Por periodo',
+    },
+    {
       title: 'Reporte de inventario',
       description: 'Stock valorizado, rotacion, cobertura y lotes por vencer.',
       icon: 'pi pi-warehouse',
@@ -89,7 +98,7 @@ export class Reports implements OnInit {
     },
   ];
 
-  /** Total number of report cards (used for the "5 reportes" caption). */
+  /** Total number of report cards rendered by the reports hub. */
   protected readonly totalCount = computed(() => this.cards.length);
 
   ngOnInit(): void {

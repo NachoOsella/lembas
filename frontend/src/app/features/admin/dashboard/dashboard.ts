@@ -1,6 +1,5 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { DatePipe } from '@angular/common';
 
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
@@ -46,7 +45,6 @@ import { TopProductDto } from '../../../shared/models/dashboard';
     LoadingSpinner,
     RecommendationCard,
     TopProductsTable,
-    DatePipe,
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
@@ -60,7 +58,6 @@ export class Dashboard implements OnInit, OnDestroy {
   protected readonly data = this.store.data;
   protected readonly loading = this.store.loading;
   protected readonly error = this.store.error;
-  protected readonly lastRefreshed = this.store.lastRefreshed;
   protected readonly reportDate = this.store.reportDate;
   protected readonly branchName = this.store.branchName;
 
@@ -77,11 +74,6 @@ export class Dashboard implements OnInit, OnDestroy {
   /** Maximum date the user can pick (today). */
   protected readonly today = signal(new Date());
 
-  /**
-   * Pulses the "live" indicator dot while the dashboard is refreshing,
-   * so the user can see at a glance when the data is current.
-   */
-  protected readonly liveRefresh = computed(() => this.loading());
 
   /**
    * Top 6 stat cards, skipping the less actionable ones (onlineSales,

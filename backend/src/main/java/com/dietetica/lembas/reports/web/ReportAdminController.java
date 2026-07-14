@@ -5,11 +5,13 @@ import com.dietetica.lembas.reports.dto.CashOverviewDto;
 import com.dietetica.lembas.reports.dto.CashReportDto;
 import com.dietetica.lembas.reports.dto.CashSessionHistoryDto;
 import com.dietetica.lembas.reports.dto.DashboardDto;
+import com.dietetica.lembas.reports.dto.EmployeeReportDto;
 import com.dietetica.lembas.reports.dto.InventoryReportDto;
 import com.dietetica.lembas.reports.dto.SalesReportDto;
 import com.dietetica.lembas.reports.dto.SuppliersReportDto;
 import com.dietetica.lembas.reports.service.ReportService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +30,7 @@ import java.time.LocalDate;
  */
 @RestController
 @RequestMapping("/api/admin/reports")
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
 public class ReportAdminController {
 
     private final ReportService reportService;
@@ -107,6 +110,18 @@ public class ReportAdminController {
             @RequestParam(required = false) Long branchId
     ) {
         return reportService.getSalesReport(from, to, branchId);
+    }
+
+    /**
+     * Employee-focused report for attributable POS and cash-register activity.
+     */
+    @GetMapping("/employees")
+    public EmployeeReportDto getEmployeeReport(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long branchId
+    ) {
+        return reportService.getEmployeeReport(from, to, branchId);
     }
 
     /**

@@ -1,7 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
-import { authGuard, adminGuard, adminOnlyGuard, customerGuard, guestGuard } from './auth-guard';
+import {
+  authGuard,
+  adminGuard,
+  adminOnlyGuard,
+  customerGuard,
+  guestGuard,
+  roleGuard,
+} from './auth-guard';
 import { AuthService } from '../services/auth';
 
 /** Role abbreviations accepted by the mock service. */
@@ -159,6 +166,21 @@ describe('Customer guard', () => {
     expect(result).not.toBe(false);
     expect(result).not.toBe(true);
     expect((result as any)?.root?.children?.primary?.segments?.[0]?.path).toBe('admin');
+  });
+});
+
+describe('Role guard', () => {
+  it('Should_allowOnlyConfiguredStaffRoles', () => {
+    setupGuard({ isAuthenticated: true, role: 'EMPLOYEE' });
+
+    const result = TestBed.runInInjectionContext(() =>
+      roleGuard('ADMIN', 'MANAGER')({} as any, {} as any),
+    );
+
+    expect(result).not.toBe(true);
+    expect(
+      (result as any)?.root?.children?.primary?.segments?.map((segment: any) => segment.path),
+    ).toEqual(['admin', 'pos']);
   });
 });
 

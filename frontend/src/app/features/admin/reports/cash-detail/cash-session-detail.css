@@ -211,3 +211,18 @@
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
 }
+
+@media (max-width: 48rem) {
+  :host {
+    padding: 0;
+  }
+
+  .cash-detail__toolbar {
+    align-items: stretch;
+  }
+
+  .cash-detail__toolbar app-button,
+  .cash-detail__toolbar app-data-export {
+    width: 100%;
+  }
+}

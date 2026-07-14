@@ -121,14 +121,22 @@
 }
 
 @media (max-width: 48rem) {
-  .product-form-page__hero,
   .product-form__actions {
     align-items: stretch;
-    flex-direction: column;
+    flex-direction: column-reverse;
+  }
+
+  .product-form__actions app-button {
+    width: 100%;
   }
 
   .product-form__grid,
   .product-form__media-grid {
     grid-template-columns: 1fr;
+  }
+
+  .product-form__preview {
+    min-height: 12rem;
+    max-height: 18rem;
   }
 }

@@ -6,6 +6,21 @@
     title="Venta presencial"
     description="Busca un producto, agregalo al carrito y elegi el metodo de pago. F8 cobra la venta actual."
   >
+    @if (isAdmin()) {
+      <app-select
+        class="pos-page__branch-select"
+        inputId="pos-branch"
+        name="pos-branch"
+        [options]="branchOptions()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar sucursal"
+        [value]="selectedBranchId()"
+        (valueChange)="onBranchSelected($event)"
+        data-testid="pos-branch-select"
+      />
+    }
+
     @if (cashSession(); as session) {
       <app-badge tone="success" icon="pi pi-check-circle" data-testid="cash-session-badge">
         Caja abierta #{{ session.id }}
@@ -26,8 +41,10 @@
         variant="primary"
         icon="pi pi-plus"
         routerLink="/admin/cash/open"
+        [queryParams]="{ branchId: selectedBranchId() }"
         data-testid="open-cash-button"
-      >Abrir caja</app-button>
+        >Abrir caja</app-button
+      >
       <app-button
         variant="ghost"
         size="sm"

@@ -22,6 +22,8 @@ import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import com.dietetica.lembas.users.model.Role;
+import com.dietetica.lembas.users.model.User;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -87,9 +89,10 @@ public class InventoryService {
     /** Creates a new stock lot and records its PURCHASE_ENTRY movement in the same transaction. */
     @Transactional
     public StockLotDto createStockLot(CreateStockLotRequest request) {
+        Long effectiveBranchId = resolveBranchForUser(request.branchId());
         Product product = productRepository.findByIdAndActiveTrue(request.productId())
                 .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
-        Branch branch = branchRepository.findById(request.branchId())
+        Branch branch = branchRepository.findById(effectiveBranchId)
                 .filter(Branch::isActive)
                 .orElseThrow(() -> new DomainException("BRANCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Branch not found"));
 
@@ -112,17 +115,19 @@ public class InventoryService {
     /** Returns aggregated stock summaries grouped by product and branch. */
     @Transactional(readOnly = true)
     public Page<StockProductSummaryDto> listProductSummaries(String search, Long branchId, boolean expiringSoon, Pageable pageable) {
+        Long effectiveBranchId = resolveBranchForUser(branchId);
         LocalDate expiringSoonLimit = LocalDate.now(clock).plusDays(EXPIRING_SOON_DAYS);
         String searchPattern = buildSearchPattern(search);
-        return stockLotRepository.searchProductSummaries(searchPattern, branchId, expiringSoon, expiringSoonLimit, mapProductSort(pageable));
+        return stockLotRepository.searchProductSummaries(searchPattern, effectiveBranchId, expiringSoon, expiringSoonLimit, mapProductSort(pageable));
     }
 
     /** Lists stock lots with optional product search and filters for the admin inventory table. */
     @Transactional(readOnly = true)
     public Page<StockLotDto> listLots(String search, Long productId, Long branchId, boolean expiringSoon, Pageable pageable) {
+        Long effectiveBranchId = resolveBranchForUser(branchId);
         LocalDate expiringSoonLimit = LocalDate.now(clock).plusDays(EXPIRING_SOON_DAYS);
         String searchPattern = buildSearchPattern(search);
-        return stockLotRepository.searchLots(searchPattern, productId, branchId, expiringSoon, expiringSoonLimit, mapSort(pageable))
+        return stockLotRepository.searchLots(searchPattern, productId, effectiveBranchId, expiringSoon, expiringSoonLimit, mapSort(pageable))
                 .map(lot -> toDto(lot, null));
     }
 
@@ -255,9 +260,10 @@ public class InventoryService {
      */
     @Transactional
     public void adjustStock(StockAdjustmentRequest request) {
+        Long effectiveBranchId = resolveBranchForUser(request.branchId());
         Product product = productRepository.findByIdAndActiveTrue(request.productId())
                 .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
-        Branch branch = branchRepository.findById(request.branchId())
+        Branch branch = branchRepository.findById(effectiveBranchId)
                 .filter(Branch::isActive)
                 .orElseThrow(() -> new DomainException("BRANCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Branch not found"));
 
@@ -357,11 +363,12 @@ public class InventoryService {
     @Transactional(readOnly = true)
     public Page<StockMovementDto> listMovements(StockMovementType type, Long productId, Long branchId,
                                                 String search, LocalDate from, LocalDate to, Pageable pageable) {
+        Long effectiveBranchId = resolveBranchForUser(branchId);
         OffsetDateTime fromDate = from != null ? from.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime() : null;
         OffsetDateTime toDate = to != null ? to.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC) : null;
         String searchPattern = buildSearchPattern(search);
         return stockMovementRepository
-                .findAll(movementSearchSpec(type, productId, branchId, searchPattern, fromDate, toDate), mapMovementSort(pageable))
+                .findAll(movementSearchSpec(type, productId, effectiveBranchId, searchPattern, fromDate, toDate), mapMovementSort(pageable))
                 .map(this::toMovementDto);
     }
 
@@ -639,6 +646,20 @@ public class InventoryService {
                 lot.getPurchaseReceiptItemId(),
                 totalAvailable
         );
+    }
+
+    /** Resolves branch filters so non-admin users cannot inspect or mutate another branch. */
+    private Long resolveBranchForUser(Long requestedBranchId) {
+        User currentUser = securityContextHelper.getCurrentUser();
+        // Unit-level callers without a security context keep the legacy explicit branch behavior.
+        if (currentUser == null || currentUser.getRole() == Role.ADMIN) {
+            return requestedBranchId;
+        }
+        if (currentUser.getBranchId() == null) {
+            throw new DomainException("INVALID_USER_BRANCH", HttpStatus.BAD_REQUEST,
+                    "User has no assigned branch");
+        }
+        return currentUser.getBranchId();
     }
 
     /** Normalizes optional text fields before persistence. */

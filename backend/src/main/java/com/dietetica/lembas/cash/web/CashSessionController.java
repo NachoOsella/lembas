@@ -9,6 +9,7 @@ import com.dietetica.lembas.cash.dto.OpenCashSessionRequest;
 import com.dietetica.lembas.cash.service.CashService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/admin/cash-sessions")
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
 public class CashSessionController {
 
     private final CashService cashService;

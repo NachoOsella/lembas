@@ -26,6 +26,7 @@
   border: 1px solid rgba(7, 95, 54, 0.12);
   border-radius: var(--radius-card, 12px);
   box-shadow: var(--shadow-card);
+  overflow: hidden;
 }
 
 .cash-overview__summary {
@@ -138,6 +139,10 @@
 }
 
 @media (max-width: 42rem) {
+  :host {
+    padding: 0;
+  }
+
   .cash-overview__metrics,
   .cash-overview__summary {
     grid-template-columns: 1fr;

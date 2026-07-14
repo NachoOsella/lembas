@@ -213,6 +213,10 @@
     flex-direction: column-reverse;
   }
 
+  .supplier-form__actions app-button {
+    width: 100%;
+  }
+
   /* Shrink avatar on mobile to avoid breaking the name cell */
   .supplier-avatar {
     width: 2rem;

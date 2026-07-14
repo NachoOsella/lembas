@@ -4,7 +4,9 @@
     title="Stock por producto"
     description="Stock disponible agrupado por producto y sucursal. El vencimiento muestra la fecha del lote mas proximo a vencer."
   >
-    <app-button icon="pi pi-plus" (click)="openCreateDialog()">Nuevo lote</app-button>
+    @if (canManageInventory()) {
+      <app-button icon="pi pi-plus" (click)="openCreateDialog()">Nuevo lote</app-button>
+    }
   </app-page-header>
 
   @if (error()) {
@@ -15,7 +17,7 @@
 
   <app-data-table
     [data]="products()"
-    [columns]="columns"
+    [columns]="columns()"
     [loading]="loading()"
     [sortable]="true"
     [paginated]="true"
@@ -28,7 +30,7 @@
     (sortChange)="onSort($event)"
     emptyTitle="No hay stock disponible"
     emptyDescription="Registra una recepcion de mercaderia para que aparezcan los primeros productos con stock."
-    emptyActionLabel="Ir a recepciones"
+    [emptyActionLabel]="canManageInventory() ? 'Ir a recepciones' : null"
     (emptyAction)="navigateToReceipts()"
   >
     <ng-template #toolbar>
@@ -65,40 +67,40 @@
 
     <ng-template #body let-item>
       <tr>
-        <td><strong>{{ item.productName }}</strong></td>
+        <td>
+          <strong>{{ item.productName }}</strong>
+        </td>
         <td>{{ item.branchName }}</td>
         <td class="inventory-qty">{{ formatQuantity(item.totalAvailable) }}</td>
         <td>{{ formatDate(item.nearestExpirationDate) }}</td>
-        <td>
-          <div class="table-actions">
-            <app-button
-              variant="ghost"
-              size="sm"
-              icon="pi pi-list"
-              [iconOnly]="true"
-              [ariaLabel]="'Ver lotes de ' + item.productName + ' en ' + item.branchName"
-              (click)="viewLots(item)"
-            />
-            <app-button
-              variant="ghost"
-              size="sm"
-              icon="pi pi-sliders-v"
-              [iconOnly]="true"
-              [ariaLabel]="'Ajustar stock de ' + item.productName"
-              (click)="openAdjustDialog(item)"
-            />
-          </div>
-        </td>
+        @if (canManageInventory()) {
+          <td>
+            <div class="table-actions">
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-list"
+                [iconOnly]="true"
+                [ariaLabel]="'Ver lotes de ' + item.productName + ' en ' + item.branchName"
+                (click)="viewLots(item)"
+              />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-sliders-v"
+                [iconOnly]="true"
+                [ariaLabel]="'Ajustar stock de ' + item.productName"
+                (click)="openAdjustDialog(item)"
+              />
+            </div>
+          </td>
+        }
       </tr>
     </ng-template>
   </app-data-table>
 </div>
 
-<app-modal
-  [(visible)]="dialogVisible"
-  title="Nuevo lote de stock"
-  [width]="'min(38rem, 92vw)'"
->
+<app-modal [(visible)]="dialogVisible" title="Nuevo lote de stock" [width]="'min(38rem, 92vw)'">
   <form class="supplier-form" (ngSubmit)="saveLot()">
     <app-form-section
       [index]="1"
@@ -126,6 +128,7 @@
               (valueChange)="newBranchId.set($event)"
               [options]="branchOptions()"
               placeholder="Seleccionar sucursal"
+              [disabled]="isBranchRestricted()"
             />
           </app-control-field>
         </div>
@@ -191,11 +194,7 @@
   </form>
 </app-modal>
 
-<app-modal
-  [(visible)]="adjDialogVisible"
-  title="Ajustar stock"
-  [width]="'min(38rem, 92vw)'"
->
+<app-modal [(visible)]="adjDialogVisible" title="Ajustar stock" [width]="'min(38rem, 92vw)'">
   <form class="supplier-form" (ngSubmit)="saveAdjustment()">
     <app-form-section
       [index]="1"
@@ -223,6 +222,7 @@
               (valueChange)="onAdjBranchChange($event)"
               [options]="branchOptions()"
               placeholder="Seleccionar sucursal"
+              [disabled]="isBranchRestricted()"
             />
           </app-control-field>
         </div>

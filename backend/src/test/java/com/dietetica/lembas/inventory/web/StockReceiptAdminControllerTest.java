@@ -77,6 +77,23 @@ class StockReceiptAdminControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void Should_return201_when_employeeConfirmsPurchaseReceipt() throws Exception {
+        PurchaseReceiptRequest request = new PurchaseReceiptRequest(
+                1L,
+                "FAC-EMP-1",
+                null,
+                List.of(new PurchaseReceiptItemRequest(100L, BigDecimal.ONE, BigDecimal.valueOf(500), "L-EMP", LocalDate.now().plusDays(30)))
+        );
+        when(purchaseReceiptService.confirm(any(PurchaseReceiptRequest.class))).thenReturn(aReceipt());
+
+        mockMvc.perform(post("/api/admin/stock/receipts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
     @WithMockUser(roles = "ADMIN")
     void Should_return400_when_receiptHasInvalidQuantity() throws Exception {
         String invalidJson = """
