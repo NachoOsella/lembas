@@ -1,11 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import {
-  OrderDetail,
-  PaymentMethod,
-} from '../../../../shared/models/order';
+import { OrderDetail, PaymentMethod } from '../../../../shared/models/order';
 
 /** Single line on a POS sale request. */
 export interface CreatePosSaleItemRequest {
@@ -41,7 +38,11 @@ export class PosSaleService {
    * with the standard {@code ApiError} body; the FE surfaces them via
    * {@code ErrorMappingService}.</p>
    */
-  createSale(request: CreatePosSaleRequest): Observable<OrderDetail> {
-    return this.http.post<OrderDetail>(this.apiUrl, request);
+  createSale(request: CreatePosSaleRequest, branchId?: number | null): Observable<OrderDetail> {
+    let params = new HttpParams();
+    if (branchId != null) {
+      params = params.set('branchId', branchId);
+    }
+    return this.http.post<OrderDetail>(this.apiUrl, request, { params });
   }
 }

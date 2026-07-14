@@ -1,8 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 
 import { PosSaleService, CreatePosSaleRequest } from './pos-sale.service';
@@ -55,6 +52,21 @@ describe('PosSaleService', () => {
     expect(received).toBeDefined();
     expect(received!.id).toBe(1);
     expect(received!.type).toBe('POS');
+  });
+
+  it('sends the selected branch id for an administrator sale', () => {
+    const request: CreatePosSaleRequest = {
+      items: [{ productId: 100, quantity: 1 }],
+      paymentMethod: 'CASH',
+      cashReceived: null,
+      notes: null,
+    };
+
+    service.createSale(request, 7).subscribe();
+
+    const req = httpMock.expectOne('/api/pos/sales?branchId=7');
+    expect(req.request.body).toEqual(request);
+    req.flush({});
   });
 
   it('forwards a 4xx with the API error body so the FE can map it', () => {

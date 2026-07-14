@@ -30,6 +30,7 @@ import com.dietetica.lembas.pos.dto.CreatePosSaleRequest;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -115,9 +116,8 @@ public class PosSaleService {
      * Creates a POS sale atomically.
      *
      * @param request     the validated cart, payment method, and optional notes
-     * @param currentUser the authenticated employee; the cashier's branch is
-     *                    used to resolve the cash session and to scope stock
-     *                    availability
+     * @param currentUser the authenticated employee; their assigned branch is
+     *                    used for MANAGER/EMPLOYEE users
      * @return the persisted order with all items, payments, and lifecycle fields
      * @throws DomainException {@code CASH_BRANCH_REQUIRED} (400) for cashiers
      *         without an assigned branch; {@code CASH_SESSION_NOT_FOUND} (404)
@@ -128,7 +128,25 @@ public class PosSaleService {
      */
     @Transactional
     public OrderDetailDto createSale(CreatePosSaleRequest request, User currentUser) {
-        CashSessionDto session = resolveOpenCashSession(currentUser);
+        return createSale(request, currentUser, null);
+    }
+
+    /**
+     * Creates a POS sale against the selected branch for an administrator.
+     *
+     * <p>For MANAGER and EMPLOYEE users, {@code requestedBranchId} is ignored
+     * and their assigned branch remains the sole source of authority.</p>
+     *
+     * @param request the validated cart, payment method, and optional notes
+     * @param currentUser the authenticated internal user
+     * @param requestedBranchId required for ADMIN; ignored for other internal roles
+     * @return the persisted order with all items, payments, and lifecycle fields
+     */
+    @Transactional
+    public OrderDetailDto createSale(
+            CreatePosSaleRequest request, User currentUser, Long requestedBranchId
+    ) {
+        CashSessionDto session = resolveOpenCashSession(currentUser, requestedBranchId);
         Branch branch = resolveBranch(session.branchId());
 
         // 1) Merge duplicate productId lines (scanner may send the same barcode twice)
@@ -185,12 +203,21 @@ public class PosSaleService {
     // ---------------------------------------------------------------------------
 
     /**
-     * Resolves the OPEN cash session for the cashier. Throws
-     * {@code CASH_BRANCH_REQUIRED} if the cashier has no branch (ADMIN without
-     * assignment), and lets {@code CASH_SESSION_NOT_FOUND} propagate from
-     * {@code CashService.getCurrentSession} when there is no OPEN session.
+     * Resolves the OPEN cash session for the operator. ADMIN must provide a
+     * selected branch; MANAGER and EMPLOYEE use their assigned branch. Lets
+     * {@code CASH_SESSION_NOT_FOUND} propagate when there is no OPEN session.
      */
-    private CashSessionDto resolveOpenCashSession(User currentUser) {
+    private CashSessionDto resolveOpenCashSession(User currentUser, Long requestedBranchId) {
+        if (currentUser.getRole() == Role.ADMIN) {
+            if (requestedBranchId == null) {
+                throw new DomainException(
+                        "CASH_BRANCH_REQUIRED",
+                        HttpStatus.BAD_REQUEST,
+                        "ADMIN must select a branch before selling"
+                );
+            }
+            return cashService.getCurrentSession(requestedBranchId, currentUser);
+        }
         if (currentUser.getBranchId() == null) {
             throw new DomainException(
                     "CASH_BRANCH_REQUIRED",

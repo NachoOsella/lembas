@@ -6,9 +6,11 @@ import com.dietetica.lembas.pos.dto.CreatePosSaleRequest;
 import com.dietetica.lembas.pos.service.PosSaleService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/pos/sales")
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
 public class PosSaleController {
 
     private final PosSaleService posSaleService;
@@ -40,7 +43,8 @@ public class PosSaleController {
      *
      * <p>Errors:</p>
      * <ul>
-     *   <li>{@code CASH_BRANCH_REQUIRED} (400) when the cashier has no branch.</li>
+     *   <li>{@code CASH_BRANCH_REQUIRED} (400) when the operator has no branch
+     *       or an ADMIN has not selected one.</li>
      *   <li>{@code CASH_SESSION_NOT_FOUND} (404) when no OPEN session exists for the cashier's branch.</li>
      *   <li>{@code BRANCH_NOT_FOUND} (404) when the resolved branch is missing or inactive.</li>
      *   <li>{@code PRODUCT_NOT_FOUND} (404) for any inactive or missing product.</li>
@@ -50,7 +54,10 @@ public class PosSaleController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderDetailDto create(@Valid @RequestBody CreatePosSaleRequest request) {
-        return posSaleService.createSale(request, securityContextHelper.getCurrentUser());
+    public OrderDetailDto create(
+            @Valid @RequestBody CreatePosSaleRequest request,
+            @RequestParam(required = false) Long branchId
+    ) {
+        return posSaleService.createSale(request, securityContextHelper.getCurrentUser(), branchId);
     }
 }
