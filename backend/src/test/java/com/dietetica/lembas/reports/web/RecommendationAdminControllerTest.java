@@ -6,10 +6,12 @@ import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import com.dietetica.lembas.reports.dto.RecommendationDto;
 import com.dietetica.lembas.reports.service.RecommendationService;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
+import com.dietetica.lembas.users.web.SecurityConfigForTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(controllers = {RecommendationAdminController.class, GlobalExceptionHandler.class})
 @AutoConfigureMockMvc(addFilters = false)
+@Import(SecurityConfigForTest.class)
 class RecommendationAdminControllerTest {
 
     @Autowired
@@ -41,6 +44,13 @@ class RecommendationAdminControllerTest {
     private JwtTokenProvider jwtTokenProvider;
     @MockitoBean
     private LembasUserDetailsService lembasUserDetailsService;
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void recommendationsReturn403ForEmployee() throws Exception {
+        mockMvc.perform(get("/api/admin/recommendations"))
+                .andExpect(status().isForbidden());
+    }
 
     @Test
     @WithMockUser(roles = "ADMIN")

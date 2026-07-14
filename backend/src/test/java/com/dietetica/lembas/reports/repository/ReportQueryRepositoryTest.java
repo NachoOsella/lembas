@@ -68,6 +68,9 @@ class ReportQueryRepositoryTest {
         assertThat(repository.topSuppliersByVolume(start, end, null, 10)).isNotNull();
         assertThat(repository.avgLeadTimeBySupplier(start, end, null, 10)).isNotNull();
         assertThat(repository.purchaseAggregates(start, end, null)).hasSize(4);
+        assertThat(repository.employeePosPerformance(start, end, null)).isNotNull();
+        assertThat(repository.employeeCashOpenPerformance(start, end, null)).isNotNull();
+        assertThat(repository.employeeCashClosePerformance(start, end, null)).isNotNull();
     }
 
     @Test

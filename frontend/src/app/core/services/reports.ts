@@ -4,6 +4,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import {
+  EmployeeReportDto,
   InventoryReportDto,
   SalesReportDto,
   SuppliersReportDto,
@@ -36,9 +37,24 @@ export class ReportsService {
     if (from) params = params.set('from', from);
     if (to) params = params.set('to', to);
     if (branchId != null) params = params.set('branchId', String(branchId));
-    return this.http.get<SalesReportDto>(`${this.baseUrl}/sales`, { params }).pipe(
-      catchError((err: HttpErrorResponse) => this.handleError(err)),
-    );
+    return this.http
+      .get<SalesReportDto>(`${this.baseUrl}/sales`, { params })
+      .pipe(catchError((err: HttpErrorResponse) => this.handleError(err)));
+  }
+
+  /** Employee performance from attributable POS sales and cash activity. */
+  getEmployeeReport(
+    from?: string | null,
+    to?: string | null,
+    branchId?: number | null,
+  ): Observable<EmployeeReportDto | null> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    if (branchId != null) params = params.set('branchId', String(branchId));
+    return this.http
+      .get<EmployeeReportDto>(`${this.baseUrl}/employees`, { params })
+      .pipe(catchError((err: HttpErrorResponse) => this.handleError(err)));
   }
 
   /** Inventory valuation + rotation + expiring lots. */
@@ -60,9 +76,9 @@ export class ReportsService {
     if (from) params = params.set('from', from);
     if (to) params = params.set('to', to);
     if (branchId != null) params = params.set('branchId', String(branchId));
-    return this.http.get<SuppliersReportDto>(`${this.baseUrl}/suppliers`, { params }).pipe(
-      catchError((err: HttpErrorResponse) => this.handleError(err)),
-    );
+    return this.http
+      .get<SuppliersReportDto>(`${this.baseUrl}/suppliers`, { params })
+      .pipe(catchError((err: HttpErrorResponse) => this.handleError(err)));
   }
 
   /**

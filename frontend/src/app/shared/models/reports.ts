@@ -58,6 +58,30 @@ export interface SalesReportDto {
 }
 
 /** Full payload returned by the inventory report endpoint. */
+/** One employee row in the operational performance report. */
+export interface EmployeePerformanceDto {
+  readonly employeeId: number;
+  readonly employeeName: string;
+  readonly role: string;
+  readonly posSalesCount: number;
+  readonly posRevenue: number;
+  readonly averageTicket: number;
+  readonly cashSessionsOpened: number;
+  readonly cashSessionsClosed: number;
+  readonly cashDifferenceAbsolute: number;
+}
+
+/** Full payload returned by the employee report endpoint. */
+export interface EmployeeReportDto {
+  readonly from: string;
+  readonly to: string;
+  readonly branchId: number | null;
+  readonly branchName: string | null;
+  readonly generatedAt: string;
+  readonly kpis: ReadonlyArray<ReportKpiDto>;
+  readonly employees: ReadonlyArray<EmployeePerformanceDto>;
+}
+
 export interface InventoryReportDto {
   readonly branchId: number | null;
   readonly branchName: string | null;

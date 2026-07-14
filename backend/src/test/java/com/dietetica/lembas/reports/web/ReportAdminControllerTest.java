@@ -11,12 +11,17 @@ import com.dietetica.lembas.reports.dto.CashSessionHistoryDto;
 import com.dietetica.lembas.reports.dto.CashSessionSummaryDto;
 import com.dietetica.lembas.reports.dto.DashboardDto;
 import com.dietetica.lembas.reports.dto.DashboardStatCardDto;
+import com.dietetica.lembas.reports.dto.EmployeePerformanceDto;
+import com.dietetica.lembas.reports.dto.EmployeeReportDto;
+import com.dietetica.lembas.reports.dto.ReportKpiDto;
 import com.dietetica.lembas.reports.service.ReportService;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
+import com.dietetica.lembas.users.web.SecurityConfigForTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,6 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(controllers = {ReportAdminController.class, GlobalExceptionHandler.class})
 @AutoConfigureMockMvc(addFilters = false)
+@Import(SecurityConfigForTest.class)
 class ReportAdminControllerTest {
 
     @Autowired
@@ -52,6 +58,13 @@ class ReportAdminControllerTest {
     private JwtTokenProvider jwtTokenProvider;
     @MockitoBean
     private LembasUserDetailsService lembasUserDetailsService;
+
+    @Test
+    @WithMockUser(roles = "EMPLOYEE")
+    void reportsReturn403ForEmployee() throws Exception {
+        mockMvc.perform(get("/api/admin/reports/dashboard"))
+                .andExpect(status().isForbidden());
+    }
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -91,6 +104,21 @@ class ReportAdminControllerTest {
                 .andExpect(jsonPath("$.expectedCashTotal").value(4500))
                 .andExpect(jsonPath("$.dailyCloseSeries[0].date").value("2026-07-13"))
                 .andExpect(jsonPath("$.paymentMethods[0].method").value("CASH"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void employeeReportReturnsAttributablePosAndCashMetrics() throws Exception {
+        when(reportService.getEmployeeReport(any(), any(), eq(3L))).thenReturn(sampleEmployeeReport());
+
+        mockMvc.perform(get("/api/admin/reports/employees")
+                        .param("from", "2026-07-01")
+                        .param("to", "2026-07-13")
+                        .param("branchId", "3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.employees[0].employeeName").value("Carla Cajero"))
+                .andExpect(jsonPath("$.employees[0].posSalesCount").value(5))
+                .andExpect(jsonPath("$.employees[0].cashSessionsClosed").value(2));
     }
 
     @Test
@@ -155,6 +183,19 @@ class ReportAdminControllerTest {
                 List.of(),
                 List.of(),
                 new BigDecimal("12.5"), new BigDecimal("8.0"), new BigDecimal("3.0")
+        );
+    }
+
+    private EmployeeReportDto sampleEmployeeReport() {
+        return new EmployeeReportDto(
+                LocalDate.parse("2026-07-01"), LocalDate.parse("2026-07-13"), 3L, "Centro",
+                OffsetDateTime.now(),
+                List.of(new ReportKpiDto("Facturacion POS", "$ 12.500", null,
+                        "pi pi-shopping-bag", "SUCCESS", null, null)),
+                List.of(new EmployeePerformanceDto(
+                        7L, "Carla Cajero", "EMPLOYEE", 5L,
+                        new BigDecimal("12500.00"), new BigDecimal("2500.00"),
+                        2L, 2L, new BigDecimal("0.00")))
         );
     }
 

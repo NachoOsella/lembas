@@ -127,6 +127,37 @@ class ReportServiceTest {
     }
 
     // ---------------------------------------------------------------------------
+    // Employee report
+    // ---------------------------------------------------------------------------
+
+    @Test
+    void employeeReportMergesPosAndCashActivityByEmployee() {
+        when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+        when(reportRepository.employeePosPerformance(any(), any(), isNull())).thenReturn(List.<Object[]>of(
+                new Object[]{10L, "Carla", "Cajero", Role.EMPLOYEE, 2L,
+                        new BigDecimal("3000.00"), new BigDecimal("1500.00")}
+        ));
+        when(reportRepository.employeeCashOpenPerformance(any(), any(), isNull())).thenReturn(List.<Object[]>of(
+                new Object[]{10L, "Carla", "Cajero", Role.EMPLOYEE, 1L}
+        ));
+        when(reportRepository.employeeCashClosePerformance(any(), any(), isNull())).thenReturn(List.<Object[]>of(
+                new Object[]{10L, "Carla", "Cajero", Role.EMPLOYEE, 1L, new BigDecimal("50.00")}
+        ));
+
+        var report = reportService.getEmployeeReport(
+                LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 31), null);
+
+        assertThat(report.employees()).hasSize(1);
+        var employee = report.employees().getFirst();
+        assertThat(employee.employeeName()).isEqualTo("Carla Cajero");
+        assertThat(employee.posSalesCount()).isEqualTo(2L);
+        assertThat(employee.posRevenue()).isEqualByComparingTo("3000.00");
+        assertThat(employee.cashSessionsOpened()).isEqualTo(1L);
+        assertThat(employee.cashSessionsClosed()).isEqualTo(1L);
+        assertThat(employee.cashDifferenceAbsolute()).isEqualByComparingTo("50.00");
+    }
+
+    // ---------------------------------------------------------------------------
     // Branch resolution (role-based policy)
     // ---------------------------------------------------------------------------
 

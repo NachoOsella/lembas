@@ -1,0 +1,153 @@
+:host {
+  display: block;
+  padding: clamp(0.75rem, 1.6vw, 1.4rem);
+}
+
+:host > app-page-header {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.employees-report {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.employees-report__section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.employees-report__kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.95rem;
+}
+
+.employees-report__charts {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.employees-report__chart-card,
+.employees-report__table-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  min-width: 0;
+  padding: clamp(1rem, 2vw, 1.35rem);
+  background: var(--color-surface);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: var(--radius-card, 12px);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.employees-report__table-card {
+  padding-bottom: 0.8rem;
+}
+
+.employees-report__person {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 12rem;
+  color: var(--color-primary-darkest);
+}
+
+.employees-report__person-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+  border-radius: 50%;
+  background: var(--color-mint-wash-light);
+  color: var(--color-primary);
+  font-size: 0.8rem;
+}
+
+.employees-report__person strong {
+  overflow: hidden;
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.employees-report__role {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid rgba(7, 95, 54, 0.12);
+  border-radius: 999px;
+  background: var(--color-mint-wash-pale);
+  color: var(--color-primary-dark);
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.employees-report__money,
+.employees-report__difference {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.employees-report__money {
+  color: var(--color-primary-darkest);
+  font-weight: 650;
+}
+
+.employees-report__difference {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.employees-report__difference--warning {
+  color: var(--color-amber);
+}
+
+.employees-report__note {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0 0.2rem;
+  color: var(--color-primary);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.employees-report__note i {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1100px) {
+  .employees-report__kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .employees-report__charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 48rem) {
+  :host {
+    padding: 0;
+  }
+
+  .employees-report__kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .employees-report__chart-card,
+  .employees-report__table-card {
+    padding: 1rem;
+  }
+}
