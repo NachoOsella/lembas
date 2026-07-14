@@ -10,6 +10,7 @@ import com.dietetica.lembas.inventory.repository.StockMovementRepository;
 import com.dietetica.lembas.orders.repository.OrderItemRepository;
 import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.payments.repository.PaymentRepository;
+import com.dietetica.lembas.reports.repository.ReportQueryRepository;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.suppliers.repository.PurchaseOrderRepository;
 import com.dietetica.lembas.suppliers.repository.PurchaseReceiptItemRepository;
@@ -126,6 +127,10 @@ class LembasBackendApplicationTests {
     /** Provides the cash movement repository collaborator while JPA repositories are disabled. */
     @MockitoBean
     private CashMovementRepository cashMovementRepository;
+
+    /** Provides the reports query repository collaborator while JPA repositories are disabled. */
+    @MockitoBean
+    private ReportQueryRepository reportQueryRepository;
 
     /**
      * Keeps a fast smoke test for the application context without external services.

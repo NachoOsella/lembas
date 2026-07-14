@@ -1,0 +1,21 @@
+<section class="filter-bar" aria-label="Filtros del reporte">
+  <div class="filter-bar__info">
+    <p class="filter-bar__kicker">{{ caption() }}</p>
+    @if (title(); as t) {
+      <h2 class="filter-bar__title">{{ t }}</h2>
+    }
+    @if (description(); as d) {
+      <p class="filter-bar__caption" [class.filter-bar__caption--with-title]="!!title()">{{ d }}</p>
+    }
+  </div>
+
+  <div class="filter-bar__actions-wrap">
+    <div class="filter-bar__fields">
+      <ng-content select="[slot=fields]" />
+    </div>
+
+    <div class="filter-bar__actions">
+      <ng-content select="[slot=actions]" />
+    </div>
+  </div>
+</section>

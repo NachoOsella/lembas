@@ -1,0 +1,109 @@
+<app-page-header
+  eyebrow="Alertas"
+  title="Recomendaciones"
+  description="Sugerencias automaticas segun reglas de stock, vencimiento y rotacion. Las alertas se priorizan por urgencia."
+  tone="light"
+/>
+
+<div class="recommendations">
+  <app-report-filter-bar
+    caption="Filtros"
+    title="Alertas operativas"
+    [description]="recommendations().length + ' recomendaciones encontradas.'"
+  >
+    <app-select
+      slot="fields"
+      [options]="typeOptions"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Tipo de alerta"
+      [value]="typeFilter()"
+      (valueChange)="onTypeChange($event)"
+    />
+    <app-select
+      slot="fields"
+      [options]="urgencyOptions"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Urgencia"
+      [value]="urgencyFilter()"
+      (valueChange)="onUrgencyChange($event)"
+    />
+    <app-button
+      slot="actions"
+      [variant]="'ghost'"
+      [size]="'sm'"
+      [icon]="'pi pi-filter-slash'"
+      (click)="onClearFilters()"
+    >
+      Limpiar
+    </app-button>
+    <app-button
+      slot="actions"
+      [variant]="'primary'"
+      [size]="'sm'"
+      [icon]="'pi pi-refresh'"
+      [loading]="loading()"
+      (click)="onRefresh()"
+    >
+      Actualizar
+    </app-button>
+    <app-data-export slot="actions" [data]="exportData()" />
+  </app-report-filter-bar>
+
+  @if (errorMessage()) {
+    <app-error-alert
+      title="No se pudieron cargar las recomendaciones"
+      [message]="errorMessage() ?? ''"
+    />
+  } @else {
+    <app-data-table
+      [data]="recommendations()"
+      [columns]="columns"
+      [loading]="loading()"
+      [sortable]="false"
+      [paginated]="true"
+      [rows]="10"
+      emptyTitle="Sin recomendaciones"
+      emptyDescription="Todo en orden. No hay alertas activas para los filtros seleccionados."
+    >
+      <ng-template #body let-row>
+        <tr class="recommendations__row">
+          <td>
+            <span class="recommendations__type">
+              <i [class]="row.iconName" aria-hidden="true"></i>
+              {{ typeLabel(row.type) }}
+            </span>
+          </td>
+          <td>
+            <app-badge [tone]="urgencyTone(row.urgency)">
+              {{ urgencyLabel(row.urgency) }}
+            </app-badge>
+          </td>
+          <td>
+            <div class="recommendations__product">
+              <strong>{{ row.productName }}</strong>
+              @if (row.categoryName) {
+                <span>{{ row.categoryName }}</span>
+              }
+            </div>
+          </td>
+          <td class="recommendations__description">{{ row.description }}</td>
+          <td class="recommendations__context">{{ context(row) }}</td>
+          <td>
+            <app-button
+              [variant]="'ghost'"
+              [size]="'sm'"
+              [icon]="row.iconName"
+              (click)="openRecommendation(row)"
+            >
+              {{ row.actionLabel }}
+            </app-button>
+          </td>
+        </tr>
+      </ng-template>
+    </app-data-table>
+  }
+</div>
+
+<app-toast />

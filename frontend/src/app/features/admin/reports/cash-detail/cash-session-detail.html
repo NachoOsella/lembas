@@ -1,0 +1,148 @@
+<app-page-header
+  eyebrow="Reportes"
+  title="Reporte de cierre de caja"
+  [description]="'Sesion #' + (report()?.sessionId ?? '')"
+  tone="light"
+/>
+
+<div class="cash-detail">
+  <header class="cash-detail__toolbar">
+    <app-button [variant]="'ghost'" [size]="'sm'" [icon]="'pi pi-arrow-left'" (click)="goBack()">
+      Volver al historial
+    </app-button>
+    @if (report(); as r) {
+      <app-data-export [data]="exportData()" />
+    }
+  </header>
+
+  @if (errorMessage()) {
+    <app-error-alert title="No se pudo cargar el reporte" [message]="errorMessage() ?? ''" />
+  } @else if (loading()) {
+    <app-loading-spinner label="Cargando reporte..." surface="card" />
+  } @else if (report(); as r) {
+    <!-- Session metadata -------------------------------------------------- -->
+    <section class="cash-detail__section" aria-label="Datos del cierre">
+      <header class="cash-detail__section-head">
+        <h2 class="cash-detail__section-title">Datos del cierre</h2>
+      </header>
+      <dl class="cash-detail__meta">
+        <div>
+          <dt>Sucursal</dt>
+          <dd>{{ r.branchName }}</dd>
+        </div>
+        <div>
+          <dt>Estado</dt>
+          <dd>
+            <app-badge [tone]="statusTone(r.status)" [icon]="statusIcon(r.status)">
+              {{ statusLabel(r.status) }}
+            </app-badge>
+          </dd>
+        </div>
+        <div>
+          <dt>Abrio</dt>
+          <dd>
+            <strong>{{ r.openedByUserName }}</strong>
+            <span> - {{ r.openedAt | shortDateAr }}</span>
+          </dd>
+        </div>
+        <div>
+          <dt>Cerro</dt>
+          <dd>
+            <strong>{{ r.closedByUserName ?? '-' }}</strong>
+            <span> - {{ r.closedAt ? (r.closedAt | shortDateAr) : '-' }}</span>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- Financial summary ------------------------------------------------- -->
+    <section class="cash-detail__cards" aria-label="Resumen financiero">
+      <article class="cash-detail__stat cash-detail__stat--info">
+        <span class="cash-detail__stat-label">Esperado</span>
+        <strong class="cash-detail__stat-value">{{ r.expectedCashAmount | currencyAr }}</strong>
+        <span class="cash-detail__stat-sub">Caja teorica al cierre</span>
+      </article>
+      <article class="cash-detail__stat cash-detail__stat--info">
+        <span class="cash-detail__stat-label">Contado</span>
+        <strong class="cash-detail__stat-value">{{ r.countedCashAmount | currencyAr }}</strong>
+        <span class="cash-detail__stat-sub">Efectivo contado por el cajero</span>
+      </article>
+      <article
+        class="cash-detail__stat"
+        [ngClass]="differenceClass(r.cashDifferenceAmount)"
+        [class.cash-detail__stat--success]="isDifferenceNonNegative(r.cashDifferenceAmount)"
+        [class.cash-detail__stat--danger]="isDifferenceNegative(r.cashDifferenceAmount)"
+      >
+        <span class="cash-detail__stat-label">Diferencia</span>
+        <strong class="cash-detail__stat-value">{{ r.cashDifferenceAmount | currencyAr }}</strong>
+        <span class="cash-detail__stat-sub">
+          {{ r.cashDifferenceReason ?? 'Sin diferencia' }}
+        </span>
+      </article>
+    </section>
+
+    <!-- Payments by method ------------------------------------------------ -->
+    <section class="cash-detail__section" aria-label="Totales por metodo de pago">
+      <header class="cash-detail__section-head">
+        <h2 class="cash-detail__section-title">Totales por metodo</h2>
+        <p class="cash-detail__section-desc">Montos aprobados agrupados por metodo de pago.</p>
+      </header>
+      @if (methodAmounts().length === 0) {
+        <app-empty-state
+          icon="pi pi-credit-card"
+          title="Sin pagos"
+          description="Esta sesion no tuvo pagos aprobados."
+        />
+      } @else {
+        <div class="cash-detail__chart-wrap">
+          <app-dashboard-chart
+            type="doughnut"
+            [labels]="methodLabels()"
+            [data]="methodAmounts()"
+            [currency]="true"
+            [height]="'300px'"
+            [centerLabel]="r.totalPosRevenue | currencyAr"
+            centerSubLabel="Total facturado POS"
+          />
+        </div>
+      }
+    </section>
+
+    <!-- Manual movements -------------------------------------------------- -->
+    <section class="cash-detail__section" aria-label="Movimientos manuales">
+      <header class="cash-detail__section-head">
+        <h2 class="cash-detail__section-title">Movimientos manuales</h2>
+        <p class="cash-detail__section-desc">
+          Ingresos y egresos registrados manualmente por los operarios.
+        </p>
+      </header>
+      @if (manualMovements().length === 0) {
+        <app-empty-state
+          icon="pi pi-list"
+          title="Sin movimientos manuales"
+          description="Esta sesion no tuvo ingresos ni egresos registrados."
+        />
+      } @else {
+        <app-data-table
+          [data]="manualMovements()"
+          [columns]="movementColumns"
+          [paginated]="true"
+          [rows]="10"
+        >
+          <ng-template #body let-row>
+            <tr>
+              <td>{{ row.type }}</td>
+              <td>{{ row.method }}</td>
+              <td>{{ row.amount | currencyAr }}</td>
+              <td>{{ row.reason }}</td>
+              <td>{{ row.createdByUserName ?? '-' }}</td>
+              <td>{{ row.createdAt | shortDateAr }}</td>
+            </tr>
+          </ng-template>
+        </app-data-table>
+      }
+    </section>
+  }
+</div>
+
+<app-toast />

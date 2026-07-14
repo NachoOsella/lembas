@@ -1,0 +1,62 @@
+:host {
+  display: block;
+  padding: clamp(0.75rem, 1.6vw, 1.4rem);
+}
+
+:host > app-page-header {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.recommendations {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.recommendations__row {
+  vertical-align: middle;
+}
+
+.recommendations__type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-primary-darkest);
+  font-size: 0.84rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.recommendations__type i {
+  color: var(--color-primary);
+  font-size: 0.95rem;
+}
+
+.recommendations__product {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 10rem;
+}
+
+.recommendations__product strong {
+  color: var(--color-primary-darkest);
+  font-size: 0.86rem;
+}
+
+.recommendations__product span,
+.recommendations__context,
+.recommendations__description {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.recommendations__description {
+  max-width: 38ch;
+}
+
+.recommendations__context {
+  min-width: 9rem;
+}

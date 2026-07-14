@@ -162,6 +162,8 @@ public class CustomerOrderService {
         item.setSubtotalAmount(subtotal);
         item.setProductNameSnapshot(product.getName());
         item.setProductBarcodeSnapshot(product.getBarcode());
+        item.setCategoryIdSnapshot(product.getCategory() == null ? null : product.getCategory().getId());
+        item.setCategoryNameSnapshot(product.getCategory() == null ? null : product.getCategory().getName());
         item.setCostPriceSnapshot(null);
         return item;
     }

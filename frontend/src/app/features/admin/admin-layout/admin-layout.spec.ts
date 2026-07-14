@@ -150,12 +150,14 @@ describe('AdminLayout', () => {
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
     );
-    expect(navLinks.length).toBe(14);
+    expect(navLinks.length).toBe(16);
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );
     expect(labels).toContain('Precios');
     expect(labels).toContain('Usuarios');
+    expect(labels).toContain('Recomendaciones');
+    expect(labels).toContain('Cierres de caja');
   });
 
   /** Should hide Usuarios but keep pricing in sidebar when role is MANAGER. */
@@ -165,7 +167,7 @@ describe('AdminLayout', () => {
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
     );
-    expect(navLinks.length).toBe(13);
+    expect(navLinks.length).toBe(15);
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );
@@ -189,7 +191,7 @@ describe('AdminLayout', () => {
     const navLinks: Element[] = Array.from(
       fixture.nativeElement.querySelectorAll('.admin__nav-link'),
     );
-    expect(navLinks.length).toBe(13);
+    expect(navLinks.length).toBe(15);
     const labels = navLinks.map(
       (el) => el.querySelector('.admin__nav-label')?.textContent?.trim() ?? '',
     );

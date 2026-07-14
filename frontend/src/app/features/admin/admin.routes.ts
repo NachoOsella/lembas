@@ -85,9 +85,7 @@ export default [
           {
             path: ':id',
             loadComponent: () =>
-              import('./orders/order-detail-page/order-detail-page').then(
-                (m) => m.OrderDetailPage,
-              ),
+              import('./orders/order-detail-page/order-detail-page').then((m) => m.OrderDetailPage),
           },
         ],
       },
@@ -108,6 +106,23 @@ export default [
         // router picks this path when navigating to /admin/cash/close/:id.
         path: 'cash/close/:sessionId',
         loadComponent: () => import('./cash/close/cash-close').then((m) => m.CashClose),
+      },
+      {
+        // Cash history list + detail (S4-US05). Declared BEFORE the generic
+        // /admin/cash/:id route so Angular's first-match router picks these
+        // when navigating to /admin/cash/history or /admin/cash/history/:id.
+        path: 'cash/history',
+        loadComponent: () =>
+          import('./reports/cash-history/cash-session-history').then(
+            (m) => m.CashSessionHistoryPageComponent,
+          ),
+      },
+      {
+        path: 'cash/history/:sessionId',
+        loadComponent: () =>
+          import('./reports/cash-detail/cash-session-detail').then(
+            (m) => m.CashSessionDetailReportPageComponent,
+          ),
       },
       {
         path: 'cash/:id',
@@ -139,6 +154,42 @@ export default [
       {
         path: 'reports',
         loadComponent: () => import('./reports/reports').then((m) => m.Reports),
+      },
+      {
+        // Specific report pages (Sprint 4 reports). They are intentionally
+        // NOT in the sidebar nav: they are only reachable through the reports
+        // hub at /admin/reports so the navigation stays focused on the main
+        // admin views.
+        path: 'reports/cash',
+        loadComponent: () =>
+          import('./reports/cash-overview/cash-overview').then((m) => m.CashOverviewPageComponent),
+      },
+      {
+        path: 'reports/sales',
+        loadComponent: () =>
+          import('./reports/sales-report/sales-report').then((m) => m.SalesReportPageComponent),
+      },
+      {
+        path: 'reports/inventory',
+        loadComponent: () =>
+          import('./reports/inventory-report/inventory-report').then(
+            (m) => m.InventoryReportPageComponent,
+          ),
+      },
+      {
+        path: 'reports/suppliers',
+        loadComponent: () =>
+          import('./reports/suppliers-report/suppliers-report').then(
+            (m) => m.SuppliersReportPageComponent,
+          ),
+      },
+      {
+        // Recommendations page (S4-US06).
+        path: 'recommendations',
+        loadComponent: () =>
+          import('./reports/recommendations/recommendations-panel').then(
+            (m) => m.RecommendationsPanelComponent,
+          ),
       },
       {
         path: 'users',

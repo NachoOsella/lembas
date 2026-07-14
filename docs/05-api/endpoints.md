@@ -265,8 +265,39 @@ Notes: price update batches require human review before applying. They can updat
 GET /api/admin/reports/dashboard
   Response: { todaySales, onlineSales, posSales, pendingOrders, lowStockProducts, expiringLots, topProducts }
 
+GET /api/admin/reports/cash-overview?from=&to=&branchId=
+  Response: { from, to, branchId, closedSessions, openSessions, balancedSessions,
+              sessionsWithDifference, expectedCashTotal, countedCashTotal,
+              netDifferenceTotal, absoluteDifferenceTotal, dailyCloseSeries,
+              paymentMethods, sessionsWithDiscrepancy }
+  Notes: Operational cash dashboard. All amounts are raw numeric values; the
+         client formats currency and labels. ADMIN may scope by branch; other
+         internal roles are restricted to their assigned branch.
+
 GET /api/admin/reports/cash-session/{id}
   Response: { session, totalsByMethod: { CASH, QR, TRANSFER, DEBIT_CARD, CREDIT_CARD }, expectedCash, countedCash, difference, differenceReason }
+
+GET /api/admin/reports/sales?from=&to=&branchId=
+  Response: { from, to, branchId, branchName, kpis, series, byMethod,
+              byCategory, topProducts }
+  Notes: Uses Argentina business-day boundaries. Revenue breakdowns use net
+         order totals and immutable category snapshots; gross margin uses
+         stock-movement cost snapshots. Cancelled and stock-conflict orders are
+         excluded from revenue.
+
+GET /api/admin/reports/inventory?branchId=
+  Response: { branchId, branchName, kpis, stockByCategory, expiringByMonth,
+              topByValue, lowStock }
+  Notes: Consolidated low-stock results are evaluated independently per branch.
+         KPIs include current valuation, capital expiring within 30 days, and
+         active stock that is already expired.
+
+GET /api/admin/reports/suppliers?from=&to=&branchId=
+  Response: { from, to, branchId, branchName, kpis, purchasesByMonth,
+              topByVolume, leadTimeBySupplier }
+  Notes: Purchase amounts come from confirmed receipt quantities and actual
+         receipt unit costs, not draft purchase orders. Lead time ends at the
+         final confirmed receipt; on-time performance uses expected delivery.
 
 GET /api/admin/recommendations
   Response: [ { type: "LOW_STOCK"|"EXPIRING_SOON"|"HIGH_ROTATION"|"NO_MOVEMENT", productId, productName, message, urgency } ]

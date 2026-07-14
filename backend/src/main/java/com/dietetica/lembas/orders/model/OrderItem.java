@@ -85,6 +85,14 @@ public class OrderItem {
     @Column(name = "product_barcode_snapshot", length = 100)
     private String productBarcodeSnapshot;
 
+    /** Category identifier captured at sale time for stable historical reports. */
+    @Column(name = "category_id_snapshot")
+    private Long categoryIdSnapshot;
+
+    /** Category name captured at sale time for stable historical reports. */
+    @Column(name = "category_name_snapshot", length = 255)
+    private String categoryNameSnapshot;
+
     /** Unit cost captured at sale time for margin reports. */
     @Column(name = "cost_price_snapshot", precision = 12, scale = 2)
     private BigDecimal costPriceSnapshot;

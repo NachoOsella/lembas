@@ -1,0 +1,56 @@
+<section class="chart" [class.chart--doughnut]="type() === 'doughnut'" [style.height]="height()">
+  @if (eyebrow() || title()) {
+    <header class="chart__header">
+      @if (eyebrow()) {
+        <p class="chart__eyebrow">{{ eyebrow() }}</p>
+      }
+      @if (title()) {
+        <h3 class="chart__title">{{ title() }}</h3>
+      }
+    </header>
+  }
+
+  <div class="chart__body">
+    @if (loading()) {
+      <div class="chart__skeleton" aria-hidden="true">
+        <app-skeleton width="100%" height="100%" shape="rect" />
+      </div>
+    } @else if (empty()) {
+      <app-empty-state icon="pi pi-chart-bar" title="Sin datos" [description]="emptyMessage()" />
+    } @else if (type() === 'bar') {
+      <div class="chart__prime-chart">
+        <p-chart type="bar" [data]="chartData()" [options]="chartOptions()" [height]="height()" />
+      </div>
+    } @else {
+      <div class="chart__doughnut">
+        <div class="chart__doughnut-visual">
+          <p-chart
+            type="doughnut"
+            [data]="chartData()"
+            [options]="chartOptions()"
+            [height]="'100%'"
+          />
+          @if (centerLabel()) {
+            <div class="chart__doughnut-center">
+              <strong>{{ centerLabel() }}</strong>
+              @if (centerSubLabel()) {
+                <span>{{ centerSubLabel() }}</span>
+              }
+            </div>
+          }
+        </div>
+        <ul class="chart__legend">
+          @for (item of legendItems(); track item.label) {
+            <li>
+              <span class="chart__legend-swatch" [style.background-color]="item.color"></span>
+              <span class="chart__legend-label">{{ item.label }}</span>
+              <span class="chart__legend-value"
+                >{{ formatValue(item.value) }} - {{ item.percentage }}%</span
+              >
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </div>
+</section>
