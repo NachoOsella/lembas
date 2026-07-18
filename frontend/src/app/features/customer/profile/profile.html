@@ -1,1 +1,26 @@
-<p>profile works!</p>
+<section class="profile-page" aria-labelledby="profile-title">
+  <div class="profile-page__intro">
+    <p class="profile-page__eyebrow">Mi cuenta</p>
+    <h1 id="profile-title">Tu perfil</h1>
+    <p>Consulta tus compras y volv&eacute; a la tienda cuando quieras.</p>
+  </div>
+
+  <div class="profile-page__panel">
+    <div class="profile-page__mark" aria-hidden="true">
+      <i class="pi pi-user"></i>
+    </div>
+    <div class="profile-page__content">
+      <h2>Datos de cuenta</h2>
+      <p>
+        La gesti&oacute;n de datos personales estar&aacute; disponible pr&oacute;ximamente. Mientras
+        tanto, pod&eacute;s seguir tus pedidos y hacer nuevas compras desde Lembas.
+      </p>
+    </div>
+    <div class="profile-page__actions">
+      <app-button routerLink="/customer/orders" icon="pi pi-receipt"> Ver mis pedidos </app-button>
+      <app-button routerLink="/store/products" variant="secondary" icon="pi pi-shopping-bag">
+        Ir a la tienda
+      </app-button>
+    </div>
+  </div>
+</section>

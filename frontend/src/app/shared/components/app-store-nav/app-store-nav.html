@@ -41,6 +41,28 @@
 
     <!-- Actions (right) -->
     <div class="app-store-nav__actions">
+      <div class="app-store-nav__mobile-actions">
+        <button
+          type="button"
+          class="app-store-nav__mobile-cart"
+          aria-label="Ir al carrito de compras"
+          (click)="cartClick.emit()"
+        >
+          <i class="pi pi-shopping-bag" aria-hidden="true"></i>
+          @if (cartCount() > 0) {
+            <span>{{ cartCount() }}</span>
+          }
+        </button>
+        @if (!isLoggedIn()) {
+          <a
+            routerLink="/auth/login"
+            class="app-store-nav__mobile-account"
+            aria-label="Ingresar a tu cuenta"
+          >
+            <i class="pi pi-user" aria-hidden="true"></i>
+          </a>
+        }
+      </div>
       <div class="app-store-nav__branch" aria-label="Sucursal de retiro">
         <i class="pi pi-map-marker app-store-nav__branch-icon" aria-hidden="true"></i>
         @if (branchesLoading()) {
@@ -109,11 +131,7 @@
 
 <!-- Floating Cart CTA -->
 @if (showFloatingCart()) {
-  <a
-    routerLink="/store/cart"
-    class="app-store-nav__cart"
-    aria-label="Ir al carrito de compras"
-  >
+  <a routerLink="/store/cart" class="app-store-nav__cart" aria-label="Ir al carrito de compras">
     <i class="pi pi-shopping-bag text-xl"></i>
     @if (cartCount() > 0) {
       <span class="app-store-nav__cart-badge">

@@ -6,7 +6,8 @@ import { AppToast } from '../../../../shared/components/app-toast/app-toast';
 import { AppDatePicker } from '../../../../shared/components/app-date-picker/app-date-picker';
 import { AppSelect } from '../../../../shared/components/app-select/app-select';
 import { AppReportFilterBar } from '../../../../shared/components/app-report-filter-bar/app-report-filter-bar';
-import { AppReportSectionHead } from '../../../../shared/components/app-report-section-head/app-report-section-head';
+import { AppReportGrid } from '../../../../shared/components/app-report-grid/app-report-grid';
+import { AppReportPanel } from '../../../../shared/components/app-report-panel/app-report-panel';
 import { DashboardStatCard } from '../../../../shared/components/dashboard-stat-card/dashboard-stat-card';
 import { DashboardChart } from '../../../../shared/components/dashboard-chart/dashboard-chart';
 import { DataExport, ExportData } from '../../../../shared/components/data-export/data-export';
@@ -38,7 +39,8 @@ import {
     AppDatePicker,
     AppSelect,
     AppReportFilterBar,
-    AppReportSectionHead,
+    AppReportGrid,
+    AppReportPanel,
     DashboardStatCard,
     DashboardChart,
     DataExport,
@@ -94,14 +96,15 @@ export class SuppliersReportPageComponent implements OnInit {
     }));
   });
 
-  protected readonly purchaseLabels = computed(() =>
-    this.data()?.purchasesByMonth.map((p: ReportSeriesPointDto) => p.label) ?? [],
+  protected readonly purchaseLabels = computed(
+    () => this.data()?.purchasesByMonth.map((p: ReportSeriesPointDto) => p.label) ?? [],
   );
-  protected readonly purchaseValues = computed(() =>
-    this.data()?.purchasesByMonth.map((p: ReportSeriesPointDto) => p.value) ?? [],
+  protected readonly purchaseValues = computed(
+    () => this.data()?.purchasesByMonth.map((p: ReportSeriesPointDto) => p.value) ?? [],
   );
-  protected readonly purchaseOrders = computed(() =>
-    this.data()?.purchasesByMonth.map((p: ReportSeriesPointDto) => p.secondaryValue ?? 0) ?? [],
+  protected readonly purchaseOrders = computed(
+    () =>
+      this.data()?.purchasesByMonth.map((p: ReportSeriesPointDto) => p.secondaryValue ?? 0) ?? [],
   );
 
   ngOnInit(): void {

@@ -28,10 +28,10 @@ import { ProductSummary } from '../../../shared/models/product';
     HeroFlowers,
   ],
   template: `
-    <div class="home-page min-h-screen overflow-hidden bg-canvas">
+    <div class="home-page min-h-dvh overflow-hidden bg-canvas">
       <!-- Editorial hero with organic depth -->
       <header
-        class="home-hero relative isolate overflow-hidden px-4 py-16 sm:px-6 md:py-24 lg:px-8"
+        class="home-hero relative isolate overflow-hidden px-4 py-12 sm:px-6 sm:py-16 md:py-20 lg:px-8 lg:py-16"
       >
         <!-- Decorative organic shapes -->
         <div
@@ -47,7 +47,7 @@ import { ProductSummary } from '../../../shared/models/product';
         <app-hero-flowers />
 
         <div
-          class="relative mx-auto grid w-full max-w-[1600px] items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_0.85fr] lg:px-10"
+          class="relative mx-auto grid w-full max-w-[1600px] items-center gap-8 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-10"
         >
           <section class="w-full max-w-3xl min-w-0">
             <div class="home-reveal home-reveal--eyebrow">
@@ -55,7 +55,7 @@ import { ProductSummary } from '../../../shared/models/product';
             </div>
 
             <h1
-              class="home-reveal home-reveal--title mt-8 max-w-[760px] text-5xl font-semibold leading-[1.2] tracking-[-0.01em] text-white sm:text-6xl lg:text-[5rem]"
+              class="home-reveal home-reveal--title mt-6 max-w-[760px] text-5xl font-semibold leading-[1.12] tracking-[-0.01em] text-white sm:text-6xl lg:text-[4.5rem]"
             >
               Tu despensa natural, lista para retirar
             </h1>
@@ -66,7 +66,7 @@ import { ProductSummary } from '../../../shared/models/product';
               Productos saludables para comprar online y retirar en sucursal.
             </p>
 
-            <div class="home-reveal home-reveal--cta mt-10 flex flex-col gap-3 sm:flex-row">
+            <div class="home-reveal home-reveal--cta mt-8 flex flex-col gap-3 sm:flex-row">
               <app-button
                 variant="hero"
                 size="lg"
@@ -78,7 +78,7 @@ import { ProductSummary } from '../../../shared/models/product';
             </div>
           </section>
 
-          <aside class="home-ticket-stage hidden lg:block" aria-label="Resumen de compra">
+          <aside class="home-ticket-stage" aria-label="Resumen de compra">
             <div class="home-ticket relative ml-auto max-w-sm">
               <!-- Ticket body -->
               <div
@@ -101,12 +101,12 @@ import { ProductSummary } from '../../../shared/models/product';
                         >
                           Dietética Lembas
                         </p>
-                        <p class="text-xs font-bold text-text">Pedido Simple</p>
+                        <p class="text-xs font-bold text-text">Cómo comprar</p>
                       </div>
                     </div>
-                    <div class="text-right">
-                      <p class="text-[10px] text-[rgba(0,0,0,0.45)]">N°</p>
-                      <p class="font-mono text-sm font-bold text-primary">#001</p>
+                    <div class="home-ticket__status">
+                      <i class="pi pi-check-circle" aria-hidden="true"></i>
+                      <span>Compra simple</span>
                     </div>
                   </div>
                 </div>
@@ -131,9 +131,9 @@ import { ProductSummary } from '../../../shared/models/product';
                     Cómo funciona
                   </p>
                   <ul class="space-y-4">
-                    <li class="flex items-start gap-3">
+                    <li class="home-ticket__step flex items-start gap-3">
                       <div
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
+                        class="home-ticket__step-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
                       >
                         <i class="pi pi-search text-xs" aria-hidden="true"></i>
                       </div>
@@ -144,9 +144,9 @@ import { ProductSummary } from '../../../shared/models/product';
                         </p>
                       </div>
                     </li>
-                    <li class="flex items-start gap-3">
+                    <li class="home-ticket__step flex items-start gap-3">
                       <div
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
+                        class="home-ticket__step-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
                       >
                         <i class="pi pi-shopping-cart text-xs" aria-hidden="true"></i>
                       </div>
@@ -155,9 +155,9 @@ import { ProductSummary } from '../../../shared/models/product';
                         <p class="text-xs text-text-muted">Agregá productos y confirmá el pago</p>
                       </div>
                     </li>
-                    <li class="flex items-start gap-3">
+                    <li class="home-ticket__step flex items-start gap-3">
                       <div
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
+                        class="home-ticket__step-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mint-wash text-primary"
                       >
                         <i class="pi pi-box text-xs" aria-hidden="true"></i>
                       </div>
@@ -169,28 +169,9 @@ import { ProductSummary } from '../../../shared/models/product';
                   </ul>
                 </div>
 
-                <!-- Footer (barcode decorativo) -->
-                <div
-                  class="border-t-2 border-dashed border-[rgba(7,95,54,0.12)] bg-mint-wash-pale px-6 py-4"
-                >
-                  <div class="flex items-center justify-between">
-                    <div class="home-barcode flex gap-0.5">
-                      <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
-                      <div class="h-8 w-1 bg-[rgba(0,0,0,0.87)]"></div>
-                      <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
-                      <div class="h-8 w-1.5 bg-[rgba(0,0,0,0.87)]"></div>
-                      <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
-                      <div class="h-8 w-1 bg-[rgba(0,0,0,0.87)]"></div>
-                      <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
-                      <div class="h-8 w-1.5 bg-[rgba(0,0,0,0.87)]"></div>
-                      <div class="h-8 w-0.5 bg-[rgba(0,0,0,0.87)]"></div>
-                      <div class="h-8 w-1 bg-[rgba(0,0,0,0.87)]"></div>
-                    </div>
-                    <div class="text-right">
-                      <p class="text-[9px] font-mono text-[rgba(0,0,0,0.45)]">LEMBAS-2026</p>
-                      <p class="text-[9px] text-[rgba(0,0,0,0.35)]">dietetica.lembas</p>
-                    </div>
-                  </div>
+                <div class="home-ticket__footer">
+                  <i class="pi pi-info-circle" aria-hidden="true"></i>
+                  <span>Elegí tu sucursal antes de confirmar el pedido.</span>
                 </div>
               </div>
             </div>
@@ -198,7 +179,15 @@ import { ProductSummary } from '../../../shared/models/product';
         </div>
       </header>
 
-      <main class="relative py-16 lg:py-24">
+      <section class="home-utility-strip" aria-label="Beneficios de comprar en Lembas">
+        <div class="home-utility-strip__inner">
+          <span><i class="pi pi-map-marker" aria-hidden="true"></i> Retiro en sucursal</span>
+          <span><i class="pi pi-box" aria-hidden="true"></i> Stock local</span>
+          <span><i class="pi pi-shield" aria-hidden="true"></i> Pago seguro</span>
+        </div>
+      </section>
+
+      <main class="relative py-12 lg:py-16">
         <!-- Recommendations marquee -->
         <section
           class="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10"
@@ -245,10 +234,7 @@ import { ProductSummary } from '../../../shared/models/product';
                 [responsiveOptions]="carouselResponsiveOptions"
               >
                 <ng-template #item let-product>
-                  <app-store-product-card
-                    [product]="product"
-                    density="compact"
-                  />
+                  <app-store-product-card [product]="product" density="compact" />
                 </ng-template>
               </app-carousel>
             </div>

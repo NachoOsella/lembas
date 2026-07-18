@@ -1,4 +1,4 @@
-<section class="min-h-screen bg-canvas py-10 text-text sm:py-14">
+<section class="cart-page min-h-dvh bg-canvas py-8 text-text sm:py-12">
   <div class="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
     <!-- Header -->
     <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -8,7 +8,8 @@
           Tu carrito
         </h1>
         <p class="mt-2 text-base text-text-muted">
-          Retirás en <strong class="font-semibold text-text">{{ branchLabel() }}</strong>.
+          Retirás en <strong class="font-semibold text-text">{{ branchLabel() }}</strong
+          >.
         </p>
       </div>
       <app-button variant="secondary" icon="pi pi-arrow-left" (click)="continueShopping()">
@@ -16,10 +17,18 @@
       </app-button>
     </header>
 
+    <ol class="cart-progress" aria-label="Progreso de compra">
+      <li class="cart-progress__item cart-progress__item--active">
+        <span>1</span> Revisá tu pedido
+      </li>
+      <li class="cart-progress__item"><span>2</span> Confirmá el retiro</li>
+      <li class="cart-progress__item"><span>3</span> Pagá online</li>
+    </ol>
+
     <!-- Empty cart -->
     @if (cart.isEmpty()) {
       <div
-        class="rounded-xl border border-dashed border-primary/20 bg-white p-10 text-center shadow-card sm:p-14"
+        class="cart-empty rounded-xl border border-dashed border-primary/20 bg-white p-10 text-center shadow-card sm:p-14"
       >
         <app-empty-state
           icon="pi pi-shopping-bag"
@@ -33,15 +42,22 @@
 
     <!-- Cart items + summary -->
     @if (!cart.isEmpty()) {
-      <div class="grid gap-6 lg:grid-cols-[1fr_400px]">
+      <div class="cart-layout grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <!-- Product list -->
-        <div class="space-y-4">
+        <div class="cart-items space-y-4" aria-label="Productos en tu carrito">
+          <header class="cart-items__header">
+            <div>
+              <h2>Productos seleccionados</h2>
+              <p>{{ cart.totalItems() }} unidades listas para retirar</p>
+            </div>
+            <i class="pi pi-shopping-bag" aria-hidden="true"></i>
+          </header>
           @for (item of cart.items(); track item.productId) {
-            <div class="rounded-xl bg-white p-4 shadow-card sm:p-5">
+            <article class="cart-item border-t border-primary/15 py-4 sm:py-5">
               <div class="flex gap-4 sm:gap-5">
                 <!-- Product image: always on the left, small square -->
                 <div
-                  class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-warm sm:h-28 sm:w-28"
+                  class="cart-item__image flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-warm sm:h-28 sm:w-28"
                 >
                   @if (item.imageUrl) {
                     <img
@@ -55,13 +71,13 @@
                 </div>
 
                 <!-- Product info: fills the rest of the row -->
-                <div class="flex min-w-0 flex-1 flex-col">
+                <div class="cart-item__content flex min-w-0 flex-1 flex-col">
                   <div class="flex items-start justify-between gap-3">
-                    <h2 class="text-base font-semibold leading-tight text-text">
+                    <h2 class="cart-item__name text-base font-semibold leading-tight text-text">
                       {{ item.name }}
                     </h2>
-                    <span class="shrink-0 text-base font-bold text-text">
-                      {{ (item.price * item.quantity) | currencyAr }}
+                    <span class="cart-item__total shrink-0 text-base font-bold text-text">
+                      {{ item.price * item.quantity | currencyAr }}
                     </span>
                   </div>
 
@@ -69,7 +85,9 @@
                     {{ item.price | currencyAr }} por unidad
                   </p>
 
-                  <div class="mt-auto flex items-center justify-between gap-2 pt-3">
+                  <div
+                    class="cart-item__actions mt-auto flex items-center justify-between gap-2 pt-3"
+                  >
                     <button
                       type="button"
                       class="flex items-center gap-1.5 text-sm font-semibold text-text-muted transition-colors hover:text-red"
@@ -79,39 +97,22 @@
                       <i class="pi pi-trash text-xs"></i>
                       Quitar
                     </button>
-                    <div class="flex items-center gap-2">
-                      <button
-                        type="button"
-                        class="flex h-9 w-9 items-center justify-center rounded-full border border-border-warm bg-white text-text transition-colors hover:bg-surface-warm disabled:opacity-40"
-                        [disabled]="item.quantity <= 1"
-                        (click)="updateQuantity(item, item.quantity - 1)"
-                        [attr.aria-label]="'Reducir ' + item.name"
-                      >
-                        <i class="pi pi-minus text-xs"></i>
-                      </button>
-                      <span class="w-7 text-center text-sm font-semibold tabular-nums">
-                        {{ item.quantity }}
-                      </span>
-                      <button
-                        type="button"
-                        class="flex h-9 w-9 items-center justify-center rounded-full border border-border-warm bg-white text-text transition-colors hover:bg-surface-warm disabled:opacity-40"
-                        [disabled]="item.quantity >= maxQuantity(item)"
-                        (click)="updateQuantity(item, item.quantity + 1)"
-                        [attr.aria-label]="'Aumentar ' + item.name"
-                      >
-                        <i class="pi pi-plus text-xs"></i>
-                      </button>
-                    </div>
+                    <app-quantity-stepper
+                      [value]="item.quantity"
+                      [min]="minQuantity()"
+                      [max]="maxQuantity(item)"
+                      (valueChange)="updateQuantity(item, $event)"
+                    />
                   </div>
                 </div>
               </div>
-            </div>
+            </article>
           }
         </div>
 
         <!-- Summary sidebar -->
         <aside class="self-start">
-          <div class="rounded-xl bg-white p-6 shadow-card">
+          <div class="cart-summary rounded-xl border border-primary/10 bg-white p-6">
             <h2 class="text-xl font-semibold text-text">Resumen</h2>
 
             <dl class="mt-5 space-y-3">
@@ -124,10 +125,10 @@
                 <dd class="font-semibold text-text">{{ cart.total() | currencyAr }}</dd>
               </div>
               <div class="flex items-center justify-between text-base">
-                <dt class="text-text-muted">Envío</dt>
-                <dd class="font-semibold text-primary">Gratis</dd>
+                <dt class="text-text-muted">Retiro</dt>
+                <dd class="font-semibold text-primary">Sin costo</dd>
               </div>
-              <div class="border-t border-border-warm pt-4">
+              <div class="cart-summary__total border-t border-border-warm pt-4">
                 <div class="flex items-baseline justify-between">
                   <dt class="text-lg font-semibold text-text">Total</dt>
                   <dd class="text-right text-3xl font-bold tracking-tight text-text">
@@ -152,6 +153,22 @@
               </div>
             </div>
 
+            @if (branchOptions().length > 1 || branchMissing()) {
+              <div class="cart-summary__branch">
+                <label for="cart-branch">Sucursal de retiro</label>
+                <app-select
+                  inputId="cart-branch"
+                  name="cartBranch"
+                  [options]="branchOptions()"
+                  placeholder="Elegí una sucursal"
+                  [value]="branchSelection.selectedBranchId()"
+                  [loading]="branchSelection.loading()"
+                  [showClear]="false"
+                  (valueChange)="onBranchChange($event)"
+                />
+              </div>
+            }
+
             <app-button
               class="mt-5 block w-full"
               variant="primary"
@@ -163,7 +180,7 @@
             </app-button>
 
             <p class="mt-3 text-center text-xs text-text-muted">
-              Al continuar, serás redirigido para iniciar sesión si aún no lo hiciste.
+              Al continuar, vas a confirmar el pedido. Si hace falta, te pediremos iniciar sesión.
             </p>
 
             @if (branchMissing()) {

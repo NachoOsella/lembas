@@ -31,7 +31,7 @@ describe('CashOverviewPageComponent', () => {
   afterEach(() => http.verify());
 
   it('loads the cash overview for the initial 30-day range', () => {
-    const branchesRequest = http.expectOne('/api/admin/branches');
+    const branchesRequest = http.expectOne('/api/store/branches');
     branchesRequest.flush([]);
     const reportRequest = http.expectOne(
       (request) => request.url === '/api/admin/reports/cash-overview',

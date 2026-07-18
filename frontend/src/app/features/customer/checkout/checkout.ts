@@ -10,6 +10,7 @@ import { CustomerOrderService, OrderCreated } from '../../../core/services/custo
 import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
 import { AppButton } from '../../../shared/components/app-button/app-button';
 import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
+import { AppSelect } from '../../../shared/components/app-select/app-select';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
 import { QuantityStepper } from '../../../shared/components/quantity-stepper/quantity-stepper';
@@ -17,7 +18,16 @@ import { QuantityStepper } from '../../../shared/components/quantity-stepper/qua
 @Component({
   selector: 'app-checkout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, AppButton, AppEyebrow, EmptyState, ErrorAlert, QuantityStepper, CurrencyArPipe],
+  imports: [
+    RouterLink,
+    AppButton,
+    AppEyebrow,
+    AppSelect,
+    EmptyState,
+    ErrorAlert,
+    QuantityStepper,
+    CurrencyArPipe,
+  ],
   templateUrl: './checkout.html',
   styleUrl: './checkout.css',
 })
@@ -81,6 +91,16 @@ export class Checkout {
   protected readonly branchMissing = computed(
     () => this.branchSelection.selectedBranchId() == null,
   );
+
+  /** Options for changing the pickup branch before order confirmation. */
+  protected readonly branchOptions = computed(() =>
+    this.branchSelection.branches().map((branch) => ({ label: branch.name, value: branch.id })),
+  );
+
+  /** Updates the pickup branch without leaving checkout. */
+  protected onBranchChange(branchId: number | null): void {
+    this.branchSelection.selectBranch(branchId);
+  }
 
   /** Returns the maximum quantity allowed for an item based on known stock. */
   protected maxQuantity(item: CartItem): number {

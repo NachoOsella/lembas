@@ -99,44 +99,31 @@
 .cash-detail__cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.9rem;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid rgba(47, 141, 114, 0.12);
+  border-radius: var(--radius-card, 12px);
 }
 
 .cash-detail__stat {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background: var(--color-sage-wash);
-  border: 1px solid rgba(47, 141, 114, 0.12);
-  border-radius: var(--radius-card, 12px);
-  padding: 1.15rem 1.2rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  box-shadow:
-    0 0 0.5px rgba(0, 0, 0, 0.08),
-    0 1px 1px rgba(0, 0, 0, 0.1);
+  padding: 1.15rem 1.2rem;
+  background: transparent;
+  border-left: 1px solid rgba(47, 141, 114, 0.12);
 }
 
-.cash-detail__stat::before {
-  content: '';
-  position: absolute;
-  inset: auto -2.5rem -2.75rem auto;
-  z-index: -1;
-  width: 6.5rem;
-  height: 6.5rem;
-  border-radius: 999px;
-  background: rgba(47, 141, 114, 0.07);
+.cash-detail__stat:first-child {
+  border-left: 0;
 }
 
 .cash-detail__stat--info {
   background: var(--color-mint-wash-pale);
-  border-color: rgba(47, 141, 114, 0.12);
 }
 
 .cash-detail__stat--success {
   background: var(--color-mint-wash-minimal);
-  border-color: rgba(47, 141, 114, 0.18);
 }
 
 .cash-detail__stat--success::before {

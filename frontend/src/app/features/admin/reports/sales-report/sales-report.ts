@@ -6,7 +6,8 @@ import { AppToast } from '../../../../shared/components/app-toast/app-toast';
 import { AppDatePicker } from '../../../../shared/components/app-date-picker/app-date-picker';
 import { AppSelect } from '../../../../shared/components/app-select/app-select';
 import { AppReportFilterBar } from '../../../../shared/components/app-report-filter-bar/app-report-filter-bar';
-import { AppReportSectionHead } from '../../../../shared/components/app-report-section-head/app-report-section-head';
+import { AppReportGrid } from '../../../../shared/components/app-report-grid/app-report-grid';
+import { AppReportPanel } from '../../../../shared/components/app-report-panel/app-report-panel';
 import { DashboardStatCard } from '../../../../shared/components/dashboard-stat-card/dashboard-stat-card';
 import { DashboardChart } from '../../../../shared/components/dashboard-chart/dashboard-chart';
 import { DataExport, ExportData } from '../../../../shared/components/data-export/data-export';
@@ -40,7 +41,8 @@ import {
     AppDatePicker,
     AppSelect,
     AppReportFilterBar,
-    AppReportSectionHead,
+    AppReportGrid,
+    AppReportPanel,
     DashboardStatCard,
     DashboardChart,
     DataExport,
@@ -99,28 +101,26 @@ export class SalesReportPageComponent implements OnInit {
 
   // -- Chart projections --------------------------------------------------
 
-  protected readonly seriesLabels = computed(() =>
-    this.data()?.series.map((p: ReportSeriesPointDto) => p.label) ?? [],
+  protected readonly seriesLabels = computed(
+    () => this.data()?.series.map((p: ReportSeriesPointDto) => p.label) ?? [],
   );
-  protected readonly seriesValues = computed(() =>
-    this.data()?.series.map((p: ReportSeriesPointDto) => p.value) ?? [],
+  protected readonly seriesValues = computed(
+    () => this.data()?.series.map((p: ReportSeriesPointDto) => p.value) ?? [],
   );
-  protected readonly seriesHasValues = computed(() =>
-    this.seriesValues().some((v) => v > 0),
+  protected readonly seriesHasValues = computed(() => this.seriesValues().some((v) => v > 0));
+
+  protected readonly methodLabels = computed(
+    () => this.data()?.byMethod.map((m: ReportBreakdownDto) => m.label) ?? [],
+  );
+  protected readonly methodAmounts = computed(
+    () => this.data()?.byMethod.map((m: ReportBreakdownDto) => m.amount) ?? [],
   );
 
-  protected readonly methodLabels = computed(() =>
-    this.data()?.byMethod.map((m: ReportBreakdownDto) => m.label) ?? [],
+  protected readonly categoryLabels = computed(
+    () => this.data()?.byCategory.map((c: ReportBreakdownDto) => c.label) ?? [],
   );
-  protected readonly methodAmounts = computed(() =>
-    this.data()?.byMethod.map((m: ReportBreakdownDto) => m.amount) ?? [],
-  );
-
-  protected readonly categoryLabels = computed(() =>
-    this.data()?.byCategory.map((c: ReportBreakdownDto) => c.label) ?? [],
-  );
-  protected readonly categoryAmounts = computed(() =>
-    this.data()?.byCategory.map((c: ReportBreakdownDto) => c.amount) ?? [],
+  protected readonly categoryAmounts = computed(
+    () => this.data()?.byCategory.map((c: ReportBreakdownDto) => c.amount) ?? [],
   );
 
   protected readonly totalRevenue = computed(() => {

@@ -34,11 +34,9 @@
 
 .report-head__eyebrow {
   margin: 0;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
   color: var(--color-bark);
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .report-head__title {

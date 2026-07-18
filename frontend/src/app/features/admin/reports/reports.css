@@ -104,73 +104,47 @@
   color: var(--color-primary);
 }
 
-/* Grid ------------------------------------------------------------------- */
-
 .reports-hub__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.05rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
 }
-
-/* Card ------------------------------------------------------------------- */
 
 .report-card {
   --card-accent: var(--color-primary);
   --card-accent-strong: var(--color-primary-dark);
-  --card-accent-wash: var(--color-mint-wash-light);
 
   position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  padding: 1.4rem 1.4rem 1.25rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.55rem 1rem;
+  min-height: 13rem;
+  padding: 1.4rem;
+  overflow: hidden;
   background: var(--color-surface);
   border: 1px solid rgba(7, 95, 54, 0.1);
   border-radius: var(--radius-card, 12px);
   box-shadow: var(--shadow-card);
   cursor: pointer;
   transition:
-    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease,
     box-shadow 0.25s ease,
-    border-color 0.2s ease;
-  min-height: 232px;
-  overflow: hidden;
-}
-
-.report-card::before {
-  content: '';
-  position: absolute;
-  inset: auto -3rem -3.5rem auto;
-  z-index: 0;
-  width: 9rem;
-  height: 9rem;
-  border-radius: 999px;
-  background: var(--card-accent-wash);
-  pointer-events: none;
-  transition: transform 0.4s ease;
+    transform 0.2s ease;
 }
 
 .report-card__stripe {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--card-accent) 0%, var(--card-accent-strong) 100%);
-  z-index: 1;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--card-accent);
 }
 
 .report-card:hover {
-  transform: translateY(-3px);
+  border-color: rgba(47, 141, 114, 0.22);
   box-shadow:
-    0 0 0.5px rgba(0, 0, 0, 0.08),
-    0 12px 22px rgba(0, 0, 0, 0.08);
-  border-color: rgba(7, 95, 54, 0.22);
-}
-
-.report-card:hover::before {
-  transform: scale(1.1);
+    0 0 0.5px rgba(0, 0, 0, 0.1),
+    0 8px 20px rgba(7, 95, 54, 0.08);
+  transform: translateY(-2px);
 }
 
 .report-card:focus-visible {
@@ -182,9 +156,10 @@
   position: relative;
   z-index: 1;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  align-items: flex-start;
+  justify-content: center;
+  grid-column: 1;
+  grid-row: 1 / 5;
 }
 
 .report-card__icon {
@@ -193,23 +168,27 @@
   justify-content: center;
   width: 2.85rem;
   height: 2.85rem;
-  border-radius: 14px;
+  border-radius: 50%;
   background: var(--card-accent);
   color: #ffffff;
   font-size: 1.2rem;
-  box-shadow: 0 0.55rem 1.1rem color-mix(in srgb, var(--card-accent) 24%, transparent);
   flex-shrink: 0;
+}
+
+.report-card__cadence,
+.report-card__title,
+.report-card__description,
+.report-card__footer {
+  grid-column: 2;
 }
 
 .report-card__cadence {
   position: relative;
   z-index: 1;
   margin: 0;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   color: var(--card-accent-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .report-card__title {
@@ -304,21 +283,23 @@
   --card-accent-wash: #e0eef5;
 }
 
+/* Report navigation stays within the single visible Lembas green system. */
+.report-card[data-accent] {
+  --card-accent: var(--color-primary);
+  --card-accent-strong: var(--color-primary-dark);
+}
+
 /* Soon state ------------------------------------------------------------- */
 
 .report-card--soon {
   cursor: not-allowed;
-  background: var(--color-sage-wash);
+  opacity: 0.62;
 }
 
-.report-card--soon:hover {
-  transform: none;
-  box-shadow: var(--shadow-card);
-  border-color: rgba(7, 95, 54, 0.1);
-}
-
-.report-card--soon:hover::before {
-  transform: none;
+@media (max-width: 72rem) {
+  .reports-hub__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 48rem) {
@@ -333,5 +314,9 @@
 
   .reports-hub__grid {
     grid-template-columns: 1fr;
+  }
+
+  .report-card {
+    min-height: 0;
   }
 }

@@ -2,20 +2,14 @@
   display: block;
 }
 
-/* ----------------------------------------------------------------
-   Filter bar — updated to match the data-table toolbar rhythm.
-   Standalone bar with card appearance (border, radius, shadow) but
-   internal layout mirrors the table toolbar: info on the left,
-   fields + actions on the right, space-between alignment.
-   ---------------------------------------------------------------- */
 .filter-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: nowrap;
   gap: 1rem;
-  padding: 0.75rem clamp(0.9rem, 1.6vw, 1.6rem);
-  background: var(--color-neutral-cool);
+  padding: 0.85rem clamp(0.9rem, 1.6vw, 1.4rem);
+  background: var(--color-surface);
   border: 1px solid rgba(7, 95, 54, 0.1);
   border-radius: var(--radius-card, 12px);
   box-shadow: var(--shadow-card);
@@ -35,11 +29,9 @@
 
 .filter-bar__kicker {
   margin: 0;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   color: var(--color-bark);
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .filter-bar__title {

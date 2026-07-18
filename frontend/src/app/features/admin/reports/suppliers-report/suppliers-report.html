@@ -4,11 +4,10 @@
   description="Recepciones, costo real, lead time y puntualidad por proveedor en el periodo seleccionado."
   tone="light"
 />
-
 <div class="suppliers-report">
   <app-report-filter-bar
     caption="Filtros"
-    title="Reporte de proveedores"
+    title="Proveedores"
     description="Por defecto se toman los ultimos 90 dias."
   >
     <app-date-picker
@@ -18,16 +17,14 @@
       [maxDate]="toDate()"
       (valueChange)="onFromChange($event)"
       selectionMode="single"
-    />
-    <app-date-picker
+    /><app-date-picker
       slot="fields"
       placeholder="Hasta"
       [value]="toDate()"
       [minDate]="fromDate()"
       (valueChange)="onToChange($event)"
       selectionMode="single"
-    />
-    <app-select
+    /><app-select
       slot="fields"
       [options]="branchOptions()"
       placeholder="Todas las sucursales"
@@ -36,31 +33,23 @@
     />
     <app-button
       slot="actions"
-      [variant]="'ghost'"
-      [size]="'sm'"
-      [icon]="'pi pi-filter-slash'"
+      variant="ghost"
+      size="sm"
+      icon="pi pi-filter-slash"
       (click)="onClearFilters()"
-    >
-      Limpiar
-    </app-button>
-    <app-button
+      >Limpiar</app-button
+    ><app-button
       slot="actions"
-      [variant]="'primary'"
-      [size]="'sm'"
-      [icon]="'pi pi-refresh'"
+      variant="primary"
+      size="sm"
+      icon="pi pi-refresh"
       [loading]="loading()"
       (click)="onRefresh()"
-    >
-      Actualizar
-    </app-button>
-    <app-data-export slot="actions" [data]="exportData()" />
+      >Actualizar</app-button
+    ><app-data-export slot="actions" [data]="exportData()" />
   </app-report-filter-bar>
-
   @if (errorMessage() && !data()) {
-    <app-error-alert
-      title="Sin datos por ahora"
-      [message]="errorMessage() ?? ''"
-    />
+    <app-error-alert title="Sin datos por ahora" [message]="errorMessage() ?? ''" />
   } @else if (loading() && !data()) {
     <app-loading-spinner label="Cargando reporte de proveedores..." surface="card" />
   } @else if (!hasData()) {
@@ -70,22 +59,16 @@
       description="Cuando se reciban ordenes de compra en el periodo seleccionado apareceran aqui los indicadores."
     />
   } @else {
-    <section class="suppliers-report__section" aria-label="Indicadores">
-      <div class="suppliers-report__kpis">
-        @for (card of statCards(); track card.label) {
-          <app-dashboard-stat-card [card]="card" />
-        }
-      </div>
-    </section>
-
-    <section class="suppliers-report__section" aria-label="Compras en el tiempo">
-      <article class="suppliers-report__chart-card">
-        <app-report-section-head
-          eyebrow="Tendencia"
-          title="Costo y recepciones por mes"
-          description="Costo real recibido y cantidad de recepciones confirmadas por mes."
-        />
-        <app-dashboard-chart
+    <app-report-grid layout="metrics">
+      @for (card of statCards(); track card.label) {
+        <app-dashboard-stat-card [card]="card" />
+      }
+    </app-report-grid>
+    <app-report-grid layout="single"
+      ><app-report-panel
+        title="Costo y recepciones por mes"
+        description="Costo real recibido y cantidad de recepciones confirmadas por mes."
+        ><app-dashboard-chart
           type="bar"
           [labels]="purchaseLabels()"
           [data]="purchaseValues()"
@@ -97,83 +80,55 @@
           [currency]="true"
           primaryLabel="Costo recibido"
           secondaryLabel="Recepciones"
-          [secondaryAxis]="true"
-        />
-      </article>
-    </section>
-
-    <section class="suppliers-report__section" aria-label="Top proveedores y lead time">
-      <div class="suppliers-report__split">
-        <article class="suppliers-report__table-card">
-          <app-report-section-head
-            eyebrow="Volumen"
-            title="Top proveedores por compra"
-            description="Proveedores con mayor costo de mercaderia recibida en el periodo."
-          >
-            <app-data-export slot="actions" [data]="topSuppliersExport()" />
-          </app-report-section-head>
-          <div class="suppliers-report__list">
-            @if ((data()?.topByVolume ?? []).length === 0) {
-              <p class="suppliers-report__empty">Sin proveedores destacados.</p>
-            } @else {
-              <ol class="suppliers-report__top-list">
-                @for (row of data()?.topByVolume ?? []; track row.id) {
-                  <li class="suppliers-report__top-item">
-                    <span class="suppliers-report__top-rank">{{ $index + 1 }}</span>
-                    <div class="suppliers-report__top-body">
-                      <strong>{{ row.primary }}</strong>
-                      @if (row.secondary) {
-                        <span>{{ row.secondary }}</span>
-                      }
-                    </div>
-                    <div class="suppliers-report__top-metric">
-                      <strong>{{ row.metric }}</strong>
-                      @if (row.submetric) {
-                        <span>{{ row.submetric }}</span>
-                      }
-                    </div>
-                  </li>
-                }
-              </ol>
+          [secondaryAxis]="true" /></app-report-panel
+    ></app-report-grid>
+    <app-report-grid layout="balanced">
+      <app-report-panel
+        title="Top proveedores por compra"
+        description="Proveedores con mayor costo de mercaderia recibida."
+        ><app-data-export panel-actions [data]="topSuppliersExport()" />
+        @if ((data()?.topByVolume ?? []).length === 0) {
+          <p class="suppliers-report__empty">Sin proveedores destacados.</p>
+        } @else {
+          <ol class="suppliers-report__list">
+            @for (row of data()?.topByVolume ?? []; track row.id) {
+              <li>
+                <span>{{ $index + 1 }}</span>
+                <div>
+                  <strong>{{ row.primary }}</strong>
+                  @if (row.secondary) {
+                    <small>{{ row.secondary }}</small>
+                  }
+                </div>
+                <strong>{{ row.metric }}</strong>
+              </li>
             }
-          </div>
-        </article>
-        <article class="suppliers-report__table-card suppliers-report__table-card--accent">
-          <app-report-section-head
-            eyebrow="Operacion"
-            title="Lead time por proveedor"
-            description="Tiempo promedio entre la emision de la orden y la recepcion de mercaderia."
-          >
-            <app-data-export slot="actions" [data]="leadTimeExport()" />
-          </app-report-section-head>
-          <div class="suppliers-report__list">
-            @if ((data()?.leadTimeBySupplier ?? []).length === 0) {
-              <p class="suppliers-report__empty">Sin datos de lead time disponibles.</p>
-            } @else {
-              <ul class="suppliers-report__lead-list">
-                @for (row of data()?.leadTimeBySupplier ?? []; track row.id) {
-                  <li class="suppliers-report__lead-item">
-                    <div class="suppliers-report__lead-body">
-                      <strong>{{ row.primary }}</strong>
-                      @if (row.secondary) {
-                        <span>{{ row.secondary }}</span>
-                      }
-                    </div>
-                    <div class="suppliers-report__lead-metric">
-                      <strong>{{ row.metric }}</strong>
-                      @if (row.submetric) {
-                        <span>{{ row.submetric }}</span>
-                      }
-                    </div>
-                  </li>
-                }
-              </ul>
+          </ol>
+        }
+      </app-report-panel>
+      <app-report-panel
+        title="Lead time por proveedor"
+        description="Tiempo promedio entre la orden y la recepcion de mercaderia."
+        ><app-data-export panel-actions [data]="leadTimeExport()" />
+        @if ((data()?.leadTimeBySupplier ?? []).length === 0) {
+          <p class="suppliers-report__empty">Sin datos de lead time disponibles.</p>
+        } @else {
+          <ul class="suppliers-report__list suppliers-report__list--plain">
+            @for (row of data()?.leadTimeBySupplier ?? []; track row.id) {
+              <li>
+                <div>
+                  <strong>{{ row.primary }}</strong>
+                  @if (row.secondary) {
+                    <small>{{ row.secondary }}</small>
+                  }
+                </div>
+                <strong>{{ row.metric }}</strong>
+              </li>
             }
-          </div>
-        </article>
-      </div>
-    </section>
+          </ul>
+        }
+      </app-report-panel>
+    </app-report-grid>
   }
 </div>
-
 <app-toast />

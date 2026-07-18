@@ -1,11 +1,11 @@
-<section class="min-h-screen bg-canvas py-10 text-text sm:py-14">
+<section class="checkout-page min-h-dvh bg-canvas py-8 text-text sm:py-12">
   <div class="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
     <!-- Header -->
     <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div class="min-w-0">
         <app-eyebrow color="bark">Checkout</app-eyebrow>
         <h1 class="mt-1.5 text-3xl font-semibold tracking-tight text-text sm:text-4xl">
-          Tu carrito
+          Confirmá tu pedido
         </h1>
         <p class="mt-2 text-base text-text-muted">
           Retirás en <strong class="font-semibold text-text">{{ branchLabel() }}</strong
@@ -17,10 +17,20 @@
       </app-button>
     </header>
 
+    <ol class="checkout-progress" aria-label="Progreso de compra">
+      <li class="checkout-progress__item checkout-progress__item--done">
+        <span>1</span> Pedido revisado
+      </li>
+      <li class="checkout-progress__item checkout-progress__item--active">
+        <span>2</span> Confirmar retiro
+      </li>
+      <li class="checkout-progress__item"><span>3</span> Pagar online</li>
+    </ol>
+
     <!-- Success -->
     @if (createdOrder(); as order) {
       <div
-        class="rounded-xl border border-primary/10 bg-white p-8 shadow-card sm:p-10"
+        class="checkout-page__success rounded-xl border border-primary/10 bg-white p-8 shadow-card sm:p-10"
         data-testid="checkout-success"
       >
         <div class="flex items-start gap-5">
@@ -83,15 +93,18 @@
 
     <!-- Cart + Summary -->
     @if (!cart.isEmpty() && !createdOrder()) {
-      <div class="grid gap-6 lg:grid-cols-[1fr_400px]">
+      <div class="checkout-layout grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <!-- Product list -->
-        <div class="space-y-4" data-testid="checkout-items">
+        <div class="checkout-items space-y-4" data-testid="checkout-items">
           @for (item of cart.items(); track item.productId) {
-            <div class="rounded-xl bg-white p-4 shadow-card sm:p-5" data-testid="checkout-line">
+            <article
+              class="checkout-line border-t border-primary/10 py-4 sm:py-5"
+              data-testid="checkout-line"
+            >
               <div class="flex gap-4 sm:gap-5">
                 <!-- Image: always on the left, small square -->
                 <div
-                  class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-warm sm:h-28 sm:w-28"
+                  class="checkout-line__image flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-warm sm:h-28 sm:w-28"
                 >
                   @if (item.imageUrl) {
                     <img
@@ -105,13 +118,13 @@
                 </div>
 
                 <!-- Info: fills the rest of the row -->
-                <div class="flex min-w-0 flex-1 flex-col">
+                <div class="checkout-line__content flex min-w-0 flex-1 flex-col">
                   <div class="flex items-start justify-between gap-3">
-                    <h2 class="text-base font-semibold leading-tight text-text">
+                    <h2 class="checkout-line__name text-base font-semibold leading-tight text-text">
                       {{ item.name }}
                     </h2>
-                    <span class="shrink-0 text-base font-bold text-text">
-                      {{ (item.price * item.quantity) | currencyAr }}
+                    <span class="checkout-line__total shrink-0 text-base font-bold text-text">
+                      {{ item.price * item.quantity | currencyAr }}
                     </span>
                   </div>
 
@@ -119,7 +132,9 @@
                     {{ item.price | currencyAr }} por unidad
                   </p>
 
-                  <div class="mt-auto flex items-center justify-between gap-2 pt-3">
+                  <div
+                    class="checkout-line__actions mt-auto flex items-center justify-between gap-2 pt-3"
+                  >
                     <button
                       type="button"
                       class="flex items-center gap-1.5 text-sm font-semibold text-text-muted transition-colors hover:text-red"
@@ -138,13 +153,13 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </article>
           }
         </div>
 
         <!-- Summary sidebar -->
         <aside class="self-start" data-testid="checkout-summary">
-          <div class="rounded-xl bg-white p-6 shadow-card">
+          <div class="checkout-summary rounded-xl border border-primary/10 bg-white p-6">
             <h2 class="text-xl font-semibold text-text">Resumen del pedido</h2>
 
             <!-- Totals -->
@@ -158,8 +173,8 @@
                 <dd class="font-semibold text-text">{{ cart.total() | currencyAr }}</dd>
               </div>
               <div class="flex items-center justify-between text-base">
-                <dt class="text-text-muted">Envío</dt>
-                <dd class="font-semibold text-primary">Gratis</dd>
+                <dt class="text-text-muted">Retiro</dt>
+                <dd class="font-semibold text-primary">Sin costo</dd>
               </div>
               <div class="border-t border-border-warm pt-4">
                 <div class="flex items-baseline justify-between">
@@ -195,6 +210,22 @@
                   <p class="mt-0.5 text-sm font-semibold text-text">Mercado Pago</p>
                 </div>
               </div>
+
+              @if (branchOptions().length > 1 || branchMissing()) {
+                <div class="checkout-summary__branch">
+                  <label for="checkout-branch">Sucursal de retiro</label>
+                  <app-select
+                    inputId="checkout-branch"
+                    name="checkoutBranch"
+                    [options]="branchOptions()"
+                    placeholder="Elegí una sucursal"
+                    [value]="branchSelection.selectedBranchId()"
+                    [loading]="branchSelection.loading()"
+                    [showClear]="false"
+                    (valueChange)="onBranchChange($event)"
+                  />
+                </div>
+              }
 
               @if (hasCustomerData()) {
                 <div class="flex items-start gap-3">

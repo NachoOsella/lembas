@@ -6,7 +6,8 @@ import { AppPageHeader } from '../../../shared/components/app-page-header/app-pa
 import { AppToast } from '../../../shared/components/app-toast/app-toast';
 import { AppDatePicker } from '../../../shared/components/app-date-picker/app-date-picker';
 import { AppReportFilterBar } from '../../../shared/components/app-report-filter-bar/app-report-filter-bar';
-import { AppReportSectionHead } from '../../../shared/components/app-report-section-head/app-report-section-head';
+import { AppReportGrid } from '../../../shared/components/app-report-grid/app-report-grid';
+import { AppReportPanel } from '../../../shared/components/app-report-panel/app-report-panel';
 import { DashboardStatCard } from '../../../shared/components/dashboard-stat-card/dashboard-stat-card';
 import { DashboardChart } from '../../../shared/components/dashboard-chart/dashboard-chart';
 import { DataExport, ExportData } from '../../../shared/components/data-export/data-export';
@@ -37,7 +38,8 @@ import { TopProductDto } from '../../../shared/models/dashboard';
     AppToast,
     AppDatePicker,
     AppReportFilterBar,
-    AppReportSectionHead,
+    AppReportGrid,
+    AppReportPanel,
     DashboardStatCard,
     DashboardChart,
     DataExport,
@@ -73,7 +75,6 @@ export class Dashboard implements OnInit, OnDestroy {
 
   /** Maximum date the user can pick (today). */
   protected readonly today = signal(new Date());
-
 
   /**
    * Top 6 stat cards, skipping the less actionable ones (onlineSales,

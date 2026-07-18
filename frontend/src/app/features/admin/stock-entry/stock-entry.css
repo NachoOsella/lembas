@@ -7,17 +7,15 @@
   gap: var(--space-4);
 }
 
-/* --- Single card wrapper ----------------------------------------- */
-
 .stock-entry__card {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-4);
   background: var(--color-surface);
-  border: 1px solid rgba(7, 95, 54, 0.08);
+  border: 1px solid rgba(7, 95, 54, 0.1);
   border-radius: var(--radius-card, 12px);
   box-shadow: var(--shadow-card);
-  padding: var(--space-4);
-  display: grid;
-  gap: var(--space-3);
-  min-width: 0;
 }
 
 /* --- Section headers (replaces form-section) -------------------- */

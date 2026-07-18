@@ -31,7 +31,7 @@
     </div>
   </header>
 
-  <!-- Category selector — quick filters plus searchable full category panel -->
+  <!-- Category selector with quick filters and a searchable full category panel. -->
   <div class="mx-auto max-w-[1600px] px-4 pt-8 sm:px-6 lg:px-10">
     <app-category-nav
       [categories]="categories()"
@@ -46,7 +46,7 @@
   <main id="catalog-results" class="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-10">
     <!-- Product count / search info bar -->
     <div
-      class="catalog-page__card mb-8 flex flex-col gap-4 rounded-xl bg-white p-6 shadow-card sm:flex-row sm:items-center sm:justify-between"
+      class="catalog-page__toolbar mb-8 flex flex-col gap-4 rounded-xl border border-primary/10 bg-white p-5 shadow-card sm:flex-row sm:items-center sm:justify-between"
     >
       <div>
         <app-eyebrow color="green">Góndola</app-eyebrow>
@@ -94,9 +94,7 @@
         />
       </app-error-alert>
     } @else if (initialLoadDone() && products().length === 0) {
-      <div
-        class="catalog-page__card rounded-xl bg-white p-12 text-center shadow-card"
-      >
+      <div class="rounded-xl border border-primary/10 bg-white p-12 text-center shadow-card">
         <app-empty-state
           icon="pi pi-shop"
           [title]="
@@ -109,9 +107,7 @@
       <app-product-grid [products]="products()" (addToCart)="onAddToCart($event)" />
 
       @if (totalRecords() > 0) {
-        <div
-          class="catalog-page__card mt-10 rounded-xl bg-white p-5 shadow-card"
-        >
+        <div class="mt-10 border-t border-primary/15 pt-5">
           <app-pagination
             [totalRecords]="totalRecords()"
             [rows]="pageSize()"

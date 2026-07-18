@@ -13,7 +13,7 @@
 
 .inventory-expiring-label {
   font-size: 0.8125rem;
-  color: var(--p-text-muted-color);
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
@@ -95,11 +95,11 @@
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   border: 1px solid rgba(47, 141, 114, 0.18);
-  border-radius: 12px;
-  background: var(--color-green-50, #f0fdf4);
+  border-radius: var(--radius-card);
+  background: var(--color-mint-wash-subtle);
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--color-green-700, #15803d);
+  color: var(--color-primary-dark);
 }
 
 .adjustment-form__stock-info i {

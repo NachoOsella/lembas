@@ -2,67 +2,66 @@
   display: block;
 }
 
-:host ::ng-deep .section-card {
-  border: 1px solid rgba(7, 95, 54, 0.08);
-  border-radius: 12px;
-  box-shadow: var(--shadow-card);
+.section-card {
+  color: var(--color-text);
+  padding: clamp(1.1rem, 2vw, 1.6rem);
   overflow: hidden;
-}
-
-:host ::ng-deep .section-card .p-card-body {
-  padding: clamp(1rem, 2vw, 1.35rem);
-}
-
-:host ::ng-deep .section-card .p-card-content {
-  padding: 0;
-}
-
-:host ::ng-deep .section-card--surface {
-  color: var(--color-text);
   background: var(--color-surface);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: var(--radius-card, 12px);
+  box-shadow: var(--shadow-card);
 }
 
-:host ::ng-deep .section-card--muted {
-  color: var(--color-text);
+.section-card--muted {
   background: var(--color-surface-muted);
-  border-color: rgba(0, 0, 0, 0.08);
+  border-color: rgba(7, 95, 54, 0.12);
 }
 
-:host ::ng-deep .section-card--dark {
+.section-card--dark {
   color: var(--color-text-on-dark);
   background: var(--color-primary-dark);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
 .section-card__header {
-  margin-bottom: 1rem;
+  max-width: 46rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgba(7, 95, 54, 0.09);
+}
+
+.section-card--dark .section-card__header {
+  border-bottom-color: rgba(255, 255, 255, 0.12);
 }
 
 .section-card__eyebrow {
-  margin: 0 0 0.45rem;
-  color: var(--color-orange);
-  font-size: 0.74rem;
+  margin: 0 0 0.35rem;
+  color: var(--color-bark);
+  font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+}
+
+.section-card--dark .section-card__eyebrow {
+  color: var(--color-orange-light);
 }
 
 .section-card__title {
   margin: 0;
   color: inherit;
-  font-size: 24px;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .section-card__description {
-  margin: 0.45rem 0 0;
+  max-width: 65ch;
+  margin: 0.4rem 0 0;
   color: var(--color-text-muted);
-  font-size: 0.92rem;
-  line-height: 1.55;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
-:host ::ng-deep .section-card--dark .section-card__description {
+.section-card--dark .section-card__description {
   color: var(--color-text-on-dark-muted);
 }
 

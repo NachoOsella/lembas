@@ -4,11 +4,10 @@
   description="Rendimiento de operadores, facturación POS y control de caja para el periodo seleccionado."
   tone="light"
 />
-
 <div class="employees-report">
   <app-report-filter-bar
     caption="Filtros"
-    title="Reporte de empleados"
+    title="Equipo"
     description="Las ventas online no se incluyen porque no tienen vendedor asignado."
   >
     <app-date-picker
@@ -36,26 +35,22 @@
     />
     <app-button
       slot="actions"
-      [variant]="'ghost'"
-      [size]="'sm'"
-      [icon]="'pi pi-filter-slash'"
+      variant="ghost"
+      size="sm"
+      icon="pi pi-filter-slash"
       (click)="onClearFilters()"
+      >Limpiar</app-button
     >
-      Limpiar
-    </app-button>
     <app-button
       slot="actions"
-      [variant]="'primary'"
-      [size]="'sm'"
-      [icon]="'pi pi-refresh'"
+      variant="primary"
+      size="sm"
+      icon="pi pi-refresh"
       [loading]="loading()"
       (click)="onRefresh()"
-    >
-      Actualizar
-    </app-button>
-    <app-data-export slot="actions" [data]="exportData()" />
+      >Actualizar</app-button
+    ><app-data-export slot="actions" [data]="exportData()" />
   </app-report-filter-bar>
-
   @if (errorMessage() && !data()) {
     <app-error-alert title="Sin datos por ahora" [message]="errorMessage() ?? ''" />
   } @else if (loading() && !data()) {
@@ -67,68 +62,50 @@
       description="Aparecerán operadores cuando haya ventas POS o aperturas y cierres de caja."
     />
   } @else {
-    <section class="employees-report__section" aria-label="Indicadores de empleados">
-      <div class="employees-report__kpis">
-        @for (card of statCards(); track card.label) {
-          <app-dashboard-stat-card [card]="card" />
-        }
-      </div>
-    </section>
-
-    <section class="employees-report__section" aria-label="Rendimiento del equipo">
-      <div class="employees-report__charts">
-        <article class="employees-report__chart-card">
-          <app-report-section-head
-            eyebrow="Rendimiento"
-            title="Facturación por operador"
-            description="Compará la facturación POS y la cantidad de ventas de cada operador."
-          />
-          <app-dashboard-chart
-            type="bar"
-            [labels]="employeeLabels()"
-            [data]="revenueValues()"
-            [secondaryData]="salesValues()"
-            primaryLabel="Facturación POS"
-            secondaryLabel="Ventas POS"
-            [secondaryAxis]="true"
-            [loading]="loading()"
-            [empty]="!hasPerformanceData()"
-            emptyMessage="No hay ventas POS en el periodo."
-            [height]="'300px'"
-            [currency]="true"
-          />
-        </article>
-        <article class="employees-report__chart-card">
-          <app-report-section-head
-            eyebrow="Participación"
-            title="Aporte a la facturación"
-            description="Participación de cada operador sobre la facturación POS total."
-          />
-          <app-dashboard-chart
-            type="doughnut"
-            [labels]="employeeLabels()"
-            [data]="revenueValues()"
-            [loading]="loading()"
-            [empty]="!hasPerformanceData()"
-            emptyMessage="No hay facturación POS para distribuir."
-            [height]="'300px'"
-            [currency]="true"
-            [centerLabel]="totalRevenue()"
-            centerSubLabel="Facturación POS"
-          />
-        </article>
-      </div>
-    </section>
-
-    <section class="employees-report__section" aria-label="Detalle por operador">
-      <article class="employees-report__table-card">
-        <app-report-section-head
-          eyebrow="Detalle operativo"
-          title="Actividad por operador"
-          description="Ventas POS, movimientos de caja y desvíos absolutos del periodo."
-        >
-          <app-data-export slot="actions" [data]="exportData()" />
-        </app-report-section-head>
+    <app-report-grid layout="metrics">
+      @for (card of statCards(); track card.label) {
+        <app-dashboard-stat-card [card]="card" />
+      }
+    </app-report-grid>
+    <app-report-grid layout="emphasis">
+      <app-report-panel
+        title="Facturación por operador"
+        description="Facturación POS y cantidad de ventas de cada operador."
+        ><app-dashboard-chart
+          type="bar"
+          [labels]="employeeLabels()"
+          [data]="revenueValues()"
+          [secondaryData]="salesValues()"
+          primaryLabel="Facturación POS"
+          secondaryLabel="Ventas POS"
+          [secondaryAxis]="true"
+          [loading]="loading()"
+          [empty]="!hasPerformanceData()"
+          emptyMessage="No hay ventas POS en el periodo."
+          [height]="'300px'"
+          [currency]="true"
+      /></app-report-panel>
+      <app-report-panel
+        title="Aporte a la facturación"
+        description="Participación de cada operador sobre la facturación POS total."
+        ><app-dashboard-chart
+          type="doughnut"
+          [labels]="employeeLabels()"
+          [data]="revenueValues()"
+          [loading]="loading()"
+          [empty]="!hasPerformanceData()"
+          emptyMessage="No hay facturación POS para distribuir."
+          [height]="'300px'"
+          [currency]="true"
+          [centerLabel]="totalRevenue()"
+          centerSubLabel="Facturación POS"
+      /></app-report-panel>
+    </app-report-grid>
+    <app-report-grid layout="single"
+      ><app-report-panel
+        title="Actividad por operador"
+        description="Ventas POS, movimientos de caja y desvíos absolutos del periodo."
+        ><app-data-export panel-actions [data]="exportData()" />
         <app-data-table
           [data]="rows()"
           [columns]="columns"
@@ -136,45 +113,34 @@
           [paginated]="false"
           [emptyTitle]="'Sin actividad en este periodo'"
           [emptyDescription]="'Ajustá los filtros para ampliar la búsqueda.'"
-        >
-          <ng-template #body let-row>
-            <tr class="app-data-table__row">
+          ><ng-template #body let-row
+            ><tr>
               <td>
-                <span class="employees-report__person">
-                  <span class="employees-report__person-icon" aria-hidden="true">
-                    <i class="pi pi-user"></i>
-                  </span>
-                  <strong>{{ row.employeeName }}</strong>
-                </span>
+                <span class="employees-report__person"
+                  ><i class="pi pi-user" aria-hidden="true"></i
+                  ><strong>{{ row.employeeName }}</strong></span
+                >
               </td>
-              <td>
-                <span class="employees-report__role">{{ roleLabel(row.role) }}</span>
-              </td>
+              <td>{{ roleLabel(row.role) }}</td>
               <td>{{ row.posSalesCount }}</td>
-              <td class="employees-report__money">{{ row.posRevenue | currencyAr }}</td>
-              <td class="employees-report__money">{{ row.averageTicket | currencyAr }}</td>
+              <td>{{ row.posRevenue | currencyAr }}</td>
+              <td>{{ row.averageTicket | currencyAr }}</td>
               <td>{{ row.cashSessionsOpened }}</td>
               <td>{{ row.cashSessionsClosed }}</td>
-              <td>
-                <span
-                  class="employees-report__difference"
-                  [class.employees-report__difference--warning]="row.cashDifferenceAbsolute > 0"
-                >
-                  {{ row.cashDifferenceAbsolute | currencyAr }}
-                </span>
+              <td [class.employees-report__difference--warning]="row.cashDifferenceAbsolute > 0">
+                {{ row.cashDifferenceAbsolute | currencyAr }}
               </td>
-            </tr>
-          </ng-template>
-        </app-data-table>
+            </tr></ng-template
+          ></app-data-table
+        >
         @if (!hasCashDifferenceData()) {
           <p class="employees-report__note">
-            <i class="pi pi-check-circle" aria-hidden="true"></i>
-            No se registraron desvíos absolutos de caja en el periodo.
+            <i class="pi pi-check-circle" aria-hidden="true"></i>No se registraron desvíos absolutos
+            de caja en el periodo.
           </p>
         }
-      </article>
-    </section>
+      </app-report-panel></app-report-grid
+    >
   }
 </div>
-
 <app-toast />

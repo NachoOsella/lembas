@@ -1,9 +1,7 @@
 import { Component, input } from '@angular/core';
-import { Card } from 'primeng/card';
 
 @Component({
   selector: 'app-section-card',
-  imports: [Card],
   templateUrl: './app-section-card.html',
   styleUrl: './app-section-card.css',
 })

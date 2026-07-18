@@ -22,8 +22,8 @@ import { TopProductDto } from '../../models/dashboard';
 export class TopProductsTable {
   readonly products = input.required<TopProductDto[]>();
   readonly loading = input(false);
-  readonly title = input<string | null>('Productos mas vendidos');
-  readonly eyebrow = input<string | null>('Top 10 del dia');
+  readonly title = input<string | null>(null);
+  readonly eyebrow = input<string | null>(null);
 
   /** True when there is at least one product to display. */
   readonly hasData = computed(() => this.products().length > 0);

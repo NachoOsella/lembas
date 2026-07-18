@@ -8,8 +8,8 @@
 <div class="sales-report">
   <app-report-filter-bar
     caption="Filtros"
-    title="Reporte de ventas"
-    description="Rango de fechas para acotar el periodo analizado."
+    title="Ventas"
+    description="Defini el periodo y la sucursal a analizar."
   >
     <app-date-picker
       slot="fields"
@@ -36,31 +36,26 @@
     />
     <app-button
       slot="actions"
-      [variant]="'ghost'"
-      [size]="'sm'"
-      [icon]="'pi pi-filter-slash'"
+      variant="ghost"
+      size="sm"
+      icon="pi pi-filter-slash"
       (click)="onClearFilters()"
+      >Limpiar</app-button
     >
-      Limpiar
-    </app-button>
     <app-button
       slot="actions"
-      [variant]="'primary'"
-      [size]="'sm'"
-      [icon]="'pi pi-refresh'"
+      variant="primary"
+      size="sm"
+      icon="pi pi-refresh"
       [loading]="loading()"
       (click)="onRefresh()"
+      >Actualizar</app-button
     >
-      Actualizar
-    </app-button>
     <app-data-export slot="actions" [data]="exportData()" />
   </app-report-filter-bar>
 
   @if (errorMessage() && !data()) {
-    <app-error-alert
-      title="Sin datos por ahora"
-      [message]="errorMessage() ?? ''"
-    />
+    <app-error-alert title="Sin datos por ahora" [message]="errorMessage() ?? ''" />
   } @else if (loading() && !data()) {
     <app-loading-spinner label="Cargando reporte de ventas..." surface="card" />
   } @else if (!hasData()) {
@@ -70,112 +65,97 @@
       description="Cuando se registren ventas en el periodo seleccionado apareceran aqui los indicadores."
     />
   } @else {
-    <section class="sales-report__section" aria-label="Indicadores">
-      <div class="sales-report__kpis">
-        @for (card of statCards(); track card.label) {
-          <app-dashboard-stat-card [card]="card" />
-        }
-      </div>
-    </section>
+    <app-report-grid layout="metrics">
+      @for (card of statCards(); track card.label) {
+        <app-dashboard-stat-card [card]="card" />
+      }
+    </app-report-grid>
 
-    <section class="sales-report__section" aria-label="Series y medios de pago">
-      <div class="sales-report__charts">
-        <article class="sales-report__chart-card">
-          <app-report-section-head
-            eyebrow="Tendencia"
-            title="Ventas por dia"
-            description="Facturacion diaria del periodo seleccionado."
-          />
-          <app-dashboard-chart
-            type="bar"
-            [labels]="seriesLabels()"
-            [data]="seriesValues()"
-            [loading]="loading()"
-            [empty]="!seriesHasValues()"
-            emptyMessage="Aun no se registran ventas en este periodo."
-            [height]="'300px'"
-            [currency]="true"
-            primaryLabel="Facturacion"
-          />
-        </article>
-        <article class="sales-report__chart-card">
-          <app-report-section-head
-            eyebrow="Composicion"
-            title="Medios de pago"
-            description="Participacion de cada metodo sobre la facturacion total."
-          />
-          <app-dashboard-chart
-            type="doughnut"
-            [labels]="methodLabels()"
-            [data]="methodAmounts()"
-            [loading]="loading()"
-            [empty]="methodAmounts().length === 0"
-            emptyMessage="No hay pagos registrados en el periodo."
-            [height]="'300px'"
-            [currency]="true"
-            [centerLabel]="totalRevenue()"
-            centerSubLabel="Total facturado"
-          />
-        </article>
-      </div>
-    </section>
+    <app-report-grid layout="emphasis">
+      <app-report-panel
+        title="Ventas por dia"
+        description="Facturacion diaria del periodo seleccionado."
+      >
+        <app-dashboard-chart
+          type="bar"
+          [labels]="seriesLabels()"
+          [data]="seriesValues()"
+          [loading]="loading()"
+          [empty]="!seriesHasValues()"
+          emptyMessage="Aun no se registran ventas en este periodo."
+          [height]="'300px'"
+          [currency]="true"
+          primaryLabel="Facturacion"
+        />
+      </app-report-panel>
+      <app-report-panel
+        title="Medios de pago"
+        description="Participacion de cada metodo sobre la facturacion total."
+      >
+        <app-dashboard-chart
+          type="doughnut"
+          [labels]="methodLabels()"
+          [data]="methodAmounts()"
+          [loading]="loading()"
+          [empty]="methodAmounts().length === 0"
+          emptyMessage="No hay pagos registrados en el periodo."
+          [height]="'300px'"
+          [currency]="true"
+          [centerLabel]="totalRevenue()"
+          centerSubLabel="Total facturado"
+        />
+      </app-report-panel>
+    </app-report-grid>
 
-    <section class="sales-report__section" aria-label="Categorias y top productos">
-      <div class="sales-report__split">
-        <article class="sales-report__chart-card">
-          <app-report-section-head
-            eyebrow="Categorias"
-            title="Ventas por categoria"
-            description="Facturacion agrupada por categoria de producto."
-          />
-          <app-dashboard-chart
-            type="bar"
-            [labels]="categoryLabels()"
-            [data]="categoryAmounts()"
-            [loading]="loading()"
-            [empty]="categoryAmounts().length === 0"
-            emptyMessage="No hay ventas agrupadas por categoria."
-            [height]="'300px'"
-            [currency]="true"
-            primaryLabel="Facturacion"
-          />
-        </article>
-        <article class="sales-report__table-card">
-          <app-report-section-head
-            eyebrow="Ranking"
-            title="Top productos del periodo"
-            description="Los 10 productos con mayor facturacion."
-          >
-            <app-data-export slot="actions" [data]="topProductsExport()" />
-          </app-report-section-head>
-          <div class="sales-report__top">
-            @if ((data()?.topProducts ?? []).length === 0) {
-              <p class="sales-report__empty">Sin productos destacados en este periodo.</p>
-            } @else {
-              <ol class="sales-report__top-list">
-                @for (row of data()?.topProducts ?? []; track row.id) {
-                  <li class="sales-report__top-item">
-                    <span class="sales-report__top-rank">{{ $index + 1 }}</span>
-                    <div class="sales-report__top-body">
-                      <strong>{{ row.primary }}</strong>
-                      @if (row.secondary) {
-                        <span>{{ row.secondary }}</span>
-                      }
-                    </div>
-                    <div class="sales-report__top-metric">
-                      <strong>{{ row.metric }}</strong>
-                      @if (row.submetric) {
-                        <span>{{ row.submetric }}</span>
-                      }
-                    </div>
-                  </li>
-                }
-              </ol>
-            }
-          </div>
-        </article>
-      </div>
-    </section>
+    <app-report-grid layout="balanced">
+      <app-report-panel
+        title="Ventas por categoria"
+        description="Facturacion agrupada por categoria de producto."
+      >
+        <app-dashboard-chart
+          type="bar"
+          [labels]="categoryLabels()"
+          [data]="categoryAmounts()"
+          [loading]="loading()"
+          [empty]="categoryAmounts().length === 0"
+          emptyMessage="No hay ventas agrupadas por categoria."
+          [height]="'300px'"
+          [currency]="true"
+          primaryLabel="Facturacion"
+        />
+      </app-report-panel>
+      <app-report-panel
+        title="Top productos"
+        description="Los 10 productos con mayor facturacion del periodo."
+      >
+        <app-data-export panel-actions [data]="topProductsExport()" />
+        <div class="sales-report__top">
+          @if ((data()?.topProducts ?? []).length === 0) {
+            <p class="sales-report__empty">Sin productos destacados en este periodo.</p>
+          } @else {
+            <ol class="sales-report__top-list">
+              @for (row of data()?.topProducts ?? []; track row.id) {
+                <li class="sales-report__top-item">
+                  <span class="sales-report__top-rank">{{ $index + 1 }}</span>
+                  <div class="sales-report__top-body">
+                    <strong>{{ row.primary }}</strong>
+                    @if (row.secondary) {
+                      <span>{{ row.secondary }}</span>
+                    }
+                  </div>
+                  <div class="sales-report__top-metric">
+                    <strong>{{ row.metric }}</strong>
+                    @if (row.submetric) {
+                      <span>{{ row.submetric }}</span>
+                    }
+                  </div>
+                </li>
+              }
+            </ol>
+          }
+        </div>
+      </app-report-panel>
+    </app-report-grid>
   }
 </div>
 

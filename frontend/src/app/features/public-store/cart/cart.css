@@ -1,2 +1,213 @@
-/* Cart page uses only Tailwind utility classes; this file exists for
-   Angular component style encapsulation requirements. */
+:host {
+  display: block;
+}
+
+.cart-page {
+  letter-spacing: var(--tracking-tight);
+}
+
+.cart-progress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0 0 2rem;
+  padding: 0;
+  list-style: none;
+  border-block: 1px solid var(--color-border-warm);
+}
+
+.cart-progress__item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 3rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-align: center;
+}
+
+.cart-progress__item span {
+  display: grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  border: 1px solid var(--color-border-neutral);
+  border-radius: 50%;
+  font-size: 0.68rem;
+}
+
+.cart-progress__item--active {
+  color: var(--color-primary-dark);
+}
+
+.cart-progress__item--active span {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-dark);
+}
+
+.cart-empty {
+  max-width: 46rem;
+  margin-inline: auto;
+}
+
+.cart-layout {
+  align-items: start;
+}
+
+.cart-items {
+  min-width: 0;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  background: var(--color-surface);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.cart-items__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border-warm);
+}
+
+.cart-items__header h2 {
+  margin: 0;
+  color: var(--color-primary-darkest);
+  font-size: 1.1rem;
+  font-weight: 750;
+}
+
+.cart-items__header p {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.cart-items__header > i {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-mint-wash-light);
+  color: var(--color-primary);
+}
+
+.cart-item {
+  display: block;
+  border-color: var(--color-border-warm);
+}
+
+.cart-item:first-of-type {
+  border-top: 0;
+  padding-top: 1rem;
+}
+
+.cart-item__image {
+  border: 1px solid rgba(7, 95, 54, 0.08);
+}
+
+.cart-item__name {
+  max-width: 32rem;
+}
+
+.cart-item__total {
+  color: var(--color-primary-darkest);
+  font-variant-numeric: tabular-nums;
+}
+
+.cart-item__actions {
+  min-height: 2.5rem;
+}
+
+.cart-item__actions app-quantity-stepper {
+  padding: 0.2rem;
+  border: 1px solid var(--color-border-warm);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-warmest);
+}
+
+.cart-summary {
+  position: sticky;
+  top: 1.5rem;
+  box-shadow: var(--shadow-card);
+}
+
+.cart-summary h2 {
+  color: var(--color-primary-darkest);
+}
+
+.cart-summary__total {
+  margin-top: 0.25rem;
+}
+
+.cart-summary__total dd {
+  color: var(--color-primary-dark);
+  font-size: 2rem;
+}
+
+.cart-summary dd:last-child {
+  color: var(--color-primary-dark);
+}
+
+.cart-summary app-button {
+  display: block;
+}
+
+.cart-summary__branch {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-warm);
+}
+
+.cart-summary__branch label {
+  color: var(--color-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.cart-summary__branch app-select {
+  width: 100%;
+}
+
+.cart-summary app-button .app-button {
+  width: 100%;
+}
+
+@media (max-width: 64rem) {
+  .cart-summary {
+    position: static;
+  }
+}
+
+@media (max-width: 40rem) {
+  .cart-progress {
+    gap: 0;
+    margin-bottom: 1.5rem;
+  }
+
+  .cart-progress__item {
+    flex-direction: column;
+    gap: 0.2rem;
+    min-height: 3.75rem;
+    padding: 0.4rem 0.2rem;
+    font-size: 0.66rem;
+    line-height: 1.15;
+  }
+
+  .cart-item__image {
+    width: 5rem;
+    height: 5rem;
+  }
+
+  .cart-item__actions {
+    align-items: flex-end;
+  }
+}

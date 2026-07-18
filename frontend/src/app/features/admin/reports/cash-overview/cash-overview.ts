@@ -9,6 +9,8 @@ import {
 import { AppDatePicker } from '../../../../shared/components/app-date-picker/app-date-picker';
 import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
 import { AppReportFilterBar } from '../../../../shared/components/app-report-filter-bar/app-report-filter-bar';
+import { AppReportGrid } from '../../../../shared/components/app-report-grid/app-report-grid';
+import { AppReportPanel } from '../../../../shared/components/app-report-panel/app-report-panel';
 import { AppSelect } from '../../../../shared/components/app-select/app-select';
 import { AppToast } from '../../../../shared/components/app-toast/app-toast';
 import { DashboardChart } from '../../../../shared/components/dashboard-chart/dashboard-chart';
@@ -39,6 +41,8 @@ import { Branch } from '../../../../shared/models/user';
     AppDatePicker,
     AppPageHeader,
     AppReportFilterBar,
+    AppReportGrid,
+    AppReportPanel,
     AppSelect,
     AppToast,
     DashboardChart,
