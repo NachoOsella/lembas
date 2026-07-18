@@ -100,7 +100,7 @@
                 <app-badge tone="warning" icon="pi pi-exclamation-circle">
                   Ultimas {{ p.availableStock }} unidades
                 </app-badge>
-              } @else if (p.availableStock != null) {
+              } @else if (p.availableStock !== null && p.availableStock !== undefined) {
                 <app-badge tone="success" icon="pi pi-check-circle">
                   {{ p.availableStock }} unidades disponibles
                 </app-badge>

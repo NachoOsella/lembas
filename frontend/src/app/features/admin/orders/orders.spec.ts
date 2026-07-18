@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
@@ -6,12 +7,18 @@ import { of, throwError } from 'rxjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { Orders } from './orders';
-import { AdminOrderService } from '../../../core/services/admin-order';
-import { UserService } from '../../../core/services/user';
-import { AuthService, AuthUser } from '../../../core/services/auth';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { OrderSummary, OrderStatus, OrderType, FulfillmentType } from '../../../shared/models/order';
-import { PageResponse } from '../../../shared/models/page';
+import { AdminOrderService } from '@features/orders/data-access/admin-order';
+import { UserService } from '@features/users/data-access/user';
+import type { AuthUser } from '@core/services/auth';
+import { AuthService } from '@core/services/auth';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import type {
+  OrderSummary,
+  OrderStatus,
+  OrderType,
+  FulfillmentType,
+} from '@features/orders/domain/order';
+import type { PageResponse } from '@shared/types/page';
 
 /** Creates a mock OrderSummary for testing. */
 function mockOrder(overrides: Partial<OrderSummary> = {}): OrderSummary {
@@ -63,7 +70,10 @@ describe('Orders (admin list)', () => {
   let router: { navigate: ReturnType<typeof vi.fn> };
   let messageService: { add: ReturnType<typeof vi.fn> };
 
-  function configure(role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'CUSTOMER' = 'ADMIN', userBranchId: number | null = null) {
+  function configure(
+    role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'CUSTOMER' = 'ADMIN',
+    userBranchId: number | null = null,
+  ) {
     adminOrderService = {
       listOrders: vi.fn().mockReturnValue(of(mockPage([]))),
       prepare: vi.fn(),
@@ -302,9 +312,7 @@ describe('Orders (admin list)', () => {
     });
 
     it('should call deliver endpoint for READY orders', async () => {
-      adminOrderService.listOrders.mockReturnValue(
-        of(mockPage([mockOrder({ status: 'READY' })])),
-      );
+      adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ status: 'READY' })])));
       adminOrderService.deliver.mockReturnValue(of(mockOrder({ status: 'DELIVERED' })));
       component.loadOrders();
       fixture.detectChanges();
@@ -451,7 +459,9 @@ describe('Orders (admin list)', () => {
     });
 
     it('sends the trimmed search query to the service', () => {
-      (component as unknown as { onSearchChange: (v: string) => void }).onSearchChange('  ON-2026  ');
+      (component as unknown as { onSearchChange: (v: string) => void }).onSearchChange(
+        '  ON-2026  ',
+      );
       const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
       expect(lastCall?.search).toBe('ON-2026');
     });

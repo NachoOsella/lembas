@@ -1,4 +1,5 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import type { PipeTransform } from '@angular/core';
+import { Pipe } from '@angular/core';
 
 /**
  * Formats a numeric value as Argentine Pesos with no fractional digits.
@@ -38,9 +39,8 @@ export class CurrencyArPipe implements PipeTransform {
    * which always uses a dot; we still accept commas for safety.
    */
   private parseDecimal(value: string): number {
-    const cleaned = value.replace(/[^0-9,.\-]/g, '').replace(',', '.');
+    const cleaned = value.replace(/[^0-9,.-]/g, '').replace(',', '.');
     const parsed = Number(cleaned);
     return Number.isFinite(parsed) ? parsed : Number.NaN;
   }
 }
-

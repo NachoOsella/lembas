@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -7,11 +8,11 @@ import { of, throwError } from 'rxjs';
 import { describe, it, expect, vi } from 'vitest';
 
 import { CashOpen } from './cash-open';
-import { CashService } from '../../../../core/services/cash';
-import { AuthService } from '../../../../core/services/auth';
-import { UserService } from '../../../../core/services/user';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { CashSessionDto } from '../../../../shared/models/cash-session';
+import { CashService } from '@features/cash/data-access/cash';
+import { AuthService } from '@core/services/auth';
+import { UserService } from '@features/users/data-access/user';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import type { CashSessionDto } from '@features/cash/domain/cash-session';
 
 /** Unit tests for the cash opening form (S3-US06 subtask 13). */
 describe('CashOpen', () => {
@@ -73,7 +74,10 @@ describe('CashOpen', () => {
   }
 
   function apiError(status: number, code: string): HttpErrorResponse {
-    return new HttpErrorResponse({ status, error: { code, status } });
+    return new HttpErrorResponse({
+      status,
+      error: { status, code, message: code },
+    });
   }
 
   it('disables submit until the amount is set (employee)', async () => {
@@ -123,7 +127,17 @@ describe('CashOpen', () => {
   it('maps CASH_SESSION_ALREADY_OPEN to a friendly message', async () => {
     configureAs('EMPLOYEE', 1);
     cashService.currentSession.mockReturnValue(
-      throwError(() => ({ error: { code: 'CASH_SESSION_NOT_FOUND' } })),
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 404,
+            error: {
+              status: 404,
+              code: 'CASH_SESSION_NOT_FOUND',
+              message: 'No open session.',
+            },
+          }),
+      ),
     );
     cashService.openSession.mockReturnValue(
       throwError(() => apiError(409, 'CASH_SESSION_ALREADY_OPEN')),

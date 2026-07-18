@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 
-import { ProductService } from '../../../core/services/product';
-import { SupplierService } from '../../../core/services/supplier';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
+import { ProductService } from '@features/catalog/data-access/product';
+import { SupplierService } from '@features/suppliers/data-access/supplier';
+import { ErrorMappingService } from '@core/services/error-mapping';
 import { Suppliers } from './suppliers';
 
 /** Unit tests for the supplier management page. */
@@ -33,7 +34,10 @@ describe('Suppliers', () => {
         MessageService,
         ErrorMappingService,
         { provide: SupplierService, useValue: supplierService },
-        { provide: ProductService, useValue: { listAdminProducts: vi.fn().mockReturnValue(of({ content: [] })) } },
+        {
+          provide: ProductService,
+          useValue: { listAdminProducts: vi.fn().mockReturnValue(of({ content: [] })) },
+        },
       ],
     }).compileComponents();
 

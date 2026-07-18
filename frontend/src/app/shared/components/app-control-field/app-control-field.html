@@ -1,4 +1,8 @@
-<div class="control-field" [class.control-field--wide]="wide()" [class.control-field--error]="hasError()">
+<div
+  class="control-field"
+  [class.control-field--wide]="wide()"
+  [class.control-field--error]="hasError()"
+>
   <label class="control-field__label" [attr.for]="forId()">
     {{ label() }}
     @if (required()) {

@@ -1,27 +1,33 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AppDatePicker } from '../../../shared/components/app-date-picker/app-date-picker';
-import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
+import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
+import { AppInputNumber } from '@shared/components/app-input-number/app-input-number';
 import { MessageService } from 'primeng/api';
 
-import { PurchaseOrderService } from '../../../core/services/purchase-order';
-import { SupplierService } from '../../../core/services/supplier';
-import { UserService } from '../../../core/services/user';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { getApiError } from '../../../shared/models/api-error';
-import { PurchaseOrderDetailDto, PurchaseOrderStatus, PurchaseOrderSummaryDto } from '../../../shared/models/purchase-order';
-import { SupplierDto, SupplierProductDto } from '../../../shared/models/supplier';
-import { Branch } from '../../../shared/models/user';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppControlField } from '../../../shared/components/app-control-field/app-control-field';
-import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
-import { AppFormField } from '../../../shared/components/app-form-field/app-form-field';
-import { AppModal } from '../../../shared/components/app-modal/app-modal';
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppSelect } from '../../../shared/components/app-select/app-select';
-import { StatusBadge, StatusBadgeConfig } from '../../../shared/components/status-badge/status-badge';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { FormSection } from '../../../shared/components/form-section/form-section';
+import { PurchaseOrderService } from '@features/suppliers/data-access/purchase-order';
+import { SupplierService } from '@features/suppliers/data-access/supplier';
+import { UserService } from '@features/users/data-access/user';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import type {
+  PurchaseOrderDetailDto,
+  PurchaseOrderStatus,
+  PurchaseOrderSummaryDto,
+} from '@features/suppliers/domain/purchase-order';
+import type { SupplierDto, SupplierProductDto } from '@features/suppliers/domain/supplier';
+import type { Branch } from '@features/users/domain/user';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppControlField } from '@shared/components/app-control-field/app-control-field';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { AppModal } from '@shared/components/app-modal/app-modal';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import type { StatusBadgeConfig } from '@shared/components/status-badge/status-badge';
+import { StatusBadge } from '@shared/components/status-badge/status-badge';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { FormSection } from '@shared/components/form-section/form-section';
 
 interface Option<T> {
   readonly label: string;
@@ -54,6 +60,7 @@ const PURCHASE_ORDER_STATUS_BADGES: Record<string, StatusBadgeConfig> = {
 
 /** Admin screen for creating supplier purchase orders and downloading their PDF. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-purchase-orders',
   imports: [
     AppButton,
@@ -129,13 +136,30 @@ export class PurchaseOrders {
 
   protected readonly statusOptions = STATUS_OPTIONS;
   protected readonly statusBadges = PURCHASE_ORDER_STATUS_BADGES;
-  protected readonly supplierOptions = computed<Option<number>[]>(() => this.suppliers().map((supplier) => ({ label: supplier.name, value: supplier.id })));
-  protected readonly branchOptions = computed<Option<number>[]>(() => this.branches().map((branch) => ({ label: branch.name, value: branch.id })));
-  protected readonly supplierProductOptions = computed<Option<number>[]>(() =>
-    this.supplierProducts().map((item) => ({ label: `${item.productName} - ${this.formatPrice(item.currentCost)}`, value: item.id })),
+  protected readonly supplierOptions = computed<Option<number>[]>(() =>
+    this.suppliers().map((supplier) => ({ label: supplier.name, value: supplier.id })),
   );
-  protected readonly total = computed(() => this.draftItems().reduce((sum, item) => sum + this.itemSubtotal(item), 0));
-  protected readonly formValid = computed(() => !!this.supplierId() && !!this.branchId() && this.draftItems().length > 0 && this.draftItems().every((item) => (item.quantityOrdered ?? 0) > 0 && (item.unitCost ?? 0) >= 0));
+  protected readonly branchOptions = computed<Option<number>[]>(() =>
+    this.branches().map((branch) => ({ label: branch.name, value: branch.id })),
+  );
+  protected readonly supplierProductOptions = computed<Option<number>[]>(() =>
+    this.supplierProducts().map((item) => ({
+      label: `${item.productName} - ${this.formatPrice(item.currentCost)}`,
+      value: item.id,
+    })),
+  );
+  protected readonly total = computed(() =>
+    this.draftItems().reduce((sum, item) => sum + this.itemSubtotal(item), 0),
+  );
+  protected readonly formValid = computed(
+    () =>
+      !!this.supplierId() &&
+      !!this.branchId() &&
+      this.draftItems().length > 0 &&
+      this.draftItems().every(
+        (item) => (item.quantityOrdered ?? 0) > 0 && (item.unitCost ?? 0) >= 0,
+      ),
+  );
 
   constructor() {
     this.loadLookups();
@@ -201,20 +225,25 @@ export class PurchaseOrders {
         this.editingOrder.set(detail);
         this.supplierId.set(detail.supplierId);
         this.branchId.set(detail.branchId);
-        this.expectedDeliveryDate.set(detail.expectedDeliveryDate ? new Date(`${detail.expectedDeliveryDate}T00:00:00`) : null);
+        this.expectedDeliveryDate.set(
+          detail.expectedDeliveryDate ? new Date(`${detail.expectedDeliveryDate}T00:00:00`) : null,
+        );
         this.notes.set(detail.notes ?? '');
-        this.draftItems.set(detail.items.map((item) => ({
-          supplierProductId: item.supplierProductId,
-          productName: item.productName,
-          supplierSku: item.supplierSku,
-          quantityOrdered: item.quantityOrdered,
-          unitCost: item.unitCost,
-        })));
+        this.draftItems.set(
+          detail.items.map((item) => ({
+            supplierProductId: item.supplierProductId,
+            productName: item.productName,
+            supplierSku: item.supplierSku,
+            quantityOrdered: item.quantityOrdered,
+            unitCost: item.unitCost,
+          })),
+        );
         this.submitted.set(false);
         this.dialogVisible.set(true);
         this.loadSupplierProducts(detail.supplierId);
       },
-      error: (error) => this.error.set(this.messageForError(error, 'No pudimos abrir la orden de compra.')),
+      error: (error) =>
+        this.error.set(this.messageForError(error, 'No pudimos abrir la orden de compra.')),
     });
   }
 
@@ -233,7 +262,10 @@ export class PurchaseOrders {
   /** Adds the selected supplier product as a draft order item with current cost preloaded. */
   protected addSelectedItem(): void {
     const supplierProductId = this.selectedSupplierProductId();
-    if (!supplierProductId || this.draftItems().some((item) => item.supplierProductId === supplierProductId)) {
+    if (
+      !supplierProductId ||
+      this.draftItems().some((item) => item.supplierProductId === supplierProductId)
+    ) {
       return;
     }
     const supplierProduct = this.supplierProducts().find((item) => item.id === supplierProductId);
@@ -255,7 +287,9 @@ export class PurchaseOrders {
 
   /** Removes one draft item by supplier-product id. */
   protected removeItem(supplierProductId: number): void {
-    this.draftItems.update((items) => items.filter((item) => item.supplierProductId !== supplierProductId));
+    this.draftItems.update((items) =>
+      items.filter((item) => item.supplierProductId !== supplierProductId),
+    );
   }
 
   /** Persists the create or update form. */
@@ -282,12 +316,18 @@ export class PurchaseOrders {
       })),
     };
     const current = this.editingOrder();
-    const action = current ? this.purchaseOrderService.update(current.id, request) : this.purchaseOrderService.create(request);
+    const action = current
+      ? this.purchaseOrderService.update(current.id, request)
+      : this.purchaseOrderService.create(request);
     action.subscribe({
       next: () => {
         this.saving.set(false);
         this.dialogVisible.set(false);
-        this.messageService.add({ severity: 'success', summary: 'Orden guardada', detail: 'La orden de compra fue actualizada.' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Orden guardada',
+          detail: 'La orden de compra fue actualizada.',
+        });
         this.loadOrders();
       },
       error: (error) => {
@@ -301,10 +341,15 @@ export class PurchaseOrders {
   protected confirm(order: PurchaseOrderSummaryDto): void {
     this.purchaseOrderService.confirm(order.id).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Orden confirmada', detail: 'La orden ya puede enviarse al proveedor.' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Orden confirmada',
+          detail: 'La orden ya puede enviarse al proveedor.',
+        });
         this.loadOrders();
       },
-      error: (error) => this.error.set(this.messageForError(error, 'No pudimos confirmar la orden.')),
+      error: (error) =>
+        this.error.set(this.messageForError(error, 'No pudimos confirmar la orden.')),
     });
   }
 
@@ -312,10 +357,15 @@ export class PurchaseOrders {
   protected markSent(order: PurchaseOrderSummaryDto): void {
     this.purchaseOrderService.send(order.id).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Orden enviada', detail: 'La orden fue marcada como enviada manualmente.' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Orden enviada',
+          detail: 'La orden fue marcada como enviada manualmente.',
+        });
         this.loadOrders();
       },
-      error: (error) => this.error.set(this.messageForError(error, 'No pudimos marcar la orden como enviada.')),
+      error: (error) =>
+        this.error.set(this.messageForError(error, 'No pudimos marcar la orden como enviada.')),
     });
   }
 
@@ -332,14 +382,21 @@ export class PurchaseOrders {
     if (!order) {
       return;
     }
-    this.purchaseOrderService.cancel(order.id, { reason: this.cancelReason().trim() || null }).subscribe({
-      next: () => {
-        this.cancelDialogVisible.set(false);
-        this.messageService.add({ severity: 'success', summary: 'Orden cancelada', detail: 'La orden de compra fue cancelada.' });
-        this.loadOrders();
-      },
-      error: (error) => this.error.set(this.messageForError(error, 'No pudimos cancelar la orden.')),
-    });
+    this.purchaseOrderService
+      .cancel(order.id, { reason: this.cancelReason().trim() || null })
+      .subscribe({
+        next: () => {
+          this.cancelDialogVisible.set(false);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Orden cancelada',
+            detail: 'La orden de compra fue cancelada.',
+          });
+          this.loadOrders();
+        },
+        error: (error) =>
+          this.error.set(this.messageForError(error, 'No pudimos cancelar la orden.')),
+      });
   }
 
   /** Downloads the order PDF for manual sending to the supplier. */
@@ -389,7 +446,9 @@ export class PurchaseOrders {
 
   /** Formats a money value for the admin UI. */
   protected formatPrice(value: number | null | undefined): string {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(value ?? 0);
+    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(
+      value ?? 0,
+    );
   }
 
   /** Loads supplier and branch selectors. */
@@ -411,16 +470,18 @@ export class PurchaseOrders {
   /** Loads active products associated with a supplier. */
   private loadSupplierProducts(supplierId: number): void {
     this.loadingProducts.set(true);
-    this.supplierService.listSupplierProducts({ supplierId, page: 0, size: 100, sort: 'productName,asc' }).subscribe({
-      next: (page) => {
-        this.supplierProducts.set(page.content);
-        this.loadingProducts.set(false);
-      },
-      error: () => {
-        this.supplierProducts.set([]);
-        this.loadingProducts.set(false);
-      },
-    });
+    this.supplierService
+      .listSupplierProducts({ supplierId, page: 0, size: 100, sort: 'productName,asc' })
+      .subscribe({
+        next: (page) => {
+          this.supplierProducts.set(page.content);
+          this.loadingProducts.set(false);
+        },
+        error: () => {
+          this.supplierProducts.set([]);
+          this.loadingProducts.set(false);
+        },
+      });
   }
 
   /** Converts a Date to backend LocalDate format. */
@@ -443,6 +504,6 @@ export class PurchaseOrders {
     if (apiError.code === 'VALIDATION_ERROR') {
       return this.errorMapping.formatValidationErrors(apiError);
     }
-    return this.errorMapping.getMessage(apiError.code, apiError.message);
+    return this.errorMapping.getMessage(apiError.code);
   }
 }

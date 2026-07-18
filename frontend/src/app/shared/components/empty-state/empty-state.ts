@@ -1,9 +1,10 @@
 import { NgClass } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 
 import { AppButton } from '../app-button/app-button';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-empty-state',
   imports: [AppButton, NgClass],
   templateUrl: './empty-state.html',

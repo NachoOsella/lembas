@@ -1,9 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
-import { CashService } from '../../../core/services/cash';
-import { AuthService } from '../../../core/services/auth';
+import { CashService } from '@features/cash/data-access/cash';
+import { AuthService } from '@core/services/auth';
 
 /**
  * Cash landing screen.
@@ -16,6 +17,7 @@ import { AuthService } from '../../../core/services/auth';
  * branch dropdown is shown.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-cash',
   imports: [],
   template: '',

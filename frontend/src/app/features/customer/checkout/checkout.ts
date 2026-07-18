@@ -2,18 +2,20 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
-import { AuthService } from '../../../core/services/auth';
-import { Cart, CartItem } from '../../../core/services/cart';
-import { CurrencyArPipe } from '../../../core/pipes/currency-ar.pipe';
-import { CustomerCheckoutService } from '../../../core/services/customer-checkout';
-import { CustomerOrderService, OrderCreated } from '../../../core/services/customer-order';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { AppSelect } from '../../../shared/components/app-select/app-select';
-import { EmptyState } from '../../../shared/components/empty-state/empty-state';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { QuantityStepper } from '../../../shared/components/quantity-stepper/quantity-stepper';
+import { AuthService } from '@core/services/auth';
+import type { CartItem } from '@features/checkout/state/cart';
+import { Cart } from '@features/checkout/state/cart';
+import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
+import { CustomerCheckoutService } from '@features/checkout/data-access/customer-checkout';
+import type { OrderCreated } from '@features/orders/data-access/customer-order';
+import { CustomerOrderService } from '@features/orders/data-access/customer-order';
+import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { QuantityStepper } from '@shared/components/quantity-stepper/quantity-stepper';
 
 @Component({
   selector: 'app-checkout',
@@ -127,9 +129,16 @@ export class Checkout {
     this.submitting.set(true);
     this.errorCode.set(null);
 
+    const branchId = this.branchSelection.selectedBranchId();
+    if (branchId === null) {
+      this.errorCode.set('BRANCH_NOT_FOUND');
+      this.submitting.set(false);
+      return;
+    }
+
     this.customerOrderService
       .createOrder({
-        branchId: this.branchSelection.selectedBranchId()!,
+        branchId,
         items: this.cart.items().map((item) => ({
           productId: item.productId,
           quantity: item.quantity,

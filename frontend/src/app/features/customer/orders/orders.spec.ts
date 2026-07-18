@@ -2,12 +2,13 @@ import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
 import { Orders } from './orders';
-import { CustomerOrderService } from '../../../core/services/customer-order';
-import { OrderSummary } from '../../../shared/models/order';
+import { CustomerOrderService } from '@features/orders/data-access/customer-order';
+import type { OrderSummary } from '@features/orders/domain/order';
 
 /** Builds a minimal OrderSummary for test setups. */
 function summary(overrides: Partial<OrderSummary> = {}): OrderSummary {

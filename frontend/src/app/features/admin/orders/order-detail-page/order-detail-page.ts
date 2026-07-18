@@ -1,30 +1,30 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
-import { AdminOrderService, CancelOrderRequest } from '../../../../core/services/admin-order';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { getApiError } from '../../../../shared/models/api-error';
+import type { CancelOrderRequest } from '@features/orders/data-access/admin-order';
+import { AdminOrderService } from '@features/orders/data-access/admin-order';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import type { OrderDetail, OrderStatus } from '@features/orders/domain/order';
 import {
-  OrderDetail,
-  OrderStatus,
   orderStatusLabel,
   orderStatusSeverity,
   paymentStatusLabel,
   paymentStatusSeverity,
-} from '../../../../shared/models/order';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { AppSectionCard } from '../../../../shared/components/app-section-card/app-section-card';
-import {
-  StatusBadge,
-  StatusBadgeConfig,
-} from '../../../../shared/components/status-badge/status-badge';
-import { ConfirmDialog, ConfirmDialogMode } from '../../../../shared/components/confirm-dialog/confirm-dialog';
-import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { CurrencyArPipe } from '../../../../core/pipes/currency-ar.pipe';
-import { ShortDateArPipe } from '../../../../core/pipes/short-date-ar.pipe';
+} from '@features/orders/domain/order';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppSectionCard } from '@shared/components/app-section-card/app-section-card';
+import type { StatusBadgeConfig } from '@shared/components/status-badge/status-badge';
+import { StatusBadge } from '@shared/components/status-badge/status-badge';
+import type { ConfirmDialogMode } from '@shared/components/confirm-dialog/confirm-dialog';
+import { ConfirmDialog } from '@shared/components/confirm-dialog/confirm-dialog';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
+import { ShortDateArPipe } from '@core/pipes/short-date-ar.pipe';
 
 // ----------------------------------------------------------------
 // Transition action descriptors
@@ -49,7 +49,8 @@ const PREPARE_ACTION: TransitionAction = {
   label: 'Preparar pedido',
   description: 'Marcar como preparando',
   confirmTitle: 'Iniciar preparacion',
-  confirmMessage: 'El pedido pasara a estado Preparando. Los productos se comenzaran a reunir para el retiro.',
+  confirmMessage:
+    'El pedido pasara a estado Preparando. Los productos se comenzaran a reunir para el retiro.',
   icon: 'pi pi-play',
 };
 
@@ -58,7 +59,8 @@ const READY_ACTION: TransitionAction = {
   label: 'Marcar como listo',
   description: 'Listo para retirar',
   confirmTitle: 'Marcar como listo para retirar',
-  confirmMessage: 'El pedido quedara marcado como Listo para retirar. El cliente podra pasar por la sucursal.',
+  confirmMessage:
+    'El pedido quedara marcado como Listo para retirar. El cliente podra pasar por la sucursal.',
   icon: 'pi pi-check',
 };
 
@@ -67,7 +69,8 @@ const DELIVER_ACTION: TransitionAction = {
   label: 'Confirmar entrega',
   description: 'Entregar al cliente',
   confirmTitle: 'Confirmar entrega al cliente',
-  confirmMessage: 'Confirmas que el cliente ya retiro el pedido en la sucursal? El pedido quedara como Entregado.',
+  confirmMessage:
+    'Confirmas que el cliente ya retiro el pedido en la sucursal? El pedido quedara como Entregado.',
   icon: 'pi pi-box',
 };
 
@@ -76,7 +79,8 @@ const CANCEL_ACTION: TransitionAction = {
   label: 'Cancelar pedido',
   description: 'Anular y revertir stock',
   confirmTitle: 'Cancelar pedido',
-  confirmMessage: 'Esta accion no se puede deshacer. Si el pedido ya desconto stock, sera devuelto a los lotes originales y los pagos quedaran marcados como cancelados.',
+  confirmMessage:
+    'Esta accion no se puede deshacer. Si el pedido ya desconto stock, sera devuelto a los lotes originales y los pagos quedaran marcados como cancelados.',
   icon: 'pi pi-times-circle',
   destructive: true,
   requiresReason: true,
@@ -160,6 +164,7 @@ const PAYMENT_STATUS_BADGES: Record<string, StatusBadgeConfig> = {
 };
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-order-detail-page',
   imports: [
     AppButton,
@@ -331,7 +336,10 @@ export class OrderDetailPage implements OnInit {
       error: (err) => {
         this.actionLoading.set(null);
         this.pendingAction.set(null);
-        const detail = this.errorMessageFor(err, 'No se pudo completar la accion. Intenta nuevamente.');
+        const detail = this.errorMessageFor(
+          err,
+          'No se pudo completar la accion. Intenta nuevamente.',
+        );
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -370,7 +378,10 @@ export class OrderDetailPage implements OnInit {
       error: (err) => {
         this.actionLoading.set(null);
         this.pendingAction.set(null);
-        const detail = this.errorMessageFor(err, 'No se pudo cancelar el pedido. Intenta nuevamente.');
+        const detail = this.errorMessageFor(
+          err,
+          'No se pudo cancelar el pedido. Intenta nuevamente.',
+        );
         this.messageService.add({
           severity: 'error',
           summary: 'No se pudo cancelar',
@@ -508,7 +519,7 @@ export class OrderDetailPage implements OnInit {
 
   private messageForError(error: unknown, fallback: string): string {
     const apiError = getApiError(error);
-    return apiError ? this.errorMapping.getMessage(apiError.code, apiError.message) : fallback;
+    return apiError ? this.errorMapping.getMessage(apiError.code) : fallback;
   }
 
   private errorMessageFor(error: unknown, fallback: string): string {

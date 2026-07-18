@@ -1,23 +1,28 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AppDatePicker } from '../../../shared/components/app-date-picker/app-date-picker';
-import { AppFormField } from '../../../shared/components/app-form-field/app-form-field';
-import { AppInput } from '../../../shared/components/app-input/app-input';
-import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
+import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { AppInput } from '@shared/components/app-input/app-input';
+import { AppInputNumber } from '@shared/components/app-input-number/app-input-number';
 import { MessageService } from 'primeng/api';
 
-import { InventoryService } from '../../../core/services/inventory';
-import { PurchaseOrderService } from '../../../core/services/purchase-order';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { getApiError } from '../../../shared/models/api-error';
-import { PurchaseOrderDetailDto, PurchaseOrderItemDto, PurchaseOrderSummaryDto } from '../../../shared/models/purchase-order';
-import { PurchaseReceiptDto } from '../../../shared/models/inventory';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppControlField } from '../../../shared/components/app-control-field/app-control-field';
-import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppSelect } from '../../../shared/components/app-select/app-select';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
+import { InventoryService } from '@features/inventory/data-access/inventory';
+import { PurchaseOrderService } from '@features/suppliers/data-access/purchase-order';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import type {
+  PurchaseOrderDetailDto,
+  PurchaseOrderItemDto,
+  PurchaseOrderSummaryDto,
+} from '@features/suppliers/domain/purchase-order';
+import type { PurchaseReceiptDto } from '@features/inventory/domain/inventory';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppControlField } from '@shared/components/app-control-field/app-control-field';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 interface Option<T> {
   readonly label: string;
   readonly value: T;
@@ -36,6 +41,7 @@ interface ReceiptRow {
 
 /** Admin page for confirming purchase receipts and generating stock lots. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-stock-entry',
   imports: [
     AppButton,
@@ -111,8 +117,11 @@ export class StockEntry {
     this.rows().some((row) => Number(row.quantityReceived ?? 0) > 0),
   );
 
-  protected readonly formValid = computed(() =>
-    !!this.selectedOrder() && this.hasReceivableRows() && this.rows().every((row) => this.rowValid(row)),
+  protected readonly formValid = computed(
+    () =>
+      !!this.selectedOrder() &&
+      this.hasReceivableRows() &&
+      this.rows().every((row) => this.rowValid(row)),
   );
 
   constructor() {
@@ -123,18 +132,22 @@ export class StockEntry {
   protected loadOrders(): void {
     this.loadingOrders.set(true);
     this.error.set('');
-    this.purchaseOrderService.list({ status: 'SENT', page: 0, size: 50, sort: 'createdAt,desc' }).subscribe({
-      next: (sentPage) => {
-        this.purchaseOrderService.list({ status: 'PARTIALLY_RECEIVED', page: 0, size: 50, sort: 'createdAt,desc' }).subscribe({
-          next: (partialPage) => {
-            this.orders.set([...sentPage.content, ...partialPage.content]);
-            this.loadingOrders.set(false);
-          },
-          error: (error) => this.handleLoadError(error),
-        });
-      },
-      error: (error) => this.handleLoadError(error),
-    });
+    this.purchaseOrderService
+      .list({ status: 'SENT', page: 0, size: 50, sort: 'createdAt,desc' })
+      .subscribe({
+        next: (sentPage) => {
+          this.purchaseOrderService
+            .list({ status: 'PARTIALLY_RECEIVED', page: 0, size: 50, sort: 'createdAt,desc' })
+            .subscribe({
+              next: (partialPage) => {
+                this.orders.set([...sentPage.content, ...partialPage.content]);
+                this.loadingOrders.set(false);
+              },
+              error: (error) => this.handleLoadError(error),
+            });
+        },
+        error: (error) => this.handleLoadError(error),
+      });
   }
 
   /** Loads the selected order detail and initializes editable receipt rows. */
@@ -167,7 +180,9 @@ export class StockEntry {
   protected updateRow(purchaseOrderItemId: number, patch: Partial<ReceiptRow>): void {
     this.confirmedReceipt.set(null);
     this.rows.update((rows) =>
-      rows.map((row) => (row.purchaseOrderItemId === purchaseOrderItemId ? { ...row, ...patch } : row)),
+      rows.map((row) =>
+        row.purchaseOrderItemId === purchaseOrderItemId ? { ...row, ...patch } : row,
+      ),
     );
   }
 
@@ -261,7 +276,9 @@ export class StockEntry {
   /** Handles errors while loading the order selector data. */
   private handleLoadError(error: unknown): void {
     this.loadingOrders.set(false);
-    this.error.set(this.messageForError(error, 'No pudimos cargar las ordenes pendientes de recepcion.'));
+    this.error.set(
+      this.messageForError(error, 'No pudimos cargar las ordenes pendientes de recepcion.'),
+    );
   }
 
   /** Converts a Date to the backend LocalDate format. */
@@ -284,7 +301,7 @@ export class StockEntry {
     if (apiError.code === 'VALIDATION_ERROR') {
       return this.errorMapping.formatValidationErrors(apiError, this.fieldLabel);
     }
-    return this.errorMapping.getMessage(apiError.code, apiError.message);
+    return this.errorMapping.getMessage(apiError.code);
   }
 
   /** Translates backend validation field names to form labels. */

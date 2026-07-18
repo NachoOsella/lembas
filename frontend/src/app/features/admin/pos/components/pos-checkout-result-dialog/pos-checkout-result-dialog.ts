@@ -1,16 +1,9 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  model,
-  output,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, model, output } from '@angular/core';
 
-import { OrderDetail, PaymentMethod } from '../../../../../shared/models/order';
-import { AppBadge } from '../../../../../shared/components/app-badge/app-badge';
-import { AppButton } from '../../../../../shared/components/app-button/app-button';
-import { AppModal } from '../../../../../shared/components/app-modal/app-modal';
+import type { OrderDetail, PaymentMethod } from '@features/orders/domain/order';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppModal } from '@shared/components/app-modal/app-modal';
 
 const MAX_ITEMS_DISPLAYED = 5;
 

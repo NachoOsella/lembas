@@ -60,16 +60,24 @@
     <ng-template #body let-item>
       <tr>
         <td>
-          <span class="movement-type-badge" [class]="'movement-type-badge--' + typeSeverity(item.type)">
+          <span
+            class="movement-type-badge"
+            [class]="'movement-type-badge--' + typeSeverity(item.type)"
+          >
             {{ typeLabel(item.type) }}
           </span>
         </td>
-        <td>{{ item.createdAt | date:'dd/MM/yy HH:mm' }}</td>
+        <td>{{ item.createdAt | date: 'dd/MM/yy HH:mm' }}</td>
         <td>{{ item.productName }}</td>
         <td>{{ item.branchName }}</td>
         <td>
-          <span class="movement-quantity" [class]="item.quantity >= 0 ? 'movement-quantity--positive' : 'movement-quantity--negative'">
-            {{ item.quantity >= 0 ? '+' : '' }}{{ item.quantity | number:'1.0-3' }}
+          <span
+            class="movement-quantity"
+            [class]="
+              item.quantity >= 0 ? 'movement-quantity--positive' : 'movement-quantity--negative'
+            "
+          >
+            {{ item.quantity >= 0 ? '+' : '' }}{{ item.quantity | number: '1.0-3' }}
           </span>
         </td>
         <td>{{ item.reason ?? '-' }}</td>

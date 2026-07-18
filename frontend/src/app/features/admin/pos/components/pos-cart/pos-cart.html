@@ -1,7 +1,7 @@
 <app-section-card
   eyebrow="Venta"
   title="Carrito"
-  [description]="(itemCount() === 1 ? '1 item' : (itemCount() + ' items')) + ' en el carrito'"
+  [description]="(itemCount() === 1 ? '1 item' : itemCount() + ' items') + ' en el carrito'"
   class="pos-cart"
 >
   @if (!hasLines()) {
@@ -58,9 +58,7 @@
 
     @if (requiresCash()) {
       <div class="pos-cart__cash">
-        <label for="pos-cash-received" class="pos-cart__cash-label">
-          Efectivo recibido
-        </label>
+        <label for="pos-cash-received" class="pos-cart__cash-label"> Efectivo recibido </label>
         <div class="pos-cart__cash-input">
           <app-input-number
             inputId="pos-cash-received"
@@ -93,7 +91,8 @@
         (click)="onClearCart()"
         [disabled]="processing()"
         data-testid="pos-clear-button"
-      >Vaciar carrito</app-button>
+        >Vaciar carrito</app-button
+      >
       <app-button
         variant="primary"
         icon="pi pi-bolt"
@@ -102,7 +101,8 @@
         [loading]="processing()"
         size="lg"
         testId="pos-checkout-button"
-      >Cobrar (F8)</app-button>
+        >Cobrar (F8)</app-button
+      >
     </div>
   }
 </app-section-card>

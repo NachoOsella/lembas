@@ -1,4 +1,4 @@
-import { Component, input, model } from '@angular/core';
+import { Component, input, model, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Checkbox } from 'primeng/checkbox';
 
@@ -16,6 +16,7 @@ import { Checkbox } from 'primeng/checkbox';
  * ```
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-checkbox',
   imports: [FormsModule, Checkbox],
   templateUrl: './app-checkbox.html',

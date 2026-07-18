@@ -1,15 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { Cart, CartItem } from '../../../core/services/cart';
-import { AuthService } from '../../../core/services/auth';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
-import { CurrencyArPipe } from '../../../core/pipes/currency-ar.pipe';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { AppSelect } from '../../../shared/components/app-select/app-select';
-import { EmptyState } from '../../../shared/components/empty-state/empty-state';
-import { QuantityStepper } from '../../../shared/components/quantity-stepper/quantity-stepper';
+import type { CartItem } from '@features/checkout/state/cart';
+import { Cart } from '@features/checkout/state/cart';
+import { AuthService } from '@core/services/auth';
+import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { QuantityStepper } from '@shared/components/quantity-stepper/quantity-stepper';
 
 /**
  * Public cart page accessible to all visitors.

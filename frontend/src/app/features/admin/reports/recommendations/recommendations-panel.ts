@@ -1,27 +1,27 @@
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import type { Subscription } from 'rxjs';
 
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import {
-  AppDataTable,
-  ColumnDef,
-} from '../../../../shared/components/app-data-table/app-data-table';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
-import { AppToast } from '../../../../shared/components/app-toast/app-toast';
-import { AppReportFilterBar } from '../../../../shared/components/app-report-filter-bar/app-report-filter-bar';
-import { DataExport, ExportData } from '../../../../shared/components/data-export/data-export';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { AppReportFilterBar } from '@features/reports/ui/app-report-filter-bar/app-report-filter-bar';
+import type { ExportData } from '@shared/components/data-export/data-export';
+import { DataExport } from '@shared/components/data-export/data-export';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { RecommendationService } from '../../../../core/services/recommendation';
-import {
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { RecommendationService } from '@features/reports/data-access/recommendation';
+import type {
   RecommendationDto,
   RecommendationType,
   RecommendationUrgency,
-} from '../../../../shared/models/recommendation';
+} from '@features/reports/domain/recommendation';
 
 interface FilterOption<T> {
   readonly label: string;
@@ -51,6 +51,7 @@ const URGENCY_TONES: Record<RecommendationUrgency, RecommendationBadgeTone> = {
 
 /** Full recommendations page with automatic initial loading and table-based results. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-recommendations-panel',
   imports: [
     AppPageHeader,

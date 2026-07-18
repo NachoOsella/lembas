@@ -2,14 +2,15 @@ import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 
 import { OrderDetail } from './order-detail';
-import { CustomerCheckoutService } from '../../../core/services/customer-checkout';
-import { CustomerOrderService } from '../../../core/services/customer-order';
-import { OrderDetail as OrderDetailData } from '../../../shared/models/order';
+import { CustomerCheckoutService } from '@features/checkout/data-access/customer-checkout';
+import { CustomerOrderService } from '@features/orders/data-access/customer-order';
+import type { OrderDetail as OrderDetailData } from '@features/orders/domain/order';
 
 /** Builds a minimal OrderDetail payload for tests. */
 function detailPayload(overrides: Partial<OrderDetailData> = {}): OrderDetailData {
@@ -67,9 +68,11 @@ function mockOrderService(overrides: Partial<CustomerOrderService> = {}): Custom
 /** Minimal mock for CustomerCheckoutService. */
 function mockCheckoutService(): CustomerCheckoutService {
   return {
-    createPreference: vi.fn().mockReturnValue(
-      of({ paymentId: 99, preferenceId: 'PREF-1', initPoint: 'https://init/PREF-1' }),
-    ),
+    createPreference: vi
+      .fn()
+      .mockReturnValue(
+        of({ paymentId: 99, preferenceId: 'PREF-1', initPoint: 'https://init/PREF-1' }),
+      ),
   } as unknown as CustomerCheckoutService;
 }
 
@@ -88,10 +91,12 @@ describe('OrderDetail', () => {
   let component: OrderDetail;
   let fixture: ComponentFixture<OrderDetail>;
 
-  async function configure(opts: {
-    orderService?: CustomerOrderService;
-    routeId?: string;
-  } = {}): Promise<void> {
+  async function configure(
+    opts: {
+      orderService?: CustomerOrderService;
+      routeId?: string;
+    } = {},
+  ): Promise<void> {
     const orderService = opts.orderService ?? mockOrderService();
     const route = mockRoute(opts.routeId ?? '42');
 
@@ -130,11 +135,7 @@ describe('OrderDetail', () => {
 
   it('should show error when order not found', async () => {
     const svc = mockOrderService({
-      getOrder: vi
-        .fn()
-        .mockReturnValue(
-          throwError(() => ({ error: { code: 'ORDER_NOT_FOUND' } })),
-        ),
+      getOrder: vi.fn().mockReturnValue(throwError(() => ({ error: { code: 'ORDER_NOT_FOUND' } }))),
     });
     await configure({ orderService: svc });
 
@@ -144,9 +145,7 @@ describe('OrderDetail', () => {
 
   it('should show error when forbidden', async () => {
     const svc = mockOrderService({
-      getOrder: vi
-        .fn()
-        .mockReturnValue(throwError(() => ({ error: { code: 'FORBIDDEN' } }))),
+      getOrder: vi.fn().mockReturnValue(throwError(() => ({ error: { code: 'FORBIDDEN' } }))),
     });
     await configure({ orderService: svc });
 

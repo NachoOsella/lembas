@@ -1,4 +1,4 @@
-import { Component, input, model, output } from '@angular/core';
+import { Component, input, model, output, ChangeDetectionStrategy } from '@angular/core';
 
 export interface TabItem {
   readonly label: string;
@@ -7,6 +7,7 @@ export interface TabItem {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-tabs',
   imports: [],
   templateUrl: './app-tabs.html',

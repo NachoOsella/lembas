@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 
-import { OrderDetail, PaymentMethod } from '../../../../shared/models/order';
+import type { OrderDetail, PaymentMethod } from '@features/orders/domain/order';
 
 /** Single line on a POS sale request. */
 export interface CreatePosSaleItemRequest {
@@ -26,7 +26,7 @@ export interface CreatePosSaleRequest {
  * atomically registers the order, manual payment, and FEFO stock
  * deductions.</p>
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class PosSaleService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/pos/sales';

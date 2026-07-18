@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
@@ -8,8 +9,8 @@ import { of, Subject, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import { Catalog } from './catalog';
-import { CatalogService } from '../../../core/services/catalog';
-import { Category, ProductSummary } from '../../../shared/models/product';
+import { CatalogService } from '@features/catalog/data-access/catalog';
+import type { Category, ProductSummary } from '@features/catalog/domain/product';
 
 // ---------------------------------------------------------------------------
 // Test helpers

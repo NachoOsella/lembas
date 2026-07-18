@@ -1,35 +1,43 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
-import { AppCheckbox } from '../../../shared/components/app-checkbox/app-checkbox';
-import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
-import { AppSelect } from '../../../shared/components/app-select/app-select';
+import { AppCheckbox } from '@shared/components/app-checkbox/app-checkbox';
+import { AppInputNumber } from '@shared/components/app-input-number/app-input-number';
+import { AppSelect } from '@shared/components/app-select/app-select';
 
-import { SupplierService } from '../../../core/services/supplier';
-import { ProductService } from '../../../core/services/product';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { getApiError } from '../../../shared/models/api-error';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
-import { AppFormField } from '../../../shared/components/app-form-field/app-form-field';
-import { FormSection } from '../../../shared/components/form-section/form-section';
-import { AppModal } from '../../../shared/components/app-modal/app-modal';
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppProductSelector } from '../../../shared/components/app-product-selector/app-product-selector';
-import { AppSearchBar } from '../../../shared/components/app-search-bar/app-search-bar';
-import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { ProductSummary } from '../../../shared/models/product';
-import { SupplierDto, SupplierProductDto } from '../../../shared/models/supplier';
+import { SupplierService } from '@features/suppliers/data-access/supplier';
+import { ProductService } from '@features/catalog/data-access/product';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { FormSection } from '@shared/components/form-section/form-section';
+import { AppModal } from '@shared/components/app-modal/app-modal';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppProductSelector } from '@features/catalog/ui/app-product-selector/app-product-selector';
+import { AppSearchBar } from '@shared/components/app-search-bar/app-search-bar';
+import { ConfirmDialog } from '@shared/components/confirm-dialog/confirm-dialog';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import type { ProductSummary } from '@features/catalog/domain/product';
+import type { SupplierDto, SupplierProductDto } from '@features/suppliers/domain/supplier';
 
 /** Backend-supported supplier fields that can be used for server-side sorting. */
 const SUPPLIER_SORT_FIELDS = new Set(['name', 'contactName', 'cuit']);
 
 /** Backend-supported supplier-product fields that can be used for server-side sorting. */
-const SUPPLIER_PRODUCT_SORT_FIELDS = new Set(['productName', 'supplierName', 'supplierSku', 'currentCost', 'preferred']);
+const SUPPLIER_PRODUCT_SORT_FIELDS = new Set([
+  'productName',
+  'supplierName',
+  'supplierSku',
+  'currentCost',
+  'preferred',
+]);
 
 /** Admin page for supplier CRUD and product-supplier replacement costs. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-suppliers',
   imports: [
     AppButton,
@@ -118,7 +126,9 @@ export class Suppliers {
     { field: 'actions', header: 'Acciones', sortable: false, width: '7rem' },
   ];
 
-  protected readonly supplierOptions = computed(() => this.allSuppliers().map((supplier) => ({ label: supplier.name, value: supplier.id })));
+  protected readonly supplierOptions = computed(() =>
+    this.allSuppliers().map((supplier) => ({ label: supplier.name, value: supplier.id })),
+  );
 
   constructor() {
     this.refreshAll();
@@ -194,12 +204,18 @@ export class Suppliers {
       cuit: this.blankToNull(this.supplierFormCuit()),
     };
     const current = this.editingSupplier();
-    const action = current ? this.supplierService.updateSupplier(current.id, request) : this.supplierService.createSupplier(request);
+    const action = current
+      ? this.supplierService.updateSupplier(current.id, request)
+      : this.supplierService.createSupplier(request);
     action.subscribe({
       next: () => {
         this.saving.set(false);
         this.supplierDialogVisible.set(false);
-        this.messageService.add({ severity: 'success', summary: 'Proveedor guardado', detail: 'Los datos del proveedor fueron actualizados.' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Proveedor guardado',
+          detail: 'Los datos del proveedor fueron actualizados.',
+        });
         this.refreshAll();
       },
       error: (error) => this.handleSaveError(error, 'No pudimos guardar el proveedor.'),
@@ -220,7 +236,11 @@ export class Suppliers {
   /** Opens the supplier-product edit dialog. */
   protected openSupplierProductEdit(item: SupplierProductDto): void {
     this.editingSupplierProduct.set(item);
-    this.selectedProduct.set({ id: item.productId, name: item.productName, barcode: item.productBarcode ?? null } as ProductSummary);
+    this.selectedProduct.set({
+      id: item.productId,
+      name: item.productName,
+      barcode: item.productBarcode ?? null,
+    } as ProductSummary);
     this.supplierProductFormSupplierId.set(item.supplierId);
     this.supplierProductFormSupplierSku.set(item.supplierSku ?? '');
     this.supplierProductFormCurrentCost.set(item.currentCost);
@@ -253,17 +273,30 @@ export class Suppliers {
     }
     this.saving.set(true);
     this.error.set('');
-    const request = { productId: product.id, supplierId: supplierId, supplierSku: this.blankToNull(supplierSku), currentCost: Number(currentCost), preferred: preferred };
+    const request = {
+      productId: product.id,
+      supplierId: supplierId,
+      supplierSku: this.blankToNull(supplierSku),
+      currentCost: Number(currentCost),
+      preferred: preferred,
+    };
     const current = this.editingSupplierProduct();
-    const action = current ? this.supplierService.updateSupplierProduct(current.id, request) : this.supplierService.createSupplierProduct(request);
+    const action = current
+      ? this.supplierService.updateSupplierProduct(current.id, request)
+      : this.supplierService.createSupplierProduct(request);
     action.subscribe({
       next: () => {
         this.saving.set(false);
         this.supplierProductDialogVisible.set(false);
-        this.messageService.add({ severity: 'success', summary: 'Costo guardado', detail: 'La relacion proveedor-producto fue actualizada.' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Costo guardado',
+          detail: 'La relacion proveedor-producto fue actualizada.',
+        });
         this.loadSupplierProducts();
       },
-      error: (error) => this.handleSaveError(error, 'No pudimos guardar el producto del proveedor.'),
+      error: (error) =>
+        this.handleSaveError(error, 'No pudimos guardar el producto del proveedor.'),
     });
   }
 
@@ -274,10 +307,15 @@ export class Suppliers {
     this.supplierService.deleteSupplier(supplier.id).subscribe({
       next: () => {
         this.supplierToDelete.set(null);
-        this.messageService.add({ severity: 'success', summary: 'Proveedor eliminado', detail: supplier.name });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Proveedor eliminado',
+          detail: supplier.name,
+        });
         this.refreshAll();
       },
-      error: (error) => this.error.set(this.messageForError(error, 'No pudimos eliminar el proveedor.')),
+      error: (error) =>
+        this.error.set(this.messageForError(error, 'No pudimos eliminar el proveedor.')),
     });
   }
 
@@ -288,10 +326,15 @@ export class Suppliers {
     this.supplierService.deleteSupplierProduct(item.id).subscribe({
       next: () => {
         this.supplierProductToDelete.set(null);
-        this.messageService.add({ severity: 'success', summary: 'Asociacion eliminada', detail: item.productName });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Asociacion eliminada',
+          detail: item.productName,
+        });
         this.loadSupplierProducts();
       },
-      error: (error) => this.error.set(this.messageForError(error, 'No pudimos eliminar la asociacion.')),
+      error: (error) =>
+        this.error.set(this.messageForError(error, 'No pudimos eliminar la asociacion.')),
     });
   }
 
@@ -359,11 +402,13 @@ export class Suppliers {
   // ---------------------------------------------------------------------------
 
   /** Builds a Spring Data sort param from field and order signals. */
-  private buildSortParam(field: string | undefined, order: number | undefined, defaultField: string): string | undefined {
-    if (!field || ![1, -1].includes(order ?? 0)) {
-      return undefined;
-    }
-    return `${field},${order === 1 ? 'asc' : 'desc'}`;
+  private buildSortParam(
+    field: string | undefined,
+    order: number | undefined,
+    defaultField: string,
+  ): string {
+    const effectiveField = field ?? defaultField;
+    return `${effectiveField},${order === -1 ? 'desc' : 'asc'}`;
   }
 
   /** Loads the supplier table with lazy pagination. */
@@ -398,9 +443,18 @@ export class Suppliers {
   private loadSupplierProducts(): void {
     this.loadingProducts.set(true);
     const page = Math.floor(this.productFirst() / this.productPageSize());
-    const sort = this.buildSortParam(this.productSortField(), this.productSortOrder(), 'productName');
+    const sort = this.buildSortParam(
+      this.productSortField(),
+      this.productSortOrder(),
+      'productName',
+    );
     this.supplierService
-      .listSupplierProducts({ search: this.productSearch(), page, size: this.productPageSize(), sort })
+      .listSupplierProducts({
+        search: this.productSearch(),
+        page,
+        size: this.productPageSize(),
+        sort,
+      })
       .subscribe({
         next: (response) => {
           this.supplierProducts.set(response.content);
@@ -408,7 +462,9 @@ export class Suppliers {
           this.loadingProducts.set(false);
         },
         error: (error) => {
-          this.error.set(this.messageForError(error, 'No pudimos cargar los costos de proveedores.'));
+          this.error.set(
+            this.messageForError(error, 'No pudimos cargar los costos de proveedores.'),
+          );
           this.loadingProducts.set(false);
         },
       });
@@ -423,7 +479,7 @@ export class Suppliers {
   /** Maps backend errors to user-facing messages. */
   private messageForError(error: unknown, fallback: string): string {
     const apiError = getApiError(error);
-    return apiError ? this.errorMapping.getMessage(apiError.code, apiError.message) : fallback;
+    return apiError ? this.errorMapping.getMessage(apiError.code) : fallback;
   }
 
   /** Converts empty text fields to null for API requests. */

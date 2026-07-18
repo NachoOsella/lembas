@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
-import { InventoryService } from '../../../core/services/inventory';
-import { PurchaseOrderService } from '../../../core/services/purchase-order';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
+import { InventoryService } from '@features/inventory/data-access/inventory';
+import { PurchaseOrderService } from '@features/suppliers/data-access/purchase-order';
+import { ErrorMappingService } from '@core/services/error-mapping';
 import { StockEntry } from './stock-entry';
 
 const orderSummary = {
@@ -79,8 +80,18 @@ describe('StockEntry', () => {
 
   it('should create and load receivable purchase orders', () => {
     expect(component).toBeTruthy();
-    expect(purchaseOrderService.list).toHaveBeenCalledWith({ status: 'SENT', page: 0, size: 50, sort: 'createdAt,desc' });
-    expect(purchaseOrderService.list).toHaveBeenCalledWith({ status: 'PARTIALLY_RECEIVED', page: 0, size: 50, sort: 'createdAt,desc' });
+    expect(purchaseOrderService.list).toHaveBeenCalledWith({
+      status: 'SENT',
+      page: 0,
+      size: 50,
+      sort: 'createdAt,desc',
+    });
+    expect(purchaseOrderService.list).toHaveBeenCalledWith({
+      status: 'PARTIALLY_RECEIVED',
+      page: 0,
+      size: 50,
+      sort: 'createdAt,desc',
+    });
     expect((component as any).orders()).toEqual([orderSummary]);
   });
 

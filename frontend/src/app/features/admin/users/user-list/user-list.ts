@@ -1,16 +1,25 @@
-import { Component, OnInit, inject, input, output, signal, computed } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  input,
+  output,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { MessageService } from 'primeng/api';
 
-import { UserService } from '../../../../core/services/user';
-import { Branch, UserResponse } from '../../../../shared/models/user';
-import { ColumnDef } from '../../../../shared/components/app-data-table/app-data-table';
-import { AppDataTable } from '../../../../shared/components/app-data-table/app-data-table';
+import { UserService } from '@features/users/data-access/user';
+import type { Branch, UserResponse } from '@features/users/domain/user';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
 
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
-import { AppToggleSwitch } from '../../../../shared/components/app-toggle-switch/app-toggle-switch';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppSearchBar } from '@shared/components/app-search-bar/app-search-bar';
+import { AppToggleSwitch } from '@shared/components/app-toggle-switch/app-toggle-switch';
 
 /** Maps a role to an AppBadge tone. */
 const ROLE_TONE: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
@@ -42,15 +51,9 @@ const USER_COLUMNS: ColumnDef[] = [
 const USER_SORT_FIELDS = new Set(['firstName', 'email', 'role', 'enabled']);
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-user-list',
-  imports: [
-    AppDataTable,
-    AppButton,
-    AppBadge,
-    AppPageHeader,
-    AppSearchBar,
-    AppToggleSwitch,
-  ],
+  imports: [AppDataTable, AppButton, AppBadge, AppPageHeader, AppSearchBar, AppToggleSwitch],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
 })

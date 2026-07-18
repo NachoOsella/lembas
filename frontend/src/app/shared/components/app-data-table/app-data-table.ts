@@ -1,8 +1,15 @@
-import { Component, input, model, output, TemplateRef, contentChild } from '@angular/core';
+import type { TemplateRef } from '@angular/core';
+import {
+  Component,
+  input,
+  model,
+  output,
+  contentChild,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { Paginator } from 'primeng/paginator';
 import { TableModule } from 'primeng/table';
-import { Skeleton } from 'primeng/skeleton';
 import { EmptyState } from '../empty-state/empty-state';
 import { LoadingSpinner } from '../loading-spinner/loading-spinner';
 
@@ -25,6 +32,7 @@ function defaultRowTrackBy<T>(index: number, item: T): unknown {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-data-table',
   imports: [NgTemplateOutlet, Paginator, TableModule, EmptyState, LoadingSpinner],
   templateUrl: './app-data-table.html',

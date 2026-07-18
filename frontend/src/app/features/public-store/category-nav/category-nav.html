@@ -76,14 +76,16 @@
 
   <!-- Full category overlay modal -->
   @if (panelOpen()) {
-    <div class="catnav-overlay" (click)="closePanel()" aria-hidden="true"></div>
     <div
-      class="catnav-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Todas las categorías"
-      (click)="$event.stopPropagation()"
-    >
+      class="catnav-overlay"
+      role="button"
+      tabindex="0"
+      aria-label="Cerrar categorías"
+      (click)="closePanel()"
+      (keydown.enter)="closePanel()"
+      (keydown.space)="closePanel()"
+    ></div>
+    <div class="catnav-modal" role="dialog" aria-modal="true" aria-label="Todas las categorías">
       <div class="catnav-modal__head">
         <div>
           <p class="catnav-modal__label">Navegá por categoría</p>

@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpErrorResponse, HttpEvent, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
+import type { HttpEvent, HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpRequest } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { firstValueFrom, of, throwError } from 'rxjs';

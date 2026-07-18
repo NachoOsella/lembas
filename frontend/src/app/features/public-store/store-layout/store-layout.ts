@@ -1,18 +1,15 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
-import { MenuItem } from 'primeng/api';
+import type { MenuItem } from 'primeng/api';
 
-import { AuthService } from '../../../core/services/auth';
-import { Cart } from '../../../core/services/cart';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
-import {
-  AppStoreNav,
-  StoreBrandConfig,
-} from '../../../shared/components/app-store-nav/app-store-nav';
-import {
-  AppStoreFooter,
-  StoreFooterLink,
-} from '../../../shared/components/app-store-footer/app-store-footer';
+import { AuthService } from '@core/services/auth';
+import { Cart } from '@features/checkout/state/cart';
+import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import type { StoreBrandConfig } from '@features/public-store/ui/app-store-nav/app-store-nav';
+import { AppStoreNav } from '@features/public-store/ui/app-store-nav/app-store-nav';
+import type { StoreFooterLink } from '@features/public-store/ui/app-store-footer/app-store-footer';
+import { AppStoreFooter } from '@features/public-store/ui/app-store-footer/app-store-footer';
 @Component({
   selector: 'app-store-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,7 +36,10 @@ export class StoreLayout implements OnInit {
 
   /** Whether the navigation should show the compact branch dropdown. */
   protected readonly showBranchDropdown = computed(
-    () => !this.branchSelection.loading() && !this.branchSelection.error() && this.branchSelection.branches().length > 1,
+    () =>
+      !this.branchSelection.loading() &&
+      !this.branchSelection.error() &&
+      this.branchSelection.branches().length > 1,
   );
 
   /** Label shown when the selector is collapsed or when there is only one branch. */
@@ -119,7 +119,7 @@ export class StoreLayout implements OnInit {
     );
   });
 
-    ngOnInit(): void {
+  ngOnInit(): void {
     // Hydrate auth state from HttpOnly cookies so the nav shows login/register
     // or user info correctly before the first render completes.
     this.auth.ensureSession().subscribe();

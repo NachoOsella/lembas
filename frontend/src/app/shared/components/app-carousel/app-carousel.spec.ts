@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Carousel } from 'primeng/carousel';
 
@@ -14,6 +15,7 @@ interface TestItem {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [AppCarousel],
   template: `
@@ -73,8 +75,7 @@ describe('AppCarousel', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const carouselEl = fixture.debugElement
-      .query(By.directive(AppCarousel))
+    const carouselEl = fixture.debugElement.query(By.directive(AppCarousel))
       ?.componentInstance as AppCarousel;
 
     return { fixture, host: fixture.componentInstance, carouselEl };

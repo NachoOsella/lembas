@@ -81,12 +81,7 @@
             placeholder="Hasta"
             dateFormat="dd/mm/yy"
           />
-          <app-button
-            variant="ghost"
-            size="sm"
-            icon="pi pi-filter-slash"
-            (click)="clearFilters()"
-          >
+          <app-button variant="ghost" size="sm" icon="pi pi-filter-slash" (click)="clearFilters()">
             Limpiar
           </app-button>
         </div>
@@ -98,7 +93,11 @@
         <td class="orders-col--number">
           <div class="orders-number-cell">
             <span class="orders-number-cell__value">{{ item.orderNumber }}</span>
-            <span class="orders-number-cell__type orders-number-cell__type--{{ item.type.toLowerCase() }}">
+            <span
+              class="orders-number-cell__type orders-number-cell__type--{{
+                item.type.toLowerCase()
+              }}"
+            >
               {{ typeLabel(item.type) }}
             </span>
           </div>

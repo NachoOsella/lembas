@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 
 import { AppFieldHint } from '../app-field-hint/app-field-hint';
 
@@ -10,6 +10,7 @@ import { AppFieldHint } from '../app-field-hint/app-field-hint';
  * input covered by AppFormField.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-control-field',
   imports: [AppFieldHint],
   templateUrl: './app-control-field.html',

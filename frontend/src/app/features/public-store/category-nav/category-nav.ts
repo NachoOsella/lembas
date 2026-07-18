@@ -1,7 +1,7 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 
-import { StoreCategory } from '../../../shared/models/category';
-import { AppInput } from '../../../shared/components/app-input/app-input';
+import type { StoreCategory } from '@features/catalog/domain/category';
+import { AppInput } from '@shared/components/app-input/app-input';
 
 /**
  * Responsive category selector for the public catalog.
@@ -10,6 +10,7 @@ import { AppInput } from '../../../shared/components/app-input/app-input';
  * Mobile: pills hidden; a single button opens a bottom sheet with all categories + search.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-category-nav',
   imports: [AppInput],
   templateUrl: './category-nav.html',

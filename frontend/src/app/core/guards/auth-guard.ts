@@ -1,6 +1,8 @@
-import { CanActivateFn, Router, UrlTree } from '@angular/router';
+import type { CanActivateFn, UrlTree } from '@angular/router';
+import { Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { map } from 'rxjs';
 import { AuthService } from '../services/auth';
 
 /** Guard result supported by Angular route guards. */

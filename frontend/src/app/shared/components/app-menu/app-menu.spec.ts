@@ -1,7 +1,8 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 
 import { AppMenu } from './app-menu';
-import { MenuItem } from 'primeng/api';
+import type { MenuItem } from 'primeng/api';
 
 describe('AppMenu', () => {
   let fixture: ComponentFixture<AppMenu>;

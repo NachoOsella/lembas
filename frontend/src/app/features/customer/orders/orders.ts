@@ -1,16 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { CustomerOrderService } from '../../../core/services/customer-order';
-import { OrderSummary, orderStatusLabel, orderStatusSeverity } from '../../../shared/models/order';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
-import { AppPagination } from '../../../shared/components/app-pagination/app-pagination';
-import { EmptyState } from '../../../shared/components/empty-state/empty-state';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
-import { SeverityPill, SeverityPillTone } from '../../../shared/components/severity-pill/severity-pill';
+import { CustomerOrderService } from '@features/orders/data-access/customer-order';
+import type { OrderSummary } from '@features/orders/domain/order';
+import { orderStatusLabel, orderStatusSeverity } from '@features/orders/domain/order';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppPagination } from '@shared/components/app-pagination/app-pagination';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import type { SeverityPillTone } from '@shared/components/severity-pill/severity-pill';
+import { SeverityPill } from '@shared/components/severity-pill/severity-pill';
 
 /** Page size used by the mobile card list. */
 const MOBILE_PAGE_SIZE = 8;

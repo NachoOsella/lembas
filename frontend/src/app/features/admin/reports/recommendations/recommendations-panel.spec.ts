@@ -1,9 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MessageService } from 'primeng/api';
 
-import { RecommendationDto } from '../../../../shared/models/recommendation';
+import type { RecommendationDto } from '@features/reports/domain/recommendation';
 import { RecommendationsPanelComponent } from './recommendations-panel';
 
 describe('RecommendationsPanelComponent', () => {

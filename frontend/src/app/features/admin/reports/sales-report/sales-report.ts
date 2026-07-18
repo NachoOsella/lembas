@@ -1,31 +1,32 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppToast } from '../../../../shared/components/app-toast/app-toast';
-import { AppDatePicker } from '../../../../shared/components/app-date-picker/app-date-picker';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
-import { AppReportFilterBar } from '../../../../shared/components/app-report-filter-bar/app-report-filter-bar';
-import { AppReportGrid } from '../../../../shared/components/app-report-grid/app-report-grid';
-import { AppReportPanel } from '../../../../shared/components/app-report-panel/app-report-panel';
-import { DashboardStatCard } from '../../../../shared/components/dashboard-stat-card/dashboard-stat-card';
-import { DashboardChart } from '../../../../shared/components/dashboard-chart/dashboard-chart';
-import { DataExport, ExportData } from '../../../../shared/components/data-export/data-export';
-import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { AppReportFilterBar } from '@features/reports/ui/app-report-filter-bar/app-report-filter-bar';
+import { AppReportGrid } from '@features/reports/ui/app-report-grid/app-report-grid';
+import { AppReportPanel } from '@features/reports/ui/app-report-panel/app-report-panel';
+import { DashboardStatCard } from '@features/dashboard/ui/dashboard-stat-card/dashboard-stat-card';
+import { DashboardChart } from '@features/dashboard/ui/dashboard-chart/dashboard-chart';
+import type { ExportData } from '@shared/components/data-export/data-export';
+import { DataExport } from '@shared/components/data-export/data-export';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
 
-import { ReportsService } from '../../../../core/services/reports';
-import { UserService } from '../../../../core/services/user';
-import { Branch } from '../../../../shared/models/user';
-import { DashboardStatCardDto } from '../../../../shared/models/dashboard';
-import {
+import { ReportsService } from '@features/reports/data-access/reports';
+import { UserService } from '@features/users/data-access/user';
+import type { Branch } from '@features/users/domain/user';
+import type { DashboardStatCardDto } from '@features/dashboard/domain/dashboard';
+import type {
   ReportBreakdownDto,
   ReportKpiDto,
   ReportSeriesPointDto,
-  ReportTopRowDto,
   SalesReportDto,
-} from '../../../../shared/models/reports';
+} from '@features/reports/domain/reports';
 
 /**
  * Sales report (Reportes / Ventas). Surfaces KPI tiles, a daily-sales
@@ -33,6 +34,7 @@ import {
  * and a top-products table.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-sales-report',
   imports: [
     AppPageHeader,

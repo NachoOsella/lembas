@@ -1,18 +1,19 @@
-import { ChangeDetectionStrategy, Component, OnInit, effect, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { CatalogService } from '../../../core/services/catalog';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
-import { CarouselResponsiveOptions } from 'primeng/carousel';
+import { CatalogService } from '@features/catalog/data-access/catalog';
+import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import type { CarouselResponsiveOptions } from 'primeng/carousel';
 
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppCarousel } from '../../../shared/components/app-carousel/app-carousel';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { CardBanner } from '../../../shared/components/app-card-banner/app-card-banner';
-import { ProductGridSkeleton } from '../../../shared/components/product-grid-skeleton/product-grid-skeleton';
-import { StoreProductCard } from '../../../shared/components/store-product-card/store-product-card';
-import { HeroFlowers } from '../../../shared/components/hero-flowers/hero-flowers';
-import { ProductSummary } from '../../../shared/models/product';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppCarousel } from '@shared/components/app-carousel/app-carousel';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { CardBanner } from '@shared/components/app-card-banner/app-card-banner';
+import { ProductGridSkeleton } from '@features/catalog/ui/product-grid-skeleton/product-grid-skeleton';
+import { StoreProductCard } from '@features/catalog/ui/store-product-card/store-product-card';
+import { HeroFlowers } from '@features/public-store/ui/hero-flowers/hero-flowers';
+import type { ProductSummary } from '@features/catalog/domain/product';
 
 @Component({
   selector: 'app-home',

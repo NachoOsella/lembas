@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1.7
 
 # Build the Angular frontend with npm dependencies cached in a Docker layer.
-FROM node:20-alpine AS build
+FROM node:22.14.0-alpine AS build
 WORKDIR /workspace/frontend
 
 # Copy package manifests first to maximize Docker layer cache reuse without BuildKit.
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install --global npm@11.14.1 && npm ci
 
 # Copy the frontend source and build the production bundle.
 COPY frontend/ ./

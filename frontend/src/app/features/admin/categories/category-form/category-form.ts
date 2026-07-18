@@ -1,17 +1,25 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
+import { AppSelect } from '@shared/components/app-select/app-select';
 
 import { MessageService } from 'primeng/api';
-import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
-import { CategoryService } from '../../../../core/services/category';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { CategoryDto, CategoryRequest } from '../../../../shared/models/category';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
-import { AppModal } from '../../../../shared/components/app-modal/app-modal';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { FormSection } from '../../../../shared/components/form-section/form-section';
+import { getApiError } from '@shared/types/api-error';
+import { CategoryService } from '@features/catalog/data-access/category';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import type { CategoryDto, CategoryRequest } from '@features/catalog/domain/category';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { AppModal } from '@shared/components/app-modal/app-modal';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { FormSection } from '@shared/components/form-section/form-section';
 
 interface ParentOption {
   readonly label: string;
@@ -20,6 +28,7 @@ interface ParentOption {
 
 /** Modal form for creating and editing product categories with realtime validation. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-category-form',
   imports: [AppButton, AppFormField, AppModal, AppSelect, ErrorAlert, FormSection, FormsModule],
   templateUrl: './category-form.html',

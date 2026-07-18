@@ -1,17 +1,13 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
 import { PosProductSearchComponent } from './pos-product-search';
 import { PosCartStore } from '../../state/pos-cart.store';
-import {
-  PosProductSearchItem,
-  PosProductSearchService,
-} from '../../services/pos-product-search.service';
+import type { PosProductSearchItem } from '../../services/pos-product-search.service';
+import { PosProductSearchService } from '../../services/pos-product-search.service';
 
 /** Sample row returned by the backend. */
 const SAMPLE: PosProductSearchItem = {
@@ -47,6 +43,8 @@ describe('PosProductSearchComponent', () => {
         provideNoopAnimations(),
         provideHttpClient(),
         provideHttpClientTesting(),
+        PosCartStore,
+        PosProductSearchService,
       ],
     });
     await TestBed.compileComponents();
@@ -65,8 +63,7 @@ describe('PosProductSearchComponent', () => {
 
   function flushQuery(q: string, body: PosProductSearchItem[]): void {
     const req = httpMock.expectOne(
-      (r) =>
-        r.url === '/api/pos/products/search' && r.params.get('q') === q,
+      (r) => r.url === '/api/pos/products/search' && r.params.get('q') === q,
     );
     expect(req.request.params.get('q')).toBe(q);
     req.flush(body);
@@ -147,9 +144,7 @@ describe('PosProductSearchComponent', () => {
     flushQuery('zzz', []);
     fixture.detectChanges();
 
-    const empty = fixture.nativeElement.querySelector(
-      '[data-testid="empty-state"]',
-    );
+    const empty = fixture.nativeElement.querySelector('[data-testid="empty-state"]');
     expect(empty).toBeTruthy();
   });
 
@@ -162,9 +157,7 @@ describe('PosProductSearchComponent', () => {
       .flush('boom', { status: 500, statusText: 'Server Error' });
     fixture.detectChanges();
 
-    const err = fixture.nativeElement.querySelector(
-      '[data-testid="search-error"]',
-    );
+    const err = fixture.nativeElement.querySelector('[data-testid="search-error"]');
     expect(err).toBeTruthy();
   });
 
@@ -173,9 +166,7 @@ describe('PosProductSearchComponent', () => {
     typeInInput('750123');
     fixture.detectChanges();
 
-    const hint = fixture.nativeElement.querySelector(
-      '[data-testid="barcode-mode"]',
-    );
+    const hint = fixture.nativeElement.querySelector('[data-testid="barcode-mode"]');
     expect(hint).toBeTruthy();
   });
 
@@ -184,9 +175,7 @@ describe('PosProductSearchComponent', () => {
     typeInInput('12345');
     fixture.detectChanges();
 
-    const hint = fixture.nativeElement.querySelector(
-      '[data-testid="barcode-mode"]',
-    );
+    const hint = fixture.nativeElement.querySelector('[data-testid="barcode-mode"]');
     expect(hint).toBeFalsy();
   });
 
@@ -231,9 +220,32 @@ describe('PosProductSearchComponent', () => {
     typeInInput('ace');
 
     component.onEnter();
+    await new Promise((resolve) => setTimeout(resolve, 0));
     flushQuery('ace', [SAMPLE]);
     fixture.detectChanges();
 
     expect(component.results()).toHaveLength(1);
+  });
+
+  it('keeps only the latest search response when requests overlap', async () => {
+    await createComponent();
+    typeInInput('ace');
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    const firstRequest = httpMock.expectOne(
+      (request) => request.url === '/api/pos/products/search' && request.params.get('q') === 'ace',
+    );
+
+    typeInInput('yerba');
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    const secondRequest = httpMock.expectOne(
+      (request) =>
+        request.url === '/api/pos/products/search' && request.params.get('q') === 'yerba',
+    );
+    secondRequest.flush([OUT_OF_STOCK]);
+    fixture.detectChanges();
+
+    expect(component.results()).toEqual([OUT_OF_STOCK]);
+    expect(firstRequest.cancelled).toBe(true);
+    expect(component.results()).toEqual([OUT_OF_STOCK]);
   });
 });

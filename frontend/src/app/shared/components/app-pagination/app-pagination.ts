@@ -1,7 +1,8 @@
-import { Component, computed, input, model, output } from '@angular/core';
+import { Component, computed, input, model, output, ChangeDetectionStrategy } from '@angular/core';
 import { Paginator } from 'primeng/paginator';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-pagination',
   imports: [Paginator],
   templateUrl: './app-pagination.html',

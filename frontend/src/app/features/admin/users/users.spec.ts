@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
@@ -7,8 +8,8 @@ import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import { Users } from './users';
-import { UserService } from '../../../core/services/user';
-import { Branch, Page, UserResponse } from '../../../shared/models/user';
+import { UserService } from '@features/users/data-access/user';
+import type { Branch, Page, UserResponse } from '@features/users/domain/user';
 
 /** Sample branches for testing. */
 const SAMPLE_BRANCHES: Branch[] = [

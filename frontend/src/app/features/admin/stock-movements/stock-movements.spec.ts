@@ -1,10 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import { InventoryService } from '../../../core/services/inventory';
-import { UserService } from '../../../core/services/user';
+import { InventoryService } from '@features/inventory/data-access/inventory';
+import { UserService } from '@features/users/data-access/user';
 import { StockMovements } from './stock-movements';
 
 const MOVEMENTS_PAGE = {

@@ -1,9 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 
-import { CategoryService } from '../../../../core/services/category';
+import { CategoryService } from '@features/catalog/data-access/category';
 import { CategoryForm } from './category-form';
 
 /** Tests the category form creation and edition behaviour. */

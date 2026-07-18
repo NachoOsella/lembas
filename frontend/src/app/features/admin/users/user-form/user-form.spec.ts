@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
@@ -8,8 +9,8 @@ import { of, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import { UserForm } from './user-form';
-import { UserService } from '../../../../core/services/user';
-import { Branch, UserResponse } from '../../../../shared/models/user';
+import { UserService } from '@features/users/data-access/user';
+import type { Branch, UserResponse } from '@features/users/domain/user';
 
 /** Builds a fake user response for testing. */
 function buildUser(overrides: Partial<UserResponse> = {}): UserResponse {
@@ -346,7 +347,11 @@ describe('UserForm', () => {
     it('should show dialog error on duplicate email', () => {
       const errorResponse = new HttpErrorResponse({
         status: 409,
-        error: { code: 'EMAIL_DUPLICATED', message: 'A user with this email already exists' },
+        error: {
+          status: 409,
+          code: 'EMAIL_DUPLICATED',
+          message: 'A user with this email already exists',
+        },
       });
       svc['createUser'].mockReturnValue(throwError(() => errorResponse));
 
@@ -454,7 +459,11 @@ describe('UserForm', () => {
     it('should show dialog error on update failure', () => {
       const errorResponse = new HttpErrorResponse({
         status: 409,
-        error: { code: 'EMAIL_DUPLICATED', message: 'duplicate' },
+        error: {
+          status: 409,
+          code: 'EMAIL_DUPLICATED',
+          message: 'A user with this email already exists',
+        },
       });
       svc['updateUser'].mockReturnValue(throwError(() => errorResponse));
 

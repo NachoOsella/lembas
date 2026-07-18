@@ -28,7 +28,6 @@ describe('DataExport', () => {
     });
 
     it('treats null as an empty string', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(escapeCsv(null as any)).toBe('');
     });
   });
@@ -83,11 +82,7 @@ describe('DataExport', () => {
   describe('component', () => {
     it('renders a button and disables it when there are no rows', async () => {
       await TestBed.configureTestingModule({
-        providers: [
-          provideHttpClient(),
-          provideHttpClientTesting(),
-          MessageService,
-        ],
+        providers: [provideHttpClient(), provideHttpClientTesting(), MessageService],
       }).compileComponents();
 
       const fixture = TestBed.createComponent(DataExport);

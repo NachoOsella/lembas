@@ -1,15 +1,18 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { InventoryService } from '../../../core/services/inventory';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { getApiError } from '../../../shared/models/api-error';
-import { StockLotDto } from '../../../shared/models/inventory';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { StatusBadge, StatusBadgeConfig } from '../../../shared/components/status-badge/status-badge';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
+import { InventoryService } from '@features/inventory/data-access/inventory';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import type { StockLotDto } from '@features/inventory/domain/inventory';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import type { StatusBadgeConfig } from '@shared/components/status-badge/status-badge';
+import { StatusBadge } from '@shared/components/status-badge/status-badge';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 
 const STOCK_LOT_STATUS_BADGES: Record<string, StatusBadgeConfig> = {
   ACTIVE: { label: 'Activo', tone: 'success', icon: 'pi pi-check-circle' },
@@ -19,14 +22,9 @@ const STOCK_LOT_STATUS_BADGES: Record<string, StatusBadgeConfig> = {
 
 /** Displays all individual lots for a given product in a branch, with pagination. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-stock-lot-detail',
-  imports: [
-    AppButton,
-    AppDataTable,
-    AppPageHeader,
-    ErrorAlert,
-    StatusBadge,
-  ],
+  imports: [AppButton, AppDataTable, AppPageHeader, ErrorAlert, StatusBadge],
   templateUrl: './stock-lot-detail.html',
   styleUrl: './stock-lot-detail.css',
 })
@@ -125,7 +123,10 @@ export class StockLotDetail implements OnInit {
   // ---------------------------------------------------------------------------
 
   protected formatQuantity(value: number): string {
-    return Number(value).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+    return Number(value).toLocaleString('es-AR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 3,
+    });
   }
 
   protected formatPrice(value: number): string {
@@ -143,6 +144,6 @@ export class StockLotDetail implements OnInit {
 
   private messageForError(error: unknown, fallback: string): string {
     const apiError = getApiError(error);
-    return apiError ? this.errorMapping.getMessage(apiError.code, apiError.message) : fallback;
+    return apiError ? this.errorMapping.getMessage(apiError.code) : fallback;
   }
 }

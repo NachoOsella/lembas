@@ -1,27 +1,28 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 
-import { CashService } from '../../../../core/services/cash';
-import { AuthService } from '../../../../core/services/auth';
-import { UserService } from '../../../../core/services/user';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { getApiError } from '../../../../shared/models/api-error';
-import { Branch } from '../../../../shared/models/user';
-import { OpenCashSessionRequest } from '../../../../shared/models/cash-session';
+import { CashService } from '@features/cash/data-access/cash';
+import { AuthService } from '@core/services/auth';
+import { UserService } from '@features/users/data-access/user';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import type { Branch } from '@features/users/domain/user';
+import type { OpenCashSessionRequest } from '@features/cash/domain/cash-session';
 
-import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppControlField } from '../../../../shared/components/app-control-field/app-control-field';
-import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
-import { AppInputNumber } from '../../../../shared/components/app-input-number/app-input-number';
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
-import { AppToast } from '../../../../shared/components/app-toast/app-toast';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
-import { FormSection } from '../../../../shared/components/form-section/form-section';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppControlField } from '@shared/components/app-control-field/app-control-field';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { AppInputNumber } from '@shared/components/app-input-number/app-input-number';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import { FormSection } from '@shared/components/form-section/form-section';
 
 interface BranchOption {
   readonly label: string;
@@ -40,6 +41,7 @@ interface BranchOption {
  * On a successful open it redirects to the new cash detail (subtask 10).
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-cash-open',
   imports: [
     AppBadge,
@@ -254,6 +256,6 @@ export class CashOpen implements OnInit {
     if (apiError.code === 'VALIDATION_ERROR') {
       return this.errorMapping.formatValidationErrors(apiError);
     }
-    return this.errorMapping.getMessage(apiError.code, apiError.message);
+    return this.errorMapping.getMessage(apiError.code);
   }
 }

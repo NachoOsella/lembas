@@ -1,34 +1,33 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
-import { CashService } from '../../../../core/services/cash';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { getApiError } from '../../../../shared/models/api-error';
-import {
+import { CashService } from '@features/cash/data-access/cash';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import type {
   CashCloseRequestPayload,
   CashEntryDto,
   CashSessionDto,
   CashTotalsByMethod,
-} from '../../../../shared/models/cash-session';
+} from '@features/cash/domain/cash-session';
 
-import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppControlField } from '../../../../shared/components/app-control-field/app-control-field';
-import { AppDataTable } from '../../../../shared/components/app-data-table/app-data-table';
-import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
-import { AppInputNumber } from '../../../../shared/components/app-input-number/app-input-number';
-import { AppModal } from '../../../../shared/components/app-modal/app-modal';
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import {
-  AppMetricItem,
-  AppStatCard,
-} from '../../../../shared/components/app-stat-card/app-stat-card';
-import { AppToast } from '../../../../shared/components/app-toast/app-toast';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { FormSection } from '../../../../shared/components/form-section/form-section';
-import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppControlField } from '@shared/components/app-control-field/app-control-field';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { AppInputNumber } from '@shared/components/app-input-number/app-input-number';
+import { AppModal } from '@shared/components/app-modal/app-modal';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import type { AppMetricItem } from '@shared/components/app-stat-card/app-stat-card';
+import { AppStatCard } from '@shared/components/app-stat-card/app-stat-card';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { FormSection } from '@shared/components/form-section/form-section';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
 import {
   CASH_ENTRY_COLUMNS,
   cashEntryAmountModifier,
@@ -39,7 +38,7 @@ import {
   cashEntrySign,
   cashEntryTypeTone,
 } from '../shared/cash-entry-display';
-import { SeverityPill } from '../../../../shared/components/severity-pill/severity-pill';
+import { SeverityPill } from '@shared/components/severity-pill/severity-pill';
 
 const ARS_CURRENCY = new Intl.NumberFormat('es-AR', {
   style: 'currency',
@@ -58,6 +57,7 @@ const ARS_CURRENCY = new Intl.NumberFormat('es-AR', {
  * final al cerrar la sesión.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-cash-close',
   imports: [
     AppBadge,
@@ -124,9 +124,7 @@ export class CashClose implements OnInit {
     return round2(counted - this.expectedCash());
   });
 
-  protected readonly isDifferenceNonZero = computed(
-    () => round2(this.difference()) !== 0,
-  );
+  protected readonly isDifferenceNonZero = computed(() => round2(this.difference()) !== 0);
 
   protected readonly isReasonInvalid = computed(
     () => this.isDifferenceNonZero() && this.cashDifferenceReason().trim() === '',
@@ -287,8 +285,7 @@ export class CashClose implements OnInit {
     const request: CashCloseRequestPayload = {
       countedCashAmount: counted.toFixed(2),
       closingNotes: this.closingNotes().trim() || null,
-      cashDifferenceReason:
-        this.isDifferenceNonZero() ? this.cashDifferenceReason().trim() : null,
+      cashDifferenceReason: this.isDifferenceNonZero() ? this.cashDifferenceReason().trim() : null,
     };
 
     this.saving.set(true);
@@ -371,10 +368,7 @@ export class CashClose implements OnInit {
   private totalPaymentsAmount(): number {
     const totals = this.totalsByMethod();
     if (totals) {
-      return Object.values(totals.paymentsByMethod).reduce(
-        (sum, value) => sum + Number(value),
-        0,
-      );
+      return Object.values(totals.paymentsByMethod).reduce((sum, value) => sum + Number(value), 0);
     }
     return this.entries()
       .filter((entry) => entry.kind === 'PAYMENT')
@@ -462,7 +456,7 @@ export class CashClose implements OnInit {
     if (apiError.code === 'VALIDATION_ERROR') {
       return this.errorMapping.formatValidationErrors(apiError);
     }
-    return this.errorMapping.getMessage(apiError.code, apiError.message);
+    return this.errorMapping.getMessage(apiError.code);
   }
 
   /** Formats a number as ARS currency (es-AR locale), no decimals. */

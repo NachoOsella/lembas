@@ -62,7 +62,9 @@
         <span class="stock-entry__section-badge">2</span>
         <div>
           <h2 class="stock-entry__section-title">Items recibidos</h2>
-          <p class="stock-entry__section-desc">Carga solo las cantidades que llegaron. Los renglones con cantidad 0 no generan lotes.</p>
+          <p class="stock-entry__section-desc">
+            Carga solo las cantidades que llegaron. Los renglones con cantidad 0 no generan lotes.
+          </p>
         </div>
       </div>
 
@@ -91,7 +93,9 @@
                 <small class="stock-entry__muted">Codigo {{ row.productBarcode }}</small>
               }
             </td>
-            <td [style.width]="columns[1]?.width" class="stock-entry__cell--numeric">{{ row.orderedQuantity }}</td>
+            <td [style.width]="columns[1]?.width" class="stock-entry__cell--numeric">
+              {{ row.orderedQuantity }}
+            </td>
             <td [style.width]="columns[2]?.width">
               <div class="stock-entry__cell-control">
                 <app-input-number
@@ -146,7 +150,9 @@
       </app-data-table>
 
       @if (submitted() && !hasReceivableRows()) {
-        <small class="stock-entry__error">Ingresa al menos una cantidad recibida mayor a cero.</small>
+        <small class="stock-entry__error"
+          >Ingresa al menos una cantidad recibida mayor a cero.</small
+        >
       }
 
       <div class="stock-entry__actions">

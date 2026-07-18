@@ -1,34 +1,36 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
-import { AppDatePicker } from '../../../shared/components/app-date-picker/app-date-picker';
-import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
+import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
+import { AppInputNumber } from '@shared/components/app-input-number/app-input-number';
 
-import { AuthService } from '../../../core/services/auth';
-import { InventoryService } from '../../../core/services/inventory';
-import { ProductService } from '../../../core/services/product';
-import { UserService } from '../../../core/services/user';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { getApiError } from '../../../shared/models/api-error';
-import { StockProductSummaryDto } from '../../../shared/models/inventory';
-import { ProductSummary } from '../../../shared/models/product';
-import { Branch } from '../../../shared/models/user';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppModal } from '../../../shared/components/app-modal/app-modal';
-import { AppControlField } from '../../../shared/components/app-control-field/app-control-field';
-import { AppFormField } from '../../../shared/components/app-form-field/app-form-field';
-import { AppProductSelector } from '../../../shared/components/app-product-selector/app-product-selector';
-import { AppSearchBar } from '../../../shared/components/app-search-bar/app-search-bar';
-import { AppSelect } from '../../../shared/components/app-select/app-select';
-import { AppToggleSwitch } from '../../../shared/components/app-toggle-switch/app-toggle-switch';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { FormSection } from '../../../shared/components/form-section/form-section';
+import { AuthService } from '@core/services/auth';
+import { InventoryService } from '@features/inventory/data-access/inventory';
+import { ProductService } from '@features/catalog/data-access/product';
+import { UserService } from '@features/users/data-access/user';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import type { StockProductSummaryDto } from '@features/inventory/domain/inventory';
+import type { ProductSummary } from '@features/catalog/domain/product';
+import type { Branch } from '@features/users/domain/user';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppModal } from '@shared/components/app-modal/app-modal';
+import { AppControlField } from '@shared/components/app-control-field/app-control-field';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { AppProductSelector } from '@features/catalog/ui/app-product-selector/app-product-selector';
+import { AppSearchBar } from '@shared/components/app-search-bar/app-search-bar';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { AppToggleSwitch } from '@shared/components/app-toggle-switch/app-toggle-switch';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { FormSection } from '@shared/components/form-section/form-section';
 
 /** Admin page showing aggregated stock per product and branch. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-inventory',
   imports: [
     AppButton,
@@ -380,8 +382,7 @@ export class Inventory {
     return (
       this.adjSelectedProduct() !== null &&
       this.adjSelectedBranchId() !== null &&
-      this.adjQuantity() !== null &&
-      this.adjQuantity()! > 0 &&
+      (this.adjQuantity() ?? 0) > 0 &&
       this.adjReason().trim().length > 0
     );
   }
@@ -462,7 +463,7 @@ export class Inventory {
 
   private messageForError(error: unknown, fallback: string): string {
     const apiError = getApiError(error);
-    return apiError ? this.errorMapping.getMessage(apiError.code, apiError.message) : fallback;
+    return apiError ? this.errorMapping.getMessage(apiError.code) : fallback;
   }
 
   private blankToNull(value: string): string | null {

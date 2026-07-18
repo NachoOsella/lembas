@@ -1,8 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
 import { PosCheckoutResultDialogComponent } from './pos-checkout-result-dialog';
-import { OrderDetail, OrderItem, PaymentSummary } from '../../../../../shared/models/order';
+import type { OrderDetail, OrderItem, PaymentSummary } from '@features/orders/domain/order';
 
 /** Builds a minimal OrderDetail for the receipt. */
 function buildOrder(overrides: Partial<OrderDetail> = {}): OrderDetail {
@@ -24,14 +25,37 @@ function buildOrder(overrides: Partial<OrderDetail> = {}): OrderDetail {
     notes: null,
     cancellationReason: null,
     items: [
-      { id: 1, productId: 100, productName: 'Aceite', productBarcode: '7501',
-        quantity: 1, unitPrice: 500, discountAmount: 0, subtotalAmount: 500 } as OrderItem,
-      { id: 2, productId: 101, productName: 'Yerba', productBarcode: '7790',
-        quantity: 1, unitPrice: 500, discountAmount: 0, subtotalAmount: 500 } as OrderItem,
+      {
+        id: 1,
+        productId: 100,
+        productName: 'Aceite',
+        productBarcode: '7501',
+        quantity: 1,
+        unitPrice: 500,
+        discountAmount: 0,
+        subtotalAmount: 500,
+      } as OrderItem,
+      {
+        id: 2,
+        productId: 101,
+        productName: 'Yerba',
+        productBarcode: '7790',
+        quantity: 1,
+        unitPrice: 500,
+        discountAmount: 0,
+        subtotalAmount: 500,
+      } as OrderItem,
     ],
     payments: [
-      { id: 1, provider: 'MANUAL', method: 'CASH', status: 'APPROVED',
-        amount: 1000, approvedAt: null, createdAt: '' } as PaymentSummary,
+      {
+        id: 1,
+        provider: 'MANUAL',
+        method: 'CASH',
+        status: 'APPROVED',
+        amount: 1000,
+        approvedAt: null,
+        createdAt: '',
+      } as PaymentSummary,
     ],
     paidAt: null,
     preparedAt: null,
@@ -92,16 +116,20 @@ describe('PosCheckoutResultDialogComponent', () => {
   });
 
   it('truncates the items list to 5 with a +N indicator', async () => {
-    const manyItems: OrderItem[] = Array.from({ length: 7 }, (_, i) => ({
-      id: i + 1,
-      productId: 100 + i,
-      productName: 'Item ' + (i + 1),
-      productBarcode: 'BC' + i,
-      quantity: 1,
-      unitPrice: 100,
-      discountAmount: 0,
-      subtotalAmount: 100,
-    } as OrderItem));
+    const manyItems: OrderItem[] = Array.from(
+      { length: 7 },
+      (_, i) =>
+        ({
+          id: i + 1,
+          productId: 100 + i,
+          productName: 'Item ' + (i + 1),
+          productBarcode: 'BC' + i,
+          quantity: 1,
+          unitPrice: 100,
+          discountAmount: 0,
+          subtotalAmount: 100,
+        }) as OrderItem,
+    );
     const order = buildOrder({ items: manyItems, total: 700 });
     await createComponent(order);
 

@@ -7,7 +7,7 @@ import {
   computed,
 } from '@angular/core';
 
-import { PosProductSearchItem } from '../../services/pos-product-search.service';
+import type { PosProductSearchItem } from '../../services/pos-product-search.service';
 
 /** Visual state for the stock badge. */
 type StockState = 'ok' | 'out' | 'unknown';

@@ -1,15 +1,23 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { CustomerOrderService } from '../../../core/services/customer-order';
-import { ShortDateArPipe } from '../../../core/pipes/short-date-ar.pipe';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { OrderDetail, OrderStatus } from '../../../shared/models/order';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
+import { CustomerOrderService } from '@features/orders/data-access/customer-order';
+import { ShortDateArPipe } from '@core/pipes/short-date-ar.pipe';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import type { OrderDetail, OrderStatus } from '@features/orders/domain/order';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
 
 /** Phase reported by the callback page after the polling loop. */
 type CallbackPhase = 'loading' | 'pending' | 'success' | 'failure' | 'stock_conflict' | 'error';
@@ -27,6 +35,7 @@ const PENDING_ORDER_KEY = 'pendingOrderId';
  * for the final status.</p>
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-payment-callback',
   imports: [AppButton, AppEyebrow, ErrorAlert, LoadingSpinner, ShortDateArPipe],
   templateUrl: './payment-callback.html',
@@ -68,11 +77,12 @@ export class PaymentCallback implements OnInit {
     // triggered after the user already consumed the redirect still work.
     const fromQuery = Number(this.route.snapshot.queryParamMap.get('orderId'));
     const fromSession = Number(sessionStorage.getItem(PENDING_ORDER_KEY));
-    const orderId = Number.isFinite(fromQuery) && fromQuery > 0
+    const orderId =
+      Number.isFinite(fromQuery) && fromQuery > 0
         ? fromQuery
         : Number.isFinite(fromSession) && fromSession > 0
-            ? fromSession
-            : NaN;
+          ? fromSession
+          : NaN;
     sessionStorage.removeItem(PENDING_ORDER_KEY);
     if (!Number.isFinite(orderId)) {
       this.phase.set('error');
@@ -85,7 +95,8 @@ export class PaymentCallback implements OnInit {
   /** Polls the order detail until it reaches a terminal status or the budget is exhausted. */
   private pollOrder(orderId: number, attempt: number): void {
     this.attempts.set(attempt);
-    this.orderService.getOrder(orderId)
+    this.orderService
+      .getOrder(orderId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (order) => {

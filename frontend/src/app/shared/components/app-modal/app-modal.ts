@@ -1,7 +1,15 @@
-import { Component, ViewEncapsulation, input, model, output } from '@angular/core';
+import {
+  Component,
+  ViewEncapsulation,
+  input,
+  model,
+  output,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { Dialog } from 'primeng/dialog';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-modal',
   host: { class: 'app-modal-host' },
   imports: [Dialog],

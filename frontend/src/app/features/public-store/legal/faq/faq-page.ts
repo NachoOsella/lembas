@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { PanelModule } from 'primeng/panel';
 
-import { LegalContentService } from '../../../../core/services/legal-content';
-import { FaqDocument, FaqItem } from '../../../../shared/models/legal-content';
-import { AppEyebrow } from '../../../../shared/components/app-eyebrow/app-eyebrow';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { LegalContentService } from '@features/catalog/data-access/legal-content';
+import type { FaqDocument, FaqItem } from '@features/catalog/domain/legal-content';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
 
 /**
  * Easing curve mandated by the Lembas design system for expanders/accordions.

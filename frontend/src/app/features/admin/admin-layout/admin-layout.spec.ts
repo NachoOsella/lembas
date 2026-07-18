@@ -1,12 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { signal, WritableSignal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
+import { signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 
 import { AdminLayout } from './admin-layout';
-import { AuthService, AuthUser } from '../../../core/services/auth';
-import { CashService } from '../../../core/services/cash';
+import type { AuthUser } from '@core/services/auth';
+import { AuthService } from '@core/services/auth';
+import { CashService } from '@features/cash/data-access/cash';
 
 describe('AdminLayout', () => {
   let component: AdminLayout;

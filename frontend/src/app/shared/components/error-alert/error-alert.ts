@@ -1,8 +1,9 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-error-alert',
   imports: [Button, Message],
   templateUrl: './error-alert.html',

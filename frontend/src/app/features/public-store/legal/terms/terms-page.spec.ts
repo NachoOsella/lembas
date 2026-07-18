@@ -1,9 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
-import { LegalContentService } from '../../../../core/services/legal-content';
-import { TermsDocument } from '../../../../shared/models/legal-content';
+import { LegalContentService } from '@features/catalog/data-access/legal-content';
+import type { TermsDocument } from '@features/catalog/domain/legal-content';
 import { TermsPage } from './terms-page';
 
 /** Builds a populated terms document used by the tests. */
@@ -46,10 +47,7 @@ describe('TermsPage', () => {
 
     await TestBed.configureTestingModule({
       imports: [TermsPage],
-      providers: [
-        provideRouter([]),
-        { provide: LegalContentService, useValue: legalContent },
-      ],
+      providers: [provideRouter([]), { provide: LegalContentService, useValue: legalContent }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TermsPage);
@@ -116,10 +114,7 @@ describe('TermsPage', () => {
 
     await TestBed.configureTestingModule({
       imports: [TermsPage],
-      providers: [
-        provideRouter([]),
-        { provide: LegalContentService, useValue: legalContent },
-      ],
+      providers: [provideRouter([]), { provide: LegalContentService, useValue: legalContent }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TermsPage);

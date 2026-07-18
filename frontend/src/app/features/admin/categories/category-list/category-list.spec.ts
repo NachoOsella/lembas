@@ -1,12 +1,13 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
 
-import { CategoryService } from '../../../../core/services/category';
+import { CategoryService } from '@features/catalog/data-access/category';
 import { CategoryList } from './category-list';
-import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
+import { AppSearchBar } from '@shared/components/app-search-bar/app-search-bar';
 
 /** Tests the admin category table states and destructive action flow. */
 describe('CategoryList', () => {
@@ -99,7 +100,11 @@ describe('CategoryList', () => {
       throwError(
         () =>
           new HttpErrorResponse({
-            error: { code: 'CATEGORY_HAS_CHILDREN' },
+            error: {
+              status: 409,
+              code: 'CATEGORY_HAS_CHILDREN',
+              message: 'Category has children.',
+            },
             status: 409,
             statusText: 'Conflict',
           }),
@@ -130,7 +135,11 @@ describe('CategoryList', () => {
       throwError(
         () =>
           new HttpErrorResponse({
-            error: { code: 'CATEGORY_HAS_PRODUCTS' },
+            error: {
+              status: 409,
+              code: 'CATEGORY_HAS_PRODUCTS',
+              message: 'Category has products.',
+            },
             status: 409,
             statusText: 'Conflict',
           }),

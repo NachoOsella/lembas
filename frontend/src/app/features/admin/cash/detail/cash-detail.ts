@@ -1,32 +1,31 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 
-import { CashService } from '../../../../core/services/cash';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { getApiError } from '../../../../shared/models/api-error';
-import {
+import { CashService } from '@features/cash/data-access/cash';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import type {
   CashSessionDto,
   CashEntryDto,
   CashSessionStatus,
-} from '../../../../shared/models/cash-session';
+} from '@features/cash/domain/cash-session';
 
-import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppDataTable } from '../../../../shared/components/app-data-table/app-data-table';
-import { AppModal } from '../../../../shared/components/app-modal/app-modal';
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { AppSectionCard } from '../../../../shared/components/app-section-card/app-section-card';
-import {
-  AppStatCard,
-  AppMetricItem,
-} from '../../../../shared/components/app-stat-card/app-stat-card';
-import { AppToast } from '../../../../shared/components/app-toast/app-toast';
-import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppModal } from '@shared/components/app-modal/app-modal';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppSectionCard } from '@shared/components/app-section-card/app-section-card';
+import type { AppMetricItem } from '@shared/components/app-stat-card/app-stat-card';
+import { AppStatCard } from '@shared/components/app-stat-card/app-stat-card';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
 import { MovementForm } from '../movement-form/movement-form';
-import { SeverityPill } from '../../../../shared/components/severity-pill/severity-pill';
+import { SeverityPill } from '@shared/components/severity-pill/severity-pill';
 import {
   CASH_ENTRY_COLUMNS,
   cashEntryAmountModifier,
@@ -58,6 +57,7 @@ const SESSION_STATUS_BADGES: Record<CashSessionStatus, SessionBadgeConfig> = {
  * manual-movement form for OPEN sessions.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-cash-detail',
   imports: [
     AppBadge,
@@ -228,9 +228,7 @@ export class CashDetail implements OnInit {
         this.loading.set(false);
         const apiError = getApiError(err);
         this.errorMessage.set(
-          apiError
-            ? this.errorMapping.getMessage(apiError.code, apiError.message)
-            : 'No se pudo cargar la caja.',
+          apiError ? this.errorMapping.getMessage(apiError.code) : 'No se pudo cargar la caja.',
         );
       },
     });

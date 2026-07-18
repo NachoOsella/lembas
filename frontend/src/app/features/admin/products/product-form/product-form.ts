@@ -1,27 +1,27 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { AppInputNumber } from '../../../../shared/components/app-input-number/app-input-number';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
+import { AppInputNumber } from '@shared/components/app-input-number/app-input-number';
+import { AppSelect } from '@shared/components/app-select/app-select';
 
-import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
-import { CategoryService } from '../../../../core/services/category';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { ProductService } from '../../../../core/services/product';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { FormSection } from '../../../../shared/components/form-section/form-section';
-import { Skeleton } from '../../../../shared/components/skeleton/skeleton';
-import { CategoryDto } from '../../../../shared/models/category';
-import {
+import { getApiError } from '@shared/types/api-error';
+import { CategoryService } from '@features/catalog/data-access/category';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { ProductService } from '@features/catalog/data-access/product';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { FormSection } from '@shared/components/form-section/form-section';
+import { Skeleton } from '@shared/components/skeleton/skeleton';
+import type { CategoryDto } from '@features/catalog/domain/category';
+import type {
   ProductDetail,
   ProductOnlineStatus,
   ProductRequest,
-} from '../../../../shared/models/product';
-import { PRODUCT_STATUS_ACTIONS } from '../../../../shared/models/product-status';
+} from '@features/catalog/domain/product';
+import { PRODUCT_STATUS_ACTIONS } from '@features/catalog/presentation/product-status';
 
 interface Option<T> {
   readonly label: string;
@@ -30,6 +30,7 @@ interface Option<T> {
 
 /** Create and edit form for admin catalog products with local image preview. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-product-form',
   imports: [
     AppButton,
@@ -218,12 +219,17 @@ export class ProductForm {
 
   /** Converts signal state to the backend request contract. */
   private toRequest(): ProductRequest {
+    const categoryId = this.categoryId();
+    if (categoryId === null) {
+      throw new Error('Category must be selected before building a product request');
+    }
+
     return {
       name: this.name().trim(),
       description: this.description().trim() || undefined,
       brandName: this.brandName().trim() || undefined,
       barcode: this.barcode().trim() || undefined,
-      categoryId: this.categoryId()!,
+      categoryId,
       salePrice: Number(this.salePrice()),
       minimumStock: this.minimumStock() ?? undefined,
       imageUrl: this.imageUrl().trim() || undefined,

@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { AppButton } from './app-button';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AppButton],
   template: '<app-button routerLink="/auth/login">Ingresar</app-button>',
 })

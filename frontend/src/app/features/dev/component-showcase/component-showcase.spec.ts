@@ -1,5 +1,6 @@
 import { provideRouter } from '@angular/router';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 
 import { ComponentShowcase } from './component-showcase';

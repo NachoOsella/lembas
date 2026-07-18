@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
@@ -6,13 +7,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { describe, it, expect, vi } from 'vitest';
 
 import { MovementForm } from './movement-form';
-import { CashService } from '../../../../core/services/cash';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import {
+import { CashService } from '@features/cash/data-access/cash';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import type {
   CashMovementDto,
   CashMovementMethod,
   CashMovementType,
-} from '../../../../shared/models/cash-session';
+} from '@features/cash/domain/cash-session';
 
 describe('MovementForm', () => {
   let fixture: ComponentFixture<MovementForm>;
@@ -121,7 +122,11 @@ describe('MovementForm', () => {
     createComponent();
     const error = new HttpErrorResponse({
       status: 400,
-      error: { code: 'CASH_MOVEMENT_CLOSED_SESSION', status: 400 },
+      error: {
+        status: 400,
+        code: 'CASH_MOVEMENT_CLOSED_SESSION',
+        message: 'The cash session is closed.',
+      },
     });
     cashService.addMovement.mockReturnValue(throwError(() => error));
 

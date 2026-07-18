@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { ErrorMappingService } from './error-mapping';
-import { ApiErrorResponse } from '../../shared/models/api-error';
+import type { ApiErrorResponse } from '@shared/types/api-error';
 
 describe('ErrorMappingService', () => {
   let service: ErrorMappingService;

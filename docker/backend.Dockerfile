@@ -12,9 +12,9 @@ RUN chmod +x ./mvnw
 # Download dependencies in a Docker layer so rebuilds can reuse Maven artifacts without BuildKit.
 RUN ./mvnw -B dependency:go-offline
 
-# Copy source after dependency resolution so code changes do not invalidate dependency cache.
+# CI runs the ratcheted Spotless check with Git history. Image packaging only needs to compile and package.
 COPY backend/src ./src
-RUN ./mvnw -B package -DskipTests
+RUN ./mvnw -B package -DskipTests -Dspotless.check.skip=true
 
 # Run the packaged application with a smaller JRE image and a non-root user.
 FROM eclipse-temurin:21-jre-alpine AS runtime

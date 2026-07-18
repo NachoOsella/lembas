@@ -1,37 +1,30 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
-import { AdminOrderService, CancelOrderRequest } from '../../../core/services/admin-order';
-import { UserService } from '../../../core/services/user';
-import { AuthService } from '../../../core/services/auth';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { getApiError } from '../../../shared/models/api-error';
-import {
-  OrderStatus,
-  OrderSummary,
-  OrderType,
-  orderStatusLabel,
-  orderStatusSeverity,
-} from '../../../shared/models/order';
-import { Branch } from '../../../shared/models/user';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
-import { AppInput } from '../../../shared/components/app-input/app-input';
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppSelect } from '../../../shared/components/app-select/app-select';
-import { AppDatePicker } from '../../../shared/components/app-date-picker/app-date-picker';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import {
-  StatusBadge,
-  StatusBadgeConfig,
-} from '../../../shared/components/status-badge/status-badge';
-import {
-  ConfirmDialog,
-  ConfirmDialogMode,
-} from '../../../shared/components/confirm-dialog/confirm-dialog';
-import { CurrencyArPipe } from '../../../core/pipes/currency-ar.pipe';
-import { ShortDateArPipe } from '../../../core/pipes/short-date-ar.pipe';
+import type { CancelOrderRequest } from '@features/orders/data-access/admin-order';
+import { AdminOrderService } from '@features/orders/data-access/admin-order';
+import { UserService } from '@features/users/data-access/user';
+import { AuthService } from '@core/services/auth';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import type { OrderStatus, OrderSummary, OrderType } from '@features/orders/domain/order';
+import { orderStatusLabel, orderStatusSeverity } from '@features/orders/domain/order';
+import type { Branch } from '@features/users/domain/user';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppInput } from '@shared/components/app-input/app-input';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import type { StatusBadgeConfig } from '@shared/components/status-badge/status-badge';
+import { StatusBadge } from '@shared/components/status-badge/status-badge';
+import type { ConfirmDialogMode } from '@shared/components/confirm-dialog/confirm-dialog';
+import { ConfirmDialog } from '@shared/components/confirm-dialog/confirm-dialog';
+import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
+import { ShortDateArPipe } from '@core/pipes/short-date-ar.pipe';
 
 // ----------------------------------------------------------------
 // Badge config
@@ -118,6 +111,7 @@ const NON_CANCELLABLE_STATUSES: ReadonlySet<OrderStatus> = new Set<OrderStatus>(
 ]);
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-orders',
   imports: [
     AppButton,
@@ -394,7 +388,7 @@ export class Orders {
         this.pendingOrderId.set(null);
         const apiError = getApiError(err);
         const detail = apiError
-          ? this.errorMapping.getMessage(apiError.code, apiError.message)
+          ? this.errorMapping.getMessage(apiError.code)
           : 'No se pudo completar la accion.';
         this.messageService.add({
           severity: 'error',
@@ -439,7 +433,7 @@ export class Orders {
         this.cancelReason.set('');
         const apiError = getApiError(err);
         const detail = apiError
-          ? this.errorMapping.getMessage(apiError.code, apiError.message)
+          ? this.errorMapping.getMessage(apiError.code)
           : 'No se pudo cancelar el pedido.';
         this.messageService.add({
           severity: 'error',
@@ -576,6 +570,6 @@ export class Orders {
 
   private messageForError(error: unknown, fallback: string): string {
     const apiError = getApiError(error);
-    return apiError ? this.errorMapping.getMessage(apiError.code, apiError.message) : fallback;
+    return apiError ? this.errorMapping.getMessage(apiError.code) : fallback;
   }
 }

@@ -1,13 +1,14 @@
-import { Component, OnDestroy, OnInit, inject, signal, computed } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subject, filter, takeUntil } from 'rxjs';
-import { MenuItem } from 'primeng/api';
-import { AppMenu } from '../../../shared/components/app-menu/app-menu';
-import { AppButton } from '../../../shared/components/app-button/app-button';
+import type { MenuItem } from 'primeng/api';
+import { AppMenu } from '@shared/components/app-menu/app-menu';
+import { AppButton } from '@shared/components/app-button/app-button';
 
-import { AuthService } from '../../../core/services/auth';
-import { CashService } from '../../../core/services/cash';
-import { AppToast } from '../../../shared/components/app-toast/app-toast';
+import { AuthService } from '@core/services/auth';
+import { CashService } from '@features/cash/data-access/cash';
+import { AppToast } from '@shared/components/app-toast/app-toast';
 
 type StaffRole = 'ADMIN' | 'MANAGER' | 'EMPLOYEE';
 
@@ -99,6 +100,7 @@ const LABEL_MAP: Record<string, string> = {
 };
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-admin-layout',
   imports: [AppMenu, AppButton, RouterLink, RouterLinkActive, RouterOutlet, AppToast],
   templateUrl: './admin-layout.html',

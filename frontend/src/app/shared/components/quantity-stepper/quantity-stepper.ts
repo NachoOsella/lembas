@@ -1,4 +1,4 @@
-import { Component, model } from '@angular/core';
+import { Component, model, ChangeDetectionStrategy } from '@angular/core';
 
 /**
  * Reusable quantity stepper component.
@@ -13,6 +13,7 @@ import { Component, model } from '@angular/core';
  * ```
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-quantity-stepper',
   templateUrl: './quantity-stepper.html',
   styleUrl: './quantity-stepper.css',

@@ -1,13 +1,14 @@
 import { provideHttpClient } from '@angular/common/http';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PaymentCallback } from './payment-callback';
-import { CustomerOrderService } from '../../../core/services/customer-order';
-import { OrderDetail } from '../../../shared/models/order';
+import { CustomerOrderService } from '@features/orders/data-access/customer-order';
+import type { OrderDetail } from '@features/orders/domain/order';
 
 function detail(overrides: Partial<OrderDetail> = {}): OrderDetail {
   return {

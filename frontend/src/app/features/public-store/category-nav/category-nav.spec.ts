@@ -1,6 +1,7 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 
-import { StoreCategory } from '../../../shared/models/category';
+import type { StoreCategory } from '@features/catalog/domain/category';
 import { CategoryNav } from './category-nav';
 
 const CATEGORIES: StoreCategory[] = [

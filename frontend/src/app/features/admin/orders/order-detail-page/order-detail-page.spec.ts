@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
@@ -6,16 +7,16 @@ import { of, throwError } from 'rxjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { OrderDetailPage } from './order-detail-page';
-import { AdminOrderService } from '../../../../core/services/admin-order';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import {
+import { AdminOrderService } from '@features/orders/data-access/admin-order';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import type {
   OrderDetail,
   OrderStatus,
   OrderType,
   FulfillmentType,
   OrderItem,
   PaymentSummary,
-} from '../../../../shared/models/order';
+} from '@features/orders/domain/order';
 
 // ----------------------------------------------------------------
 // Test data factories
@@ -62,14 +63,40 @@ function mockOrderDetail(status: OrderStatus, overrides: Partial<OrderDetail> = 
 
 function mockItems(): OrderItem[] {
   return [
-    { id: 1, productId: 100, productName: 'Yerba Mate Organica', productBarcode: '1234567890123', quantity: 2, unitPrice: 500, discountAmount: 0, subtotalAmount: 1000 },
-    { id: 2, productId: 101, productName: 'Granola Artesanal', productBarcode: null, quantity: 1, unitPrice: 500, discountAmount: 0, subtotalAmount: 500 },
+    {
+      id: 1,
+      productId: 100,
+      productName: 'Yerba Mate Organica',
+      productBarcode: '1234567890123',
+      quantity: 2,
+      unitPrice: 500,
+      discountAmount: 0,
+      subtotalAmount: 1000,
+    },
+    {
+      id: 2,
+      productId: 101,
+      productName: 'Granola Artesanal',
+      productBarcode: null,
+      quantity: 1,
+      unitPrice: 500,
+      discountAmount: 0,
+      subtotalAmount: 500,
+    },
   ];
 }
 
 function mockPayments(): PaymentSummary[] {
   return [
-    { id: 1, provider: 'MERCADO_PAGO', method: 'CHECKOUT_PRO', status: 'APPROVED', amount: 1500, approvedAt: '2026-07-06T10:00:00Z', createdAt: '2026-07-06T09:31:00Z' },
+    {
+      id: 1,
+      provider: 'MERCADO_PAGO',
+      method: 'CHECKOUT_PRO',
+      status: 'APPROVED',
+      amount: 1500,
+      approvedAt: '2026-07-06T10:00:00Z',
+      createdAt: '2026-07-06T09:31:00Z',
+    },
   ];
 }
 
@@ -104,7 +131,10 @@ describe('OrderDetailPage', () => {
       providers: [
         provideNoopAnimations(),
         { provide: AdminOrderService, useValue: adminOrderService },
-        { provide: ErrorMappingService, useValue: { getMessage: vi.fn().mockReturnValue('Error') } },
+        {
+          provide: ErrorMappingService,
+          useValue: { getMessage: vi.fn().mockReturnValue('Error') },
+        },
         { provide: ActivatedRoute, useValue: route },
         { provide: MessageService, useValue: messageService },
       ],
@@ -137,7 +167,10 @@ describe('OrderDetailPage', () => {
     it('should show error when order not found', async () => {
       configure();
       adminOrderService.getOrder.mockReturnValue(
-        throwError(() => ({ status: 404, error: { code: 'ORDER_NOT_FOUND', message: 'Not found' } })),
+        throwError(() => ({
+          status: 404,
+          error: { code: 'ORDER_NOT_FOUND', message: 'Not found' },
+        })),
       );
       fixture.detectChanges();
       await fixture.whenStable();

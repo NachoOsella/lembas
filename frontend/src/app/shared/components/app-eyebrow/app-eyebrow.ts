@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 /**
  * Reusable eyebrow text component.
@@ -12,6 +12,7 @@ import { Component, input } from '@angular/core';
  * - `bark`: Brown Bark (#9a5b19) — for editorial / category nav modal
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-eyebrow',
   templateUrl: './app-eyebrow.html',
   styleUrl: './app-eyebrow.css',

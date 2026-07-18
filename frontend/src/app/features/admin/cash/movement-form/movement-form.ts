@@ -1,22 +1,30 @@
-import { Component, inject, input, output, signal, computed } from '@angular/core';
+import {
+  Component,
+  inject,
+  input,
+  output,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 
-import { CashService } from '../../../../core/services/cash';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { getApiError } from '../../../../shared/models/api-error';
-import {
+import { CashService } from '@features/cash/data-access/cash';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import type {
   CashMovementMethod,
   CashMovementType,
   CreateCashMovementRequest,
-} from '../../../../shared/models/cash-session';
+} from '@features/cash/domain/cash-session';
 
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppControlField } from '../../../../shared/components/app-control-field/app-control-field';
-import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
-import { AppInputNumber } from '../../../../shared/components/app-input-number/app-input-number';
-import { AppToast } from '../../../../shared/components/app-toast/app-toast';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppControlField } from '@shared/components/app-control-field/app-control-field';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { AppInputNumber } from '@shared/components/app-input-number/app-input-number';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 
 /** Visual + semantic description for a movement-type chip. */
 interface TypeOption {
@@ -73,6 +81,7 @@ const METHOD_OPTIONS: ReadonlyArray<MethodOption> = [
  * Emits {@code movementAdded} when the backend confirms the creation.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-movement-form',
   imports: [
     AppButton,
@@ -228,6 +237,6 @@ export class MovementForm {
     if (apiError.code === 'VALIDATION_ERROR') {
       return this.errorMapping.formatValidationErrors(apiError);
     }
-    return this.errorMapping.getMessage(apiError.code, apiError.message);
+    return this.errorMapping.getMessage(apiError.code);
   }
 }

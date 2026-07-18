@@ -19,7 +19,7 @@ export interface PosCartLine {
  * the upcoming US10 implementation can wire up the UI without re-plumbing
  * the state container.</p>
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class PosCartStore {
   private readonly _lines = signal<PosCartLine[]>([]);
 
@@ -28,16 +28,11 @@ export class PosCartStore {
 
   /** Sum of {@code unitPrice * quantity} across all lines. */
   readonly total = computed(() =>
-    this._lines().reduce(
-      (acc, line) => acc + line.unitPrice * line.quantity,
-      0,
-    ),
+    this._lines().reduce((acc, line) => acc + line.unitPrice * line.quantity, 0),
   );
 
   /** Total number of units across all lines. */
-  readonly itemCount = computed(() =>
-    this._lines().reduce((acc, line) => acc + line.quantity, 0),
-  );
+  readonly itemCount = computed(() => this._lines().reduce((acc, line) => acc + line.quantity, 0));
 
   /**
    * Adds an item to the cart.
@@ -47,9 +42,7 @@ export class PosCartStore {
    */
   addItem(input: { productId: number; name: string; unitPrice: number }): void {
     this._lines.update((lines) => {
-      const existingIndex = lines.findIndex(
-        (line) => line.productId === input.productId,
-      );
+      const existingIndex = lines.findIndex((line) => line.productId === input.productId);
       if (existingIndex >= 0) {
         const copy = [...lines];
         const existing = copy[existingIndex];

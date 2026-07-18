@@ -7,15 +7,11 @@ import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -23,6 +19,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Rule-based recommendation engine for the operational dashboard and the
@@ -44,6 +43,7 @@ public class RecommendationService {
 
     /** Error codes surfaced to the FE; documented in {@code docs/05-api/error-handling.md}. */
     public static final String CODE_BRANCH_NOT_FOUND = "BRANCH_NOT_FOUND";
+
     public static final String CODE_INVALID_USER_BRANCH = "INVALID_USER_BRANCH";
     public static final String CODE_ACCESS_DENIED = "ACCESS_DENIED";
     public static final String CODE_INVALID_URGENCY = "INVALID_URGENCY";
@@ -51,12 +51,14 @@ public class RecommendationService {
 
     /** Recommendation types. */
     public static final String TYPE_LOW_STOCK = "LOW_STOCK";
+
     public static final String TYPE_EXPIRING_SOON = "EXPIRING_SOON";
     public static final String TYPE_HIGH_ROTATION = "HIGH_ROTATION";
     public static final String TYPE_NO_MOVEMENT = "NO_MOVEMENT";
 
     /** Urgency levels, ordered from most to least severe. */
     private static final List<String> URGENCY_ORDER = List.of("HIGH", "MEDIUM", "LOW");
+
     private static final int EXPIRING_HORIZON_DAYS = 30;
     private static final int HIGH_ROTATION_LOOKBACK_DAYS = 7;
     private static final int HIGH_ROTATION_THRESHOLD = 10;
@@ -69,8 +71,7 @@ public class RecommendationService {
     public RecommendationService(
             ReportQueryRepository reportRepository,
             SecurityContextHelper securityContextHelper,
-            BranchRepository branchRepository
-    ) {
+            BranchRepository branchRepository) {
         this.reportRepository = reportRepository;
         this.securityContextHelper = securityContextHelper;
         this.branchRepository = branchRepository;
@@ -93,12 +94,7 @@ public class RecommendationService {
      */
     @Transactional(readOnly = true)
     public List<RecommendationDto> getRecommendations(
-            Long branchId,
-            String minUrgency,
-            String type,
-            Long productId,
-            Integer limit
-    ) {
+            Long branchId, String minUrgency, String type, Long productId, Integer limit) {
         User currentUser = securityContextHelper.getCurrentUser();
         ensureInternalUser(currentUser);
 
@@ -142,8 +138,7 @@ public class RecommendationService {
         }
 
         List<RecommendationDto> result = new ArrayList<>(deduped.values());
-        result.sort(Comparator
-                .comparingInt((RecommendationDto r) -> URGENCY_ORDER.indexOf(r.urgency()))
+        result.sort(Comparator.comparingInt((RecommendationDto r) -> URGENCY_ORDER.indexOf(r.urgency()))
                 .thenComparing(r -> r.productName() == null ? "" : r.productName(), Comparator.naturalOrder()));
 
         if (limit != null && limit > 0 && result.size() > limit) {
@@ -184,8 +179,8 @@ public class RecommendationService {
                 stockBranchId = ((Number) row[7]).longValue();
             }
             String stockBranchName = row.length > 8 ? (String) row[8] : null;
-            String recommendationId = TYPE_LOW_STOCK + "-" + prodId
-                    + (stockBranchId == null ? "" : "-" + stockBranchId);
+            String recommendationId =
+                    TYPE_LOW_STOCK + "-" + prodId + (stockBranchId == null ? "" : "-" + stockBranchId);
             if (minimum == null) {
                 continue;
             }
@@ -199,11 +194,12 @@ public class RecommendationService {
                 urgency = "LOW";
             }
 
-            String title = "Stock bajo: " + name
-                    + (stockBranchName == null ? "" : " - " + stockBranchName);
-            String description = String.format(new Locale("es", "AR"),
+            String title = "Stock bajo: " + name + (stockBranchName == null ? "" : " - " + stockBranchName);
+            String description = String.format(
+                    new Locale("es", "AR"),
                     "Stock actual: %s, minimo: %d. Reponer antes de que se agote.",
-                    formatQuantity(stock), minimum);
+                    formatQuantity(stock),
+                    minimum);
 
             result.add(new RecommendationDto(
                     recommendationId,
@@ -227,8 +223,7 @@ public class RecommendationService {
                     null,
                     null,
                     null,
-                    OffsetDateTime.now()
-            ));
+                    OffsetDateTime.now()));
         }
         return result;
     }
@@ -271,9 +266,12 @@ public class RecommendationService {
                 urgency = "LOW";
             }
             String title = "Lote por vencer: " + name;
-            String description = String.format(new Locale("es", "AR"),
+            String description = String.format(
+                    new Locale("es", "AR"),
                     "Vence el %s (%dd). Cantidad disponible: %s.",
-                    expires.toString(), daysToExpire, formatQuantity(quantity));
+                    expires.toString(),
+                    daysToExpire,
+                    formatQuantity(quantity));
 
             result.add(new RecommendationDto(
                     TYPE_EXPIRING_SOON + "-" + lotId,
@@ -297,8 +295,7 @@ public class RecommendationService {
                     quantity,
                     null,
                     null,
-                    OffsetDateTime.now()
-            ));
+                    OffsetDateTime.now()));
         }
         return result;
     }
@@ -314,8 +311,10 @@ public class RecommendationService {
      * </ul>
      */
     private List<RecommendationDto> buildHighRotation(Long branchId, Long productId) {
-        OffsetDateTime since = LocalDate.now(REPORT_ZONE).minusDays(HIGH_ROTATION_LOOKBACK_DAYS)
-                .atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        OffsetDateTime since = LocalDate.now(REPORT_ZONE)
+                .minusDays(HIGH_ROTATION_LOOKBACK_DAYS)
+                .atStartOfDay(REPORT_ZONE)
+                .toOffsetDateTime();
         List<Object[]> rows = reportRepository.highRotationCandidates(branchId, since);
         List<RecommendationDto> result = new ArrayList<>();
         for (Object[] row : rows) {
@@ -351,12 +350,17 @@ public class RecommendationService {
             }
             String title = coverageDays == null ? "Alta rotacion: " + name : "Cobertura baja: " + name;
             String description = coverageDays == null
-                    ? String.format(new Locale("es", "AR"),
+                    ? String.format(
+                            new Locale("es", "AR"),
                             "Vendio %d unidades en los ultimos %d dias.",
-                            totalSold, HIGH_ROTATION_LOOKBACK_DAYS)
-                    : String.format(new Locale("es", "AR"),
+                            totalSold,
+                            HIGH_ROTATION_LOOKBACK_DAYS)
+                    : String.format(
+                            new Locale("es", "AR"),
                             "Vendio %d unidades en %d dias y quedan %s dias de cobertura.",
-                            totalSold, HIGH_ROTATION_LOOKBACK_DAYS, coverageDays.toPlainString());
+                            totalSold,
+                            HIGH_ROTATION_LOOKBACK_DAYS,
+                            coverageDays.toPlainString());
 
             result.add(new RecommendationDto(
                     TYPE_HIGH_ROTATION + "-" + prodId,
@@ -380,8 +384,7 @@ public class RecommendationService {
                     null,
                     totalSold,
                     null,
-                    OffsetDateTime.now()
-            ));
+                    OffsetDateTime.now()));
         }
         return result;
     }
@@ -418,11 +421,10 @@ public class RecommendationService {
             }
 
             Integer daysWithoutSales = null;
-            OffsetDateTime activityReference = toOffsetDateTime(lastSaleRaw != null
-                    ? lastSaleRaw
-                    : oldestStockRaw);
+            OffsetDateTime activityReference = toOffsetDateTime(lastSaleRaw != null ? lastSaleRaw : oldestStockRaw);
             if (activityReference != null) {
-                LocalDate activityDate = activityReference.atZoneSameInstant(REPORT_ZONE).toLocalDate();
+                LocalDate activityDate =
+                        activityReference.atZoneSameInstant(REPORT_ZONE).toLocalDate();
                 daysWithoutSales = Math.toIntExact(today.toEpochDay() - activityDate.toEpochDay());
                 if (daysWithoutSales < NO_MOVEMENT_LOOKBACK_DAYS) {
                     continue;
@@ -433,8 +435,6 @@ public class RecommendationService {
             if (daysWithoutSales == null || daysWithoutSales >= 90) {
                 urgency = "HIGH";
             } else if (daysWithoutSales >= 60) {
-                urgency = "HIGH";
-            } else if (daysWithoutSales >= 60) {
                 urgency = "MEDIUM";
             } else {
                 urgency = "LOW";
@@ -442,13 +442,16 @@ public class RecommendationService {
 
             String description;
             if (daysWithoutSales == null) {
-                description = String.format(new Locale("es", "AR"),
+                description = String.format(
+                        new Locale("es", "AR"),
                         "Producto sin ventas registradas. Stock disponible: %s.",
                         formatQuantity(stock));
             } else {
-                description = String.format(new Locale("es", "AR"),
+                description = String.format(
+                        new Locale("es", "AR"),
                         "Sin ventas desde hace %d dias. Stock disponible: %s.",
-                        daysWithoutSales, formatQuantity(stock));
+                        daysWithoutSales,
+                        formatQuantity(stock));
             }
 
             result.add(new RecommendationDto(
@@ -473,8 +476,7 @@ public class RecommendationService {
                     null,
                     null,
                     daysWithoutSales,
-                    OffsetDateTime.now()
-            ));
+                    OffsetDateTime.now()));
         }
         return result;
     }
@@ -493,18 +495,12 @@ public class RecommendationService {
                 return null;
             }
             if (!branchRepository.existsByIdAndActiveTrue(requestedBranchId)) {
-                throw new DomainException(
-                        CODE_BRANCH_NOT_FOUND,
-                        HttpStatus.NOT_FOUND,
-                        "Branch not found or inactive");
+                throw new DomainException(CODE_BRANCH_NOT_FOUND, HttpStatus.NOT_FOUND, "Branch not found or inactive");
             }
             return requestedBranchId;
         }
         if (user.getBranchId() == null) {
-            throw new DomainException(
-                    CODE_INVALID_USER_BRANCH,
-                    HttpStatus.BAD_REQUEST,
-                    "User has no assigned branch");
+            throw new DomainException(CODE_INVALID_USER_BRANCH, HttpStatus.BAD_REQUEST, "User has no assigned branch");
         }
         return user.getBranchId();
     }
@@ -512,8 +508,8 @@ public class RecommendationService {
     /** Rejects CUSTOMER users from the recommendations endpoint. */
     private void ensureInternalUser(User user) {
         if (user == null || user.getRole() == Role.CUSTOMER) {
-            throw new DomainException(CODE_ACCESS_DENIED, HttpStatus.FORBIDDEN,
-                    "Only internal users can access recommendations");
+            throw new DomainException(
+                    CODE_ACCESS_DENIED, HttpStatus.FORBIDDEN, "Only internal users can access recommendations");
         }
     }
 
@@ -525,9 +521,7 @@ public class RecommendationService {
         int idx = URGENCY_ORDER.indexOf(minUrgency.toUpperCase());
         if (idx < 0) {
             throw new DomainException(
-                    CODE_INVALID_URGENCY,
-                    HttpStatus.BAD_REQUEST,
-                    "minUrgency must be one of HIGH, MEDIUM, LOW");
+                    CODE_INVALID_URGENCY, HttpStatus.BAD_REQUEST, "minUrgency must be one of HIGH, MEDIUM, LOW");
         }
         return idx;
     }
@@ -535,10 +529,11 @@ public class RecommendationService {
     /** Validates a type filter against the known rule types. */
     private static String normalizeType(String type) {
         String upper = type.toUpperCase();
-        if (!URGENCY_ORDER.isEmpty() && (TYPE_LOW_STOCK.equals(upper)
-                || TYPE_EXPIRING_SOON.equals(upper)
-                || TYPE_HIGH_ROTATION.equals(upper)
-                || TYPE_NO_MOVEMENT.equals(upper))) {
+        if (!URGENCY_ORDER.isEmpty()
+                && (TYPE_LOW_STOCK.equals(upper)
+                        || TYPE_EXPIRING_SOON.equals(upper)
+                        || TYPE_HIGH_ROTATION.equals(upper)
+                        || TYPE_NO_MOVEMENT.equals(upper))) {
             return upper;
         }
         throw new DomainException(

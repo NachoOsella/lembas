@@ -1,11 +1,12 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppToast } from '../../../shared/components/app-toast/app-toast';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppToast } from '@shared/components/app-toast/app-toast';
 
-import { RecommendationService } from '../../../core/services/recommendation';
-import { RecommendationDto } from '../../../shared/models/recommendation';
+import { RecommendationService } from '@features/reports/data-access/recommendation';
+import type { RecommendationDto } from '@features/reports/domain/recommendation';
 
 interface ReportCard {
   readonly title: string;
@@ -29,6 +30,7 @@ interface ReportCard {
  * so the navigation stays focused on the main admin views.</p>
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-reports',
   imports: [AppPageHeader, AppToast, RouterLink],
   templateUrl: './reports.html',

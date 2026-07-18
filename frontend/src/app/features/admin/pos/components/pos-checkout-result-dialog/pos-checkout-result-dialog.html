@@ -28,9 +28,7 @@
           {{ paymentMethodLabel() }}
         </app-badge>
       }
-      <app-badge tone="neutral" icon="pi pi-receipt" data-testid="receipt-type">
-        POS
-      </app-badge>
+      <app-badge tone="neutral" icon="pi pi-receipt" data-testid="receipt-type"> POS </app-badge>
     </div>
 
     @if (visibleItems().length > 0) {
@@ -59,16 +57,15 @@
   </div>
 
   <div modalFooter class="pos-receipt__footer">
-    <app-button
-      variant="secondary"
-      (click)="visible.set(false)"
-      data-testid="receipt-close"
-    >Cerrar</app-button>
+    <app-button variant="secondary" (click)="visible.set(false)" data-testid="receipt-close"
+      >Cerrar</app-button
+    >
     <app-button
       variant="primary"
       icon="pi pi-plus"
       (click)="onNewSale()"
       data-testid="receipt-new-sale"
-    >Nueva venta</app-button>
+      >Nueva venta</app-button
+    >
   </div>
 </app-modal>

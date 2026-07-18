@@ -1,20 +1,29 @@
 import { ViewportScroller } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, effect, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { MenuItem } from 'primeng/api';
+import type { MenuItem } from 'primeng/api';
 
-import { Cart } from '../../../core/services/cart';
-import { CatalogService } from '../../../core/services/catalog';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
-import { ProductSummary } from '../../../shared/models/product';
-import { AppBadge } from '../../../shared/components/app-badge/app-badge';
-import { AppBreadcrumb } from '../../../shared/components/app-breadcrumb/app-breadcrumb';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
-import { ProductGrid } from '../../../shared/components/product-grid/product-grid';
-import { QuantityStepper } from '../../../shared/components/quantity-stepper/quantity-stepper';
+import { Cart } from '@features/checkout/state/cart';
+import { CatalogService } from '@features/catalog/data-access/catalog';
+import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import type { ProductSummary } from '@features/catalog/domain/product';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
+import { AppBreadcrumb } from '@shared/components/app-breadcrumb/app-breadcrumb';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import { ProductGrid } from '@features/catalog/ui/product-grid/product-grid';
+import { QuantityStepper } from '@shared/components/quantity-stepper/quantity-stepper';
 
 @Component({
   selector: 'app-product-detail',

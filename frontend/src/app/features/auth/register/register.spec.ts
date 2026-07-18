@@ -1,11 +1,13 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
 import { Register } from './register';
-import { AuthResponse, AuthService } from '../../../core/services/auth';
+import type { AuthResponse } from '@core/services/auth';
+import { AuthService } from '@core/services/auth';
 
 /** Helper: fills an input field and dispatches the events signal-forms listens to. */
 function fillField(fixture: ComponentFixture<Register>, selector: string, value: string): void {
@@ -20,9 +22,7 @@ function fillField(fixture: ComponentFixture<Register>, selector: string, value:
  * PrimeNG checkbox input. Triggers the same change events signal-forms listens to.
  */
 function acceptTerms(fixture: ComponentFixture<Register>): void {
-  const checkbox = fixture.nativeElement.querySelector(
-    '#acceptTerms',
-  ) as HTMLInputElement;
+  const checkbox = fixture.nativeElement.querySelector('#acceptTerms') as HTMLInputElement;
   expect(checkbox).toBeTruthy();
   checkbox.click();
   fixture.detectChanges();
@@ -457,9 +457,7 @@ describe('Register component', () => {
 
   /** Should render an unchecked Terms and Conditions checkbox by default. */
   it('Should_renderUncheckedTermsCheckbox_byDefault', () => {
-    const checkbox = fixture.nativeElement.querySelector(
-      '#acceptTerms',
-    ) as HTMLInputElement;
+    const checkbox = fixture.nativeElement.querySelector('#acceptTerms') as HTMLInputElement;
     expect(checkbox).toBeTruthy();
     expect(checkbox.checked).toBe(false);
   });

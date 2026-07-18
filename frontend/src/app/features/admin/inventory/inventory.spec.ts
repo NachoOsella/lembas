@@ -1,15 +1,16 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { AuthService } from '../../../core/services/auth';
-import { InventoryService } from '../../../core/services/inventory';
-import { ProductService } from '../../../core/services/product';
-import { UserService } from '../../../core/services/user';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
+import { AuthService } from '@core/services/auth';
+import { InventoryService } from '@features/inventory/data-access/inventory';
+import { ProductService } from '@features/catalog/data-access/product';
+import { UserService } from '@features/users/data-access/user';
+import { ErrorMappingService } from '@core/services/error-mapping';
 import { Inventory } from './inventory';
 
 function summary(productName: string, branchName: string, qty: string) {

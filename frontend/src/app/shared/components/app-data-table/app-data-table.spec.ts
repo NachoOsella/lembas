@@ -1,5 +1,7 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { AppDataTable, ColumnDef } from './app-data-table';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import type { ColumnDef } from './app-data-table';
+import { AppDataTable } from './app-data-table';
 
 interface TestRow {
   name: string;

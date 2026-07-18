@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 /**
  * Visual tone that controls the card's background wash, border tint,
@@ -33,6 +33,7 @@ export interface AppMetricItem {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-stat-card',
   templateUrl: './app-stat-card.html',
   styleUrl: './app-stat-card.css',

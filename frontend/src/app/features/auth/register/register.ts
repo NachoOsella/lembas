@@ -1,4 +1,4 @@
-import { Component, computed, signal, inject } from '@angular/core';
+import { Component, computed, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   form,
@@ -12,17 +12,19 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 
-import { AuthService, RegisterRequest } from '../../../core/services/auth';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { getApiError } from '../../../shared/models/api-error';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { AppInput } from '../../../shared/components/app-input/app-input';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppCheckbox } from '../../../shared/components/app-checkbox/app-checkbox';
-import { AppToast } from '../../../shared/components/app-toast/app-toast';
-import { PasswordToggle } from '../../../shared/components/password-toggle/password-toggle';
+import type { RegisterRequest } from '@core/services/auth';
+import { AuthService } from '@core/services/auth';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { AppInput } from '@shared/components/app-input/app-input';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppCheckbox } from '@shared/components/app-checkbox/app-checkbox';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { PasswordToggle } from '@shared/components/password-toggle/password-toggle';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-register',
   imports: [
     ErrorAlert,

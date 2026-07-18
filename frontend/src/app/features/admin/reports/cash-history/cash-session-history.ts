@@ -1,32 +1,32 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgClass } from '@angular/common';
 
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import {
-  AppDataTable,
-  ColumnDef,
-} from '../../../../shared/components/app-data-table/app-data-table';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
-import { AppDatePicker } from '../../../../shared/components/app-date-picker/app-date-picker';
-import { AppToast } from '../../../../shared/components/app-toast/app-toast';
-import { AppReportFilterBar } from '../../../../shared/components/app-report-filter-bar/app-report-filter-bar';
-import { DataExport, ExportData } from '../../../../shared/components/data-export/data-export';
-import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
-import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { AppReportFilterBar } from '@features/reports/ui/app-report-filter-bar/app-report-filter-bar';
+import type { ExportData } from '@shared/components/data-export/data-export';
+import { DataExport } from '@shared/components/data-export/data-export';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
 
-import { CurrencyArPipe } from '../../../../core/pipes/currency-ar.pipe';
-import { ShortDateArPipe } from '../../../../core/pipes/short-date-ar.pipe';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { CashReportService } from '../../../../core/services/cash-report';
-import { CashSessionStatus } from '../../../../shared/models/cash-session';
-import {
+import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
+import { ShortDateArPipe } from '@core/pipes/short-date-ar.pipe';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { CashReportService } from '@features/cash/data-access/cash-report';
+import type { CashSessionStatus } from '@features/cash/domain/cash-session';
+import type {
   CashSessionHistoryDto,
   CashSessionSummaryDto,
-} from '../../../../shared/models/cash-report';
+} from '@features/cash/domain/cash-report';
 
 interface StatusFilterOption {
   readonly label: string;
@@ -35,6 +35,7 @@ interface StatusFilterOption {
 
 /** Cash session history page (S4-US05). */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-cash-session-history',
   imports: [
     AppPageHeader,
@@ -245,10 +246,10 @@ export class CashSessionHistoryPageComponent implements OnInit {
     if (err && typeof err === 'object') {
       const candidate = err as { error?: { message?: string } | null; message?: string };
       if (candidate.error && typeof candidate.error === 'object' && candidate.error.message) {
-        return this.errorMapping.getMessage('INTERNAL_ERROR', candidate.error.message);
+        return this.errorMapping.getMessage('INTERNAL_ERROR');
       }
       if (typeof candidate.message === 'string') {
-        return this.errorMapping.getMessage('INTERNAL_ERROR', candidate.message);
+        return this.errorMapping.getMessage('INTERNAL_ERROR');
       }
     }
     return this.errorMapping.getMessage('INTERNAL_ERROR');

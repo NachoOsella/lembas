@@ -290,7 +290,8 @@
 
         <div class="supplier-form__field">
           <label class="supplier-form__label">
-            Costo actual de reposicion <span class="supplier-form__required" aria-hidden="true">*</span>
+            Costo actual de reposicion
+            <span class="supplier-form__required" aria-hidden="true">*</span>
           </label>
           <app-input-number
             [(value)]="supplierProductFormCurrentCost"
@@ -305,9 +306,7 @@
 
         <div class="supplier-form__field supplier-form__field--wide">
           <label class="supplier-form__checkbox-row">
-            <app-checkbox
-              [(value)]="supplierProductFormPreferred"
-            >
+            <app-checkbox [(value)]="supplierProductFormPreferred">
               Marcar como proveedor preferido para este producto
             </app-checkbox>
           </label>
@@ -316,7 +315,11 @@
     </app-form-section>
 
     <div class="supplier-form__actions" modalFooter>
-      <app-button variant="secondary" type="button" (click)="supplierProductDialogVisible.set(false)">
+      <app-button
+        variant="secondary"
+        type="button"
+        (click)="supplierProductDialogVisible.set(false)"
+      >
         Cancelar
       </app-button>
       <app-button type="submit" [loading]="saving()">Guardar costo</app-button>
@@ -327,7 +330,11 @@
 <app-confirm-dialog
   [visible]="!!supplierToDelete()"
   title="Eliminar proveedor"
-  [message]="'Vas a eliminar ' + (supplierToDelete()?.name ?? 'este proveedor') + '. Sus historiales quedan preservados.'"
+  [message]="
+    'Vas a eliminar ' +
+    (supplierToDelete()?.name ?? 'este proveedor') +
+    '. Sus historiales quedan preservados.'
+  "
   confirmLabel="Eliminar"
   [destructive]="true"
   (confirmed)="confirmDeleteSupplier()"
@@ -337,7 +344,11 @@
 <app-confirm-dialog
   [visible]="!!supplierProductToDelete()"
   title="Eliminar asociacion"
-  [message]="'Vas a eliminar la asociacion de ' + (supplierProductToDelete()?.productName ?? 'este producto') + ' con el proveedor.'"
+  [message]="
+    'Vas a eliminar la asociacion de ' +
+    (supplierProductToDelete()?.productName ?? 'este producto') +
+    ' con el proveedor.'
+  "
   confirmLabel="Eliminar"
   [destructive]="true"
   (confirmed)="confirmDeleteSupplierProduct()"

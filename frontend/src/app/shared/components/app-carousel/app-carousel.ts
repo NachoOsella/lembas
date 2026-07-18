@@ -1,13 +1,15 @@
 import { NgTemplateOutlet } from '@angular/common';
+import type { TemplateRef } from '@angular/core';
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   contentChild,
   input,
   output,
-  TemplateRef,
 } from '@angular/core';
-import { Carousel, CarouselResponsiveOptions } from 'primeng/carousel';
+import type { CarouselResponsiveOptions } from 'primeng/carousel';
+import { Carousel } from 'primeng/carousel';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -47,6 +49,7 @@ export interface CarouselPageChangeEvent {
  * ```
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-carousel',
   imports: [NgTemplateOutlet, Carousel],
   templateUrl: './app-carousel.html',
@@ -131,9 +134,7 @@ export class AppCarousel<T = unknown> {
   // ---------------------------------------------------------------------------
 
   /** Whether the component has a header to render. */
-  protected readonly hasHeader = computed(
-    () => this.headerText().length > 0,
-  );
+  protected readonly hasHeader = computed(() => this.headerText().length > 0);
 
   // ---------------------------------------------------------------------------
   // Handlers

@@ -1,7 +1,8 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { Skeleton as PrimeSkeleton } from 'primeng/skeleton';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-skeleton',
   imports: [PrimeSkeleton],
   templateUrl: './skeleton.html',

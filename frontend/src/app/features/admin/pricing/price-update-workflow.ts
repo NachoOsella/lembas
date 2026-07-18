@@ -1,35 +1,34 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
-import { PriceUpdateBatchService } from '../../../core/services/price-update-batch';
-import { SupplierService } from '../../../core/services/supplier';
-import { ProductService } from '../../../core/services/product';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { getApiError } from '../../../shared/models/api-error';
-import {
+import { PriceUpdateBatchService } from '@features/suppliers/data-access/price-update-batch';
+import { SupplierService } from '@features/suppliers/data-access/supplier';
+import { ProductService } from '@features/catalog/data-access/product';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
+import type {
   PriceUpdateBatchDetailDto,
   PriceUpdateBatchItemDto,
-} from '../../../shared/models/price-update-batch';
-import { ProductSummary } from '../../../shared/models/product';
-import { SupplierDto } from '../../../shared/models/supplier';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
-import { AppCheckOption } from '../../../shared/components/app-check-option/app-check-option';
-import { AppControlField } from '../../../shared/components/app-control-field/app-control-field';
-import { AppFormField } from '../../../shared/components/app-form-field/app-form-field';
-import { AppInput } from '../../../shared/components/app-input/app-input';
-import { AppInputNumber } from '../../../shared/components/app-input-number/app-input-number';
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppProductSelector } from '../../../shared/components/app-product-selector/app-product-selector';
-import { AppSelect } from '../../../shared/components/app-select/app-select';
-import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { FormSection } from '../../../shared/components/form-section/form-section';
-import {
-  StatusBadge,
-  StatusBadgeConfig,
-} from '../../../shared/components/status-badge/status-badge';
+} from '@features/suppliers/domain/price-update-batch';
+import type { ProductSummary } from '@features/catalog/domain/product';
+import type { SupplierDto } from '@features/suppliers/domain/supplier';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppCheckOption } from '@shared/components/app-check-option/app-check-option';
+import { AppControlField } from '@shared/components/app-control-field/app-control-field';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { AppInput } from '@shared/components/app-input/app-input';
+import { AppInputNumber } from '@shared/components/app-input-number/app-input-number';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppProductSelector } from '@features/catalog/ui/app-product-selector/app-product-selector';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { ConfirmDialog } from '@shared/components/confirm-dialog/confirm-dialog';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { FormSection } from '@shared/components/form-section/form-section';
+import type { StatusBadgeConfig } from '@shared/components/status-badge/status-badge';
+import { StatusBadge } from '@shared/components/status-badge/status-badge';
 
 interface Option<T> {
   readonly label: string;
@@ -93,6 +92,7 @@ interface PriceTableRow {
 
 /** Unified admin workflow for supplier file/manual catalog and price updates. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-price-update-workflow',
   imports: [
     AppButton,
@@ -511,11 +511,7 @@ export class PriceUpdateWorkflow {
     this.saving.set(false);
     this.loading.set(false);
     const apiError = getApiError(error);
-    this.error.set(
-      apiError
-        ? this.errorMapping.getMessage(apiError.code, apiError.message || fallback)
-        : fallback,
-    );
+    this.error.set(apiError ? this.errorMapping.getMessage(apiError.code, fallback) : fallback);
   }
 
   // ---------------------------------------------------------------
@@ -540,7 +536,7 @@ export class PriceUpdateWorkflow {
   protected onNewCostChanged(
     value: number | null,
     row: EditablePriceRow,
-    item: PriceUpdateBatchItemDto,
+    _item: PriceUpdateBatchItemDto,
   ): void {
     row.newCost = value;
     this.recalcFromMargin(row);

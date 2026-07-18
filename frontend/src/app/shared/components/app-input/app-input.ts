@@ -1,10 +1,21 @@
-import { Component, ElementRef, computed, input, model, output, viewChild } from '@angular/core';
+import type { ElementRef } from '@angular/core';
+import {
+  Component,
+  computed,
+  input,
+  model,
+  output,
+  viewChild,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { InputText } from 'primeng/inputtext';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
+import type { FieldTree } from '@angular/forms/signals';
 import { FormField } from '@angular/forms/signals';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-input',
   imports: [InputText, IconField, InputIcon, FormField],
   templateUrl: './app-input.html',
@@ -36,7 +47,7 @@ export class AppInput {
   readonly testId = input<string | null>(null);
 
   /** When provided, binds to Angular signal forms instead of the value model. */
-  readonly formField = input<any>(undefined);
+  readonly formField = input<FieldTree<string> | undefined>(undefined);
 
   readonly value = model<string>('');
   readonly blur = output<void>();

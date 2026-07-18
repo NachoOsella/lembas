@@ -1,39 +1,36 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import {
-  AppDataTable,
-  ColumnDef,
-} from '../../../../shared/components/app-data-table/app-data-table';
-import { AppDatePicker } from '../../../../shared/components/app-date-picker/app-date-picker';
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { AppReportFilterBar } from '../../../../shared/components/app-report-filter-bar/app-report-filter-bar';
-import { AppReportGrid } from '../../../../shared/components/app-report-grid/app-report-grid';
-import { AppReportPanel } from '../../../../shared/components/app-report-panel/app-report-panel';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
-import { AppToast } from '../../../../shared/components/app-toast/app-toast';
-import { DashboardChart } from '../../../../shared/components/dashboard-chart/dashboard-chart';
-import { DashboardStatCard } from '../../../../shared/components/dashboard-stat-card/dashboard-stat-card';
-import { DataExport, ExportData } from '../../../../shared/components/data-export/data-export';
-import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppReportFilterBar } from '@features/reports/ui/app-report-filter-bar/app-report-filter-bar';
+import { AppReportGrid } from '@features/reports/ui/app-report-grid/app-report-grid';
+import { AppReportPanel } from '@features/reports/ui/app-report-panel/app-report-panel';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { DashboardChart } from '@features/dashboard/ui/dashboard-chart/dashboard-chart';
+import { DashboardStatCard } from '@features/dashboard/ui/dashboard-stat-card/dashboard-stat-card';
+import type { ExportData } from '@shared/components/data-export/data-export';
+import { DataExport } from '@shared/components/data-export/data-export';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
 
-import { CurrencyArPipe } from '../../../../core/pipes/currency-ar.pipe';
-import { ShortDateArPipe } from '../../../../core/pipes/short-date-ar.pipe';
-import { CashReportService } from '../../../../core/services/cash-report';
-import { UserService } from '../../../../core/services/user';
-import { DashboardStatCardDto } from '../../../../shared/models/dashboard';
-import {
-  CashMethodTotalDto,
-  CashOverviewDto,
-  CashSessionSummaryDto,
-} from '../../../../shared/models/cash-report';
-import { Branch } from '../../../../shared/models/user';
+import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
+import { ShortDateArPipe } from '@core/pipes/short-date-ar.pipe';
+import { CashReportService } from '@features/cash/data-access/cash-report';
+import { UserService } from '@features/users/data-access/user';
+import type { DashboardStatCardDto } from '@features/dashboard/domain/dashboard';
+import type { CashMethodTotalDto, CashOverviewDto } from '@features/cash/domain/cash-report';
+import type { Branch } from '@features/users/domain/user';
 
 /** Operational overview for cash closes, separate from the session history. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-cash-overview',
   imports: [
     AppButton,
@@ -237,7 +234,7 @@ function toIsoDate(date: Date | null): string | null {
 }
 
 function formatShortDate(date: string): string {
-  const [year, month, day] = date.split('-');
+  const [, month, day] = date.split('-');
   return `${day}/${month}`;
 }
 

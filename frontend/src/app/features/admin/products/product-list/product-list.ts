@@ -1,31 +1,31 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { MenuItem, MessageService } from 'primeng/api';
-import { AppMenu } from '../../../../shared/components/app-menu/app-menu';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
+import type { MenuItem } from 'primeng/api';
+import { MessageService } from 'primeng/api';
+import { AppMenu } from '@shared/components/app-menu/app-menu';
+import { AppSelect } from '@shared/components/app-select/app-select';
 
-import { CategoryService } from '../../../../core/services/category';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { ProductFilters, ProductService } from '../../../../core/services/product';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import {
-  AppDataTable,
-  ColumnDef,
-} from '../../../../shared/components/app-data-table/app-data-table';
-import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
-import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
-import { CategoryDto } from '../../../../shared/models/category';
-import { ProductOnlineStatus, ProductSummary } from '../../../../shared/models/product';
+import { CategoryService } from '@features/catalog/data-access/category';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import type { ProductFilters } from '@features/catalog/data-access/product';
+import { ProductService } from '@features/catalog/data-access/product';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppSearchBar } from '@shared/components/app-search-bar/app-search-bar';
+import { ConfirmDialog } from '@shared/components/confirm-dialog/confirm-dialog';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { StatusBadge } from '@shared/components/status-badge/status-badge';
+import type { CategoryDto } from '@features/catalog/domain/category';
+import type { ProductOnlineStatus, ProductSummary } from '@features/catalog/domain/product';
+import type { ProductStatusAction } from '@features/catalog/presentation/product-status';
 import {
   PRODUCT_STATUS_ACTIONS,
   PRODUCT_STATUS_BADGES,
-  ProductStatusAction,
-} from '../../../../shared/models/product-status';
-import { getApiError } from '../../../../shared/models/api-error';
+} from '@features/catalog/presentation/product-status';
+import { getApiError } from '@shared/types/api-error';
 
 interface Option<T> {
   readonly label: string;
@@ -34,6 +34,7 @@ interface Option<T> {
 
 /** Admin product directory with filters, pagination, deletion and online-status publishing flow. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-product-list',
   imports: [
     AppButton,

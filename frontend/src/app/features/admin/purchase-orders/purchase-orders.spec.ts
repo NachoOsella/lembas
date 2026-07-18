@@ -1,13 +1,14 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { PurchaseOrderService } from '../../../core/services/purchase-order';
-import { SupplierService } from '../../../core/services/supplier';
-import { UserService } from '../../../core/services/user';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
+import { PurchaseOrderService } from '@features/suppliers/data-access/purchase-order';
+import { SupplierService } from '@features/suppliers/data-access/supplier';
+import { UserService } from '@features/users/data-access/user';
+import { ErrorMappingService } from '@core/services/error-mapping';
 import { PurchaseOrders } from './purchase-orders';
 
 /** Unit tests for the purchase order admin page. */
@@ -27,7 +28,18 @@ describe('PurchaseOrders', () => {
 
   beforeEach(async () => {
     purchaseOrderService = {
-      list: vi.fn().mockReturnValue(of({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 10, first: true, last: true, empty: true })),
+      list: vi.fn().mockReturnValue(
+        of({
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          number: 0,
+          size: 10,
+          first: true,
+          last: true,
+          empty: true,
+        }),
+      ),
       get: vi.fn(),
       create: vi.fn().mockReturnValue(of({ id: 1, items: [] })),
       update: vi.fn(),
@@ -47,14 +59,33 @@ describe('PurchaseOrders', () => {
         {
           provide: SupplierService,
           useValue: {
-            listSuppliers: vi.fn().mockReturnValue(of({ content: [{ id: 10, name: 'Distribuidora' }], totalElements: 1 })),
-            listSupplierProducts: vi.fn().mockReturnValue(of({
-              content: [{ id: 30, productId: 40, productName: 'Yerba', supplierId: 10, supplierName: 'Distribuidora', currentCost: 2200, preferred: true }],
-              totalElements: 1,
-            })),
+            listSuppliers: vi
+              .fn()
+              .mockReturnValue(
+                of({ content: [{ id: 10, name: 'Distribuidora' }], totalElements: 1 }),
+              ),
+            listSupplierProducts: vi.fn().mockReturnValue(
+              of({
+                content: [
+                  {
+                    id: 30,
+                    productId: 40,
+                    productName: 'Yerba',
+                    supplierId: 10,
+                    supplierName: 'Distribuidora',
+                    currentCost: 2200,
+                    preferred: true,
+                  },
+                ],
+                totalElements: 1,
+              }),
+            ),
           },
         },
-        { provide: UserService, useValue: { listBranches: vi.fn().mockReturnValue(of([{ id: 20, name: 'Centro' }])) } },
+        {
+          provide: UserService,
+          useValue: { listBranches: vi.fn().mockReturnValue(of([{ id: 20, name: 'Centro' }])) },
+        },
       ],
     }).compileComponents();
 
@@ -73,7 +104,9 @@ describe('PurchaseOrders', () => {
     const cmp = component as any;
     cmp.supplierId.set(10);
     cmp.branchId.set(20);
-    cmp.supplierProducts.set([{ id: 30, productName: 'Yerba', supplierSku: 'YER', currentCost: 2200 }]);
+    cmp.supplierProducts.set([
+      { id: 30, productName: 'Yerba', supplierSku: 'YER', currentCost: 2200 },
+    ]);
     cmp.selectedSupplierProductId.set(30);
 
     cmp.addSelectedItem();
@@ -90,8 +123,12 @@ describe('PurchaseOrders', () => {
 
   it('should request the PDF download for manual sending', () => {
     const cmp = component as any;
-    const createObjectUrl = vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:purchase-order');
-    const revokeObjectUrl = vi.spyOn(window.URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const createObjectUrl = vi
+      .spyOn(window.URL, 'createObjectURL')
+      .mockReturnValue('blob:purchase-order');
+    const revokeObjectUrl = vi
+      .spyOn(window.URL, 'revokeObjectURL')
+      .mockImplementation(() => undefined);
 
     cmp.downloadPdf({ id: 1 });
 

@@ -1,26 +1,29 @@
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppToast } from '../../../shared/components/app-toast/app-toast';
-import { AppDatePicker } from '../../../shared/components/app-date-picker/app-date-picker';
-import { AppReportFilterBar } from '../../../shared/components/app-report-filter-bar/app-report-filter-bar';
-import { AppReportGrid } from '../../../shared/components/app-report-grid/app-report-grid';
-import { AppReportPanel } from '../../../shared/components/app-report-panel/app-report-panel';
-import { DashboardStatCard } from '../../../shared/components/dashboard-stat-card/dashboard-stat-card';
-import { DashboardChart } from '../../../shared/components/dashboard-chart/dashboard-chart';
-import { DataExport, ExportData } from '../../../shared/components/data-export/data-export';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
-import { RecommendationCard } from '../../../shared/components/recommendation-card/recommendation-card';
-import { TopProductsTable } from '../../../shared/components/top-products-table/top-products-table';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
+import { AppReportFilterBar } from '@features/reports/ui/app-report-filter-bar/app-report-filter-bar';
+import { AppReportGrid } from '@features/reports/ui/app-report-grid/app-report-grid';
+import { AppReportPanel } from '@features/reports/ui/app-report-panel/app-report-panel';
+import { DashboardStatCard } from '@features/dashboard/ui/dashboard-stat-card/dashboard-stat-card';
+import { DashboardChart } from '@features/dashboard/ui/dashboard-chart/dashboard-chart';
+import type { ExportData } from '@shared/components/data-export/data-export';
+import { DataExport } from '@shared/components/data-export/data-export';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import { RecommendationCard } from '@features/reports/ui/recommendation-card/recommendation-card';
+import { TopProductsTable } from '@features/dashboard/ui/top-products-table/top-products-table';
 
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { DashboardStore } from '../../../core/stores/dashboard.store';
-import { RecommendationService } from '../../../core/services/recommendation';
-import { RecommendationDto } from '../../../shared/models/recommendation';
-import { TopProductDto } from '../../../shared/models/dashboard';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { DashboardStore } from '@features/dashboard/state/dashboard.store';
+import { RecommendationService } from '@features/reports/data-access/recommendation';
+import type { RecommendationDto } from '@features/reports/domain/recommendation';
+import type { TopProductDto } from '@features/dashboard/domain/dashboard';
+import { formatDashboardDate, parseDashboardDate } from '@features/dashboard/domain/dashboard-date';
 
 /**
  * Operational dashboard page (S4-US04 + S4-US06 mini panel).
@@ -31,7 +34,9 @@ import { TopProductDto } from '../../../shared/models/dashboard';
  * delegates the data plumbing to the store.</p>
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-dashboard',
+  providers: [DashboardStore],
   imports: [
     AppButton,
     AppPageHeader,
@@ -64,14 +69,9 @@ export class Dashboard implements OnInit, OnDestroy {
   protected readonly branchName = this.store.branchName;
 
   /** The currently selected date as a {@code Date} object (for the picker). */
-  protected readonly selectedDateAsDate = computed(() => {
-    const iso = this.store.selectedDate();
-    const [y, m, d] = iso.split('-').map((n) => Number(n));
-    if (!y || !m || !d) {
-      return new Date();
-    }
-    return new Date(y, m - 1, d);
-  });
+  protected readonly selectedDateAsDate = computed(() =>
+    parseDashboardDate(this.store.selectedDate()),
+  );
 
   /** Maximum date the user can pick (today). */
   protected readonly today = signal(new Date());
@@ -144,7 +144,7 @@ export class Dashboard implements OnInit, OnDestroy {
     if (!date) {
       return;
     }
-    this.store.setDate(toIsoDate(date));
+    this.store.setDate(formatDashboardDate(date));
     this.fetchRecommendations();
   }
 
@@ -152,7 +152,7 @@ export class Dashboard implements OnInit, OnDestroy {
   protected onGoToToday(): void {
     const now = new Date();
     this.today.set(now);
-    this.store.setDate(toIsoDate(now));
+    this.store.setDate(formatDashboardDate(now));
     this.fetchRecommendations();
   }
 
@@ -204,11 +204,4 @@ export class Dashboard implements OnInit, OnDestroy {
       },
     });
   }
-}
-
-function toIsoDate(date: Date): string {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
 }

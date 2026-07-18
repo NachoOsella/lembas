@@ -1,18 +1,19 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { PriceUpdateBatchService } from '../../../core/services/price-update-batch';
-import { SupplierService } from '../../../core/services/supplier';
-import { ProductService } from '../../../core/services/product';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
+import { PriceUpdateBatchService } from '@features/suppliers/data-access/price-update-batch';
+import { SupplierService } from '@features/suppliers/data-access/supplier';
+import { ProductService } from '@features/catalog/data-access/product';
+import { ErrorMappingService } from '@core/services/error-mapping';
 import { PriceUpdateWorkflow } from './price-update-workflow';
-import {
+import type {
   PriceUpdateBatchDetailDto,
   PriceUpdateBatchItemDto,
-} from '../../../shared/models/price-update-batch';
+} from '@features/suppliers/domain/price-update-batch';
 
 describe('PriceUpdateWorkflow', () => {
   let component: PriceUpdateWorkflow;
@@ -102,8 +103,24 @@ describe('PriceUpdateWorkflow', () => {
       listSuppliers: vi.fn().mockReturnValue(
         of({
           content: [
-            { id: 10, name: 'Distribuidora', contactName: null, phone: null, email: null, cuit: '30-12345678-9', active: true },
-            { id: 20, name: 'Mayorista SRL', contactName: null, phone: null, email: null, cuit: '30-87654321-0', active: true },
+            {
+              id: 10,
+              name: 'Distribuidora',
+              contactName: null,
+              phone: null,
+              email: null,
+              cuit: '30-12345678-9',
+              active: true,
+            },
+            {
+              id: 20,
+              name: 'Mayorista SRL',
+              contactName: null,
+              phone: null,
+              email: null,
+              cuit: '30-87654321-0',
+              active: true,
+            },
           ],
           totalElements: 2,
           totalPages: 1,
@@ -183,7 +200,12 @@ describe('PriceUpdateWorkflow', () => {
   });
 
   it('should handle import error', () => {
-    batchService.importFile.mockReturnValue(throwError(() => ({ status: 400, error: { code: 'PRICE_BATCH_FILE_EMPTY', message: 'El archivo esta vacio' } })));
+    batchService.importFile.mockReturnValue(
+      throwError(() => ({
+        status: 400,
+        error: { code: 'PRICE_BATCH_FILE_EMPTY', message: 'El archivo esta vacio' },
+      })),
+    );
     cmp.supplierId.set(10);
     cmp.fileToImport.set(new File([''], 'prices.csv'));
 
@@ -392,7 +414,16 @@ describe('PriceUpdateWorkflow', () => {
   });
 
   it('should clear manual row when supplier changes', () => {
-    cmp.manualProduct.set({ id: 1, name: 'Yerba', barcode: '779001', categoryId: 1, categoryName: 'Alimentos', onlineStatus: 'PUBLISHED', salePrice: 0, cost: 0 } as any);
+    cmp.manualProduct.set({
+      id: 1,
+      name: 'Yerba',
+      barcode: '779001',
+      categoryId: 1,
+      categoryName: 'Alimentos',
+      onlineStatus: 'PUBLISHED',
+      salePrice: 0,
+      cost: 0,
+    } as any);
     cmp.manualSku.set('YER-1');
     cmp.manualCost.set(5000);
 

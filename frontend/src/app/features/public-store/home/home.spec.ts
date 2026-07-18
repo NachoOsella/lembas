@@ -1,11 +1,12 @@
 import { signal } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
-import { CatalogService } from '../../../core/services/catalog';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
-import { ProductSummary } from '../../../shared/models/product';
+import { CatalogService } from '@features/catalog/data-access/catalog';
+import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import type { ProductSummary } from '@features/catalog/domain/product';
 import { Home } from './home';
 
 /** Builds a published product used by the home recommendations tests. */

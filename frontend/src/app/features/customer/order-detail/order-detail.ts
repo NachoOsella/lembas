@@ -1,28 +1,39 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
-import { CustomerCheckoutService } from '../../../core/services/customer-checkout';
-import { CustomerOrderService } from '../../../core/services/customer-order';
-import { CurrencyArPipe } from '../../../core/pipes/currency-ar.pipe';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { ShortDateArPipe } from '../../../core/pipes/short-date-ar.pipe';
-import {
+import { CustomerCheckoutService } from '@features/checkout/data-access/customer-checkout';
+import { CustomerOrderService } from '@features/orders/data-access/customer-order';
+import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { ShortDateArPipe } from '@core/pipes/short-date-ar.pipe';
+import type {
   OrderDetail as OrderDetailData,
   OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from '@features/orders/domain/order';
+import {
   orderStatusLabel,
   orderStatusSeverity,
   paymentStatusLabel,
   paymentStatusSeverity,
-  PaymentMethod,
-  PaymentStatus,
-} from '../../../shared/models/order';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
-import { SeverityPill, SeverityPillTone } from '../../../shared/components/severity-pill/severity-pill';
+} from '@features/orders/domain/order';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import type { SeverityPillTone } from '@shared/components/severity-pill/severity-pill';
+import { SeverityPill } from '@shared/components/severity-pill/severity-pill';
 
 /** Visual state for one step in the order journey. */
 type TimelineStepState = 'done' | 'current' | 'upcoming' | 'alert';
@@ -191,24 +202,23 @@ export class OrderDetail implements OnInit {
     // Subscribe to the paramMap observable so navigating from /customer/orders/1
     // to /customer/orders/2 (without unmounting the component) reloads the
     // detail automatically.
-    this.route.paramMap
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((params) => {
-        const id = Number(params.get('id'));
-        if (!id) {
-          this.errorCode.set('ORDER_NOT_FOUND');
-          this.loading.set(false);
-          return;
-        }
-        this.loadOrder(id);
-      });
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const id = Number(params.get('id'));
+      if (!id) {
+        this.errorCode.set('ORDER_NOT_FOUND');
+        this.loading.set(false);
+        return;
+      }
+      this.loadOrder(id);
+    });
   }
 
   /** Fetches the order detail from the backend. */
   private loadOrder(id: number): void {
     this.loading.set(true);
     this.errorCode.set(null);
-    this.service.getOrder(id)
+    this.service
+      .getOrder(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
@@ -232,7 +242,8 @@ export class OrderDetail implements OnInit {
       return;
     }
     this.paying.set(true);
-    this.checkoutService.createPreference(current.id)
+    this.checkoutService
+      .createPreference(current.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {

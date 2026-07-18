@@ -2,8 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 
-import { PosSaleService, CreatePosSaleRequest } from './pos-sale.service';
-import { OrderDetail } from '../../../../shared/models/order';
+import type { CreatePosSaleRequest } from './pos-sale.service';
+import { PosSaleService } from './pos-sale.service';
+import type { OrderDetail } from '@features/orders/domain/order';
 
 /** Unit tests for {@link PosSaleService}. */
 describe('PosSaleService', () => {
@@ -12,7 +13,7 @@ describe('PosSaleService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [PosSaleService, provideHttpClient(), provideHttpClientTesting()],
     });
     service = TestBed.inject(PosSaleService);
     httpMock = TestBed.inject(HttpTestingController);

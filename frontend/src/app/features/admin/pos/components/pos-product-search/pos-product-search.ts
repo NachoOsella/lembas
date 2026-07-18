@@ -1,9 +1,8 @@
+import type { ElementRef, OnInit } from '@angular/core';
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  ElementRef,
-  OnInit,
   computed,
   effect,
   inject,
@@ -13,31 +12,42 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import {
+  Subject,
+  catchError,
+  debounce,
+  distinctUntilChanged,
+  finalize,
+  map,
+  of,
+  switchMap,
+  timer,
+} from 'rxjs';
 
 import { InputText } from 'primeng/inputtext';
 
-import { ErrorAlert } from '../../../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../../../shared/components/loading-spinner/loading-spinner';
-import { AppSectionCard } from '../../../../../shared/components/app-section-card/app-section-card';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import { AppSectionCard } from '@shared/components/app-section-card/app-section-card';
 
-import {
-  PosProductSearchItem,
-  PosProductSearchService,
-} from '../../services/pos-product-search.service';
+import type { PosProductSearchItem } from '../../services/pos-product-search.service';
+import { PosProductSearchService } from '../../services/pos-product-search.service';
 import { PosCartStore } from '../../state/pos-cart.store';
 import { PosProductCardComponent } from '../pos-product-card/pos-product-card';
 
 /** Debounce applied to text-driven searches (ms). */
 const SEARCH_DEBOUNCE_MS = 200;
 
-/** Minimum length to consider an input as a barcode-shaped query. */
-const BARCODE_MIN_DIGITS = 6;
-
 /** Combined key for the search pipeline (query + branch id). */
 interface SearchKey {
   readonly query: string;
   readonly branchId: number | null;
+  readonly immediate: boolean;
+}
+
+interface SearchResult {
+  readonly items: PosProductSearchItem[];
+  readonly errorMessage: string | null;
 }
 
 /**
@@ -69,8 +79,7 @@ export class PosProductSearchComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   /** Reference to the search input for autofocus and refocus. */
-  private readonly inputRef =
-    viewChild<ElementRef<HTMLInputElement>>('queryInput');
+  private readonly inputRef = viewChild<ElementRef<HTMLInputElement>>('queryInput');
 
   /** Two-way bound search query. */
   readonly query = new FormControl<string>('', { nonNullable: true });
@@ -103,9 +112,7 @@ export class PosProductSearchComponent implements OnInit {
   readonly branchId = input<number | null>(null);
 
   /** Heuristic: true when the query is numeric and 6+ digits (barcode). */
-  readonly isLikelyBarcode = computed(() =>
-    /^\d{6,}$/.test((this.querySignal() ?? '').trim()),
-  );
+  readonly isLikelyBarcode = computed(() => /^\d{6,}$/.test((this.querySignal() ?? '').trim()));
 
   /** True when a search was triggered and no result was returned. */
   readonly hasNoResults = computed(
@@ -134,6 +141,7 @@ export class PosProductSearchComponent implements OnInit {
     this.searchTrigger$.next({
       query: this.query.value ?? '',
       branchId,
+      immediate: false,
     });
   });
 
@@ -143,22 +151,25 @@ export class PosProductSearchComponent implements OnInit {
     queueMicrotask(() => this.inputRef()?.nativeElement.focus());
 
     // Query-driven side of the same trigger.
-    this.query.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((value) =>
-        this.searchTrigger$.next({
-          query: value ?? '',
-          branchId: this.branchId(),
-        }),
-      );
+    this.query.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((value) =>
+      this.searchTrigger$.next({
+        query: value ?? '',
+        branchId: this.branchId(),
+        immediate: false,
+      }),
+    );
 
     this.searchTrigger$
       .pipe(
-        debounceTime(SEARCH_DEBOUNCE_MS),
+        debounce(({ immediate }) => timer(immediate ? 0 : SEARCH_DEBOUNCE_MS)),
         distinctUntilChanged((a, b) => a.query === b.query && a.branchId === b.branchId),
+        switchMap(({ query, branchId }) => this.search(query, branchId)),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(({ query, branchId }) => this.runSearch(query, branchId));
+      .subscribe(({ items, errorMessage }) => {
+        this.results.set(items);
+        this.errorMessage.set(errorMessage);
+      });
   }
 
   /** Enter key handler — executes the search immediately, bypassing debounce. */
@@ -167,7 +178,7 @@ export class PosProductSearchComponent implements OnInit {
     if (!q) {
       return;
     }
-    this.runSearch(q, this.branchId());
+    this.searchTrigger$.next({ query: q, branchId: this.branchId(), immediate: true });
   }
 
   /**
@@ -199,24 +210,21 @@ export class PosProductSearchComponent implements OnInit {
     return this.isLikelyBarcode();
   }
 
-  private runSearch(rawQuery: string, branchId: number | null): void {
-    const trimmed = rawQuery.trim();
-    if (!trimmed) {
-      this.results.set([]);
-      this.errorMessage.set(null);
-      return;
+  private search(rawQuery: string, branchId: number | null) {
+    const query = rawQuery.trim();
+    if (!query) {
+      this.loading.set(false);
+      return of<SearchResult>({ items: [], errorMessage: null });
     }
+
     this.loading.set(true);
     this.errorMessage.set(null);
-    this.searchService.search(trimmed, branchId).subscribe({
-      next: (items) => {
-        this.results.set(items);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.errorMessage.set('No se pudo buscar. Reintentá.');
-        this.loading.set(false);
-      },
-    });
+    return this.searchService.search(query, branchId).pipe(
+      map((items): SearchResult => ({ items, errorMessage: null })),
+      catchError(() =>
+        of<SearchResult>({ items: [], errorMessage: 'No se pudo buscar. Reintentá.' }),
+      ),
+      finalize(() => this.loading.set(false)),
+    );
   }
 }
