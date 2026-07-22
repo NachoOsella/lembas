@@ -1,0 +1,182 @@
+# Customized from the Presenterm skill's terminal-noir.yaml.
+# It keeps its presentation-oriented spacing and hierarchy over gruvbox-dark.
+extends: gruvbox-dark
+
+default:
+  margin:
+    percent: 7
+  colors:
+    foreground: "ebdbb2"
+    background: "282828"
+
+slide_title:
+  alignment: left
+  margin:
+    percent: 7
+  prefix: "▌"
+  padding_top: 1
+  padding_bottom: 1
+  separator: true
+  bold: true
+  font_size: 2
+  colors:
+    foreground: "fabd2f"
+
+intro_slide:
+  title:
+    alignment: left
+    margin:
+      percent: 8
+    font_size: 2
+    colors:
+      foreground: "fabd2f"
+  subtitle:
+    alignment: left
+    margin:
+      percent: 8
+    colors:
+      foreground: "8ec07c"
+  event:
+    alignment: left
+    margin:
+      percent: 8
+    colors:
+      foreground: "d3869b"
+  location:
+    alignment: left
+    margin:
+      percent: 8
+    colors:
+      foreground: "a89984"
+  date:
+    alignment: left
+    margin:
+      percent: 8
+    colors:
+      foreground: "fe8019"
+  author:
+    alignment: left
+    margin:
+      percent: 8
+    positioning: below_title
+    colors:
+      foreground: "b8bb26"
+  footer: false
+
+headings:
+  h1:
+    prefix: "▍ "
+    bold: true
+    colors:
+      foreground: "fabd2f"
+  h2:
+    prefix: "◇ "
+    bold: true
+    colors:
+      foreground: "8ec07c"
+  h3:
+    prefix: "· "
+    colors:
+      foreground: "d3869b"
+
+code:
+  alignment: center
+  minimum_size: 52
+  minimum_margin:
+    percent: 7
+  theme_name: gruvbox-dark
+  padding:
+    horizontal: 2
+    vertical: 1
+  background: true
+  line_numbers: false
+
+inline_code:
+  colors:
+    foreground: "b8bb26"
+    background: "3c3836"
+
+block_quote:
+  prefix: "┃ "
+  colors:
+    foreground: "d5c4a1"
+    background: "3c3836"
+
+footer:
+  style: template
+  left: "Ignacio Osella"
+  center: "Defensa de Proyecto Final"
+  right: "<span style='color: p:muted'>{current_slide}/{total_slides}</span>"
+  height: 2
+
+palette:
+  colors:
+    accent: "fabd2f"
+    accent2: "d3869b"
+    aqua: "8ec07c"
+    green: "b8bb26"
+    orange: "fe8019"
+    red: "fb4934"
+    muted: "a89984"
+    text: "ebdbb2"
+  classes:
+    accent:
+      foreground: "fabd2f"
+    accent2:
+      foreground: "d3869b"
+    muted:
+      foreground: "a89984"
+    success:
+      foreground: "282828"
+      background: "b8bb26"
+    key:
+      foreground: "282828"
+      background: "fabd2f"
+    badge:
+      foreground: "282828"
+      background: "8ec07c"
+
+bold:
+  colors:
+    foreground: "fabd2f"
+
+italics:
+  colors:
+    foreground: "a89984"
+
+alert:
+  prefix: "▍ "
+  base_colors:
+    foreground: "ebdbb2"
+    background: "3c3836"
+  styles:
+    note:
+      color: "8ec07c"
+      title: "Nota"
+      icon: "i"
+    tip:
+      color: "b8bb26"
+      title: "Clave"
+      icon: "+"
+    important:
+      color: "fabd2f"
+      title: "Importante"
+      icon: "!"
+    warning:
+      color: "fe8019"
+      title: "Atención"
+      icon: "!"
+    caution:
+      color: "fb4934"
+      title: "Cuidado"
+      icon: "×"
+
+mermaid:
+  background: transparent
+  theme: dark
+
+d2:
+  theme: 200
+
+layout_grid:
+  color: "fabd2f"

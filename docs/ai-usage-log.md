@@ -2,6 +2,8 @@
 
 ## 2026-07-21 (documentacion academica)
 
+- `docs/08-academic/presentacion-defensa/` -- creada presentación Presenterm en español para una defensa de 6–7 minutos. Sintetiza problema, núcleo comercial unificado, FEFO, compra online, POS/caja, confiabilidad, arquitectura, alcance y evidencia verificable; incorpora notas de orador, transición a la demostración en vivo y un tema Gruvbox Dark personalizado.
+
 - `docs/00-overview/`, `docs/00-overview/`, `docs/01-product/`, `docs/02-domain/`, `docs/03-architecture/`, `docs/04-processes/`, `docs/05-api/`, `docs/06-development/`, `docs/07-deployment/`, `docs/08-academic/`, `docs/index.md`, `README.md` -- reconciliacion completa de la documentacion del repositorio contra el estado real post-refactor. Se verificaron modulos backend (agregados `content` y `pos`), contratos API (`api/` packages), migraciones Flyway (actualizada lista V1-V31, eliminadas referencias a V5/V6/V8/V9 inexistentes), endpoints (corregido path de checkout/preference, eliminados endpoints de purchase-receipt inexistentes), estructura frontend (agregadas 13 funcionalidades post-refactor con `public-api.ts`), y marco de pruebas (Vitest/jsdom en lugar de Jasmine/Karma). Se actualizaron 11 archivos de documentacion.
 
 - `docs/08-academic/methodology.md` -- creado documento de metodologia de desarrollo cubriendo Scrum adaptado para un desarrollador, proceso de ingenieria (TDD selectivo, CI local, revision multicapa con ArchUnit/ESLint/SpotBugs), estrategia de calidad (piramide de tests, cobertura minima 75/74/55/78%), revelamiento de uso de IA, y tabla completa de herramientas y versiones.
