@@ -18,6 +18,9 @@ cd docker
 cp .env.example .env
 # Edit .env before running in production.
 docker compose --env-file .env up -d --build
+
+# Optional: enable the development-only ngrok tunnel.
+docker compose --env-file .env --profile dev-tunnel up -d --build
 ```
 
 ## Useful commands
@@ -55,9 +58,9 @@ servers. The compose stack includes an ngrok container that tunnels the
 web container (and the backend via nginx) to a public
 `https://<random>.ngrok-free.app` URL.
 
-The ngrok container starts automatically with the stack but only opens a
-tunnel when `NGROK_AUTHTOKEN` is set in `.env`. If left empty, the container
-prints a reminder and pauses harmlessly.
+The ngrok container is disabled by default. Enable the development-only
+`dev-tunnel` profile explicitly after setting `NGROK_AUTHTOKEN` in `.env`.
+Its inspection UI is bound to loopback by default.
 
 ### One-time setup
 
@@ -68,14 +71,14 @@ prints a reminder and pauses harmlessly.
    NGROK_AUTHTOKEN=<your-authtoken>
    MP_ACCESS_TOKEN=TEST-...   # from the Mercado Pago Developers panel, "Pruebas" tab
    MP_WEBHOOK_SECRET=<a-strong-shared-secret>
-   MP_NOTIFICATION_URL=http://placeholder.invalid/api/webhooks/mercadopago  # replaced after ngrok starts
+   MP_NOTIFICATION_URL=http://localhost:8080/api/webhooks/mercadopago  # replaced after ngrok starts
    ```
 
-### Start the stack
+### Start the development tunnel
 
 ```bash
 cd docker
-docker compose --env-file .env up -d --build
+docker compose --env-file .env --profile dev-tunnel up -d --build
 ```
 
 The `ngrok` container is marked as unhealthy until it has a live tunnel.
@@ -203,5 +206,6 @@ The `.env` file at `docker/.env` controls all configuration. Key variables:
 | `MP_WEBHOOK_SECRET` | *(required)* | Shared secret used to verify Mercado Pago webhook signatures |
 | `MP_NOTIFICATION_URL` | `http://localhost:8080/api/webhooks/mercadopago` | Public URL MP POSTs to |
 | `MP_SUCCESS_URL` / `MP_FAILURE_URL` / `MP_PENDING_URL` | `http://localhost/customer/payment/callback` | Customer redirect targets |
-| `NGROK_AUTHTOKEN` | *(blank)* | ngrok authtoken. Leave blank to skip the tunnel; set to enable Mercado Pago sandbox testing |
+| `NGROK_AUTHTOKEN` | *(blank)* | ngrok authtoken for the development-only tunnel profile |
+| `NGROK_WEB_BIND_ADDRESS` | `127.0.0.1` | Interface for the local ngrok inspection UI |
 | `NGROK_WEB_PORT` | `4040` | Local port for the ngrok inspection UI |

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { of } from 'rxjs';
 
 /** Compact product row returned by the POS search endpoint. */
 export interface PosProductSearchItem {
@@ -22,7 +23,7 @@ export interface PosProductSearchItem {
  * {@code availableStock} as null on every row, which the UI renders as
  * "stock: —".</p>
  */
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class PosProductSearchService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/pos/products/search';

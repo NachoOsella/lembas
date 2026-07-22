@@ -39,7 +39,7 @@ For the degree thesis, this project demonstrates:
 
 ## Key business rules
 
-1. Products have a current sale price for POS and online store. Price history is kept in a dedicated sale price history table; audit logs record who changed it.
+1. Products have a current sale price for POS and online store. Price history is kept in a dedicated sale price history table with a `created_by_user_id` reference to record who changed it.
 2. Stock is tracked by lot with expiration dates, real received unit cost, and FEFO compliance.
 3. Online orders require customer registration (no guest checkout).
 4. In-store sales require an open cash register.

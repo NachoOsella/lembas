@@ -1,12 +1,13 @@
-import { Component, inject, signal, viewChild } from '@angular/core';
+import { Component, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 
-import { CategoryService } from '../../../core/services/category';
-import { CategoryDto } from '../../../shared/models/category';
+import { CategoryService } from '@features/catalog/data-access/category';
+import type { CategoryDto } from '@features/catalog/domain/category';
 import { CategoryList } from './category-list/category-list';
 import { CategoryForm } from './category-form/category-form';
 
 /** Admin category page orchestrating list, form and shared category data. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-categories',
   imports: [CategoryList, CategoryForm],
   templateUrl: './categories.html',

@@ -2,15 +2,17 @@ import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
 import { MessageService } from 'primeng/api';
 
 import { Checkout } from './checkout';
-import { Cart } from '../../../core/services/cart';
-import { CustomerOrderService, OrderCreated } from '../../../core/services/customer-order';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
+import { Cart } from '@features/checkout/public-api';
+import type { OrderCreated } from '@features/orders/data-access/customer-order';
+import { CustomerOrderService } from '@features/orders/data-access/customer-order';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
 
 /** Minimal mock for Cart service. */
 function mockCart(overrides: Partial<Cart> = {}): Cart {

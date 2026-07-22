@@ -1,0 +1,90 @@
+<app-modal [(visible)]="visible" title="Nuevo lote de stock" [width]="'min(38rem, 92vw)'">
+  <form class="supplier-form" (ngSubmit)="submit()">
+    <app-form-section
+      [index]="1"
+      title="Datos del lote"
+      description="Registra stock directamente. Para ingresos habituales usa Recepciones de mercaderia."
+    >
+      <div class="supplier-form__grid">
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-control-field label="Producto" [required]="true">
+            <app-product-selector
+              [label]="''"
+              [(selected)]="product"
+              [suggestions]="suggestions()"
+              placeholder="Buscar producto por nombre o codigo..."
+              (search)="productSearch.emit($event)"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-control-field label="Sucursal" [required]="true">
+            <app-select
+              [(value)]="branchId"
+              [options]="branches()"
+              placeholder="Seleccionar sucursal"
+              [disabled]="branchRestricted()"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field">
+          <app-control-field label="Cantidad" [required]="true">
+            <app-input-number
+              [(value)]="quantity"
+              [min]="0"
+              [maxFractionDigits]="3"
+              placeholder="0"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field">
+          <app-control-field label="Costo unitario">
+            <app-input-number
+              [(value)]="costPrice"
+              mode="currency"
+              currency="ARS"
+              locale="es-AR"
+              [min]="0"
+              [maxFractionDigits]="2"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field">
+          <app-form-field
+            label="Codigo de lote"
+            [(value)]="lotCode"
+            placeholder="Lote del proveedor"
+            testId="lot-code"
+          />
+        </div>
+
+        <div class="supplier-form__field">
+          <app-control-field label="Fecha de vencimiento">
+            <app-date-picker
+              inputId="lot-expiration-date"
+              [(value)]="expirationDate"
+              dateFormat="dd/mm/yy"
+              [minDate]="minDate()"
+              placeholder="Seleccionar fecha"
+            />
+          </app-control-field>
+        </div>
+      </div>
+    </app-form-section>
+
+    @if (formError()) {
+      <app-error-alert variant="inline" [title]="formError()" message="" />
+    }
+
+    <div class="supplier-form__actions" modalFooter>
+      <app-button variant="secondary" type="button" (click)="visible.set(false)"
+        >Cancelar</app-button
+      >
+      <app-button type="submit" [loading]="saving()">Guardar lote</app-button>
+    </div>
+  </form>
+</app-modal>

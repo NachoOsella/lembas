@@ -1,5 +1,13 @@
 package com.dietetica.lembas.payments.web;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.auth.service.LembasUserDetailsService;
 import com.dietetica.lembas.payments.dto.MercadoPagoWebhookPayload;
@@ -7,6 +15,11 @@ import com.dietetica.lembas.payments.service.MercadoPagoProperties;
 import com.dietetica.lembas.payments.service.MercadoPagoWebhookProcessor;
 import com.dietetica.lembas.payments.service.WebhookSignatureValidator;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
+import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
+import java.util.Optional;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -17,20 +30,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.util.HexFormat;
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Routing and signature tests for {@link MercadoPagoWebhookController}.
@@ -79,11 +78,13 @@ class MercadoPagoWebhookControllerTest {
         String v1 = hmac(SECRET, manifest(dataId, requestId, ts));
         when(processor.process(any())).thenReturn(Optional.of(1L));
 
-        mockMvc.perform(post("/api/webhooks/mercadopago?data.id=" + dataId)
-                        .header("x-signature", "ts=" + ts + ",v1=" + v1)
-                        .header("x-request-id", requestId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/webhooks/mercadopago?data.id=" + dataId)
+                                .header("x-signature", "ts=" + ts + ",v1=" + v1)
+                                .header("x-request-id", requestId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {
                                   "type": "payment",
                                   "action": "payment.created",
@@ -99,10 +100,12 @@ class MercadoPagoWebhookControllerTest {
     void shouldAcceptLegacyIpnPaymentWithoutWebhookSignatureValidation() throws Exception {
         when(processor.process(any())).thenReturn(Optional.of(1L));
 
-        mockMvc.perform(post("/api/webhooks/mercadopago?id=164559101305&topic=payment")
-                        .header("x-signature", "ts=1782174452,v1=legacy-ipn-signature")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/webhooks/mercadopago?id=164559101305&topic=payment")
+                                .header("x-signature", "ts=1782174452,v1=legacy-ipn-signature")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {"resource": "164559101305", "topic": "payment"}
                                 """))
                 .andExpect(status().isOk())
@@ -115,10 +118,14 @@ class MercadoPagoWebhookControllerTest {
     void shouldAcceptLegacyIpnMerchantOrderWithoutWebhookSignatureValidation() throws Exception {
         when(processor.process(any())).thenReturn(Optional.of(1L));
 
-        mockMvc.perform(post("/api/webhooks/mercadopago?id=42074945691&topic=merchant_order")
-                        .header("x-signature", "ts=1782177709,v1=33bde3ddf4d07495df5416234336f6e1f21ee4eb94bcc31d5020fb8d7584e620")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/webhooks/mercadopago?id=42074945691&topic=merchant_order")
+                                .header(
+                                        "x-signature",
+                                        "ts=1782177709,v1=33bde3ddf4d07495df5416234336f6e1f21ee4eb94bcc31d5020fb8d7584e620")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {"resource": "42074945691", "topic": "merchant_order"}
                                 """))
                 .andExpect(status().isOk())
@@ -129,28 +136,36 @@ class MercadoPagoWebhookControllerTest {
 
     @Test
     void shouldReturn401WhenSignatureIsInvalid() throws Exception {
-        mockMvc.perform(post("/api/webhooks/mercadopago?data.id=12345")
-                        .header("x-signature", "ts=1700000000,v1=deadbeef")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/webhooks/mercadopago?data.id=12345")
+                                .header("x-signature", "ts=1700000000,v1=deadbeef")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {
                                   "type": "payment",
                                   "data": {"id": "12345"}
                                 }
                                 """))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.received").value(false));
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.code").value("WEBHOOK_SIGNATURE_INVALID"))
+                .andExpect(jsonPath("$.path").value("/api/webhooks/mercadopago"));
         verify(processor, never()).process(any());
     }
 
     @Test
     void shouldReturn401WhenSignatureHeaderIsMissing() throws Exception {
-        mockMvc.perform(post("/api/webhooks/mercadopago?data.id=12345")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/webhooks/mercadopago?data.id=12345")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {"type": "payment", "data": {"id": "12345"}}
                                 """))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.code").value("WEBHOOK_SIGNATURE_INVALID"));
     }
 
     @Test
@@ -161,10 +176,12 @@ class MercadoPagoWebhookControllerTest {
         String v1 = hmac(SECRET, manifest(dataId, null, ts));
         when(processor.process(any())).thenThrow(new RuntimeException("DB down"));
 
-        mockMvc.perform(post("/api/webhooks/mercadopago?data.id=" + dataId)
-                        .header("x-signature", "ts=" + ts + ",v1=" + v1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/webhooks/mercadopago?data.id=" + dataId)
+                                .header("x-signature", "ts=" + ts + ",v1=" + v1)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {"type": "payment", "data": {"id": "67890"}}
                                 """))
                 .andExpect(status().isOk())
@@ -180,11 +197,13 @@ class MercadoPagoWebhookControllerTest {
         String requestId = "656248a4-b523-43ab-8835-baaa7553403e";
         String v1 = hmac(SECRET, manifest(queryDataId, requestId, ts));
 
-        mockMvc.perform(post("/api/webhooks/mercadopago?data.id=" + queryDataId)
-                        .header("x-signature", "ts=" + ts + ",v1=" + v1)
-                        .header("x-request-id", requestId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+        mockMvc.perform(
+                        post("/api/webhooks/mercadopago?data.id=" + queryDataId)
+                                .header("x-signature", "ts=" + ts + ",v1=" + v1)
+                                .header("x-request-id", requestId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
                                 {
                                   "type": "topic_merchant_order_wh",
                                   "action": "update",
@@ -213,8 +232,14 @@ class MercadoPagoWebhookControllerTest {
         @Bean
         MercadoPagoProperties mercadoPagoProperties() {
             return new MercadoPagoProperties(
-                    "token", SECRET, "https://api.mercadopago.com",
-                    "https://ok", "https://fail", "https://pending", "https://notify", 5000L);
+                    "token",
+                    SECRET,
+                    "https://api.mercadopago.com",
+                    "https://ok",
+                    "https://fail",
+                    "https://pending",
+                    "https://notify",
+                    5000L);
         }
 
         @Bean

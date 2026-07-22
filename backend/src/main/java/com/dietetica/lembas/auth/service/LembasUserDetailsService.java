@@ -1,12 +1,11 @@
 package com.dietetica.lembas.auth.service;
 
-import com.dietetica.lembas.users.repository.UserRepository;
+import com.dietetica.lembas.users.api.UserDirectory;
+import java.util.Locale;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.Locale;
 
 /**
  * Bridges the Lembas {@link User} entity to Spring Security's authentication
@@ -19,10 +18,10 @@ import java.util.Locale;
 @Service
 public class LembasUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final UserDirectory userDirectory;
 
-    public LembasUserDetailsService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public LembasUserDetailsService(UserDirectory userDirectory) {
+        this.userDirectory = userDirectory;
     }
 
     /**
@@ -34,10 +33,10 @@ public class LembasUserDetailsService implements UserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userRepository.findByEmail(email.trim().toLowerCase(Locale.ROOT))
+        return userDirectory
+                .findByEmail(email.trim().toLowerCase(Locale.ROOT))
                 .map(LembasUserDetails::new)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found with email: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 
     /**
@@ -52,9 +51,9 @@ public class LembasUserDetailsService implements UserDetailsService {
      * @throws UsernameNotFoundException if no user exists with the given ID
      */
     public UserDetails loadUserById(Long userId) {
-        return userRepository.findById(userId)
+        return userDirectory
+                .findById(userId)
                 .map(LembasUserDetails::new)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found with id: " + userId));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
     }
 }

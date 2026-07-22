@@ -1,11 +1,19 @@
-import { Component, inject, signal, computed, viewChild } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  viewChild,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 
-import { UserService } from '../../../core/services/user';
-import { Branch, UserResponse } from '../../../shared/models/user';
+import { UserService } from '@features/users/data-access/user';
+import type { Branch, UserResponse } from '@features/users/domain/user';
 import { UserList } from './user-list/user-list';
 import { UserForm } from './user-form/user-form';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-users',
   imports: [UserList, UserForm],
   templateUrl: './users.html',

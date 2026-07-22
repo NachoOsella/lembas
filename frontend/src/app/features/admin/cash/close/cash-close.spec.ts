@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -7,19 +8,25 @@ import { of, throwError } from 'rxjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { CashClose } from './cash-close';
-import { CashService } from '../../../../core/services/cash';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import {
+import { CashService } from '@features/cash/data-access/cash';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import type {
   CashEntryDto,
   CashSessionDto,
   CashTotalsByMethod,
-} from '../../../../shared/models/cash-session';
+} from '@features/cash/domain/cash-session';
 
 /** Builds an HttpErrorResponse with the given status + code for testing. */
 function apiError(status: number, code: string, message = code): HttpErrorResponse {
   return new HttpErrorResponse({
     status,
-    error: { status, code, message, timestamp: '2026-06-29T00:00:00Z', path: '/api/admin/cash-sessions/1/close' },
+    error: {
+      status,
+      code,
+      message,
+      timestamp: '2026-06-29T00:00:00Z',
+      path: '/api/admin/cash-sessions/1/close',
+    },
   });
 }
 
@@ -67,14 +74,23 @@ describe('CashClose', () => {
     getById: ReturnType<typeof vi.fn>;
     closeSession: ReturnType<typeof vi.fn>;
   };
-  let errorMapping: { getMessage: ReturnType<typeof vi.fn>; formatValidationErrors: ReturnType<typeof vi.fn> };
+  let errorMapping: {
+    getMessage: ReturnType<typeof vi.fn>;
+    formatValidationErrors: ReturnType<typeof vi.fn>;
+  };
   let router: { navigate: ReturnType<typeof vi.fn> };
   let messageService: MessageService;
 
   function configureRoute(sessionId: string | null) {
     cashService = { getById: vi.fn(), closeSession: vi.fn() };
     errorMapping = {
-      getMessage: vi.fn((code: string, fallback?: string) => fallback ?? code),
+      getMessage: vi.fn((code: string, fallback?: string) => {
+        const messages: Record<string, string> = {
+          CASH_DIFFERENCE_REASON_REQUIRED: 'Reason required',
+          CASH_SESSION_ALREADY_CLOSED: 'Already closed',
+        };
+        return messages[code] ?? fallback ?? code;
+      }),
       formatValidationErrors: vi.fn(() => 'validation error'),
     };
     router = { navigate: vi.fn().mockResolvedValue(true) };
@@ -201,7 +217,7 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component['errorMessage']()).toBe('CASH_SESSION_NOT_FOUND');
+    expect(component['errorMessage']()).toBe('No se pudo cargar la caja.');
     expect(component['loading']()).toBe(false);
   });
 
@@ -223,7 +239,7 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(500);
+    component['setCountedCashAmount'](500);
     expect(component['expectedCash']()).toBe(500);
     expect(component['difference']()).toBe(0);
     expect(component['isDifferenceNonZero']()).toBe(false);
@@ -238,14 +254,14 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(450);
+    component['setCountedCashAmount'](450);
     expect(component['expectedCash']()).toBe(500);
     expect(component['difference']()).toBe(-50);
     expect(component['isDifferenceNonZero']()).toBe(true);
     expect(component['isReasonInvalid']()).toBe(true);
     expect(component['canSubmit']()).toBe(false);
 
-    component['cashDifferenceReason'].set('Faltante por error de conteo');
+    component['setCashDifferenceReason']('Faltante por error de conteo');
     expect(component['isReasonInvalid']()).toBe(false);
     expect(component['canSubmit']()).toBe(true);
   });
@@ -257,7 +273,7 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(-10);
+    component['setCountedCashAmount'](-10);
     expect(component['canSubmit']()).toBe(false);
   });
 
@@ -265,18 +281,20 @@ describe('CashClose', () => {
     configureRoute('1');
     cashService.getById.mockReturnValue(of(buildSession({ openingCashAmount: '500.00' })));
     cashService.closeSession.mockReturnValue(
-      of(buildClosedSession({
-        id: 1,
-        expectedCashAmount: '500.00',
-        countedCashAmount: '500.00',
-        cashDifferenceAmount: '0.00',
-      })),
+      of(
+        buildClosedSession({
+          id: 1,
+          expectedCashAmount: '500.00',
+          countedCashAmount: '500.00',
+          cashDifferenceAmount: '0.00',
+        }),
+      ),
     );
 
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(500);
+    component['setCountedCashAmount'](500);
     component['openConfirm']();
     expect(component['confirmDialogVisible']()).toBe(true);
 
@@ -299,21 +317,23 @@ describe('CashClose', () => {
     configureRoute('1');
     cashService.getById.mockReturnValue(of(buildSession({ openingCashAmount: '500.00' })));
     cashService.closeSession.mockReturnValue(
-      of(buildClosedSession({
-        id: 1,
-        expectedCashAmount: '500.00',
-        countedCashAmount: '450.00',
-        cashDifferenceAmount: '-50.00',
-        cashDifferenceReason: 'Faltante por error de conteo',
-      })),
+      of(
+        buildClosedSession({
+          id: 1,
+          expectedCashAmount: '500.00',
+          countedCashAmount: '450.00',
+          cashDifferenceAmount: '-50.00',
+          cashDifferenceReason: 'Faltante por error de conteo',
+        }),
+      ),
     );
 
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(450);
-    component['cashDifferenceReason'].set('Faltante por error de conteo');
-    component['closingNotes'].set('Notas opcionales');
+    component['setCountedCashAmount'](450);
+    component['setCashDifferenceReason']('Faltante por error de conteo');
+    component['setClosingNotes']('Notas opcionales');
     component['openConfirm']();
     component['confirmClose']();
     await fixture.whenStable();
@@ -335,13 +355,11 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(500);
+    component['setCountedCashAmount'](500);
     component['openConfirm']();
     component['confirmClose']();
     await fixture.whenStable();
 
-    // The mock errorMapping returns the fallback message (apiError.message)
-    // when the code is not in the mapping.
     expect(component['errorMessage']()).toBe('Reason required');
     expect(component['saving']()).toBe(false);
     expect(router.navigate).not.toHaveBeenCalled();
@@ -357,7 +375,7 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(500);
+    component['setCountedCashAmount'](500);
     component['openConfirm']();
     component['confirmClose']();
     await fixture.whenStable();
@@ -386,7 +404,7 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(500);
+    component['setCountedCashAmount'](500);
     component['openConfirm']();
     component['confirmClose']();
     await fixture.whenStable();

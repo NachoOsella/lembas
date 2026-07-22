@@ -1,10 +1,16 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MenuItem, MessageService } from 'primeng/api';
+import type { MenuItem } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { Ripple } from 'primeng/ripple';
+import type { TabItem, AppMetricItem, ColumnDef } from '@shared/components';
+import type { StoreBrandConfig } from '@features/public-store/public-api';
+import { AppStoreNav } from '@features/public-store/public-api';
+import type { StoreFooterLink } from '@features/public-store/public-api';
+import { AppStoreFooter } from '@features/public-store/public-api';
+import { StoreProductCard } from '@features/catalog/public-api';
 import {
-  TabItem,
   AppBadge,
   AppBreadcrumb,
   AppButton,
@@ -14,30 +20,23 @@ import {
   AppFormField,
   FormSection,
   AppInput,
-  AppMetricItem,
   AppModal,
   AppPageHeader,
   AppPagination,
   AppSearchBar,
   AppSectionCard,
   AppStatCard,
-  AppStoreFooter,
-  AppStoreNav,
-  StoreBrandConfig,
-  StoreFooterLink,
   AppTabs,
   AppToast,
-  ColumnDef,
   ConfirmDialog,
   EmptyState,
   ErrorAlert,
   LoadingSpinner,
   Skeleton,
-  StoreProductCard,
   StatusBadge,
-} from '../../../shared/components';
-import { ProductSummary } from '../../../shared/models/product';
-import { PRODUCT_STATUS_BADGES, ProductStatusAction } from '../../../shared/models/product-status';
+} from '@shared/components';
+import type { ProductSummary } from '@features/catalog/domain/product';
+import { PRODUCT_STATUS_BADGES } from '@features/catalog/public-api';
 
 interface ShowcaseLink {
   readonly label: string;
@@ -46,6 +45,7 @@ interface ShowcaseLink {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-component-showcase',
   imports: [
     RouterLink,

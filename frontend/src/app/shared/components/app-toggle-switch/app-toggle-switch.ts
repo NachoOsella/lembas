@@ -1,4 +1,4 @@
-import { Component, computed, input, model } from '@angular/core';
+import { Component, computed, input, model, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 
@@ -9,6 +9,7 @@ import { ToggleSwitch } from 'primeng/toggleswitch';
  * do not need one-off PrimeNG overrides.</p>
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-toggle-switch',
   imports: [FormsModule, ToggleSwitch],
   templateUrl: './app-toggle-switch.html',

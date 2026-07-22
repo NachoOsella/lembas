@@ -1,0 +1,88 @@
+<app-modal [(visible)]="visible" title="Ajustar stock" [width]="'min(38rem, 92vw)'">
+  <form class="supplier-form" (ngSubmit)="submit()">
+    <app-form-section
+      [index]="1"
+      title="Datos del ajuste"
+      description="Corrige diferencias de inventario, registra consumos internos o mermas. El motivo es obligatorio."
+    >
+      <div class="supplier-form__grid">
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-control-field label="Producto" [required]="true">
+            <app-product-selector
+              [label]="''"
+              [selected]="product()"
+              (selectedChange)="setProduct($event)"
+              [suggestions]="suggestions()"
+              placeholder="Buscar producto por nombre o codigo..."
+              (search)="productSearch.emit($event)"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-control-field label="Sucursal" [required]="true">
+            <app-select
+              [value]="branchId()"
+              (valueChange)="setBranch($event)"
+              [options]="branches()"
+              placeholder="Seleccionar sucursal"
+              [disabled]="branchRestricted()"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field">
+          <app-control-field label="Tipo" [required]="true">
+            <app-select
+              [value]="type()"
+              (valueChange)="setType($event)"
+              [options]="adjustmentTypes"
+              placeholder="Seleccionar tipo"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field">
+          <app-control-field label="Cantidad" [required]="true">
+            <app-input-number
+              [(value)]="quantity"
+              [min]="0"
+              [maxFractionDigits]="3"
+              placeholder="0"
+            />
+          </app-control-field>
+        </div>
+
+        <div class="supplier-form__field supplier-form__field--wide">
+          <app-form-field
+            label="Motivo"
+            [required]="true"
+            [(value)]="reason"
+            placeholder="Explica el motivo del ajuste (obligatorio)"
+            testId="adjustment-reason"
+          />
+        </div>
+      </div>
+
+      @if (stockLabel()) {
+        <div class="adjustment-form__stock-info">
+          <i class="pi pi-info-circle"></i>
+          <span>{{ stockLabel() }}</span>
+        </div>
+      }
+
+      @if (formError()) {
+        <app-error-alert variant="inline" [title]="formError()" message="" />
+      }
+    </app-form-section>
+
+    <div class="supplier-form__actions" modalFooter>
+      <app-button variant="secondary" type="button" (click)="visible.set(false)"
+        >Cancelar</app-button
+      >
+      <app-button type="submit" [loading]="saving()" [disabled]="!valid()">
+        Ejecutar ajuste
+      </app-button>
+    </div>
+  </form>
+</app-modal>

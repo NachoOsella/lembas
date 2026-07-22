@@ -1,0 +1,19 @@
+.inventory-expiring-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.inventory-expiring-label {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 48rem) {
+  .inventory-expiring-toggle {
+    justify-content: space-between;
+    width: 100%;
+  }
+}

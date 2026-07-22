@@ -61,7 +61,7 @@ All payments are recorded in the single `payments` entity, regardless of channel
 
 ```
 1. Customer creates order (POST /api/customer/orders)
-2. Customer requests checkout (POST /api/customer/orders/{id}/checkout/mp)
+2. Customer requests checkout (POST /api/customer/orders/{id}/payments/preference)
 3. Backend creates preference in MP from the payment service
 4. Backend saves provider_preference_id in payment
 5. Backend returns init_point to frontend

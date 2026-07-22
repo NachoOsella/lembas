@@ -1,13 +1,8 @@
 package com.dietetica.lembas.suppliers.service;
 
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
-import com.dietetica.lembas.catalog.model.Category;
+import com.dietetica.lembas.catalog.api.SupplierPricingCatalog;
 import com.dietetica.lembas.catalog.model.Product;
-import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
-import com.dietetica.lembas.catalog.model.ProductSalePriceHistory;
-import com.dietetica.lembas.catalog.repository.CategoryRepository;
-import com.dietetica.lembas.catalog.repository.ProductRepository;
-import com.dietetica.lembas.catalog.repository.ProductSalePriceHistoryRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.suppliers.dto.PriceUpdateBatchDefaultsRequest;
 import com.dietetica.lembas.suppliers.dto.PriceUpdateBatchDetailDto;
@@ -30,19 +25,17 @@ import com.dietetica.lembas.suppliers.repository.SupplierProductCostHistoryRepos
 import com.dietetica.lembas.suppliers.repository.SupplierProductRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierRepository;
 import com.dietetica.lembas.users.model.User;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
 
 /** Application service for reviewed supplier price and catalog update batches. */
 @Service
@@ -55,9 +48,7 @@ public class PriceUpdateBatchService {
     private final SupplierRepository supplierRepository;
     private final SupplierProductRepository supplierProductRepository;
     private final SupplierProductCostHistoryRepository costHistoryRepository;
-    private final ProductRepository productRepository;
-    private final CategoryRepository categoryRepository;
-    private final ProductSalePriceHistoryRepository salePriceHistoryRepository;
+    private final SupplierPricingCatalog supplierPricingCatalog;
     private final PriceUpdateImportService importService;
     private final PriceUpdateCalculationService calculationService;
     private final SecurityContextHelper securityContextHelper;
@@ -68,21 +59,16 @@ public class PriceUpdateBatchService {
             SupplierRepository supplierRepository,
             SupplierProductRepository supplierProductRepository,
             SupplierProductCostHistoryRepository costHistoryRepository,
-            ProductRepository productRepository,
-            CategoryRepository categoryRepository,
-            ProductSalePriceHistoryRepository salePriceHistoryRepository,
+            SupplierPricingCatalog supplierPricingCatalog,
             PriceUpdateImportService importService,
             PriceUpdateCalculationService calculationService,
-            SecurityContextHelper securityContextHelper
-    ) {
+            SecurityContextHelper securityContextHelper) {
         this.batchRepository = batchRepository;
         this.itemRepository = itemRepository;
         this.supplierRepository = supplierRepository;
         this.supplierProductRepository = supplierProductRepository;
         this.costHistoryRepository = costHistoryRepository;
-        this.productRepository = productRepository;
-        this.categoryRepository = categoryRepository;
-        this.salePriceHistoryRepository = salePriceHistoryRepository;
+        this.supplierPricingCatalog = supplierPricingCatalog;
         this.importService = importService;
         this.calculationService = calculationService;
         this.securityContextHelper = securityContextHelper;
@@ -105,21 +91,27 @@ public class PriceUpdateBatchService {
     public PriceUpdateBatchDetailDto createManual(PriceUpdateManualBatchRequest request) {
         Supplier supplier = findSupplier(request.supplierId());
         User currentUser = currentUserOrNull();
-        PriceUpdateBatch batch = createBatch(supplier, PriceUpdateBatchType.MANUAL_GRID, null, request.defaults(), request.notes());
+        PriceUpdateBatch batch =
+                createBatch(supplier, PriceUpdateBatchType.MANUAL_GRID, null, request.defaults(), request.notes());
         batch.setCreatedByUser(currentUser);
         for (PriceUpdateManualItemRequest item : request.items()) {
-            batch.addItem(buildPreviewItem(batch, new SupplierPriceRow(item.supplierSku(), item.barcode(), item.productName(), item.newCost(), null)));
+            batch.addItem(buildPreviewItem(
+                    batch,
+                    new SupplierPriceRow(
+                            item.supplierSku(), item.barcode(), item.productName(), item.newCost(), null)));
         }
         return toDetailDto(batchRepository.save(batch));
     }
 
     /** Creates a supplier-file batch by importing CSV or XLSX rows. */
     @Transactional
-    public PriceUpdateBatchDetailDto importFile(Long supplierId, PriceUpdateBatchDefaultsRequest defaults, MultipartFile file, String notes) {
+    public PriceUpdateBatchDetailDto importFile(
+            Long supplierId, PriceUpdateBatchDefaultsRequest defaults, MultipartFile file, String notes) {
         Supplier supplier = findSupplier(supplierId);
         User currentUser = currentUserOrNull();
         List<SupplierPriceRow> rows = importService.parse(file);
-        PriceUpdateBatch batch = createBatch(supplier, PriceUpdateBatchType.SUPPLIER_FILE, file.getOriginalFilename(), defaults, notes);
+        PriceUpdateBatch batch =
+                createBatch(supplier, PriceUpdateBatchType.SUPPLIER_FILE, file.getOriginalFilename(), defaults, notes);
         batch.setCreatedByUser(currentUser);
         rows.forEach(row -> batch.addItem(buildPreviewItem(batch, row)));
         return toDetailDto(batchRepository.save(batch));
@@ -149,7 +141,8 @@ public class PriceUpdateBatchService {
         PriceUpdateBatchItem item = batch.getItems().stream()
                 .filter(candidate -> Objects.equals(candidate.getId(), itemId))
                 .findFirst()
-                .orElseThrow(() -> new DomainException("PRICE_BATCH_ITEM_NOT_FOUND", HttpStatus.NOT_FOUND, "Price update batch item not found"));
+                .orElseThrow(() -> new DomainException(
+                        "PRICE_BATCH_ITEM_NOT_FOUND", HttpStatus.NOT_FOUND, "Price update batch item not found"));
         applyItemOverrides(batch, item, request);
         return toDetailDto(batch);
     }
@@ -179,7 +172,8 @@ public class PriceUpdateBatchService {
         ensureResolvable(batch);
         User currentUser = currentUserOrNull();
         for (PriceUpdateBatchItem item : batch.getItems()) {
-            if (item.getStatus() == PriceUpdateBatchItemStatus.EXCLUDED || item.getStatus() == PriceUpdateBatchItemStatus.UNCHANGED) {
+            if (item.getStatus() == PriceUpdateBatchItemStatus.EXCLUDED
+                    || item.getStatus() == PriceUpdateBatchItemStatus.UNCHANGED) {
                 continue;
             }
             if (item.getStatus() == PriceUpdateBatchItemStatus.UPDATE) {
@@ -194,7 +188,12 @@ public class PriceUpdateBatchService {
     }
 
     /** Builds a new batch with MVP defaults when the request omits values. */
-    private PriceUpdateBatch createBatch(Supplier supplier, PriceUpdateBatchType type, String fileName, PriceUpdateBatchDefaultsRequest defaults, String notes) {
+    private PriceUpdateBatch createBatch(
+            Supplier supplier,
+            PriceUpdateBatchType type,
+            String fileName,
+            PriceUpdateBatchDefaultsRequest defaults,
+            String notes) {
         PriceUpdateBatch batch = new PriceUpdateBatch();
         batch.setSupplier(supplier);
         batch.setType(type);
@@ -235,21 +234,23 @@ public class PriceUpdateBatchService {
     private void matchItem(PriceUpdateBatch batch, PriceUpdateBatchItem item) {
         Long supplierId = batch.getSupplier().getId();
         if (item.getSupplierSku() != null) {
-            supplierProductRepository.findBySupplierIdAndSupplierSkuIgnoreCaseAndActiveTrue(supplierId, item.getSupplierSku())
+            supplierProductRepository
+                    .findBySupplierIdAndSupplierSkuIgnoreCaseAndActiveTrue(supplierId, item.getSupplierSku())
                     .ifPresent(supplierProduct -> applySupplierProductMatch(item, supplierProduct));
             if (item.getSupplierProduct() != null) {
                 return;
             }
         }
         if (item.getBarcode() != null) {
-            productRepository.findByBarcodeIgnoreCaseAndActiveTrue(item.getBarcode())
+            supplierPricingCatalog
+                    .findActiveProductByBarcode(item.getBarcode())
                     .ifPresent(product -> applyProductMatch(batch, item, product));
             if (item.getProduct() != null) {
                 return;
             }
         }
         if (item.getSupplierProductName() != null) {
-            List<Product> matches = productRepository.findActiveByNameIgnoreCase(item.getSupplierProductName());
+            List<Product> matches = supplierPricingCatalog.findActiveProductsByExactName(item.getSupplierProductName());
             if (matches.size() == 1) {
                 applyProductMatch(batch, item, matches.getFirst());
             } else if (matches.size() > 1) {
@@ -270,8 +271,10 @@ public class PriceUpdateBatchService {
         item.setProduct(supplierProduct.getProduct());
         item.setOldCost(supplierProduct.getCurrentCost());
         item.setOldSalePrice(supplierProduct.getProduct().getSalePrice());
-        item.setSupplierProductName(defaultIfBlank(item.getSupplierProductName(), supplierProduct.getProduct().getName()));
-        item.setBarcode(defaultIfBlank(item.getBarcode(), supplierProduct.getProduct().getBarcode()));
+        item.setSupplierProductName(defaultIfBlank(
+                item.getSupplierProductName(), supplierProduct.getProduct().getName()));
+        item.setBarcode(
+                defaultIfBlank(item.getBarcode(), supplierProduct.getProduct().getBarcode()));
     }
 
     /** Applies a product match and links an existing supplier-product association when available. */
@@ -280,7 +283,9 @@ public class PriceUpdateBatchService {
         item.setOldSalePrice(product.getSalePrice());
         item.setSupplierProductName(defaultIfBlank(item.getSupplierProductName(), product.getName()));
         item.setBarcode(defaultIfBlank(item.getBarcode(), product.getBarcode()));
-        supplierProductRepository.findByProductIdAndSupplierIdAndActiveTrue(product.getId(), batch.getSupplier().getId())
+        supplierProductRepository
+                .findByProductIdAndSupplierIdAndActiveTrue(
+                        product.getId(), batch.getSupplier().getId())
                 .ifPresent(item::setSupplierProduct);
         if (item.getSupplierProduct() != null) {
             item.setOldCost(item.getSupplierProduct().getCurrentCost());
@@ -309,10 +314,13 @@ public class PriceUpdateBatchService {
     }
 
     /** Applies row-level admin overrides and recalculates the row if it remains actionable. */
-    private void applyItemOverrides(PriceUpdateBatch batch, PriceUpdateBatchItem item, PriceUpdateBatchItemUpdateRequest request) {
+    private void applyItemOverrides(
+            PriceUpdateBatch batch, PriceUpdateBatchItem item, PriceUpdateBatchItemUpdateRequest request) {
         if (request.productId() != null) {
-            Product product = productRepository.findByIdAndActiveTrue(request.productId())
-                    .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
+            Product product = supplierPricingCatalog
+                    .findActiveProductById(request.productId())
+                    .orElseThrow(
+                            () -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
             applyProductMatch(batch, item, product);
             item.setErrorMessage(null);
         }
@@ -363,30 +371,32 @@ public class PriceUpdateBatchService {
     private void applyExistingItem(PriceUpdateBatch batch, PriceUpdateBatchItem item, User currentUser) {
         SupplierProduct supplierProduct = requireSupplierProduct(item);
         Product product = requireProduct(item);
-        if (item.isApplyCostUpdate() && item.getNewCost() != null && supplierProduct.getCurrentCost().compareTo(item.getNewCost()) != 0) {
+        if (item.isApplyCostUpdate()
+                && item.getNewCost() != null
+                && supplierProduct.getCurrentCost().compareTo(item.getNewCost()) != 0) {
             BigDecimal oldCost = supplierProduct.getCurrentCost();
             supplierProduct.setCurrentCost(item.getNewCost());
-            costHistoryRepository.save(costHistory(supplierProduct, oldCost, item.getNewCost(), batch.getId(), currentUser));
+            costHistoryRepository.save(
+                    costHistory(supplierProduct, oldCost, item.getNewCost(), batch.getId(), currentUser));
         }
-        if (item.isApplySalePriceUpdate() && item.getFinalSalePrice() != null && product.getSalePrice().compareTo(item.getFinalSalePrice()) != 0) {
-            BigDecimal oldPrice = product.getSalePrice();
-            product.setSalePrice(item.getFinalSalePrice());
-            salePriceHistoryRepository.save(salePriceHistory(product, oldPrice, item.getFinalSalePrice(), batch.getId(), currentUser));
+        if (item.isApplySalePriceUpdate()
+                && item.getFinalSalePrice() != null
+                && product.getSalePrice().compareTo(item.getFinalSalePrice()) != 0) {
+            supplierPricingCatalog.changeSalePriceForSupplierPriceBatch(
+                    product, item.getFinalSalePrice(), batch.getId(), currentUser);
         }
     }
 
     /** Creates product and supplier-product rows for an approved CREATE row. */
     private void applyNewProductItem(PriceUpdateBatch batch, PriceUpdateBatchItem item, User currentUser) {
         if (!item.isCreateProduct()) {
-            throw new DomainException("PRICE_BATCH_HAS_UNRESOLVED_ITEMS", HttpStatus.CONFLICT, "New products must be explicitly approved before applying the batch");
+            throw new DomainException(
+                    "PRICE_BATCH_HAS_UNRESOLVED_ITEMS",
+                    HttpStatus.CONFLICT,
+                    "New products must be explicitly approved before applying the batch");
         }
-        Product product = new Product();
-        product.setCategory(defaultCategory());
-        product.setName(item.getSupplierProductName());
-        product.setBarcode(blankToNull(item.getBarcode()));
-        product.setSalePrice(item.getFinalSalePrice());
-        product.setOnlineStatus(ProductOnlineStatus.DRAFT);
-        Product savedProduct = productRepository.save(product);
+        Product savedProduct = supplierPricingCatalog.createDraftProductForSupplierPriceBatch(
+                item.getSupplierProductName(), blankToNull(item.getBarcode()), item.getFinalSalePrice());
 
         SupplierProduct supplierProduct = new SupplierProduct();
         supplierProduct.setSupplier(batch.getSupplier());
@@ -397,48 +407,61 @@ public class PriceUpdateBatchService {
 
         item.setProduct(savedProduct);
         item.setSupplierProduct(savedSupplierProduct);
-        costHistoryRepository.save(costHistory(savedSupplierProduct, null, item.getNewCost(), batch.getId(), currentUser));
-        salePriceHistoryRepository.save(salePriceHistory(savedProduct, null, item.getFinalSalePrice(), batch.getId(), currentUser));
+        costHistoryRepository.save(
+                costHistory(savedSupplierProduct, null, item.getNewCost(), batch.getId(), currentUser));
+        supplierPricingCatalog.recordInitialSalePriceForSupplierPriceBatch(
+                savedProduct, item.getFinalSalePrice(), batch.getId(), currentUser);
     }
 
     /** Ensures no unresolved rows would be applied accidentally. */
     private void ensureResolvable(PriceUpdateBatch batch) {
-        boolean hasBlockingRows = batch.getItems().stream().anyMatch(item ->
-                item.getStatus() == PriceUpdateBatchItemStatus.REVIEW
+        boolean hasBlockingRows = batch.getItems().stream()
+                .anyMatch(item -> item.getStatus() == PriceUpdateBatchItemStatus.REVIEW
                         || item.getStatus() == PriceUpdateBatchItemStatus.ERROR
-                        || (item.getStatus() == PriceUpdateBatchItemStatus.CREATE && !item.isCreateProduct())
-        );
+                        || (item.getStatus() == PriceUpdateBatchItemStatus.CREATE && !item.isCreateProduct()));
         if (hasBlockingRows) {
-            throw new DomainException("PRICE_BATCH_HAS_UNRESOLVED_ITEMS", HttpStatus.CONFLICT, "Resolve review, error, and unapproved create rows before applying the batch");
+            throw new DomainException(
+                    "PRICE_BATCH_HAS_UNRESOLVED_ITEMS",
+                    HttpStatus.CONFLICT,
+                    "Resolve review, error, and unapproved create rows before applying the batch");
         }
     }
 
     /** Finds a mutable batch and rejects already finalized states. */
     private PriceUpdateBatch findMutableForUpdate(Long id) {
-        PriceUpdateBatch batch = batchRepository.findDetailedByIdForUpdate(id)
-                .orElseThrow(() -> new DomainException("PRICE_BATCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Price update batch not found"));
-        if (batch.getStatus() == PriceUpdateBatchStatus.APPLIED || batch.getStatus() == PriceUpdateBatchStatus.CANCELLED) {
-            throw new DomainException("PRICE_BATCH_INVALID_STATE", HttpStatus.CONFLICT, "Price update batch can no longer be modified");
+        PriceUpdateBatch batch = batchRepository
+                .findDetailedByIdForUpdate(id)
+                .orElseThrow(() -> new DomainException(
+                        "PRICE_BATCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Price update batch not found"));
+        if (batch.getStatus() == PriceUpdateBatchStatus.APPLIED
+                || batch.getStatus() == PriceUpdateBatchStatus.CANCELLED) {
+            throw new DomainException(
+                    "PRICE_BATCH_INVALID_STATE", HttpStatus.CONFLICT, "Price update batch can no longer be modified");
         }
         return batch;
     }
 
     /** Finds a supplier or throws a uniform domain error. */
     private Supplier findSupplier(Long id) {
-        return supplierRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(() -> new DomainException("SUPPLIER_NOT_FOUND", HttpStatus.NOT_FOUND, "Supplier not found"));
+        return supplierRepository
+                .findByIdAndActiveTrue(id)
+                .orElseThrow(
+                        () -> new DomainException("SUPPLIER_NOT_FOUND", HttpStatus.NOT_FOUND, "Supplier not found"));
     }
 
     /** Finds a detailed batch or throws a uniform domain error. */
     private PriceUpdateBatch findDetailed(Long id) {
-        return batchRepository.findDetailedById(id)
-                .orElseThrow(() -> new DomainException("PRICE_BATCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Price update batch not found"));
+        return batchRepository
+                .findDetailedById(id)
+                .orElseThrow(() -> new DomainException(
+                        "PRICE_BATCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Price update batch not found"));
     }
 
     /** Returns the required existing product from an item. */
     private Product requireProduct(PriceUpdateBatchItem item) {
         if (item.getProduct() == null) {
-            throw new DomainException("PRICE_BATCH_ITEM_INVALID", HttpStatus.CONFLICT, "Price update item has no product");
+            throw new DomainException(
+                    "PRICE_BATCH_ITEM_INVALID", HttpStatus.BAD_REQUEST, "Price update item has no product");
         }
         return item.getProduct();
     }
@@ -446,20 +469,15 @@ public class PriceUpdateBatchService {
     /** Returns the required supplier product from an existing update item. */
     private SupplierProduct requireSupplierProduct(PriceUpdateBatchItem item) {
         if (item.getSupplierProduct() == null) {
-            throw new DomainException("PRICE_BATCH_ITEM_INVALID", HttpStatus.CONFLICT, "Price update item has no supplier product");
+            throw new DomainException(
+                    "PRICE_BATCH_ITEM_INVALID", HttpStatus.BAD_REQUEST, "Price update item has no supplier product");
         }
         return item.getSupplierProduct();
     }
 
-    /** Returns the first catalog category for new imported products. */
-    private Category defaultCategory() {
-        return categoryRepository.findAll(org.springframework.data.domain.PageRequest.of(0, 1)).stream()
-                .findFirst()
-                .orElseThrow(() -> new DomainException("CATEGORY_NOT_FOUND", HttpStatus.CONFLICT, "Create a category before importing new supplier products"));
-    }
-
     /** Builds replacement cost history for a batch-applied cost change. */
-    private SupplierProductCostHistory costHistory(SupplierProduct supplierProduct, BigDecimal oldCost, BigDecimal newCost, Long batchId, User currentUser) {
+    private SupplierProductCostHistory costHistory(
+            SupplierProduct supplierProduct, BigDecimal oldCost, BigDecimal newCost, Long batchId, User currentUser) {
         SupplierProductCostHistory history = new SupplierProductCostHistory();
         history.setSupplierProduct(supplierProduct);
         history.setOldCost(oldCost);
@@ -468,20 +486,6 @@ public class PriceUpdateBatchService {
         history.setReferenceType(REFERENCE_PRICE_BATCH);
         history.setReferenceId(batchId);
         history.setCreatedByUserId(currentUser == null ? null : currentUser.getId());
-        return history;
-    }
-
-    /** Builds sale price history for a batch-applied price change. */
-    private ProductSalePriceHistory salePriceHistory(Product product, BigDecimal oldPrice, BigDecimal newPrice, Long batchId, User currentUser) {
-        ProductSalePriceHistory history = new ProductSalePriceHistory();
-        history.setProduct(product);
-        history.setOldPrice(oldPrice);
-        history.setNewPrice(newPrice);
-        history.setSource(SOURCE_PRICE_BATCH);
-        history.setReason("Supplier price update batch");
-        history.setReferenceType(REFERENCE_PRICE_BATCH);
-        history.setReferenceId(batchId);
-        history.setCreatedByUser(currentUser);
         return history;
     }
 
@@ -497,7 +501,10 @@ public class PriceUpdateBatchService {
     /** Validates margin percentage before applying it to defaults or rows. */
     private void validateMargin(BigDecimal margin) {
         if (margin.compareTo(BigDecimal.ZERO) < 0 || margin.compareTo(BigDecimal.valueOf(100)) >= 0) {
-            throw new DomainException("PRICE_BATCH_ITEM_INVALID", HttpStatus.BAD_REQUEST, "Margin percentage must be between 0 and 99.99");
+            throw new DomainException(
+                    "PRICE_BATCH_ITEM_INVALID",
+                    HttpStatus.BAD_REQUEST,
+                    "Margin percentage must be between 0 and 99.99");
         }
     }
 
@@ -511,8 +518,7 @@ public class PriceUpdateBatchService {
                 batch.getStatus(),
                 batch.getSourceFileName(),
                 batch.getCreatedAt(),
-                batch.getAppliedAt()
-        );
+                batch.getAppliedAt());
     }
 
     /** Converts a batch entity into a detail DTO sorted by row id. */
@@ -535,8 +541,7 @@ public class PriceUpdateBatchService {
                 batch.getNotes(),
                 batch.getCreatedAt(),
                 batch.getAppliedAt(),
-                items
-        );
+                items);
     }
 
     /** Converts a preview item entity into an API DTO. */
@@ -544,7 +549,9 @@ public class PriceUpdateBatchService {
         Product product = item.getProduct();
         return new PriceUpdateBatchItemDto(
                 item.getId(),
-                item.getSupplierProduct() == null ? null : item.getSupplierProduct().getId(),
+                item.getSupplierProduct() == null
+                        ? null
+                        : item.getSupplierProduct().getId(),
                 product == null ? null : product.getId(),
                 product == null ? null : product.getName(),
                 item.getSupplierSku(),
@@ -561,8 +568,7 @@ public class PriceUpdateBatchService {
                 item.isApplySalePriceUpdate(),
                 item.isCreateProduct(),
                 item.getStatus(),
-                item.getErrorMessage()
-        );
+                item.getErrorMessage());
     }
 
     /** Converts blank text into null after trimming. */

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 
-import { PaymentMethod } from '../../../../../shared/models/order';
+import type { PaymentMethod } from '@features/orders/domain/order';
 
 /** UI metadata for one selectable payment method. */
 interface PaymentMethodOption {

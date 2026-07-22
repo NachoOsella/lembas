@@ -1,5 +1,12 @@
 package com.dietetica.lembas.cash.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.dietetica.lembas.cash.dto.CashMovementDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
 import com.dietetica.lembas.cash.dto.CreateCashMovementRequest;
@@ -11,28 +18,22 @@ import com.dietetica.lembas.cash.model.CashSession;
 import com.dietetica.lembas.cash.model.CashSessionStatus;
 import com.dietetica.lembas.cash.repository.CashMovementRepository;
 import com.dietetica.lembas.cash.repository.CashSessionRepository;
+import com.dietetica.lembas.payments.api.CashPaymentQuery;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.branch.model.Branch;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import com.dietetica.lembas.users.api.UserDirectory;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link CashService} open and current use cases.
@@ -52,18 +53,24 @@ class CashServiceTest {
 
     @Mock
     private CashSessionRepository cashSessionRepository;
+
     @Mock
-    private BranchRepository branchRepository;
+    private BranchQuery branchQuery;
+
     @Mock
     private CashSessionMapper cashSessionMapper;
+
     @Mock
     private CashMovementRepository cashMovementRepository;
+
     @Mock
     private CashMovementMapper cashMovementMapper;
+
     @Mock
-    private com.dietetica.lembas.payments.repository.PaymentRepository paymentRepository;
+    private CashPaymentQuery paymentRepository;
+
     @Mock
-    private com.dietetica.lembas.users.repository.UserRepository userRepository;
+    private UserDirectory userRepository;
 
     @InjectMocks
     private CashService cashService;
@@ -73,8 +80,9 @@ class CashServiceTest {
         User employee = user(Role.EMPLOYEE, 1L);
         Branch branch = branch(1L, true);
 
-        when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
-        when(cashSessionRepository.existsByBranchIdAndStatus(1L, CashSessionStatus.OPEN)).thenReturn(false);
+        when(branchQuery.findActiveById(1L)).thenReturn(Optional.of(branch));
+        when(cashSessionRepository.existsByBranchIdAndStatus(1L, CashSessionStatus.OPEN))
+                .thenReturn(false);
         CashSessionDto dto = dto(7L, 1L);
         when(cashSessionRepository.save(any(CashSession.class))).thenAnswer(inv -> {
             CashSession session = inv.getArgument(0);
@@ -98,8 +106,9 @@ class CashServiceTest {
         User employee = user(Role.EMPLOYEE, 1L);
         Branch branch = branch(1L, true);
 
-        when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
-        when(cashSessionRepository.existsByBranchIdAndStatus(1L, CashSessionStatus.OPEN)).thenReturn(true);
+        when(branchQuery.findActiveById(1L)).thenReturn(Optional.of(branch));
+        when(cashSessionRepository.existsByBranchIdAndStatus(1L, CashSessionStatus.OPEN))
+                .thenReturn(true);
 
         OpenCashSessionRequest request = new OpenCashSessionRequest(new BigDecimal("100.00"), null, null);
 
@@ -123,8 +132,9 @@ class CashServiceTest {
         User admin = user(Role.ADMIN, null);
         Branch branch = branch(2L, true);
 
-        when(branchRepository.findById(2L)).thenReturn(Optional.of(branch));
-        when(cashSessionRepository.existsByBranchIdAndStatus(2L, CashSessionStatus.OPEN)).thenReturn(false);
+        when(branchQuery.findActiveById(2L)).thenReturn(Optional.of(branch));
+        when(cashSessionRepository.existsByBranchIdAndStatus(2L, CashSessionStatus.OPEN))
+                .thenReturn(false);
         when(cashSessionRepository.save(any(CashSession.class))).thenAnswer(inv -> {
             CashSession session = inv.getArgument(0);
             setId(session, 9L);
@@ -164,7 +174,7 @@ class CashServiceTest {
         User admin = user(Role.ADMIN, null);
         Branch inactive = branch(3L, false);
 
-        when(branchRepository.findById(3L)).thenReturn(Optional.of(inactive));
+        when(branchQuery.findActiveById(3L)).thenReturn(Optional.empty());
 
         OpenCashSessionRequest request = new OpenCashSessionRequest(BigDecimal.ONE, null, 3L);
 
@@ -189,6 +199,21 @@ class CashServiceTest {
     }
 
     @Test
+    void currentForUpdateUsesPessimisticRepositoryContract() {
+        User employee = user(Role.EMPLOYEE, 1L);
+        CashSession session = new CashSession();
+        setId(session, 12L);
+        when(cashSessionRepository.findOpenByBranchIdForUpdate(1L, CashSessionStatus.OPEN))
+                .thenReturn(Optional.of(session));
+        when(cashSessionMapper.toDto(session)).thenReturn(dto(12L, 1L));
+
+        CashSessionDto result = cashService.getCurrentSessionForUpdate(null, employee);
+
+        assertThat(result.id()).isEqualTo(12L);
+        verify(cashSessionRepository).findOpenByBranchIdForUpdate(1L, CashSessionStatus.OPEN);
+    }
+
+    @Test
     void currentThrowsNotFoundWhenNoOpenSession() {
         User employee = user(Role.EMPLOYEE, 1L);
         when(cashSessionRepository.findFirstByBranchIdAndStatusOrderByOpenedAtDesc(eq(1L), eq(CashSessionStatus.OPEN)))
@@ -205,8 +230,7 @@ class CashServiceTest {
         setId(session, 42L);
         when(cashSessionRepository.findById(42L)).thenReturn(Optional.of(session));
         when(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(42L)).thenReturn(List.of());
-        when(paymentRepository.findByCashSessionIdAndStatusOrderByIdAsc(
-                eq(42L), any())).thenReturn(List.of());
+        when(paymentRepository.findApprovedForCashSession(42L)).thenReturn(List.of());
         when(cashSessionMapper.toDto(eq(session), any())).thenReturn(dto(42L, 1L));
 
         CashSessionDto result = cashService.getSessionById(42L);
@@ -216,8 +240,7 @@ class CashServiceTest {
         // The unified entries list now includes every APPROVED payment
         // (QR / transfers / card included) so the FE timeline shows the
         // full picture. The physical-cash stats still filter by CASH.
-        verify(paymentRepository).findByCashSessionIdAndStatusOrderByIdAsc(
-                eq(42L), any());
+        verify(paymentRepository).findApprovedForCashSession(42L);
     }
 
     @Test
@@ -238,10 +261,18 @@ class CashServiceTest {
         session.setStatus(CashSessionStatus.OPEN);
         CashMovement savedMovement = new CashMovement();
         setId(savedMovement, 1L);
-        CashMovementDto dto = new CashMovementDto(1L, 7L, CashMovementType.CASH_IN, CashMovementMethod.CASH,
-                new BigDecimal("100.00"), "Cobro externo", 1L, "Employee", null);
+        CashMovementDto dto = new CashMovementDto(
+                1L,
+                7L,
+                CashMovementType.CASH_IN,
+                CashMovementMethod.CASH,
+                new BigDecimal("100.00"),
+                "Cobro externo",
+                1L,
+                "Employee",
+                null);
 
-        when(cashSessionRepository.findById(7L)).thenReturn(Optional.of(session));
+        when(cashSessionRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(session));
         when(userRepository.findById(1L)).thenReturn(Optional.of(employee));
         when(cashMovementRepository.save(any())).thenReturn(savedMovement);
         when(cashMovementMapper.toDto(savedMovement)).thenReturn(dto);
@@ -264,7 +295,7 @@ class CashServiceTest {
         setId(session, 7L);
         session.setStatus(CashSessionStatus.CLOSED);
 
-        when(cashSessionRepository.findById(7L)).thenReturn(Optional.of(session));
+        when(cashSessionRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(session));
 
         CreateCashMovementRequest request = new CreateCashMovementRequest(
                 CashMovementType.CASH_IN, CashMovementMethod.CASH, new BigDecimal("50.00"), "test");
@@ -285,7 +316,7 @@ class CashServiceTest {
         setId(session, 7L);
         session.setStatus(CashSessionStatus.OPEN);
 
-        when(cashSessionRepository.findById(7L)).thenReturn(Optional.of(session));
+        when(cashSessionRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(session));
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         CreateCashMovementRequest request = new CreateCashMovementRequest(
@@ -303,7 +334,7 @@ class CashServiceTest {
         setId(session, 7L);
         session.setStatus(CashSessionStatus.OPEN);
 
-        when(cashSessionRepository.findById(7L)).thenReturn(Optional.of(session));
+        when(cashSessionRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(session));
 
         CreateCashMovementRequest request = new CreateCashMovementRequest(
                 CashMovementType.CASH_IN, CashMovementMethod.CASH, BigDecimal.ZERO, "test");
@@ -333,8 +364,9 @@ class CashServiceTest {
         User employee = user(Role.EMPLOYEE, 1L);
         Branch branch = branch(1L, true);
 
-        when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
-        when(cashSessionRepository.existsByBranchIdAndStatus(1L, CashSessionStatus.OPEN)).thenReturn(false);
+        when(branchQuery.findActiveById(1L)).thenReturn(Optional.of(branch));
+        when(cashSessionRepository.existsByBranchIdAndStatus(1L, CashSessionStatus.OPEN))
+                .thenReturn(false);
         when(cashSessionRepository.save(any(CashSession.class)))
                 .thenThrow(new org.springframework.dao.DataIntegrityViolationException(
                         "could not execute statement [ERROR: duplicate key value violates unique constraint \"uk_cash_sessions_one_open_per_branch\"",
@@ -361,8 +393,7 @@ class CashServiceTest {
     // ----------------------------------------------------------------
 
     private static User user(Role role, Long branchId) {
-        return new User(branchId, role.name().toLowerCase() + "@lembas.com", "hash",
-                role.name(), "User", null, role);
+        return new User(branchId, role.name().toLowerCase() + "@lembas.com", "hash", role.name(), "User", null, role);
     }
 
     private static Branch branch(long id, boolean active) {
@@ -375,10 +406,27 @@ class CashServiceTest {
 
     private static CashSessionDto dto(long id, long branchId) {
         return new CashSessionDto(
-                id, CashSessionStatus.OPEN, branchId, "Branch " + branchId,
-                null, "Admin User", new BigDecimal("100.00"), null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null
-        );
+                id,
+                CashSessionStatus.OPEN,
+                branchId,
+                "Branch " + branchId,
+                null,
+                "Admin User",
+                new BigDecimal("100.00"),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
     }
 
     private static void setId(Object entity, long id) {

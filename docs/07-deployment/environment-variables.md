@@ -48,6 +48,8 @@ SERVER_PORT=8080
 | `MP_SUCCESS_URL` | No | -- | Redirect after successful payment |
 | `MP_FAILURE_URL` | No | -- | Redirect after failed payment |
 | `MP_PENDING_URL` | No | -- | Redirect for pending payment |
+| `MP_NOTIFICATION_URL` | Yes (MP callback) | -- | Public URL MP sends webhook POSTs to (required for signature verification) |
+| `APP_ALLOWED_ORIGINS` | No (prod) | -- | Comma-separated allowed CORS origins for production |
 | `SPRING_PROFILES_ACTIVE` | No | `dev` | Active Spring profile |
 | `SERVER_PORT` | No | `8080` | Backend HTTP port |
 

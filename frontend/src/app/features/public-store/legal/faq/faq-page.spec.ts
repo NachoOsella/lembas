@@ -1,9 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
-import { LegalContentService } from '../../../../core/services/legal-content';
-import { FaqDocument } from '../../../../shared/models/legal-content';
+import { LegalContentService } from '@features/catalog/data-access/legal-content';
+import type { FaqDocument } from '@features/catalog/domain/legal-content';
 import { FaqPage } from './faq-page';
 
 /** Builds a populated FAQ document used by the tests. */
@@ -53,10 +54,7 @@ describe('FaqPage', () => {
 
     await TestBed.configureTestingModule({
       imports: [FaqPage],
-      providers: [
-        provideRouter([]),
-        { provide: LegalContentService, useValue: legalContent },
-      ],
+      providers: [provideRouter([]), { provide: LegalContentService, useValue: legalContent }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(FaqPage);
@@ -93,11 +91,9 @@ describe('FaqPage', () => {
     // The intro is always visible, but the answers must be hidden until the
     // user toggles the panel. PrimeNG emits the `p-panel-collapsed` class
     // on the host element when the panel is closed.
-    const panels = Array.from(
-      fixture.nativeElement.querySelectorAll('p-panel'),
-    ) as HTMLElement[];
+    const panels = Array.from(fixture.nativeElement.querySelectorAll('p-panel')) as HTMLElement[];
 
-    expect( panels.length).toBe(3);
+    expect(panels.length).toBe(3);
     for (const panel of panels) {
       expect(panel.classList.contains('p-panel-collapsed')).toBe(true);
       expect(panel.classList.contains('p-panel-expanded')).toBe(false);
@@ -112,9 +108,9 @@ describe('FaqPage', () => {
   it('should group items by category and render a heading per group', async () => {
     await configure();
 
-    const groupTitles = Array.from(
-      fixture.nativeElement.querySelectorAll('.faq-group__title'),
-    ).map((el) => (el as HTMLElement).textContent?.trim());
+    const groupTitles = Array.from(fixture.nativeElement.querySelectorAll('.faq-group__title')).map(
+      (el) => (el as HTMLElement).textContent?.trim(),
+    );
 
     expect(groupTitles).toEqual(['Pedidos', 'Pagos', 'Retiro']);
   });
@@ -122,7 +118,7 @@ describe('FaqPage', () => {
   it('should use the design-system transition (300ms cubic-bezier)', async () => {
     await configure();
 
-    expect((expose(component)['transitionOptions'] as string)).toBe(
+    expect(expose(component)['transitionOptions'] as string).toBe(
       '300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
     );
   });
@@ -145,10 +141,7 @@ describe('FaqPage', () => {
 
     await TestBed.configureTestingModule({
       imports: [FaqPage],
-      providers: [
-        provideRouter([]),
-        { provide: LegalContentService, useValue: legalContent },
-      ],
+      providers: [provideRouter([]), { provide: LegalContentService, useValue: legalContent }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(FaqPage);
@@ -184,9 +177,9 @@ describe('FaqPage', () => {
     });
     await configure(reordered);
 
-    const groupTitles = Array.from(
-      fixture.nativeElement.querySelectorAll('.faq-group__title'),
-    ).map((el) => (el as HTMLElement).textContent?.trim());
+    const groupTitles = Array.from(fixture.nativeElement.querySelectorAll('.faq-group__title')).map(
+      (el) => (el as HTMLElement).textContent?.trim(),
+    );
 
     expect(groupTitles).toEqual(['Pagos', 'Pedidos']);
   });

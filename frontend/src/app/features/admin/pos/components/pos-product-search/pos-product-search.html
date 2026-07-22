@@ -6,9 +6,7 @@
 >
   <div class="pos-search__input-row">
     <div class="pos-search__field">
-      <label for="pos-search-input" class="pos-search__label">
-        Producto o codigo de barras
-      </label>
+      <label for="pos-search-input" class="pos-search__label"> Producto o codigo de barras </label>
       <div class="pos-search__input-wrap">
         <i class="pi pi-search pos-search__icon" aria-hidden="true"></i>
         <input
@@ -45,10 +43,7 @@
 
   @if (errorMessage(); as msg) {
     <div data-testid="search-error">
-      <app-error-alert
-        [message]="msg"
-        variant="card"
-      />
+      <app-error-alert [message]="msg" variant="card" />
     </div>
   }
 
@@ -66,7 +61,7 @@
       data-testid="pos-search-results"
     >
       @for (item of results(); track item.id) {
-        <li role="option" class="pos-search__grid-item">
+        <li role="option" aria-selected="false" class="pos-search__grid-item">
           <app-pos-product-card
             [item]="item"
             [disabled]="isOutOfStock(item)"

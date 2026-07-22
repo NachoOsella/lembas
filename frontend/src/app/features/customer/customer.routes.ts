@@ -1,6 +1,6 @@
-import { Routes } from '@angular/router';
-import { authGuard } from '../../core/guards/auth-guard';
-import { customerGuard } from '../../core/guards/customer-guard';
+import type { Routes } from '@angular/router';
+import { authGuard } from '@core/guards/auth-guard';
+import { customerGuard } from '@core/guards/customer-guard';
 import { CustomerLayout } from './customer-layout/customer-layout';
 
 export default [

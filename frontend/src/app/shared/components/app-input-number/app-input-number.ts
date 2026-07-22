@@ -1,4 +1,4 @@
-import { Component, input, model } from '@angular/core';
+import { Component, input, model, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputNumber } from 'primeng/inputnumber';
 
@@ -24,6 +24,7 @@ export type InputNumberMode = 'decimal' | 'currency';
  * ```
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-input-number',
   imports: [FormsModule, InputNumber],
   templateUrl: './app-input-number.html',

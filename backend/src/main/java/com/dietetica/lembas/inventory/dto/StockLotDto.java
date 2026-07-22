@@ -21,6 +21,4 @@ public record StockLotDto(
         Long supplierProductId,
         Long purchaseReceiptId,
         Long purchaseReceiptItemId,
-        BigDecimal totalAvailableForProductBranch
-) {
-}
+        BigDecimal totalAvailableForProductBranch) {}

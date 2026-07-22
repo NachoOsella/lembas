@@ -1,15 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
 import { SuppliersReportPageComponent } from './suppliers-report';
-
-interface TestableSuppliers {
-  fromDate: () => Date | null;
-  toDate: () => Date | null;
-}
 
 describe('SuppliersReportPageComponent', () => {
   let component: SuppliersReportPageComponent;
@@ -36,8 +32,7 @@ describe('SuppliersReportPageComponent', () => {
   });
 
   it('initialises the from-date to 89 days before today', () => {
-    const testable = component as unknown as TestableSuppliers;
-    const from = testable.fromDate();
+    const from = component['fromDate']();
     const today = new Date();
     expect(from).toBeTruthy();
     if (from) {

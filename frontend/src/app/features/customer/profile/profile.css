@@ -1,0 +1,116 @@
+:host {
+  display: block;
+}
+
+.profile-page {
+  width: min(100% - 2rem, 75rem);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 5rem) 0;
+}
+
+.profile-page__intro {
+  max-width: 38rem;
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.profile-page__eyebrow {
+  margin: 0 0 0.4rem;
+  color: var(--color-bark);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.profile-page__intro h1 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.profile-page__intro > p:last-child {
+  margin: 0.75rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.profile-page__panel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(1rem, 2.5vw, 2rem);
+  align-items: center;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: var(--color-surface);
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.profile-page__mark {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  color: var(--color-primary-dark);
+  background: var(--color-mint-wash-light);
+  border-radius: 50%;
+  font-size: 1.35rem;
+}
+
+.profile-page__content h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.profile-page__content p {
+  max-width: 48rem;
+  margin: 0.4rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.profile-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+@media (max-width: 56rem) {
+  .profile-page__panel {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .profile-page__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 40rem) {
+  .profile-page {
+    width: min(100% - 2rem, 75rem);
+    padding: 2.5rem 0;
+  }
+
+  .profile-page__panel {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-page__actions {
+    display: grid;
+    grid-column: auto;
+  }
+
+  .profile-page__actions app-button {
+    width: 100%;
+  }
+}

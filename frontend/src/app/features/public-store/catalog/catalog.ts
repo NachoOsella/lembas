@@ -1,25 +1,28 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { CatalogService } from '../../../core/services/catalog';
-import { Cart } from '../../../core/services/cart';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
-import { Category, ProductSummary } from '../../../shared/models/product';
-import { ProductGridSkeleton } from '../../../shared/components/product-grid-skeleton/product-grid-skeleton';
-import { EmptyState } from '../../../shared/components/empty-state/empty-state';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { AppPagination } from '../../../shared/components/app-pagination/app-pagination';
-import {
-  ProductGrid,
-  ProductGridAddToCartEvent,
-} from '../../../shared/components/product-grid/product-grid';
-import { HeroFlowers } from '../../../shared/components/hero-flowers/hero-flowers';
+import { CatalogService } from '@features/catalog/data-access/catalog';
+import { Cart } from '@features/checkout/public-api';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
+import type { Category, ProductSummary } from '@features/catalog/domain/product';
+import { ProductGridSkeleton } from '@features/catalog/public-api';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { AppPagination } from '@shared/components/app-pagination/app-pagination';
+import type { ProductGridAddToCartEvent } from '@features/catalog/public-api';
+import { ProductGrid } from '@features/catalog/public-api';
+import { HeroFlowers } from '@features/public-store/ui/hero-flowers/hero-flowers';
 import { CategoryNav } from '../category-nav/category-nav';
-
-/** Page size for the product grid. */
-const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-catalog',
@@ -127,7 +130,7 @@ export class Catalog implements OnInit {
 
     // Read initial query params from the URL (search query may come from store nav).
     this.route.queryParams.subscribe((params) => {
-      const q = ((params['q'] as string | undefined) ?? '').trim();
+      const q = (typeof params['q'] === 'string' ? params['q'] : '').trim();
       const catId = params['categoryId'] ? Number(params['categoryId']) : null;
       const nextCategoryId = catId != null && !isNaN(catId) ? catId : null;
       const queryChanged = this.searchQuery() !== q;

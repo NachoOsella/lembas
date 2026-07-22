@@ -6,7 +6,21 @@
 />
 
 <div class="reports-hub">
-  @if (highPriorityCount() > 0) {
+  @if (errorMessage()) {
+    <div class="reports-hub__status">
+      <app-error-alert title="No se pudieron cargar las alertas" [message]="errorMessage() ?? ''" />
+      <app-button
+        variant="primary"
+        size="sm"
+        icon="pi pi-refresh"
+        [loading]="loading()"
+        (click)="onRefresh()"
+        >Reintentar</app-button
+      >
+    </div>
+  } @else if (loading()) {
+    <app-loading-spinner label="Cargando alertas..." surface="card" />
+  } @else if (highPriorityCount() > 0) {
     <aside class="reports-hub__alert" role="status">
       <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
       <span>

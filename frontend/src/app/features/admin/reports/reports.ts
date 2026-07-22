@@ -1,11 +1,17 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppToast } from '../../../shared/components/app-toast/app-toast';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppToast } from '@shared/components/app-toast/app-toast';
 
-import { RecommendationService } from '../../../core/services/recommendation';
-import { RecommendationDto } from '../../../shared/models/recommendation';
+import { RecommendationService } from '@features/reports/data-access/recommendation';
+import type { RecommendationDto } from '@features/reports/domain/recommendation';
+import { ReportRequestState } from '@features/reports/public-api';
 
 interface ReportCard {
   readonly title: string;
@@ -29,17 +35,25 @@ interface ReportCard {
  * so the navigation stays focused on the main admin views.</p>
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-reports',
-  imports: [AppPageHeader, AppToast, RouterLink],
+  imports: [AppButton, AppPageHeader, AppToast, ErrorAlert, LoadingSpinner, RouterLink],
   templateUrl: './reports.html',
   styleUrl: './reports.css',
 })
-export class Reports implements OnInit {
+export class Reports implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly recommendationService = inject(RecommendationService);
+  private readonly errorMapping = inject(ErrorMappingService);
+  private readonly requestState = new ReportRequestState<RecommendationDto[]>();
 
-  public readonly highPriorityCount = signal(0);
-  protected readonly loading = signal(true);
+  public readonly highPriorityCount = computed(
+    () =>
+      this.requestState.data()?.filter((recommendation) => recommendation.urgency === 'HIGH')
+        .length ?? 0,
+  );
+  protected readonly loading = this.requestState.loading;
+  protected readonly errorMessage = this.requestState.errorMessage;
 
   public readonly cards: readonly ReportCard[] = [
     {
@@ -102,16 +116,15 @@ export class Reports implements OnInit {
   protected readonly totalCount = computed(() => this.cards.length);
 
   ngOnInit(): void {
-    this.recommendationService.getDashboardPanel().subscribe({
-      next: (recs: RecommendationDto[]) => {
-        this.highPriorityCount.set(recs.filter((r) => r.urgency === 'HIGH').length);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.highPriorityCount.set(0);
-        this.loading.set(false);
-      },
-    });
+    this.loadRecommendations();
+  }
+
+  ngOnDestroy(): void {
+    this.requestState.destroy();
+  }
+
+  protected onRefresh(): void {
+    this.requestState.retry();
   }
 
   protected goTo(route: string): void {
@@ -119,5 +132,12 @@ export class Reports implements OnInit {
       return;
     }
     void this.router.navigateByUrl(route);
+  }
+
+  private loadRecommendations(): void {
+    this.requestState.load(
+      () => this.recommendationService.getDashboardPanel(),
+      this.errorMapping.getMessage('INTERNAL_ERROR'),
+    );
   }
 }

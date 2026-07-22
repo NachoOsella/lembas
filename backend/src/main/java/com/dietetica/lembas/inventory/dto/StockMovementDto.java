@@ -33,6 +33,4 @@ public record StockMovementDto(
         BigDecimal unitCostSnapshot,
         String reason,
         Long createdByUserId,
-        OffsetDateTime createdAt
-) {
-}
+        OffsetDateTime createdAt) {}

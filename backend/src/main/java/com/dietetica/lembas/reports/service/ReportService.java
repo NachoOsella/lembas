@@ -26,27 +26,26 @@ import com.dietetica.lembas.reports.dto.SalesReportDto;
 import com.dietetica.lembas.reports.dto.SuppliersReportDto;
 import com.dietetica.lembas.reports.dto.TopProductDto;
 import com.dietetica.lembas.reports.repository.ReportQueryRepository;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use cases for the operational dashboard and the cash session history
@@ -64,6 +63,7 @@ public class ReportService {
 
     /** Error codes used by the reports module; documented in {@code docs/05-api/error-handling.md}. */
     public static final String CODE_CASH_SESSION_NOT_FOUND = "CASH_SESSION_NOT_FOUND";
+
     public static final String CODE_BRANCH_NOT_FOUND = "BRANCH_NOT_FOUND";
     public static final String CODE_CASH_BRANCH_REQUIRED = "CASH_BRANCH_REQUIRED";
     public static final String CODE_INVALID_USER_BRANCH = "INVALID_USER_BRANCH";
@@ -75,27 +75,24 @@ public class ReportService {
     private static final int MAX_PAGE_SIZE = 100;
 
     /** Sentinel used when no {@code from} date filter is provided. */
-    private static final OffsetDateTime FAR_PAST =
-            OffsetDateTime.of(1, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+    private static final OffsetDateTime FAR_PAST = OffsetDateTime.of(1, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
 
     /** Sentinel used when no {@code to} date filter is provided. */
-    private static final OffsetDateTime FAR_FUTURE =
-            OffsetDateTime.of(9999, 12, 31, 23, 59, 59, 0, ZoneOffset.UTC);
+    private static final OffsetDateTime FAR_FUTURE = OffsetDateTime.of(9999, 12, 31, 23, 59, 59, 0, ZoneOffset.UTC);
 
     private final ReportQueryRepository reportRepository;
     private final SecurityContextHelper securityContextHelper;
-    private final BranchRepository branchRepository;
+    private final BranchQuery branchQuery;
     private final CashService cashService;
 
     public ReportService(
             ReportQueryRepository reportRepository,
             SecurityContextHelper securityContextHelper,
-            BranchRepository branchRepository,
-            CashService cashService
-    ) {
+            BranchQuery branchQuery,
+            CashService cashService) {
         this.reportRepository = reportRepository;
         this.securityContextHelper = securityContextHelper;
-        this.branchRepository = branchRepository;
+        this.branchQuery = branchQuery;
         this.cashService = cashService;
     }
 
@@ -120,7 +117,8 @@ public class ReportService {
         Long effectiveBranchId = resolveBranchForUser(branchId, currentUser);
         String branchName = effectiveBranchId == null
                 ? null
-                : branchRepository.findById(effectiveBranchId)
+                : branchQuery
+                        .findById(effectiveBranchId)
                         .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
                         .orElse(null);
 
@@ -135,7 +133,9 @@ public class ReportService {
         long orderCount = reportRepository.countConfirmedOrders(start, end, effectiveBranchId);
         long pendingOrders = reportRepository.countPendingOrders(effectiveBranchId);
         long lowStock = reportRepository.lowStockProducts(effectiveBranchId).size();
-        long expiringLots = reportRepository.expiringLots(DASHBOARD_EXPIRING_HORIZON_DAYS, effectiveBranchId).size();
+        long expiringLots = reportRepository
+                .expiringLots(DASHBOARD_EXPIRING_HORIZON_DAYS, effectiveBranchId)
+                .size();
         long activeProducts = reportRepository.countActiveProducts();
         long activeSuppliers = reportRepository.countActiveSuppliers();
 
@@ -158,8 +158,8 @@ public class ReportService {
         BigDecimal[] prevTotalAndAvg = reportRepository.totalAndAverageRevenue(prevStart, prevEnd, effectiveBranchId);
         long prevCount = reportRepository.countConfirmedOrders(prevStart, prevEnd, effectiveBranchId);
 
-        List<TopProductDto> topProducts = reportRepository.topProducts(
-                start, end, effectiveBranchId, DASHBOARD_TOP_PRODUCTS_LIMIT);
+        List<TopProductDto> topProducts =
+                reportRepository.topProducts(start, end, effectiveBranchId, DASHBOARD_TOP_PRODUCTS_LIMIT);
         List<SalesByHourDto> salesByHour = reportRepository.salesByHour(reportDate, effectiveBranchId);
         List<SalesByMethodDto> salesByMethod = reportRepository.salesByMethod(start, end, effectiveBranchId);
 
@@ -177,8 +177,7 @@ public class ReportService {
                         "pi pi-shopping-cart",
                         "SUCCESS",
                         "/admin/orders?status=PAID",
-                        "Suma de pedidos confirmados (PAID o posteriores) pagados en la fecha."
-                ),
+                        "Suma de pedidos confirmados (PAID o posteriores) pagados en la fecha."),
                 buildStatCard(
                         "Ventas online",
                         formatCurrency(onlineRevenue),
@@ -188,8 +187,7 @@ public class ReportService {
                         "pi pi-globe",
                         "INFO",
                         "/admin/orders?type=ONLINE",
-                        "Pedidos ONLINE pagados en la fecha."
-                ),
+                        "Pedidos ONLINE pagados en la fecha."),
                 buildStatCard(
                         "Ventas POS",
                         formatCurrency(posRevenue),
@@ -199,8 +197,7 @@ public class ReportService {
                         "pi pi-shopping-bag",
                         "INFO",
                         "/admin/orders?type=POS",
-                        "Pedidos cobrados en el local (POS) en la fecha."
-                ),
+                        "Pedidos cobrados en el local (POS) en la fecha."),
                 buildStatCard(
                         "Pedidos pendientes",
                         NumberFormat.getInstance(new Locale("es", "AR")).format(pendingOrders),
@@ -210,8 +207,7 @@ public class ReportService {
                         "pi pi-clock",
                         "WARNING",
                         "/admin/orders?status=PENDING",
-                        "Pedidos ONLINE pendientes de pago, preparacion o retiro."
-                ),
+                        "Pedidos ONLINE pendientes de pago, preparacion o retiro."),
                 buildStatCard(
                         "Stock bajo",
                         NumberFormat.getInstance(new Locale("es", "AR")).format(lowStock),
@@ -221,8 +217,7 @@ public class ReportService {
                         "pi pi-exclamation-triangle",
                         lowStock > 0 ? "DANGER" : "NEUTRAL",
                         "/admin/inventory",
-                        "Productos activos con stock disponible menor al minimo configurado."
-                ),
+                        "Productos activos con stock disponible menor al minimo configurado."),
                 buildStatCard(
                         "Lotes por vencer",
                         NumberFormat.getInstance(new Locale("es", "AR")).format(expiringLots),
@@ -232,8 +227,7 @@ public class ReportService {
                         "pi pi-calendar-times",
                         expiringLots > 0 ? "WARNING" : "NEUTRAL",
                         "/admin/inventory",
-                        "Lotes con fecha de vencimiento dentro de los proximos 30 dias."
-                ),
+                        "Lotes con fecha de vencimiento dentro de los proximos 30 dias."),
                 buildStatCard(
                         "Transacciones",
                         NumberFormat.getInstance(new Locale("es", "AR")).format(orderCount),
@@ -243,8 +237,7 @@ public class ReportService {
                         "pi pi-receipt",
                         "NEUTRAL",
                         "/admin/orders",
-                        "Cantidad de pedidos confirmados en la fecha."
-                ),
+                        "Cantidad de pedidos confirmados en la fecha."),
                 buildStatCard(
                         "Ticket promedio",
                         formatCurrency(avgOrderValue),
@@ -254,8 +247,7 @@ public class ReportService {
                         "pi pi-chart-line",
                         "INFO",
                         null,
-                        "Promedio de total de los pedidos confirmados en la fecha."
-                ),
+                        "Promedio de total de los pedidos confirmados en la fecha."),
                 buildStatCard(
                         "Productos activos",
                         NumberFormat.getInstance(new Locale("es", "AR")).format(activeProducts),
@@ -265,8 +257,7 @@ public class ReportService {
                         "pi pi-box",
                         "NEUTRAL",
                         "/admin/products",
-                        "Total de productos activos en el catalogo."
-                ),
+                        "Total de productos activos en el catalogo."),
                 buildStatCard(
                         "Proveedores activos",
                         NumberFormat.getInstance(new Locale("es", "AR")).format(activeSuppliers),
@@ -276,15 +267,13 @@ public class ReportService {
                         "pi pi-truck",
                         "NEUTRAL",
                         "/admin/suppliers",
-                        "Total de proveedores activos."
-                ),
+                        "Total de proveedores activos."),
                 topProducts,
                 salesByHour,
                 salesByMethod,
                 percentageDiff(totalRevenue, prevTotalAndAvg[0]),
                 percentageDiff(BigDecimal.valueOf(orderCount), BigDecimal.valueOf(prevCount)),
-                percentageDiff(avgOrderValue, prevTotalAndAvg[1])
-        );
+                percentageDiff(avgOrderValue, prevTotalAndAvg[1]));
     }
 
     // ---------------------------------------------------------------------------
@@ -307,9 +296,12 @@ public class ReportService {
         ensureInternalUser(currentUser);
 
         Long effectiveBranchId = resolveBranchForUser(branchId, currentUser);
-        String branchName = effectiveBranchId == null ? null : branchRepository.findById(effectiveBranchId)
-                .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
-                .orElse(null);
+        String branchName = effectiveBranchId == null
+                ? null
+                : branchQuery
+                        .findById(effectiveBranchId)
+                        .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
+                        .orElse(null);
 
         LocalDate effectiveTo = to != null ? to : LocalDate.now(REPORT_ZONE);
         LocalDate effectiveFrom = from != null ? from : effectiveTo.minusDays(DEFAULT_CASH_WINDOW_DAYS - 1L);
@@ -337,9 +329,7 @@ public class ReportService {
                 toBigDecimal(totals[7]).setScale(2, RoundingMode.HALF_UP),
                 reportRepository.cashOverviewDailySeries(effectiveFrom, effectiveTo, effectiveBranchId),
                 reportRepository.cashOverviewPaymentMethods(start, end, effectiveBranchId),
-                reportRepository.cashSessionsWithDiscrepancy(
-                        effectiveBranchId, start, end, CASH_DISCREPANCY_LIMIT)
-        );
+                reportRepository.cashSessionsWithDiscrepancy(effectiveBranchId, start, end, CASH_DISCREPANCY_LIMIT));
     }
 
     // ---------------------------------------------------------------------------
@@ -367,10 +357,7 @@ public class ReportService {
 
         CashSession session = reportRepository.findSessionById(sessionId);
         if (session == null) {
-            throw new DomainException(
-                    CODE_CASH_SESSION_NOT_FOUND,
-                    HttpStatus.NOT_FOUND,
-                    "Cash session not found");
+            throw new DomainException(CODE_CASH_SESSION_NOT_FOUND, HttpStatus.NOT_FOUND, "Cash session not found");
         }
 
         CashSessionDto base = cashService.getSessionById(sessionId);
@@ -403,8 +390,7 @@ public class ReportService {
                 totalPosRevenue,
                 base.entries() == null ? List.of() : base.entries(),
                 manualMovements,
-                OffsetDateTime.now()
-        );
+                OffsetDateTime.now());
     }
 
     // ---------------------------------------------------------------------------
@@ -447,7 +433,8 @@ public class ReportService {
         Long effectiveBranchId = resolveBranchForUser(branchId, currentUser);
         String branchName = effectiveBranchId == null
                 ? null
-                : branchRepository.findById(effectiveBranchId)
+                : branchQuery
+                        .findById(effectiveBranchId)
                         .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
                         .orElse(null);
 
@@ -470,8 +457,7 @@ public class ReportService {
         BigDecimal grossProfit = totalRevenue.subtract(costOfGoodsSold);
         BigDecimal grossMargin = totalRevenue.signum() == 0
                 ? BigDecimal.ZERO
-                : grossProfit.multiply(BigDecimal.valueOf(100))
-                        .divide(totalRevenue, 1, RoundingMode.HALF_UP);
+                : grossProfit.multiply(BigDecimal.valueOf(100)).divide(totalRevenue, 1, RoundingMode.HALF_UP);
 
         // Trend vs the previous period of equal length.
         long days = java.time.temporal.ChronoUnit.DAYS.between(effectiveFrom, effectiveTo) + 1;
@@ -491,8 +477,7 @@ public class ReportService {
                 "pi pi-shopping-cart",
                 "SUCCESS",
                 trend(totalRevenue, prevRevenue),
-                percentageDiff(totalRevenue, prevRevenue)
-        ));
+                percentageDiff(totalRevenue, prevRevenue)));
         kpis.add(new ReportKpiDto(
                 "Transacciones",
                 NumberFormat.getInstance(new Locale("es", "AR")).format(orderCount),
@@ -500,8 +485,7 @@ public class ReportService {
                 "pi pi-receipt",
                 "INFO",
                 trend(BigDecimal.valueOf(orderCount), BigDecimal.valueOf(prevCount)),
-                percentageDiff(BigDecimal.valueOf(orderCount), BigDecimal.valueOf(prevCount))
-        ));
+                percentageDiff(BigDecimal.valueOf(orderCount), BigDecimal.valueOf(prevCount))));
         kpis.add(new ReportKpiDto(
                 "Ticket promedio",
                 formatCurrency(avgOrderValue),
@@ -509,8 +493,7 @@ public class ReportService {
                 "pi pi-chart-line",
                 "NEUTRAL",
                 trend(avgOrderValue, prevTotalAndAvg[1]),
-                percentageDiff(avgOrderValue, prevTotalAndAvg[1])
-        ));
+                percentageDiff(avgOrderValue, prevTotalAndAvg[1])));
         kpis.add(new ReportKpiDto(
                 "Margen bruto",
                 formatCurrency(grossProfit),
@@ -518,12 +501,12 @@ public class ReportService {
                 "pi pi-percentage",
                 grossProfit.signum() >= 0 ? "SUCCESS" : "DANGER",
                 "FLAT",
-                null
-        ));
+                null));
         long resolvedOrders = orderCount + cancelled;
         BigDecimal cancellationRate = resolvedOrders == 0
                 ? BigDecimal.ZERO
-                : BigDecimal.valueOf(cancelled).multiply(BigDecimal.valueOf(100))
+                : BigDecimal.valueOf(cancelled)
+                        .multiply(BigDecimal.valueOf(100))
                         .divide(BigDecimal.valueOf(resolvedOrders), 1, RoundingMode.HALF_UP);
         kpis.add(new ReportKpiDto(
                 "Cancelaciones",
@@ -532,8 +515,7 @@ public class ReportService {
                 "pi pi-times-circle",
                 cancelled > 0 ? "WARNING" : "NEUTRAL",
                 "FLAT",
-                null
-        ));
+                null));
 
         // -- Daily series -------------------------------------------------
         List<ReportSeriesPointDto> series = new ArrayList<>();
@@ -546,11 +528,7 @@ public class ReportService {
         for (LocalDate d = effectiveFrom; !d.isAfter(effectiveTo); d = d.plusDays(1)) {
             BigDecimal value = revenueByDay.getOrDefault(d, BigDecimal.ZERO.setScale(2));
             series.add(new ReportSeriesPointDto(
-                    d,
-                    String.format("%02d/%02d", d.getDayOfMonth(), d.getMonthValue()),
-                    value,
-                    null
-            ));
+                    d, String.format("%02d/%02d", d.getDayOfMonth(), d.getMonthValue()), value, null));
         }
 
         // -- Payment methods ---------------------------------------------
@@ -562,8 +540,7 @@ public class ReportService {
                     m.methodLabel(),
                     m.totalAmount(),
                     BigDecimal.valueOf(m.transactionCount()),
-                    m.percentage()
-            ));
+                    m.percentage()));
         }
 
         // -- Categories ---------------------------------------------------
@@ -574,17 +551,11 @@ public class ReportService {
             BigDecimal amount = toBigDecimal(row[2]).setScale(2, RoundingMode.HALF_UP);
             long count = ((Number) row[3]).longValue();
             byCategory.add(new ReportBreakdownDto(
-                    String.valueOf(categoryId),
-                    categoryName,
-                    amount,
-                    BigDecimal.valueOf(count),
-                    BigDecimal.ZERO
-            ));
+                    String.valueOf(categoryId), categoryName, amount, BigDecimal.valueOf(count), BigDecimal.ZERO));
         }
         // Recompute percentages now that we know the grand total.
-        BigDecimal totalByCategory = byCategory.stream()
-                .map(ReportBreakdownDto::amount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalByCategory =
+                byCategory.stream().map(ReportBreakdownDto::amount).reduce(BigDecimal.ZERO, BigDecimal::add);
         if (totalByCategory.signum() > 0) {
             byCategory = byCategory.stream()
                     .map(item -> new ReportBreakdownDto(
@@ -592,9 +563,9 @@ public class ReportService {
                             item.label(),
                             item.amount(),
                             item.count(),
-                            item.amount().multiply(BigDecimal.valueOf(100))
-                                    .divide(totalByCategory, 2, RoundingMode.HALF_UP)
-                    ))
+                            item.amount()
+                                    .multiply(BigDecimal.valueOf(100))
+                                    .divide(totalByCategory, 2, RoundingMode.HALF_UP)))
                     .toList();
         }
 
@@ -608,8 +579,7 @@ public class ReportService {
                     t.categoryName(),
                     formatCurrency(t.totalRevenue()),
                     NumberFormat.getInstance(new Locale("es", "AR")).format(t.quantitySold()) + " u.",
-                    null
-            ));
+                    null));
         }
 
         return new SalesReportDto(
@@ -622,8 +592,7 @@ public class ReportService {
                 series,
                 byMethod,
                 byCategory,
-                topProducts
-        );
+                topProducts);
     }
 
     // ---------------------------------------------------------------------------
@@ -647,14 +616,16 @@ public class ReportService {
         Long effectiveBranchId = resolveBranchForUser(branchId, currentUser);
         String branchName = effectiveBranchId == null
                 ? null
-                : branchRepository.findById(effectiveBranchId)
+                : branchQuery
+                        .findById(effectiveBranchId)
                         .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
                         .orElse(null);
 
-        BigDecimal totalStockValue = reportRepository.totalStockValue(effectiveBranchId)
+        BigDecimal totalStockValue =
+                reportRepository.totalStockValue(effectiveBranchId).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal expiringStockValue = reportRepository
+                .expiringStockValue(DASHBOARD_EXPIRING_HORIZON_DAYS, effectiveBranchId)
                 .setScale(2, RoundingMode.HALF_UP);
-        BigDecimal expiringStockValue = reportRepository.expiringStockValue(
-                DASHBOARD_EXPIRING_HORIZON_DAYS, effectiveBranchId).setScale(2, RoundingMode.HALF_UP);
         long lowStock = reportRepository.lowStockProducts(effectiveBranchId).size();
         long expired = reportRepository.countExpiredLots(effectiveBranchId);
 
@@ -666,8 +637,7 @@ public class ReportService {
                 "pi pi-box",
                 "SUCCESS",
                 "FLAT",
-                null
-        ));
+                null));
         kpis.add(new ReportKpiDto(
                 "Capital por vencer",
                 formatCurrency(expiringStockValue),
@@ -675,8 +645,7 @@ public class ReportService {
                 "pi pi-money-bill",
                 expiringStockValue.signum() > 0 ? "WARNING" : "NEUTRAL",
                 "FLAT",
-                null
-        ));
+                null));
         kpis.add(new ReportKpiDto(
                 "Stock bajo",
                 NumberFormat.getInstance(new Locale("es", "AR")).format(lowStock),
@@ -684,8 +653,7 @@ public class ReportService {
                 "pi pi-exclamation-triangle",
                 lowStock > 0 ? "DANGER" : "NEUTRAL",
                 lowStock > 0 ? "UP" : "FLAT",
-                null
-        ));
+                null));
         kpis.add(new ReportKpiDto(
                 "Lotes vencidos",
                 NumberFormat.getInstance(new Locale("es", "AR")).format(expired),
@@ -693,8 +661,7 @@ public class ReportService {
                 "pi pi-calendar-times",
                 expired > 0 ? "DANGER" : "NEUTRAL",
                 expired > 0 ? "UP" : "FLAT",
-                null
-        ));
+                null));
 
         // -- Stock by category -------------------------------------------
         List<ReportBreakdownDto> stockByCategory = new ArrayList<>();
@@ -706,12 +673,7 @@ public class ReportService {
             BigDecimal value = toBigDecimal(row[2]).setScale(2, RoundingMode.HALF_UP);
             BigDecimal units = toBigDecimal(row[3]);
             stockByCategory.add(new ReportBreakdownDto(
-                    String.valueOf(categoryId),
-                    name,
-                    value,
-                    units.stripTrailingZeros(),
-                    BigDecimal.ZERO
-            ));
+                    String.valueOf(categoryId), name, value, units.stripTrailingZeros(), BigDecimal.ZERO));
             grandTotal = grandTotal.add(value);
         }
         if (grandTotal.signum() > 0) {
@@ -722,27 +684,22 @@ public class ReportService {
                             item.label(),
                             item.amount(),
                             item.count(),
-                            item.amount().multiply(BigDecimal.valueOf(100))
-                                    .divide(finalTotal, 2, RoundingMode.HALF_UP)
-                    ))
+                            item.amount()
+                                    .multiply(BigDecimal.valueOf(100))
+                                    .divide(finalTotal, 2, RoundingMode.HALF_UP)))
                     .toList();
         }
 
         // -- Expiring by month -------------------------------------------
         List<ReportSeriesPointDto> expiringByMonth = new ArrayList<>();
-        for (Object[] row : reportRepository.expiringLotsByMonth(INVENTORY_EXPIRATION_HORIZON_MONTHS, effectiveBranchId)) {
+        for (Object[] row :
+                reportRepository.expiringLotsByMonth(INVENTORY_EXPIRATION_HORIZON_MONTHS, effectiveBranchId)) {
             LocalDate month = toLocalDate(row[0]);
             long lotCount = ((Number) row[1]).longValue();
             BigDecimal units = toBigDecimal(row[2]).stripTrailingZeros();
-            String label = month.getMonth().getDisplayName(java.time.format.TextStyle.SHORT,
-                    new Locale("es", "AR"));
+            String label = month.getMonth().getDisplayName(java.time.format.TextStyle.SHORT, new Locale("es", "AR"));
             label = label.substring(0, 1).toUpperCase() + label.substring(1);
-            expiringByMonth.add(new ReportSeriesPointDto(
-                    month,
-                    label,
-                    BigDecimal.valueOf(lotCount),
-                    units
-            ));
+            expiringByMonth.add(new ReportSeriesPointDto(month, label, BigDecimal.valueOf(lotCount), units));
         }
 
         // -- Top by value ------------------------------------------------
@@ -759,8 +716,7 @@ public class ReportService {
                     categoryName,
                     formatCurrency(value),
                     units.stripTrailingZeros().toPlainString() + " u.",
-                    null
-            ));
+                    null));
         }
 
         // -- Low stock list ----------------------------------------------
@@ -771,20 +727,15 @@ public class ReportService {
             BigDecimal stock = toBigDecimal(row[2]);
             Integer min = ((Number) row[3]).intValue();
             String branchLabel = row.length > 5 ? (String) row[5] : null;
-            String badge = min != null && stock.signum() == 0
-                    ? "Sin stock"
-                    : "Bajo minimo";
+            String badge = min != null && stock.signum() == 0 ? "Sin stock" : "Bajo minimo";
             lowStockList.add(new ReportTopRowDto(
                     productId,
-                    effectiveBranchId == null && branchLabel != null
-                            ? productName + " - " + branchLabel
-                            : productName,
-                    "Stock actual: " + stock.stripTrailingZeros().toPlainString()
-                            + " u. - Minimo: " + (min == null ? "-" : min.toString()) + " u.",
+                    effectiveBranchId == null && branchLabel != null ? productName + " - " + branchLabel : productName,
+                    "Stock actual: " + stock.stripTrailingZeros().toPlainString() + " u. - Minimo: "
+                            + (min == null ? "-" : min.toString()) + " u.",
                     NumberFormat.getInstance(new Locale("es", "AR")).format(stock) + " u.",
                     "Min. " + (min == null ? "-" : min.toString()) + " u.",
-                    badge
-            ));
+                    badge));
         }
 
         return new InventoryReportDto(
@@ -795,8 +746,7 @@ public class ReportService {
                 stockByCategory,
                 expiringByMonth,
                 topByValue,
-                lowStockList
-        );
+                lowStockList);
     }
 
     // ---------------------------------------------------------------------------
@@ -819,7 +769,8 @@ public class ReportService {
         Long effectiveBranchId = resolveBranchForUser(branchId, currentUser);
         String branchName = effectiveBranchId == null
                 ? null
-                : branchRepository.findById(effectiveBranchId)
+                : branchQuery
+                        .findById(effectiveBranchId)
                         .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
                         .orElse(null);
 
@@ -846,8 +797,7 @@ public class ReportService {
                 "pi pi-shopping-bag",
                 "SUCCESS",
                 "FLAT",
-                null
-        ));
+                null));
         kpis.add(new ReportKpiDto(
                 "Recepciones",
                 NumberFormat.getInstance(new Locale("es", "AR")).format(receiptCount),
@@ -855,8 +805,7 @@ public class ReportService {
                 "pi pi-file",
                 "INFO",
                 "FLAT",
-                null
-        ));
+                null));
         kpis.add(new ReportKpiDto(
                 "Lead time promedio",
                 avgLeadDays.setScale(1, RoundingMode.HALF_UP).toPlainString() + " d.",
@@ -864,8 +813,7 @@ public class ReportService {
                 "pi pi-stopwatch",
                 "WARNING",
                 "FLAT",
-                null
-        ));
+                null));
         kpis.add(new ReportKpiDto(
                 "Entregas a tiempo",
                 onTimePercentage.toPlainString() + "%",
@@ -873,8 +821,7 @@ public class ReportService {
                 "pi pi-calendar-clock",
                 onTimePercentage.compareTo(BigDecimal.valueOf(80)) >= 0 ? "SUCCESS" : "WARNING",
                 "FLAT",
-                null
-        ));
+                null));
 
         // -- Purchases by month ------------------------------------------
         List<ReportSeriesPointDto> purchasesByMonth = new ArrayList<>();
@@ -882,21 +829,14 @@ public class ReportService {
             LocalDate month = toLocalDate(row[0]);
             BigDecimal total = toBigDecimal(row[1]).setScale(2, RoundingMode.HALF_UP);
             long orders = toBigDecimal(row[2]).longValue();
-            String label = month.getMonth().getDisplayName(java.time.format.TextStyle.SHORT,
-                    new Locale("es", "AR"));
+            String label = month.getMonth().getDisplayName(java.time.format.TextStyle.SHORT, new Locale("es", "AR"));
             label = label.substring(0, 1).toUpperCase() + label.substring(1);
-            purchasesByMonth.add(new ReportSeriesPointDto(
-                    month,
-                    label,
-                    total,
-                    BigDecimal.valueOf(orders)
-            ));
+            purchasesByMonth.add(new ReportSeriesPointDto(month, label, total, BigDecimal.valueOf(orders)));
         }
 
         // -- Top by volume -----------------------------------------------
         List<ReportTopRowDto> topByVolume = new ArrayList<>();
-        for (Object[] row : reportRepository.topSuppliersByVolume(
-                start, end, effectiveBranchId, REPORT_TOP_LIMIT)) {
+        for (Object[] row : reportRepository.topSuppliersByVolume(start, end, effectiveBranchId, REPORT_TOP_LIMIT)) {
             Long supplierId = ((Number) row[0]).longValue();
             String name = (String) row[1];
             BigDecimal total = toBigDecimal(row[2]).setScale(2, RoundingMode.HALF_UP);
@@ -907,14 +847,12 @@ public class ReportService {
                     null,
                     formatCurrency(total),
                     NumberFormat.getInstance(new Locale("es", "AR")).format(orders) + " ord.",
-                    null
-            ));
+                    null));
         }
 
         // -- Lead time by supplier ---------------------------------------
         List<ReportTopRowDto> leadTime = new ArrayList<>();
-        for (Object[] row : reportRepository.avgLeadTimeBySupplier(
-                start, end, effectiveBranchId, REPORT_TOP_LIMIT)) {
+        for (Object[] row : reportRepository.avgLeadTimeBySupplier(start, end, effectiveBranchId, REPORT_TOP_LIMIT)) {
             Long supplierId = ((Number) row[0]).longValue();
             String name = (String) row[1];
             BigDecimal days = toBigDecimal(row[2]).setScale(1, RoundingMode.HALF_UP);
@@ -925,8 +863,7 @@ public class ReportService {
                     null,
                     days.toPlainString() + " d.",
                     NumberFormat.getInstance(new Locale("es", "AR")).format(orders) + " ord.",
-                    null
-            ));
+                    null));
         }
 
         return new SuppliersReportDto(
@@ -938,8 +875,7 @@ public class ReportService {
                 kpis,
                 purchasesByMonth,
                 topByVolume,
-                leadTime
-        );
+                leadTime);
     }
 
     // ---------------------------------------------------------------------------
@@ -959,7 +895,8 @@ public class ReportService {
         Long effectiveBranchId = resolveBranchForUser(branchId, currentUser);
         String branchName = effectiveBranchId == null
                 ? null
-                : branchRepository.findById(effectiveBranchId)
+                : branchQuery
+                        .findById(effectiveBranchId)
                         .map(com.dietetica.lembas.shared.branch.model.Branch::getName)
                         .orElse(null);
         LocalDate effectiveFrom = from == null ? LocalDate.now(REPORT_ZONE).minusDays(29) : from;
@@ -975,7 +912,8 @@ public class ReportService {
             metrics.averageTicket = toBigDecimal(row[6]).setScale(2, RoundingMode.HALF_UP);
         }
         for (Object[] row : reportRepository.employeeCashOpenPerformance(start, end, effectiveBranchId)) {
-            metricsFor(metricsByEmployee, row).cashSessionsOpened = toBigDecimal(row[4]).longValue();
+            metricsFor(metricsByEmployee, row).cashSessionsOpened =
+                    toBigDecimal(row[4]).longValue();
         }
         for (Object[] row : reportRepository.employeeCashClosePerformance(start, end, effectiveBranchId)) {
             EmployeeMetrics metrics = metricsFor(metricsByEmployee, row);
@@ -985,44 +923,69 @@ public class ReportService {
 
         List<EmployeePerformanceDto> employees = metricsByEmployee.values().stream()
                 .map(EmployeeMetrics::toDto)
-                .sorted(Comparator.comparing(EmployeePerformanceDto::posRevenue).reversed()
+                .sorted(Comparator.comparing(EmployeePerformanceDto::posRevenue)
+                        .reversed()
                         .thenComparing(EmployeePerformanceDto::posSalesCount, Comparator.reverseOrder())
                         .thenComparing(EmployeePerformanceDto::employeeName))
                 .toList();
-        long posSalesCount = employees.stream().mapToLong(EmployeePerformanceDto::posSalesCount).sum();
-        BigDecimal posRevenue = employees.stream()
-                .map(EmployeePerformanceDto::posRevenue)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long posSalesCount = employees.stream()
+                .mapToLong(EmployeePerformanceDto::posSalesCount)
+                .sum();
+        BigDecimal posRevenue =
+                employees.stream().map(EmployeePerformanceDto::posRevenue).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal cashDifferenceAbsolute = employees.stream()
                 .map(EmployeePerformanceDto::cashDifferenceAbsolute)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        long cashSessionsClosed = employees.stream().mapToLong(EmployeePerformanceDto::cashSessionsClosed).sum();
+        long cashSessionsClosed = employees.stream()
+                .mapToLong(EmployeePerformanceDto::cashSessionsClosed)
+                .sum();
 
         List<ReportKpiDto> kpis = List.of(
-                new ReportKpiDto("Operadores con actividad", String.valueOf(employees.size()),
-                        "Ventas POS o actividad de caja", "pi pi-users", "INFO", null, null),
-                new ReportKpiDto("Facturacion POS", formatCurrency(posRevenue),
+                new ReportKpiDto(
+                        "Operadores con actividad",
+                        String.valueOf(employees.size()),
+                        "Ventas POS o actividad de caja",
+                        "pi pi-users",
+                        "INFO",
+                        null,
+                        null),
+                new ReportKpiDto(
+                        "Facturacion POS",
+                        formatCurrency(posRevenue),
                         NumberFormat.getInstance(new Locale("es", "AR")).format(posSalesCount) + " ventas",
-                        "pi pi-shopping-bag", "SUCCESS", null, null),
-                new ReportKpiDto("Cierres de caja", String.valueOf(cashSessionsClosed),
-                        "Cierres realizados en el periodo", "pi pi-wallet", "NEUTRAL", null, null),
-                new ReportKpiDto("Desvios absolutos", formatCurrency(cashDifferenceAbsolute),
-                        "Suma de diferencias de caja, sin compensarlas", "pi pi-exclamation-triangle",
-                        cashDifferenceAbsolute.signum() == 0 ? "SUCCESS" : "WARNING", null, null)
-        );
+                        "pi pi-shopping-bag",
+                        "SUCCESS",
+                        null,
+                        null),
+                new ReportKpiDto(
+                        "Cierres de caja",
+                        String.valueOf(cashSessionsClosed),
+                        "Cierres realizados en el periodo",
+                        "pi pi-wallet",
+                        "NEUTRAL",
+                        null,
+                        null),
+                new ReportKpiDto(
+                        "Desvios absolutos",
+                        formatCurrency(cashDifferenceAbsolute),
+                        "Suma de diferencias de caja, sin compensarlas",
+                        "pi pi-exclamation-triangle",
+                        cashDifferenceAbsolute.signum() == 0 ? "SUCCESS" : "WARNING",
+                        null,
+                        null));
 
         return new EmployeeReportDto(
-                effectiveFrom, effectiveTo, effectiveBranchId, branchName,
-                OffsetDateTime.now(), kpis, employees);
+                effectiveFrom, effectiveTo, effectiveBranchId, branchName, OffsetDateTime.now(), kpis, employees);
     }
 
     private static EmployeeMetrics metricsFor(Map<Long, EmployeeMetrics> metricsByEmployee, Object[] row) {
         Long employeeId = ((Number) row[0]).longValue();
-        return metricsByEmployee.computeIfAbsent(employeeId, ignored -> new EmployeeMetrics(
+        return metricsByEmployee.computeIfAbsent(
                 employeeId,
-                fullName((String) row[1], (String) row[2]),
-                row[3] == null ? "EMPLOYEE" : row[3].toString()
-        ));
+                ignored -> new EmployeeMetrics(
+                        employeeId,
+                        fullName((String) row[1], (String) row[2]),
+                        row[3] == null ? "EMPLOYEE" : row[3].toString()));
     }
 
     private static String fullName(String firstName, String lastName) {
@@ -1052,8 +1015,15 @@ public class ReportService {
 
         private EmployeePerformanceDto toDto() {
             return new EmployeePerformanceDto(
-                    employeeId, employeeName, role, posSalesCount, posRevenue, averageTicket,
-                    cashSessionsOpened, cashSessionsClosed, cashDifferenceAbsolute);
+                    employeeId,
+                    employeeName,
+                    role,
+                    posSalesCount,
+                    posRevenue,
+                    averageTicket,
+                    cashSessionsOpened,
+                    cashSessionsClosed,
+                    cashDifferenceAbsolute);
         }
     }
 
@@ -1080,8 +1050,7 @@ public class ReportService {
             CashSessionStatus status,
             int page,
             int size,
-            String sort
-    ) {
+            String sort) {
         User currentUser = securityContextHelper.getCurrentUser();
         ensureInternalUser(currentUser);
 
@@ -1089,16 +1058,24 @@ public class ReportService {
 
         int effectivePage = Math.max(page, 0);
         int effectiveSize = clampPageSize(size);
-        OffsetDateTime fromTs = from == null ? FAR_PAST : from.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
-        OffsetDateTime toTs = to == null ? FAR_FUTURE : to.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        OffsetDateTime fromTs =
+                from == null ? FAR_PAST : from.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
+        OffsetDateTime toTs = to == null
+                ? FAR_FUTURE
+                : to.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
 
         List<CashSessionSummaryDto> rows = reportRepository.cashSessionHistory(
-                effectiveBranchId, fromTs, toTs,
-                openedByUserId, closedByUserId, status,
-                effectivePage * effectiveSize, effectiveSize, sort);
+                effectiveBranchId,
+                fromTs,
+                toTs,
+                openedByUserId,
+                closedByUserId,
+                status,
+                effectivePage * effectiveSize,
+                effectiveSize,
+                sort);
         long total = reportRepository.countCashSessionHistory(
-                effectiveBranchId, fromTs, toTs,
-                openedByUserId, closedByUserId, status);
+                effectiveBranchId, fromTs, toTs, openedByUserId, closedByUserId, status);
 
         return new CashSessionHistoryDto(rows, total, effectivePage, effectiveSize);
     }
@@ -1122,19 +1099,13 @@ public class ReportService {
             if (requestedBranchId == null) {
                 return null;
             }
-            if (!branchRepository.existsByIdAndActiveTrue(requestedBranchId)) {
-                throw new DomainException(
-                        CODE_BRANCH_NOT_FOUND,
-                        HttpStatus.NOT_FOUND,
-                        "Branch not found or inactive");
+            if (!branchQuery.existsActive(requestedBranchId)) {
+                throw new DomainException(CODE_BRANCH_NOT_FOUND, HttpStatus.NOT_FOUND, "Branch not found or inactive");
             }
             return requestedBranchId;
         }
         if (user.getBranchId() == null) {
-            throw new DomainException(
-                    CODE_INVALID_USER_BRANCH,
-                    HttpStatus.BAD_REQUEST,
-                    "User has no assigned branch");
+            throw new DomainException(CODE_INVALID_USER_BRANCH, HttpStatus.BAD_REQUEST, "User has no assigned branch");
         }
         return user.getBranchId();
     }
@@ -1149,8 +1120,8 @@ public class ReportService {
     /** Rejects CUSTOMER users from the report endpoints. */
     private void ensureInternalUser(User user) {
         if (user == null || user.getRole() == Role.CUSTOMER) {
-            throw new DomainException(CODE_ACCESS_DENIED, HttpStatus.FORBIDDEN,
-                    "Only internal users can access reports");
+            throw new DomainException(
+                    CODE_ACCESS_DENIED, HttpStatus.FORBIDDEN, "Only internal users can access reports");
         }
     }
 
@@ -1182,8 +1153,7 @@ public class ReportService {
             String icon,
             String colorStyle,
             String link,
-            String tooltip
-    ) {
+            String tooltip) {
         return new DashboardStatCardDto(
                 label,
                 value,
@@ -1193,8 +1163,7 @@ public class ReportService {
                 icon,
                 colorStyle,
                 link,
-                tooltip
-        );
+                tooltip);
     }
 
     /**
@@ -1221,9 +1190,7 @@ public class ReportService {
         if (previous.signum() == 0) {
             return current.signum() == 0 ? null : BigDecimal.valueOf(100);
         }
-        return current.subtract(previous)
-                .multiply(BigDecimal.valueOf(100))
-                .divide(previous, 4, RoundingMode.HALF_UP);
+        return current.subtract(previous).multiply(BigDecimal.valueOf(100)).divide(previous, 4, RoundingMode.HALF_UP);
     }
 
     /**

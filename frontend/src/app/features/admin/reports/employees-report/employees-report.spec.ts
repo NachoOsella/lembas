@@ -1,10 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 
-import { ReportsService } from '../../../../core/services/reports';
-import { UserService } from '../../../../core/services/user';
-import { EmployeeReportDto } from '../../../../shared/models/reports';
+import { ReportsService } from '@features/reports/data-access/reports';
+import { UserService } from '@features/users/data-access/user';
+import type { EmployeeReportDto } from '@features/reports/domain/reports';
 import { EmployeesReportPageComponent } from './employees-report';
 
 const report: EmployeeReportDto = {
@@ -64,7 +65,7 @@ describe('EmployeesReportPageComponent', () => {
   });
 
   it('renders the employee POS and cash metrics', () => {
-    const text = fixture.nativeElement.textContent as string;
+    const text = fixture.nativeElement.textContent ?? '';
     expect(text).toContain('5');
     expect(text).toContain('2');
     expect(text).toContain('Empleado');

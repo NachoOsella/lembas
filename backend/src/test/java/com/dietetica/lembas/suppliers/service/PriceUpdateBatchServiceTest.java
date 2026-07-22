@@ -1,12 +1,19 @@
 package com.dietetica.lembas.suppliers.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
-import com.dietetica.lembas.catalog.model.Category;
+import com.dietetica.lembas.catalog.api.SupplierPricingCatalog;
 import com.dietetica.lembas.catalog.model.Product;
-import com.dietetica.lembas.catalog.model.ProductSalePriceHistory;
-import com.dietetica.lembas.catalog.repository.CategoryRepository;
-import com.dietetica.lembas.catalog.repository.ProductRepository;
-import com.dietetica.lembas.catalog.repository.ProductSalePriceHistoryRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.suppliers.dto.PriceUpdateBatchDefaultsRequest;
 import com.dietetica.lembas.suppliers.dto.PriceUpdateBatchDetailDto;
@@ -26,33 +33,17 @@ import com.dietetica.lembas.suppliers.repository.PriceUpdateBatchRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierProductCostHistoryRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierProductRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 /** Unit tests for the price update batch application service. */
 @ExtendWith(MockitoExtension.class)
@@ -60,24 +51,28 @@ class PriceUpdateBatchServiceTest {
 
     @Mock
     private PriceUpdateBatchRepository batchRepository;
+
     @Mock
     private PriceUpdateBatchItemRepository itemRepository;
+
     @Mock
     private SupplierRepository supplierRepository;
+
     @Mock
     private SupplierProductRepository supplierProductRepository;
+
     @Mock
     private SupplierProductCostHistoryRepository costHistoryRepository;
+
     @Mock
-    private ProductRepository productRepository;
-    @Mock
-    private CategoryRepository categoryRepository;
-    @Mock
-    private ProductSalePriceHistoryRepository salePriceHistoryRepository;
+    private SupplierPricingCatalog supplierPricingCatalog;
+
     @Mock
     private PriceUpdateImportService importService;
+
     @Mock
     private PriceUpdateCalculationService calculationService;
+
     @Mock
     private SecurityContextHelper securityContextHelper;
 
@@ -86,25 +81,19 @@ class PriceUpdateBatchServiceTest {
     private final Supplier supplier = supplier(10L, "Distribuidora");
     private final Product product = product(100L, "Yerba", BigDecimal.valueOf(8000));
     private final SupplierProduct supplierProduct = supplierProduct(200L, supplier, product, BigDecimal.valueOf(5200));
-    private final Category category = mock(Category.class);
-
-    @Captor
-    private ArgumentCaptor<PriceUpdateBatch> batchCaptor;
-    @Captor
-    private ArgumentCaptor<SupplierProductCostHistory> costHistoryCaptor;
-    @Captor
-    private ArgumentCaptor<ProductSalePriceHistory> salePriceHistoryCaptor;
 
     @BeforeEach
     void setUp() {
         service = new PriceUpdateBatchService(
-                batchRepository, itemRepository,
-                supplierRepository, supplierProductRepository,
-                costHistoryRepository, productRepository,
-                categoryRepository, salePriceHistoryRepository,
-                importService, calculationService,
-                securityContextHelper
-        );
+                batchRepository,
+                itemRepository,
+                supplierRepository,
+                supplierProductRepository,
+                costHistoryRepository,
+                supplierPricingCatalog,
+                importService,
+                calculationService,
+                securityContextHelper);
         lenient().when(securityContextHelper.getCurrentUser()).thenThrow(new IllegalStateException("No auth"));
     }
 
@@ -157,10 +146,10 @@ class PriceUpdateBatchServiceTest {
         when(supplierRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(supplier));
         mockMatchReturnsNothing();
         PriceUpdateManualBatchRequest request = new PriceUpdateManualBatchRequest(
-                10L, null,
+                10L,
+                null,
                 List.of(new PriceUpdateManualItemRequest("SUP-1", "779001", "Producto A", BigDecimal.valueOf(5200))),
-                null
-        );
+                null);
         when(batchRepository.save(any())).thenAnswer(invocation -> {
             PriceUpdateBatch saved = invocation.getArgument(0);
             saved.setId(1L);
@@ -181,8 +170,7 @@ class PriceUpdateBatchServiceTest {
     void shouldRejectManualBatchWhenSupplierNotFound() {
         when(supplierRepository.findByIdAndActiveTrue(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.createManual(
-                new PriceUpdateManualBatchRequest(999L, null, List.of(), null)))
+        assertThatThrownBy(() -> service.createManual(new PriceUpdateManualBatchRequest(999L, null, List.of(), null)))
                 .isInstanceOf(DomainException.class)
                 .extracting("code")
                 .isEqualTo("SUPPLIER_NOT_FOUND");
@@ -258,9 +246,7 @@ class PriceUpdateBatchServiceTest {
         when(batchRepository.findDetailedByIdForUpdate(1L)).thenReturn(Optional.of(batch));
 
         var request = new PriceUpdateBatchItemUpdateRequest(
-                null, null, null, null, null,
-                BigDecimal.valueOf(30), null, null, null, null, null
-        );
+                null, null, null, null, null, BigDecimal.valueOf(30), null, null, null, null, null);
         service.updateItem(1L, item.getId(), request);
 
         assertThat(item.getNewProductMarginPercentage()).isEqualByComparingTo("30");
@@ -274,9 +260,7 @@ class PriceUpdateBatchServiceTest {
         when(batchRepository.findDetailedByIdForUpdate(1L)).thenReturn(Optional.of(batch));
 
         var request = new PriceUpdateBatchItemUpdateRequest(
-                null, null, null, null, null,
-                null, BigDecimal.valueOf(6200), null, null, null, null
-        );
+                null, null, null, null, null, null, BigDecimal.valueOf(6200), null, null, null, null);
         service.updateItem(1L, item.getId(), request);
 
         assertThat(item.getFinalSalePrice()).isEqualByComparingTo("6200");
@@ -290,10 +274,7 @@ class PriceUpdateBatchServiceTest {
         when(batchRepository.findDetailedByIdForUpdate(1L)).thenReturn(Optional.of(batch));
 
         var request = new PriceUpdateBatchItemUpdateRequest(
-                null, null, null, null, null,
-                null, null, null, null, null,
-                PriceUpdateBatchItemStatus.EXCLUDED
-        );
+                null, null, null, null, null, null, null, null, null, null, PriceUpdateBatchItemStatus.EXCLUDED);
         service.updateItem(1L, item.getId(), request);
 
         assertThat(item.getStatus()).isEqualTo(PriceUpdateBatchItemStatus.EXCLUDED);
@@ -304,10 +285,8 @@ class PriceUpdateBatchServiceTest {
         var batch = draftBatchWithItems(1L);
         when(batchRepository.findDetailedByIdForUpdate(1L)).thenReturn(Optional.of(batch));
 
-        var request = new PriceUpdateBatchItemUpdateRequest(
-                null, null, null, null, null,
-                null, null, null, null, null, null
-        );
+        var request =
+                new PriceUpdateBatchItemUpdateRequest(null, null, null, null, null, null, null, null, null, null, null);
         assertThatThrownBy(() -> service.updateItem(1L, 999L, request))
                 .isInstanceOf(DomainException.class)
                 .extracting("code")
@@ -363,9 +342,9 @@ class PriceUpdateBatchServiceTest {
         assertThat(batch.getStatus()).isEqualTo(PriceUpdateBatchStatus.APPLIED);
         assertThat(batch.getAppliedAt()).isNotNull();
         assertThat(supplierProduct.getCurrentCost()).isEqualByComparingTo("5800");
-        assertThat(product.getSalePrice()).isEqualByComparingTo("9000");
         verify(costHistoryRepository).save(any(SupplierProductCostHistory.class));
-        verify(salePriceHistoryRepository).save(any(ProductSalePriceHistory.class));
+        verify(supplierPricingCatalog)
+                .changeSalePriceForSupplierPriceBatch(product, BigDecimal.valueOf(9000), 1L, null);
     }
 
     @Test
@@ -379,7 +358,7 @@ class PriceUpdateBatchServiceTest {
 
         assertThat(batch.getStatus()).isEqualTo(PriceUpdateBatchStatus.APPLIED);
         verify(costHistoryRepository, never()).save(any());
-        verify(salePriceHistoryRepository, never()).save(any());
+        verify(supplierPricingCatalog, never()).changeSalePriceForSupplierPriceBatch(any(), any(), any(), any());
     }
 
     @Test
@@ -393,8 +372,8 @@ class PriceUpdateBatchServiceTest {
 
         assertThatThrownBy(() -> service.apply(1L))
                 .isInstanceOf(DomainException.class)
-                .extracting("code")
-                .isEqualTo("PRICE_BATCH_ITEM_INVALID");
+                .extracting("code", "status")
+                .containsExactly("PRICE_BATCH_ITEM_INVALID", org.springframework.http.HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -415,9 +394,9 @@ class PriceUpdateBatchServiceTest {
         assertThat(batch.getStatus()).isEqualTo(PriceUpdateBatchStatus.APPLIED);
         // Current cost was not changed (same value), but sale price was different
         assertThat(supplierProduct.getCurrentCost()).isEqualByComparingTo("5200");
-        assertThat(product.getSalePrice()).isEqualByComparingTo("9000");
         verify(costHistoryRepository, never()).save(any());
-        verify(salePriceHistoryRepository).save(any(ProductSalePriceHistory.class));
+        verify(supplierPricingCatalog)
+                .changeSalePriceForSupplierPriceBatch(product, BigDecimal.valueOf(9000), 1L, null);
     }
 
     // ---------------------------------------------------------------
@@ -434,13 +413,10 @@ class PriceUpdateBatchServiceTest {
         item.setNewCost(BigDecimal.valueOf(4000));
         item.setFinalSalePrice(BigDecimal.valueOf(6153.85));
         when(batchRepository.findDetailedByIdForUpdate(1L)).thenReturn(Optional.of(batch));
-        when(categoryRepository.findAll(any(PageRequest.class)))
-                .thenReturn(new PageImpl<>(List.of(category)));
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> {
-            Product p = invocation.getArgument(0);
-            p.setId(200L);
-            return p;
-        });
+        Product createdProduct = product(200L, "Nuevo Producto", BigDecimal.valueOf(6153.85));
+        when(supplierPricingCatalog.createDraftProductForSupplierPriceBatch(
+                        "Nuevo Producto", null, BigDecimal.valueOf(6153.85)))
+                .thenReturn(createdProduct);
         when(supplierProductRepository.save(any(SupplierProduct.class))).thenAnswer(invocation -> {
             SupplierProduct sp = invocation.getArgument(0);
             sp.setId(300L);
@@ -450,10 +426,10 @@ class PriceUpdateBatchServiceTest {
         service.apply(1L);
 
         assertThat(batch.getStatus()).isEqualTo(PriceUpdateBatchStatus.APPLIED);
-        verify(productRepository).save(any(Product.class));
         verify(supplierProductRepository).save(any(SupplierProduct.class));
         verify(costHistoryRepository).save(any(SupplierProductCostHistory.class));
-        verify(salePriceHistoryRepository).save(any(ProductSalePriceHistory.class));
+        verify(supplierPricingCatalog)
+                .recordInitialSalePriceForSupplierPriceBatch(createdProduct, BigDecimal.valueOf(6153.85), 1L, null);
     }
 
     @Test
@@ -557,11 +533,15 @@ class PriceUpdateBatchServiceTest {
     }
 
     private void mockMatchReturnsNothing() {
-        lenient().when(supplierProductRepository.findBySupplierIdAndSupplierSkuIgnoreCaseAndActiveTrue(any(), anyString()))
+        lenient()
+                .when(supplierProductRepository.findBySupplierIdAndSupplierSkuIgnoreCaseAndActiveTrue(
+                        any(), anyString()))
                 .thenReturn(Optional.empty());
-        lenient().when(productRepository.findByBarcodeIgnoreCaseAndActiveTrue(anyString()))
+        lenient()
+                .when(supplierPricingCatalog.findActiveProductByBarcode(anyString()))
                 .thenReturn(Optional.empty());
-        lenient().when(productRepository.findActiveByNameIgnoreCase(anyString()))
+        lenient()
+                .when(supplierPricingCatalog.findActiveProductsByExactName(anyString()))
                 .thenReturn(List.of());
     }
 
@@ -580,7 +560,8 @@ class PriceUpdateBatchServiceTest {
         return p;
     }
 
-    private static SupplierProduct supplierProduct(Long id, Supplier supplier, Product product, BigDecimal currentCost) {
+    private static SupplierProduct supplierProduct(
+            Long id, Supplier supplier, Product product, BigDecimal currentCost) {
         SupplierProduct sp = new SupplierProduct();
         sp.setId(id);
         sp.setSupplier(supplier);

@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 
 import { AppBadge } from '../app-badge/app-badge';
 
@@ -26,6 +26,7 @@ export interface StatusBadgeConfig {
  * orders, payments, cash sessions, stock levels, etc.</p>
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-status-badge',
   imports: [AppBadge],
   templateUrl: './status-badge.html',

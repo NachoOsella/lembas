@@ -1,13 +1,14 @@
-import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
 import { Orders } from './orders';
-import { CustomerOrderService } from '../../../core/services/customer-order';
-import { OrderSummary } from '../../../shared/models/order';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { CustomerOrderService } from '@features/orders/data-access/customer-order';
+import type { OrderSummary } from '@features/orders/domain/order';
 
 /** Builds a minimal OrderSummary for test setups. */
 function summary(overrides: Partial<OrderSummary> = {}): OrderSummary {
@@ -33,20 +34,28 @@ function summary(overrides: Partial<OrderSummary> = {}): OrderSummary {
 }
 
 /** Minimal mock for CustomerOrderService. */
-function mockOrderService(overrides: Partial<CustomerOrderService> = {}): CustomerOrderService {
+type CustomerOrderServiceStub = {
+  createOrder: ReturnType<typeof vi.fn>;
+  getOrders: ReturnType<typeof vi.fn>;
+  getOrder: ReturnType<typeof vi.fn>;
+};
+
+function mockOrderService(
+  overrides: Partial<CustomerOrderServiceStub> = {},
+): CustomerOrderServiceStub {
   return {
     createOrder: vi.fn(),
     getOrders: vi.fn().mockReturnValue(of([])),
     getOrder: vi.fn(),
     ...overrides,
-  } as unknown as CustomerOrderService;
+  };
 }
 
 describe('Orders', () => {
   let component: Orders;
   let fixture: ComponentFixture<Orders>;
 
-  async function configure(opts: { orderService?: CustomerOrderService } = {}): Promise<void> {
+  async function configure(opts: { orderService?: CustomerOrderServiceStub } = {}): Promise<void> {
     const orderService = opts.orderService ?? mockOrderService();
 
     await TestBed.configureTestingModule({
@@ -56,6 +65,10 @@ describe('Orders', () => {
         provideHttpClientTesting(),
         provideRouter([]),
         { provide: CustomerOrderService, useValue: orderService },
+        {
+          provide: ErrorMappingService,
+          useValue: { getMessage: vi.fn().mockReturnValue('Mapped error') },
+        },
       ],
     }).compileComponents();
 

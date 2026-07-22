@@ -1,21 +1,5 @@
 package com.dietetica.lembas.catalog.service;
 
-import com.dietetica.lembas.catalog.dto.ProductRequest;
-import com.dietetica.lembas.catalog.model.Category;
-import com.dietetica.lembas.catalog.model.Product;
-import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
-import com.dietetica.lembas.catalog.repository.CategoryRepository;
-import com.dietetica.lembas.catalog.repository.ProductRepository;
-import com.dietetica.lembas.shared.exception.DomainException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,7 +7,22 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.dietetica.lembas.catalog.dto.ProductRequest;
+import com.dietetica.lembas.catalog.model.Category;
+import com.dietetica.lembas.catalog.model.Product;
+import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
+import com.dietetica.lembas.catalog.repository.CategoryRepository;
+import com.dietetica.lembas.catalog.repository.ProductRepository;
+import com.dietetica.lembas.inventory.api.InventoryQuery;
+import com.dietetica.lembas.shared.exception.DomainException;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /** Unit tests for product catalog creation, edition and validation rules. */
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +34,9 @@ class ProductServiceTest {
     @Mock
     private CategoryRepository categoryRepository;
 
+    @Mock
+    private InventoryQuery inventoryQuery;
+
     @InjectMocks
     private ProductService productService;
 
@@ -43,7 +45,8 @@ class ProductServiceTest {
         Category category = new Category(5L, null, "Cereales", null);
         Product saved = productWithId(10L, category, "Granola", "7790001", BigDecimal.valueOf(1200));
         when(categoryRepository.findById(5L)).thenReturn(Optional.of(category));
-        when(productRepository.existsByBarcodeIgnoreCaseAndActiveTrue("7790001")).thenReturn(false);
+        when(productRepository.existsByBarcodeIgnoreCaseAndActiveTrue("7790001"))
+                .thenReturn(false);
         when(productRepository.save(any(Product.class))).thenReturn(saved);
 
         var result = productService.create(request("Granola", "7790001", 5L, BigDecimal.valueOf(1200)));
@@ -55,7 +58,8 @@ class ProductServiceTest {
 
     @Test
     void createShouldRejectDuplicatedBarcode() {
-        when(productRepository.existsByBarcodeIgnoreCaseAndActiveTrue("7790001")).thenReturn(true);
+        when(productRepository.existsByBarcodeIgnoreCaseAndActiveTrue("7790001"))
+                .thenReturn(true);
 
         assertThatThrownBy(() -> productService.create(request("Granola", "7790001", 5L, BigDecimal.ONE)))
                 .isInstanceOf(DomainException.class)
@@ -76,7 +80,8 @@ class ProductServiceTest {
         Category category = new Category(5L, null, "Cereales", null);
         Product product = productWithId(10L, category, "Granola", "7790001", BigDecimal.ONE);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(productRepository.existsByBarcodeIgnoreCaseAndActiveTrueAndIdNot("7790002", 10L)).thenReturn(true);
+        when(productRepository.existsByBarcodeIgnoreCaseAndActiveTrueAndIdNot("7790002", 10L))
+                .thenReturn(true);
 
         assertThatThrownBy(() -> productService.update(10L, request("Granola", "7790002", 5L, BigDecimal.TEN)))
                 .isInstanceOf(DomainException.class)
@@ -102,7 +107,8 @@ class ProductServiceTest {
         Product existing = productWithId(10L, category, "Granola", "7790001", BigDecimal.valueOf(1200));
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(existing));
         when(categoryRepository.findById(8L)).thenReturn(Optional.of(newCategory));
-        when(productRepository.existsByBarcodeIgnoreCaseAndActiveTrueAndIdNot("7790002", 10L)).thenReturn(false);
+        when(productRepository.existsByBarcodeIgnoreCaseAndActiveTrueAndIdNot("7790002", 10L))
+                .thenReturn(false);
 
         ProductRequest request = new ProductRequest(
                 "Granola Premium",
@@ -113,8 +119,7 @@ class ProductServiceTest {
                 BigDecimal.valueOf(1500),
                 5,
                 "https://example.com/img.jpg",
-                ProductOnlineStatus.PUBLISHED
-        );
+                ProductOnlineStatus.PUBLISHED);
 
         var result = productService.update(10L, request);
 
@@ -134,16 +139,7 @@ class ProductServiceTest {
         // Bean validation is enforced at controller level via @Valid.
         // This test documents that negative prices are rejected by the DTO constraint.
         ProductRequest request = new ProductRequest(
-                "Granola",
-                null,
-                null,
-                null,
-                5L,
-                BigDecimal.valueOf(-100),
-                null,
-                null,
-                ProductOnlineStatus.DRAFT
-        );
+                "Granola", null, null, null, 5L, BigDecimal.valueOf(-100), null, null, ProductOnlineStatus.DRAFT);
 
         assertThat(request.salePrice()).isNegative();
     }
@@ -156,16 +152,7 @@ class ProductServiceTest {
         when(productRepository.save(any(Product.class))).thenReturn(saved);
 
         ProductRequest request = new ProductRequest(
-                "Muestra",
-                null,
-                null,
-                null,
-                5L,
-                BigDecimal.ZERO,
-                null,
-                null,
-                ProductOnlineStatus.DRAFT
-        );
+                "Muestra", null, null, null, 5L, BigDecimal.ZERO, null, null, ProductOnlineStatus.DRAFT);
 
         var result = productService.create(request);
 
@@ -180,16 +167,7 @@ class ProductServiceTest {
         when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
 
         ProductRequest request = new ProductRequest(
-                "Granola",
-                null,
-                null,
-                null,
-                99L,
-                BigDecimal.ONE,
-                null,
-                null,
-                ProductOnlineStatus.DRAFT
-        );
+                "Granola", null, null, null, 99L, BigDecimal.ONE, null, null, ProductOnlineStatus.DRAFT);
 
         assertThatThrownBy(() -> productService.update(10L, request))
                 .isInstanceOf(DomainException.class)
@@ -236,12 +214,17 @@ class ProductServiceTest {
 
     @Test
     void listStoreProductsShouldReturnEmptyPageWhenNoPublishedProducts() {
-        when(productRepository.searchStoreProducts(null, null, 
-                org.springframework.data.domain.PageRequest.of(0, 10, org.springframework.data.domain.Sort.by("name").ascending()))
-        ).thenReturn(org.springframework.data.domain.Page.empty());
+        when(productRepository.searchStoreProducts(
+                        null,
+                        null,
+                        org.springframework.data.domain.PageRequest.of(
+                                0,
+                                10,
+                                org.springframework.data.domain.Sort.by("name").ascending())))
+                .thenReturn(org.springframework.data.domain.Page.empty());
 
-        var result = productService.listStoreProducts(null, null, 
-                org.springframework.data.domain.PageRequest.of(0, 10));
+        var result =
+                productService.listStoreProducts(null, null, org.springframework.data.domain.PageRequest.of(0, 10));
 
         assertThat(result.getContent()).isEmpty();
     }
@@ -307,7 +290,8 @@ class ProductServiceTest {
     }
 
     private ProductRequest request(String name, String barcode, Long categoryId, BigDecimal salePrice) {
-        return new ProductRequest(name, "Rico y natural", "Lembas", barcode, categoryId, salePrice, 2, null, ProductOnlineStatus.DRAFT);
+        return new ProductRequest(
+                name, "Rico y natural", "Lembas", barcode, categoryId, salePrice, 2, null, ProductOnlineStatus.DRAFT);
     }
 
     private Product productWithId(Long id, Category category, String name, String barcode, BigDecimal salePrice) {

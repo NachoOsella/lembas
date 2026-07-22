@@ -1,26 +1,5 @@
 package com.dietetica.lembas.pos.service;
 
-import com.dietetica.lembas.catalog.model.Product;
-import com.dietetica.lembas.catalog.repository.ProductRepository;
-import com.dietetica.lembas.inventory.repository.StockLotRepository;
-import com.dietetica.lembas.pos.dto.PosProductSearchItemDto;
-import com.dietetica.lembas.shared.exception.DomainException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,6 +8,26 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.dietetica.lembas.catalog.api.ProductLookup;
+import com.dietetica.lembas.catalog.api.ProductSearch;
+import com.dietetica.lembas.catalog.model.Product;
+import com.dietetica.lembas.inventory.api.InventoryQuery;
+import com.dietetica.lembas.pos.dto.PosProductSearchItemDto;
+import com.dietetica.lembas.shared.exception.DomainException;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 /**
  * Unit tests for {@link PosProductSearchService}.
@@ -40,7 +39,7 @@ import static org.mockito.Mockito.when;
  *   <li>Numeric inputs (6+ digits) hit the exact barcode match.</li>
  *   <li>Short numeric inputs fall back to the LIKE search.</li>
  *   <li>Text inputs run as a name/barcode LIKE search bounded by MAX_RESULTS.</li>
- *   <li>Stock is resolved from {@code StockLotRepository} when branchId is
+ *   <li>Stock is resolved from {@code InventoryQuery} when branchId is
  *       present and reported as null when it is absent.</li>
  *   <li>No match returns an empty list (not null).</li>
  * </ul>
@@ -49,10 +48,13 @@ import static org.mockito.Mockito.when;
 class PosProductSearchServiceTest {
 
     @Mock
-    private ProductRepository productRepository;
+    private ProductLookup productLookup;
 
     @Mock
-    private StockLotRepository stockLotRepository;
+    private ProductSearch productSearch;
+
+    @Mock
+    private InventoryQuery inventoryQuery;
 
     @InjectMocks
     private PosProductSearchService service;
@@ -66,14 +68,16 @@ class PosProductSearchServiceTest {
         assertThatThrownBy(() -> service.search("   ", 1L))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Search query is required")
-                .extracting("code").isEqualTo("POS_QUERY_REQUIRED");
+                .extracting("code")
+                .isEqualTo("POS_QUERY_REQUIRED");
     }
 
     @Test
     void nullQueryRaisesPosQueryRequired() {
         assertThatThrownBy(() -> service.search(null, 1L))
                 .isInstanceOf(DomainException.class)
-                .extracting("code").isEqualTo("POS_QUERY_REQUIRED");
+                .extracting("code")
+                .isEqualTo("POS_QUERY_REQUIRED");
     }
 
     @Test
@@ -81,7 +85,8 @@ class PosProductSearchServiceTest {
         String overlong = "a".repeat(PosProductSearchService.MAX_QUERY_LENGTH + 1);
         assertThatThrownBy(() -> service.search(overlong, 1L))
                 .isInstanceOf(DomainException.class)
-                .extracting("code").isEqualTo("POS_QUERY_TOO_LONG");
+                .extracting("code")
+                .isEqualTo("POS_QUERY_TOO_LONG");
     }
 
     // ---------------------------------------------------------------------------
@@ -91,10 +96,8 @@ class PosProductSearchServiceTest {
     @Test
     void numericBarcodeHitUsesExactMatch() {
         Product product = product(7L, "Aceite de oliva 500ml", "7501", new BigDecimal("2500.00"));
-        when(productRepository.findByBarcodeIgnoreCaseAndActiveTrue("7501234567890"))
-                .thenReturn(Optional.of(product));
-        when(stockLotRepository.calculateAvailableQuantity(7L, 2L))
-                .thenReturn(new BigDecimal("12.00"));
+        when(productLookup.findActiveByBarcode("7501234567890")).thenReturn(Optional.of(product));
+        when(inventoryQuery.calculateAvailableQuantity(7L, 2L)).thenReturn(new BigDecimal("12.00"));
 
         List<PosProductSearchItemDto> result = service.search("7501234567890", 2L);
 
@@ -107,18 +110,17 @@ class PosProductSearchServiceTest {
         assertThat(item.availableStock()).isEqualByComparingTo("12.00");
 
         // The LIKE search must not be called when the barcode hit succeeded.
-        verify(productRepository, never()).searchStoreProducts(any(), any(), any());
+        verify(productSearch, never()).searchPublished(any(), any(), any());
     }
 
     @Test
     void exactBarcodeMissReturnsEmptyList() {
-        when(productRepository.findByBarcodeIgnoreCaseAndActiveTrue("9999999999999"))
-                .thenReturn(Optional.empty());
+        when(productLookup.findActiveByBarcode("9999999999999")).thenReturn(Optional.empty());
 
         List<PosProductSearchItemDto> result = service.search("9999999999999", 2L);
 
         assertThat(result).isEmpty();
-        verify(stockLotRepository, never()).calculateAvailableQuantity(any(), any());
+        verify(inventoryQuery, never()).calculateAvailableQuantity(any(), any());
     }
 
     @Test
@@ -126,16 +128,15 @@ class PosProductSearchServiceTest {
         // "12345" is 5 digits: heuristic does not match, so it goes to the LIKE search.
         Product product = product(11L, "Yerba 1kg", null, new BigDecimal("1800.00"));
         Page<Product> page = new PageImpl<>(List.of(product));
-        when(productRepository.searchStoreProducts(eq("12345"), isNull(), any(Pageable.class)))
+        when(productSearch.searchPublished(eq("12345"), isNull(), any(Pageable.class)))
                 .thenReturn(page);
-        when(stockLotRepository.calculateAvailableQuantity(11L, 1L))
-                .thenReturn(new BigDecimal("3.00"));
+        when(inventoryQuery.calculateAvailableQuantity(11L, 1L)).thenReturn(new BigDecimal("3.00"));
 
         List<PosProductSearchItemDto> result = service.search("12345", 1L);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).name()).isEqualTo("Yerba 1kg");
-        verify(productRepository, never()).findByBarcodeIgnoreCaseAndActiveTrue(any());
+        verify(productLookup, never()).findActiveByBarcode(any());
     }
 
     // ---------------------------------------------------------------------------
@@ -147,12 +148,10 @@ class PosProductSearchServiceTest {
         Product a = product(1L, "Aceite", "7501", new BigDecimal("200.00"));
         Product b = product(2L, "Arroz", null, new BigDecimal("150.00"));
         Page<Product> page = new PageImpl<>(List.of(a, b));
-        when(productRepository.searchStoreProducts(eq("ace"), isNull(), any(Pageable.class)))
+        when(productSearch.searchPublished(eq("ace"), isNull(), any(Pageable.class)))
                 .thenReturn(page);
-        when(stockLotRepository.calculateAvailableQuantity(1L, 5L))
-                .thenReturn(new BigDecimal("9.00"));
-        when(stockLotRepository.calculateAvailableQuantity(2L, 5L))
-                .thenReturn(new BigDecimal("0.00"));
+        when(inventoryQuery.calculateAvailableQuantity(1L, 5L)).thenReturn(new BigDecimal("9.00"));
+        when(inventoryQuery.calculateAvailableQuantity(2L, 5L)).thenReturn(new BigDecimal("0.00"));
 
         List<PosProductSearchItemDto> result = service.search("ACE", 5L);
 
@@ -161,7 +160,7 @@ class PosProductSearchServiceTest {
         assertThat(result.get(1).availableStock()).isEqualByComparingTo("0.00");
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(productRepository).searchStoreProducts(eq("ace"), isNull(), pageableCaptor.capture());
+        verify(productSearch).searchPublished(eq("ace"), isNull(), pageableCaptor.capture());
         Pageable pageable = pageableCaptor.getValue();
         assertThat(pageable.getPageNumber()).isZero();
         assertThat(pageable.getPageSize()).isEqualTo(PosProductSearchService.MAX_RESULTS);
@@ -174,20 +173,20 @@ class PosProductSearchServiceTest {
     void textSearchWithNullBranchReturnsNullStockForEachRow() {
         Product a = product(1L, "Aceite", "7501", new BigDecimal("200.00"));
         Page<Product> page = new PageImpl<>(List.of(a));
-        when(productRepository.searchStoreProducts(eq("ace"), isNull(), any(Pageable.class)))
+        when(productSearch.searchPublished(eq("ace"), isNull(), any(Pageable.class)))
                 .thenReturn(page);
 
         List<PosProductSearchItemDto> result = service.search("ace", null);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).availableStock()).isNull();
-        verify(stockLotRepository, never()).calculateAvailableQuantity(any(), any());
+        verify(inventoryQuery, never()).calculateAvailableQuantity(any(), any());
     }
 
     @Test
     void emptyLikePageReturnsEmptyList() {
         Page<Product> page = new PageImpl<>(List.of());
-        when(productRepository.searchStoreProducts(eq("zz"), isNull(), any(Pageable.class)))
+        when(productSearch.searchPublished(eq("zz"), isNull(), any(Pageable.class)))
                 .thenReturn(page);
 
         List<PosProductSearchItemDto> result = service.search("zz", 1L);
@@ -198,12 +197,12 @@ class PosProductSearchServiceTest {
     @Test
     void queryIsTrimmedBeforeSearch() {
         Page<Product> page = new PageImpl<>(List.of());
-        when(productRepository.searchStoreProducts(eq("ace"), isNull(), any(Pageable.class)))
+        when(productSearch.searchPublished(eq("ace"), isNull(), any(Pageable.class)))
                 .thenReturn(page);
 
         service.search("   ace   ", 1L);
 
-        verify(productRepository).searchStoreProducts(eq("ace"), isNull(), any(Pageable.class));
+        verify(productSearch).searchPublished(eq("ace"), isNull(), any(Pageable.class));
     }
 
     // ---------------------------------------------------------------------------

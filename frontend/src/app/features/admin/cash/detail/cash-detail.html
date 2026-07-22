@@ -25,8 +25,10 @@
       }
     </app-page-header>
 
-    @if (errorMessage()) {
-      <app-error-alert [message]="errorMessage()!" />
+    @if (errorMessage(); as error) {
+      <app-error-alert variant="inline" [message]="error">
+        <app-button variant="secondary" size="sm" (click)="retry()">Reintentar</app-button>
+      </app-error-alert>
       <div class="cash-detail__back-row">
         <app-button variant="secondary" icon="pi pi-arrow-left" (click)="goBack()">
           Volver
@@ -114,11 +116,7 @@
 
       <!-- Closed-session notice -->
       @if (isClosed) {
-        <app-section-card
-          eyebrow="Caja cerrada"
-          title="Sesion finalizada"
-          tone="muted"
-        >
+        <app-section-card eyebrow="Caja cerrada" title="Sesion finalizada" tone="muted">
           <div class="cash-detail__closed-cta">
             <i class="pi pi-lock cash-detail__closed-icon" aria-hidden="true"></i>
             <p class="cash-detail__closed-copy">

@@ -1,20 +1,20 @@
 package com.dietetica.lembas.inventory.repository;
 
 import com.dietetica.lembas.inventory.model.StockMovement;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
 
-import java.util.List;
-
 /** Repository for append-only stock movement trace entries. */
-public interface StockMovementRepository extends JpaRepository<StockMovement, Long>, JpaSpecificationExecutor<StockMovement> {
+public interface StockMovementRepository
+        extends JpaRepository<StockMovement, Long>, JpaSpecificationExecutor<StockMovement> {
 
     /** Finds movements for a lot, used to verify purchase entry traceability. */
     List<StockMovement> findByStockLotId(Long stockLotId);
@@ -27,7 +27,8 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, Lo
      * {@code idx_stock_movements_order_id} for fast lookup.</p>
      */
     @EntityGraph(attributePaths = {"stockLot", "product", "branch"})
-    @Query("""
+    @Query(
+            """
             select m from StockMovement m
             where m.orderId = :orderId
               and m.type in (

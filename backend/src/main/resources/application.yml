@@ -28,7 +28,7 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
-  forward-headers-strategy: framework
+  forward-headers-strategy: none
 
 management:
   endpoints:
@@ -41,6 +41,7 @@ app:
     jwt-secret: ${JWT_SECRET:change-me-to-at-least-256-bits-before-running-outside-local-dev}
     jwt-expiration: 24h
     allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:8080}
+    force-secure-cookies: false
   mercado-pago:
     access-token: ${MP_ACCESS_TOKEN:dev-fake-token}
     webhook-secret: ${MP_WEBHOOK_SECRET:dev-fake-secret}

@@ -1,12 +1,15 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { computed, signal, WritableSignal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { of } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import { StoreLayout } from './store-layout';
-import { AuthService, AuthUser } from '../../../core/services/auth';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
+import type { AuthUser } from '@core/services/auth';
+import { AuthService } from '@core/services/auth';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
 
 describe('StoreLayout', () => {
   let component: StoreLayout;
@@ -47,8 +50,8 @@ describe('StoreLayout', () => {
       selectedBranchId: selectedBranchIdSignal,
       loading: loadingSignal,
       error: errorSignal,
-      selectedBranch: computed(() =>
-        branchesSignal().find((branch) => branch.id === selectedBranchIdSignal()) ?? null,
+      selectedBranch: computed(
+        () => branchesSignal().find((branch) => branch.id === selectedBranchIdSignal()) ?? null,
       ),
       loadBranches: vi.fn().mockReturnValue(of(branchesSignal())),
       selectBranch: vi.fn((branchId: number | null) => selectedBranchIdSignal.set(branchId)),

@@ -1,4 +1,4 @@
-<p-card [styleClass]="'section-card section-card--' + tone()">
+<section class="section-card" [class]="'section-card section-card--' + tone()">
   @if (eyebrow() || title() || description()) {
     <header class="section-card__header">
       @if (eyebrow()) {
@@ -16,4 +16,4 @@
   <div class="section-card__content">
     <ng-content />
   </div>
-</p-card>
+</section>

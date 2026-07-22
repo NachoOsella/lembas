@@ -10,6 +10,14 @@
     <app-button [variant]="'ghost'" [size]="'sm'" [icon]="'pi pi-arrow-left'" (click)="goBack()">
       Volver al historial
     </app-button>
+    <app-button
+      variant="primary"
+      size="sm"
+      icon="pi pi-refresh"
+      [loading]="loading()"
+      (click)="onRefresh()"
+      >Actualizar</app-button
+    >
     @if (report(); as r) {
       <app-data-export [data]="exportData()" />
     }
@@ -142,6 +150,12 @@
         </app-data-table>
       }
     </section>
+  } @else {
+    <app-empty-state
+      icon="pi pi-receipt"
+      title="No hay datos para esta sesion"
+      description="El reporte de cierre no devolvio informacion para el identificador solicitado."
+    />
   }
 </div>
 

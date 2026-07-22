@@ -1,6 +1,15 @@
 package com.dietetica.lembas.users.service;
 
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
 import com.dietetica.lembas.users.dto.UpdateUserRequest;
@@ -9,7 +18,9 @@ import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
-import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -23,18 +34,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link UserAdminService}.
@@ -52,7 +51,7 @@ class UserAdminServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private BranchRepository branchRepository;
+    private BranchQuery branchQuery;
 
     @Mock
     private SecurityContextHelper securityContextHelper;
@@ -61,7 +60,8 @@ class UserAdminServiceTest {
 
     @BeforeEach
     void setUp() {
-        userAdminService = new UserAdminService(userRepository, branchRepository, new UserBranchPolicy(), passwordEncoder, securityContextHelper);
+        userAdminService = new UserAdminService(
+                userRepository, branchQuery, new UserBranchPolicy(), passwordEncoder, securityContextHelper);
     }
 
     @Nested
@@ -72,8 +72,7 @@ class UserAdminServiceTest {
             Pageable pageable = PageRequest.of(0, 20);
             User user = anAdmin();
             when(userRepository.findInternalUsers(
-                    List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
-                    null, null, null, pageable))
+                            List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE), null, null, null, pageable))
                     .thenReturn(new PageImpl<>(List.of(user)));
 
             Page<UserResponse> result = userAdminService.listUsers(null, null, null, pageable);
@@ -86,8 +85,7 @@ class UserAdminServiceTest {
         void Should_filterByRole_when_roleProvided() {
             Pageable pageable = PageRequest.of(0, 20);
             when(userRepository.findInternalUsers(
-                    List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
-                    Role.MANAGER, null, null, pageable))
+                            List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE), Role.MANAGER, null, null, pageable))
                     .thenReturn(new PageImpl<>(List.of(aManager())));
 
             Page<UserResponse> result = userAdminService.listUsers(Role.MANAGER, null, null, pageable);
@@ -100,8 +98,7 @@ class UserAdminServiceTest {
         void Should_filterByBranch_when_branchProvided() {
             Pageable pageable = PageRequest.of(0, 20);
             when(userRepository.findInternalUsers(
-                    List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
-                    null, 1L, null, pageable))
+                            List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE), null, 1L, null, pageable))
                     .thenReturn(new PageImpl<>(List.of(aManager())));
 
             Page<UserResponse> result = userAdminService.listUsers(null, 1L, null, pageable);
@@ -114,8 +111,7 @@ class UserAdminServiceTest {
         void Should_filterByRoleAndBranch_when_bothFiltersProvided() {
             Pageable pageable = PageRequest.of(0, 20);
             when(userRepository.findInternalUsers(
-                    List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
-                    Role.MANAGER, 1L, null, pageable))
+                            List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE), Role.MANAGER, 1L, null, pageable))
                     .thenReturn(new PageImpl<>(List.of(aManager())));
 
             Page<UserResponse> result = userAdminService.listUsers(Role.MANAGER, 1L, null, pageable);
@@ -138,12 +134,8 @@ class UserAdminServiceTest {
         void Should_searchInternalUsers_when_searchProvided() {
             Pageable pageable = PageRequest.of(0, 20);
             when(userRepository.findInternalUsers(
-                    List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE),
-                    null,
-                    null,
-                    "gandalf",
-                    pageable
-            )).thenReturn(new PageImpl<>(List.of(anAdmin())));
+                            List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE), null, null, "gandalf", pageable))
+                    .thenReturn(new PageImpl<>(List.of(anAdmin())));
 
             Page<UserResponse> result = userAdminService.listUsers(null, null, "  Gandalf  ", pageable);
 
@@ -161,21 +153,21 @@ class UserAdminServiceTest {
         @Test
         void Should_createUser_when_validRequest() {
             var request = new CreateInternalUserRequest(
+                    "newadmin@lembas.com", RAW_PASSWORD, "New", "Admin", null, Role.ADMIN, null);
+            when(userRepository.existsByEmail("newadmin@lembas.com")).thenReturn(false);
+            when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
+            User savedUser = new User(
+                    1L,
+                    null,
                     "newadmin@lembas.com",
-                    RAW_PASSWORD,
+                    ENCODED_PASSWORD,
                     "New",
                     "Admin",
                     null,
                     Role.ADMIN,
-                    null
-            );
-            when(userRepository.existsByEmail("newadmin@lembas.com")).thenReturn(false);
-            when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            User savedUser = new User(
-                    1L, null, "newadmin@lembas.com", ENCODED_PASSWORD,
-                    "New", "Admin", null, Role.ADMIN, true,
-                    Instant.now(), Instant.now()
-            );
+                    true,
+                    Instant.now(),
+                    Instant.now());
             when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
             UserResponse response = userAdminService.createUser(request);
@@ -190,14 +182,7 @@ class UserAdminServiceTest {
         @Test
         void Should_throwEmailDuplicated_when_emailExists() {
             var request = new CreateInternalUserRequest(
-                    "existing@lembas.com",
-                    RAW_PASSWORD,
-                    "Existing",
-                    "User",
-                    null,
-                    Role.EMPLOYEE,
-                    1L
-            );
+                    "existing@lembas.com", RAW_PASSWORD, "Existing", "User", null, Role.EMPLOYEE, 1L);
             when(userRepository.existsByEmail("existing@lembas.com")).thenReturn(true);
 
             assertThatThrownBy(() -> userAdminService.createUser(request))
@@ -212,14 +197,7 @@ class UserAdminServiceTest {
         @Test
         void Should_throwInvalidUserBranch_when_managerWithoutBranch() {
             var request = new CreateInternalUserRequest(
-                    "manager@lembas.com",
-                    RAW_PASSWORD,
-                    "Manager",
-                    "User",
-                    null,
-                    Role.MANAGER,
-                    null
-            );
+                    "manager@lembas.com", RAW_PASSWORD, "Manager", "User", null, Role.MANAGER, null);
             when(userRepository.existsByEmail("manager@lembas.com")).thenReturn(false);
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
 
@@ -232,14 +210,7 @@ class UserAdminServiceTest {
         @Test
         void Should_throwInvalidUserBranch_when_employeeWithoutBranch() {
             var request = new CreateInternalUserRequest(
-                    "employee@lembas.com",
-                    RAW_PASSWORD,
-                    "Employee",
-                    "User",
-                    null,
-                    Role.EMPLOYEE,
-                    null
-            );
+                    "employee@lembas.com", RAW_PASSWORD, "Employee", "User", null, Role.EMPLOYEE, null);
             when(userRepository.existsByEmail("employee@lembas.com")).thenReturn(false);
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
 
@@ -252,17 +223,10 @@ class UserAdminServiceTest {
         @Test
         void Should_throwBranchNotFound_when_creatingBranchBoundUserWithUnknownBranch() {
             var request = new CreateInternalUserRequest(
-                    "manager@lembas.com",
-                    RAW_PASSWORD,
-                    "Manager",
-                    "User",
-                    null,
-                    Role.MANAGER,
-                    99L
-            );
+                    "manager@lembas.com", RAW_PASSWORD, "Manager", "User", null, Role.MANAGER, 99L);
             when(userRepository.existsByEmail("manager@lembas.com")).thenReturn(false);
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            when(branchRepository.existsById(99L)).thenReturn(false);
+            when(branchQuery.existsById(99L)).thenReturn(false);
 
             assertThatThrownBy(() -> userAdminService.createUser(request))
                     .isInstanceOf(DomainException.class)
@@ -273,18 +237,11 @@ class UserAdminServiceTest {
         @Test
         void Should_throwBranchInactive_when_creatingBranchBoundUserOnInactiveBranch() {
             var request = new CreateInternalUserRequest(
-                    "manager@lembas.com",
-                    RAW_PASSWORD,
-                    "Manager",
-                    "User",
-                    null,
-                    Role.MANAGER,
-                    7L
-            );
+                    "manager@lembas.com", RAW_PASSWORD, "Manager", "User", null, Role.MANAGER, 7L);
             when(userRepository.existsByEmail("manager@lembas.com")).thenReturn(false);
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            when(branchRepository.existsById(7L)).thenReturn(true);
-            when(branchRepository.existsByIdAndActiveTrue(7L)).thenReturn(false);
+            when(branchQuery.existsById(7L)).thenReturn(true);
+            when(branchQuery.existsActive(7L)).thenReturn(false);
 
             assertThatThrownBy(() -> userAdminService.createUser(request))
                     .isInstanceOf(DomainException.class)
@@ -295,21 +252,21 @@ class UserAdminServiceTest {
         @Test
         void Should_normalizeEmail_when_creatingUser() {
             var request = new CreateInternalUserRequest(
-                    "  UPPERCASE@LEMBAS.COM  ",
-                    RAW_PASSWORD,
+                    "  UPPERCASE@LEMBAS.COM  ", RAW_PASSWORD, "Lower", "Case", null, Role.ADMIN, null);
+            when(userRepository.existsByEmail("uppercase@lembas.com")).thenReturn(false);
+            when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
+            User savedUser = new User(
+                    2L,
+                    null,
+                    "uppercase@lembas.com",
+                    ENCODED_PASSWORD,
                     "Lower",
                     "Case",
                     null,
                     Role.ADMIN,
-                    null
-            );
-            when(userRepository.existsByEmail("uppercase@lembas.com")).thenReturn(false);
-            when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            User savedUser = new User(
-                    2L, null, "uppercase@lembas.com", ENCODED_PASSWORD,
-                    "Lower", "Case", null, Role.ADMIN, true,
-                    Instant.now(), Instant.now()
-            );
+                    true,
+                    Instant.now(),
+                    Instant.now());
             when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
             userAdminService.createUser(request);
@@ -331,21 +288,14 @@ class UserAdminServiceTest {
             User existingUser = existingAdmin();
             when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
             when(userRepository.existsByEmail("updated@lembas.com")).thenReturn(false);
-            when(branchRepository.existsById(1L)).thenReturn(true);
-            when(branchRepository.existsByIdAndActiveTrue(1L)).thenReturn(true);
+            when(branchQuery.existsById(1L)).thenReturn(true);
+            when(branchQuery.existsActive(1L)).thenReturn(true);
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
             when(securityContextHelper.getCurrentUser()).thenReturn(aDifferentAdmin());
 
             var request = new UpdateUserRequest(
-                    "updated@lembas.com",
-                    RAW_PASSWORD,
-                    "Updated",
-                    "Name",
-                    "+54 351 123 4567",
-                    Role.MANAGER,
-                    1L
-            );
+                    "updated@lembas.com", RAW_PASSWORD, "Updated", "Name", "+54 351 123 4567", Role.MANAGER, 1L);
 
             UserResponse response = userAdminService.updateUser(1L, request);
 
@@ -418,14 +368,12 @@ class UserAdminServiceTest {
         void Should_throwBranchInactive_when_updatingUserToManagerWithInactiveBranch() {
             User existingUser = existingAdmin();
             when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
-            when(branchRepository.existsById(3L)).thenReturn(true);
-            when(branchRepository.existsByIdAndActiveTrue(3L)).thenReturn(false);
+            when(branchQuery.existsById(3L)).thenReturn(true);
+            when(branchQuery.existsActive(3L)).thenReturn(false);
             when(securityContextHelper.getCurrentUser()).thenReturn(aDifferentAdmin());
 
             assertThatThrownBy(() -> userAdminService.updateUser(
-                    1L,
-                    new UpdateUserRequest(null, null, null, null, null, Role.MANAGER, 3L)
-            ))
+                            1L, new UpdateUserRequest(null, null, null, null, null, Role.MANAGER, 3L)))
                     .isInstanceOf(DomainException.class)
                     .hasFieldOrPropertyWithValue("code", "BRANCH_INACTIVE")
                     .hasFieldOrPropertyWithValue("status", HttpStatus.UNPROCESSABLE_ENTITY);
@@ -439,9 +387,7 @@ class UserAdminServiceTest {
             when(securityContextHelper.getCurrentUser()).thenReturn(aDifferentAdmin());
 
             UserResponse response = userAdminService.updateUser(
-                    2L,
-                    new UpdateUserRequest(null, null, null, null, null, Role.ADMIN, null)
-            );
+                    2L, new UpdateUserRequest(null, null, null, null, null, Role.ADMIN, null));
 
             assertThat(response.role()).isEqualTo(Role.ADMIN);
             assertThat(response.branchId()).isNull();
@@ -454,10 +400,8 @@ class UserAdminServiceTest {
             when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            UserResponse response = userAdminService.updateUser(
-                    1L,
-                    new UpdateUserRequest(null, null, null, null, "", null, null)
-            );
+            UserResponse response =
+                    userAdminService.updateUser(1L, new UpdateUserRequest(null, null, null, null, "", null, null));
 
             assertThat(response.phone()).isNull();
         }
@@ -465,16 +409,21 @@ class UserAdminServiceTest {
         @Test
         void Should_hideCustomerUsers_when_updatingById() {
             User customer = new User(
-                    9L, null, "customer@lembas.com", "hash",
-                    "Customer", "User", null, Role.CUSTOMER, true,
-                    Instant.now(), Instant.now()
-            );
+                    9L,
+                    null,
+                    "customer@lembas.com",
+                    "hash",
+                    "Customer",
+                    "User",
+                    null,
+                    Role.CUSTOMER,
+                    true,
+                    Instant.now(),
+                    Instant.now());
             when(userRepository.findById(9L)).thenReturn(Optional.of(customer));
 
             assertThatThrownBy(() -> userAdminService.updateUser(
-                    9L,
-                    new UpdateUserRequest(null, null, "Changed", null, null, null, null)
-            ))
+                            9L, new UpdateUserRequest(null, null, "Changed", null, null, null, null)))
                     .isInstanceOf(DomainException.class)
                     .hasFieldOrPropertyWithValue("code", "USER_NOT_FOUND");
         }
@@ -486,9 +435,7 @@ class UserAdminServiceTest {
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
 
             assertThatThrownBy(() -> userAdminService.updateUser(
-                    1L,
-                    new UpdateUserRequest(null, null, null, null, null, Role.MANAGER, 1L)
-            ))
+                            1L, new UpdateUserRequest(null, null, null, null, null, Role.MANAGER, 1L)))
                     .isInstanceOf(DomainException.class)
                     .hasFieldOrPropertyWithValue("code", "SELF_ROLE_CHANGE_FORBIDDEN")
                     .hasFieldOrPropertyWithValue("status", HttpStatus.FORBIDDEN);
@@ -541,35 +488,62 @@ class UserAdminServiceTest {
 
     private static User existingAdmin() {
         return new User(
-                1L, null, "admin@lembas.com", "hash",
-                "Admin", "User", null, Role.ADMIN, true,
+                1L,
+                null,
+                "admin@lembas.com",
+                "hash",
+                "Admin",
+                "User",
+                null,
+                Role.ADMIN,
+                true,
                 Instant.parse("2026-01-01T00:00:00Z"),
-                Instant.parse("2026-01-01T00:00:00Z")
-        );
+                Instant.parse("2026-01-01T00:00:00Z"));
     }
 
     private static User anAdmin() {
         return new User(
-                1L, null, "admin@lembas.com", "hash",
-                "Admin", "User", null, Role.ADMIN, true,
-                Instant.now(), Instant.now()
-        );
+                1L,
+                null,
+                "admin@lembas.com",
+                "hash",
+                "Admin",
+                "User",
+                null,
+                Role.ADMIN,
+                true,
+                Instant.now(),
+                Instant.now());
     }
 
     private static User aManager() {
         return new User(
-                2L, 1L, "manager@lembas.com", "hash",
-                "Manager", "User", null, Role.MANAGER, true,
-                Instant.now(), Instant.now()
-        );
+                2L,
+                1L,
+                "manager@lembas.com",
+                "hash",
+                "Manager",
+                "User",
+                null,
+                Role.MANAGER,
+                true,
+                Instant.now(),
+                Instant.now());
     }
 
     /** A different admin user used as the "current" user in security context mocks. */
     private static User aDifferentAdmin() {
         return new User(
-                10L, null, "other@lembas.com", "hash",
-                "Other", "Admin", null, Role.ADMIN, true,
-                Instant.now(), Instant.now()
-        );
+                10L,
+                null,
+                "other@lembas.com",
+                "hash",
+                "Other",
+                "Admin",
+                null,
+                Role.ADMIN,
+                true,
+                Instant.now(),
+                Instant.now());
     }
 }

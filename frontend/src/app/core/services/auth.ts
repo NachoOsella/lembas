@@ -1,6 +1,7 @@
-import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import type { Observable } from 'rxjs';
+import { catchError, map, of, shareReplay, tap } from 'rxjs';
 
 /** Request payload for POST /api/auth/register. */
 export interface RegisterRequest {
@@ -29,12 +30,6 @@ export interface AuthUser {
 }
 
 /**
- * Re-export for backward compatibility with existing imports.
- * @deprecated Import directly from 'shared/models/api-error' instead.
- */
-export type { ApiErrorResponse, ApiFieldError } from '../../shared/models/api-error';
-
-/**
  * Response from auth endpoints.
  *
  * <p>Token fields are optional because production auth uses HttpOnly cookies;
@@ -53,14 +48,13 @@ export class AuthService {
   private readonly currentUserState = signal<AuthUser | null>(null);
   private readonly sessionChecked = signal(false);
   private sessionRequest$: Observable<boolean> | null = null;
+  private readonly http = inject(HttpClient);
 
   /** Currently authenticated user, or null if not logged in. */
   readonly currentUser = this.currentUserState.asReadonly();
 
   /** Whether a user is currently authenticated in this browser session. */
   readonly isAuthenticated = computed(() => this.currentUserState() !== null);
-
-  constructor(private readonly http: HttpClient) {}
 
   /** Registers a customer and stores the returned user while cookies are set by the backend. */
   register(request: RegisterRequest): Observable<AuthResponse> {

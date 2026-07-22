@@ -25,6 +25,4 @@ public record StockProductSummaryDto(
         String branchName,
         BigDecimal totalAvailable,
         LocalDate nearestExpirationDate,
-        long activeLotCount
-) {
-}
+        long activeLotCount) {}

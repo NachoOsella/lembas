@@ -1,4 +1,5 @@
-import { Component, contentChild, input, model, TemplateRef } from '@angular/core';
+import type { TemplateRef } from '@angular/core';
+import { Component, contentChild, input, model, ChangeDetectionStrategy } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Select } from 'primeng/select';
@@ -22,6 +23,7 @@ import { Select } from 'primeng/select';
  * ```
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-select',
   imports: [FormsModule, NgTemplateOutlet, Select],
   templateUrl: './app-select.html',

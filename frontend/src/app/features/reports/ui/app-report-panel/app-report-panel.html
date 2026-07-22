@@ -1,0 +1,23 @@
+<section class="report-panel" [class]="'report-panel report-panel--' + tone()">
+  @if (title() || description() || eyebrow()) {
+    <header class="report-panel__header">
+      <div class="report-panel__heading">
+        @if (eyebrow()) {
+          <p class="report-panel__eyebrow">{{ eyebrow() }}</p>
+        }
+        @if (title()) {
+          <h2 class="report-panel__title">{{ title() }}</h2>
+        }
+        @if (description()) {
+          <p class="report-panel__description">{{ description() }}</p>
+        }
+      </div>
+      <div class="report-panel__actions">
+        <ng-content select="[panel-actions]" />
+      </div>
+    </header>
+  }
+  <div class="report-panel__content">
+    <ng-content />
+  </div>
+</section>

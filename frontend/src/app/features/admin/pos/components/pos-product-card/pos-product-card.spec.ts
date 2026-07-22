@@ -1,12 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 
 import { PosProductCardComponent } from './pos-product-card';
-import { PosProductSearchItem } from '../../services/pos-product-search.service';
+import type { PosProductSearchItem } from '../../services/pos-product-search.service';
 
 /** Builds a fixture row for tests. */
-function buildItem(
-  overrides: Partial<PosProductSearchItem> = {},
-): PosProductSearchItem {
+function buildItem(overrides: Partial<PosProductSearchItem> = {}): PosProductSearchItem {
   return {
     id: 1,
     name: 'Aceite de oliva 500ml',
@@ -46,17 +45,13 @@ describe('PosProductCardComponent', () => {
 
   it('renders the product name as the card title', () => {
     createComponent(buildItem({ name: 'Yerba 1kg' }));
-    const title = fixture.nativeElement.querySelector(
-      '.pos-card__name',
-    ) as HTMLElement;
+    const title = fixture.nativeElement.querySelector('.pos-card__name') as HTMLElement;
     expect(title.textContent?.trim()).toContain('Yerba 1kg');
   });
 
   it('renders the brand name when provided', () => {
     createComponent(buildItem({ brandName: 'Cruz de Malta' }));
-    const brand = fixture.nativeElement.querySelector(
-      '.pos-card__brand',
-    ) as HTMLElement;
+    const brand = fixture.nativeElement.querySelector('.pos-card__brand') as HTMLElement;
     expect(brand.textContent?.trim()).toBe('Cruz de Malta');
   });
 
@@ -67,18 +62,14 @@ describe('PosProductCardComponent', () => {
 
   it('formats the price with es-AR thousands separator and no decimals', () => {
     createComponent(buildItem({ salePrice: 2500 }));
-    const price = fixture.nativeElement.querySelector(
-      '.pos-card__price',
-    ) as HTMLElement;
+    const price = fixture.nativeElement.querySelector('.pos-card__price') as HTMLElement;
     // Intl es-AR: "2.500"
     expect(price.textContent?.trim()).toContain('2.500');
   });
 
   it('does NOT render the barcode on the card anymore', () => {
     createComponent(buildItem({ barcode: '7501234567890' }));
-    const barcode = fixture.nativeElement.querySelector(
-      '.pos-card__barcode',
-    );
+    const barcode = fixture.nativeElement.querySelector('.pos-card__barcode');
     expect(barcode).toBeNull();
   });
 

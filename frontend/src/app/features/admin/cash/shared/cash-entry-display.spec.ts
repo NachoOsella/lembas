@@ -10,7 +10,7 @@ import {
   cashEntryTypeTone,
   CASH_ENTRY_COLUMNS,
 } from './cash-entry-display';
-import { CashEntryDto } from '../../../../shared/models/cash-session';
+import type { CashEntryDto } from '@features/cash/domain/cash-session';
 
 /** Builds a minimal entry for testing pure helper functions. */
 function entry(overrides: Partial<CashEntryDto> = {}): CashEntryDto {

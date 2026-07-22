@@ -1,18 +1,18 @@
 :host {
   display: block;
+  height: 100%;
 }
 
 .card-banner {
   position: relative;
+  height: 100%;
   overflow: hidden;
   border: 1px solid;
-  /* Whisper-soft layered shadow */
-  box-shadow:
-    0 0 0.5px rgba(0, 0, 0, 0.14),
-    0 1px 1px rgba(0, 0, 0, 0.24);
+  box-shadow: var(--shadow-card);
   transition:
-    box-shadow 0.3s ease,
-    transform 0.3s ease;
+    border-color 0.2s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
 }
 
 .card-banner--clickable {
@@ -20,20 +20,24 @@
 }
 
 .card-banner--clickable:hover {
+  border-color: rgba(47, 141, 114, 0.24) !important;
   box-shadow:
-    0 0 0.5px rgba(0, 0, 0, 0.14),
-    0 2px 4px rgba(0, 0, 0, 0.16);
+    0 0 0.5px rgba(0, 0, 0, 0.1),
+    0 6px 16px rgba(7, 95, 54, 0.08);
   transform: translateY(-2px);
+}
+
+.card-banner--clickable:active {
+  transform: scale(0.98);
 }
 
 .card-banner__blob {
   position: absolute;
+  z-index: 0;
   border-radius: 999px;
   pointer-events: none;
-  z-index: 0;
 }
 
-/* Ensure content sits above the blob */
 .card-banner > :not(.card-banner__blob) {
   position: relative;
   z-index: 1;

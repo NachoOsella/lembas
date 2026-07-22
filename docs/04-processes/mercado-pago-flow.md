@@ -22,8 +22,8 @@ Backend Spring Boot
 1. Customer creates order → POST /api/customer/orders
    └── Backend creates order (PENDING_PAYMENT) + payment (PENDING)
 
-2. Customer requests checkout → POST /api/customer/orders/{id}/checkout/mp
-   └── Backend creates a Mercado Pago preference
+2. Customer requests checkout → POST /api/customer/orders/{id}/payments/preference
+   └── Backend creates or reuses a Mercado Pago preference
    └── MP returns { initPoint, preferenceId }
    └── Backend saves provider_preference_id in payment
    └── Returns { initPoint } to frontend

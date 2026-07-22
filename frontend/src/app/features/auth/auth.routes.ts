@@ -1,6 +1,6 @@
-import { Routes } from '@angular/router';
+import type { Routes } from '@angular/router';
 
-import { guestGuard } from '../../core/guards/auth-guard';
+import { guestGuard } from '@core/guards/auth-guard';
 
 export default [
   {

@@ -1,19 +1,35 @@
 package com.dietetica.lembas.inventory.web;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.dietetica.lembas.auth.service.JwtAuthenticationFilter;
 import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.auth.service.LembasUserDetailsService;
+import com.dietetica.lembas.inventory.api.InventoryQuery;
+import com.dietetica.lembas.inventory.api.StockCommand;
 import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
 import com.dietetica.lembas.inventory.dto.DeductionPlan;
 import com.dietetica.lembas.inventory.dto.DeductionPlan.DeductionEntry;
-import com.dietetica.lembas.inventory.dto.StockDeductionRequest;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
 import com.dietetica.lembas.inventory.dto.StockMovementDto;
 import com.dietetica.lembas.inventory.model.StockMovementType;
-import com.dietetica.lembas.inventory.service.InventoryService;
+import com.dietetica.lembas.shared.config.SecurityPolicyProperties;
 import com.dietetica.lembas.shared.web.GlobalExceptionHandler;
 import com.dietetica.lembas.users.web.SecurityConfigForTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,22 +42,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** Web slice tests for {@link StockLotAdminController}. */
 @WebMvcTest(controllers = {StockLotAdminController.class, GlobalExceptionHandler.class})
@@ -56,9 +56,15 @@ class StockLotAdminControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private InventoryService inventoryService;
+    private InventoryQuery inventoryQuery;
+
+    @MockitoBean
+    private StockCommand stockCommand;
 
     // Required by the WebMvcTest slice even though filters are disabled.
+    @MockitoBean
+    private SecurityPolicyProperties securityPolicyProperties;
+
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
 
@@ -71,7 +77,7 @@ class StockLotAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void Should_return200_when_adminListsLots() throws Exception {
-        when(inventoryService.listLots(isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
+        when(inventoryQuery.listLots(isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(aLot()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/admin/stock/lots"))
@@ -86,7 +92,7 @@ class StockLotAdminControllerTest {
     @Test
     @WithMockUser(roles = "MANAGER")
     void Should_forwardFilters_when_managerListsLots() throws Exception {
-        when(inventoryService.listLots(isNull(), eq(10L), eq(20L), eq(true), any(Pageable.class)))
+        when(inventoryQuery.listLots(isNull(), eq(10L), eq(20L), eq(true), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
 
         mockMvc.perform(get("/api/admin/stock/lots")
@@ -101,7 +107,7 @@ class StockLotAdminControllerTest {
     void Should_return201_when_adminCreatesLot() throws Exception {
         CreateStockLotRequest request = new CreateStockLotRequest(
                 10L, 20L, BigDecimal.valueOf(3.5), "L-001", LocalDate.now().plusDays(30), BigDecimal.valueOf(500));
-        when(inventoryService.createStockLot(any(CreateStockLotRequest.class))).thenReturn(aLot());
+        when(stockCommand.createStockLot(any(CreateStockLotRequest.class))).thenReturn(aLot());
 
         mockMvc.perform(post("/api/admin/stock/lots")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -116,7 +122,7 @@ class StockLotAdminControllerTest {
     void Should_return201_when_employeeCreatesLot() throws Exception {
         CreateStockLotRequest request = new CreateStockLotRequest(
                 10L, 20L, BigDecimal.ONE, "L-EMP", LocalDate.now().plusDays(30), BigDecimal.valueOf(500));
-        when(inventoryService.createStockLot(any(CreateStockLotRequest.class))).thenReturn(aLot());
+        when(stockCommand.createStockLot(any(CreateStockLotRequest.class))).thenReturn(aLot());
 
         mockMvc.perform(post("/api/admin/stock/lots")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -127,7 +133,8 @@ class StockLotAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void Should_return400_when_createLotHasInvalidQuantity() throws Exception {
-        String invalidJson = """
+        String invalidJson =
+                """
                 {
                     "productId": 10,
                     "branchId": 20,
@@ -146,7 +153,8 @@ class StockLotAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void Should_return400_when_createLotHasPastExpirationDate() throws Exception {
-        String invalidJson = """
+        String invalidJson =
+                """
                 {
                     "productId": 10,
                     "branchId": 20,
@@ -165,17 +173,15 @@ class StockLotAdminControllerTest {
     @Test
     @WithMockUser(roles = "EMPLOYEE")
     void Should_return200_when_employeeListsLots() throws Exception {
-        when(inventoryService.listLots(isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
+        when(inventoryQuery.listLots(isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
 
-        mockMvc.perform(get("/api/admin/stock/lots"))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/admin/stock/lots")).andExpect(status().isOk());
     }
 
     @Test
     void Should_return401_when_unauthenticatedUserListsLots() throws Exception {
-        mockMvc.perform(get("/api/admin/stock/lots"))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/admin/stock/lots")).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -183,13 +189,15 @@ class StockLotAdminControllerTest {
     void Should_return200_when_adminDeductsStock() throws Exception {
         DeductionPlan plan = new DeductionPlan(
                 List.of(new DeductionEntry(1L, BigDecimal.valueOf(3), BigDecimal.valueOf(10), BigDecimal.valueOf(7))),
-                BigDecimal.valueOf(3), BigDecimal.valueOf(10), true
-        );
-        when(inventoryService.deductStock(eq(10L), eq(20L), eq(BigDecimal.valueOf(3)), eq(StockMovementType.MANUAL_ADJUSTMENT)))
+                BigDecimal.valueOf(3),
+                BigDecimal.valueOf(10),
+                true);
+        when(stockCommand.deductManualStock(eq(10L), eq(20L), eq(BigDecimal.valueOf(3)), eq("Damaged package")))
                 .thenReturn(plan);
 
-        String json = """
-                {"productId": 10, "branchId": 20, "quantity": 3}
+        String json =
+                """
+                {"productId": 10, "branchId": 20, "quantity": 3, "reason": "Damaged package"}
                 """;
 
         mockMvc.perform(post("/api/admin/stock/deductions")
@@ -218,7 +226,8 @@ class StockLotAdminControllerTest {
     @Test
     @WithMockUser(roles = "EMPLOYEE")
     void Should_return200_when_employeeAdjustsStock() throws Exception {
-        String json = """
+        String json =
+                """
                 {"productId": 10, "branchId": 20, "quantity": -1, "reason": "Merma", "type": "WASTE"}
                 """;
 
@@ -227,7 +236,7 @@ class StockLotAdminControllerTest {
                         .content(json))
                 .andExpect(status().isOk());
 
-        verify(inventoryService).adjustStock(any());
+        verify(stockCommand).adjustStock(any());
     }
 
     @Test
@@ -239,17 +248,33 @@ class StockLotAdminControllerTest {
                         .content(json))
                 .andExpect(status().isForbidden());
 
-        verify(inventoryService, never()).deductStock(any(), any(), any(), any());
+        verify(stockCommand, never()).deductManualStock(any(), any(), any(), any());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void Should_forwardSearch_when_adminListsMovements() throws Exception {
         StockMovementDto movement = new StockMovementDto(
-                1L, 2L, 10L, "Granola", 20L, "Centro", "MANUAL_ADJUSTMENT",
-                BigDecimal.ONE, BigDecimal.valueOf(500), "Reconteo", 100L, OffsetDateTime.now());
-        when(inventoryService.listMovements(eq(StockMovementType.MANUAL_ADJUSTMENT), isNull(), eq(20L),
-                eq("granola"), any(), any(), any(Pageable.class)))
+                1L,
+                2L,
+                10L,
+                "Granola",
+                20L,
+                "Centro",
+                "MANUAL_ADJUSTMENT",
+                BigDecimal.ONE,
+                BigDecimal.valueOf(500),
+                "Reconteo",
+                100L,
+                OffsetDateTime.now());
+        when(inventoryQuery.listMovements(
+                        eq(StockMovementType.MANUAL_ADJUSTMENT),
+                        isNull(),
+                        eq(20L),
+                        eq("granola"),
+                        any(),
+                        any(),
+                        any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(movement), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/admin/stock/movements")
@@ -259,8 +284,15 @@ class StockLotAdminControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].productName").value("Granola"));
 
-        verify(inventoryService).listMovements(eq(StockMovementType.MANUAL_ADJUSTMENT), isNull(), eq(20L),
-                eq("granola"), any(), any(), any(Pageable.class));
+        verify(inventoryQuery)
+                .listMovements(
+                        eq(StockMovementType.MANUAL_ADJUSTMENT),
+                        isNull(),
+                        eq(20L),
+                        eq("granola"),
+                        any(),
+                        any(),
+                        any(Pageable.class));
     }
 
     /** Creates a stock lot response used by controller tests. */
@@ -282,7 +314,6 @@ class StockLotAdminControllerTest {
                 null,
                 null,
                 null,
-                BigDecimal.valueOf(8.5)
-        );
+                BigDecimal.valueOf(8.5));
     }
 }

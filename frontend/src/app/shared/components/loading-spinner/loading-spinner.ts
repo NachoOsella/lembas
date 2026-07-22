@@ -1,7 +1,8 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { ProgressSpinner } from 'primeng/progressspinner';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-loading-spinner',
   imports: [ProgressSpinner],
   templateUrl: './loading-spinner.html',

@@ -1,5 +1,7 @@
 package com.dietetica.lembas.inventory.web;
 
+import com.dietetica.lembas.inventory.api.InventoryQuery;
+import com.dietetica.lembas.inventory.api.StockCommand;
 import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
 import com.dietetica.lembas.inventory.dto.DeductionPlan;
 import com.dietetica.lembas.inventory.dto.StockAdjustmentRequest;
@@ -8,10 +10,10 @@ import com.dietetica.lembas.inventory.dto.StockLotDto;
 import com.dietetica.lembas.inventory.dto.StockMovementDto;
 import com.dietetica.lembas.inventory.dto.StockProductSummaryDto;
 import com.dietetica.lembas.inventory.model.StockMovementType;
-import com.dietetica.lembas.inventory.service.InventoryService;
 import com.dietetica.lembas.shared.dto.PageResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -25,8 +27,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
-
 /** Admin REST controller for inventory stock lot queries and entries. */
 @RestController
 @RequestMapping("/api/admin/stock")
@@ -34,10 +34,12 @@ import java.time.LocalDate;
 @SecurityRequirement(name = "bearerAuth")
 public class StockLotAdminController {
 
-    private final InventoryService inventoryService;
+    private final InventoryQuery inventoryQuery;
+    private final StockCommand stockCommand;
 
-    public StockLotAdminController(InventoryService inventoryService) {
-        this.inventoryService = inventoryService;
+    public StockLotAdminController(InventoryQuery inventoryQuery, StockCommand stockCommand) {
+        this.inventoryQuery = inventoryQuery;
+        this.stockCommand = stockCommand;
     }
 
     /** Returns aggregated stock summaries grouped by product and branch. */
@@ -46,9 +48,8 @@ public class StockLotAdminController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Long branchId,
             @RequestParam(defaultValue = "false") boolean expiringSoon,
-            @PageableDefault(size = 10, sort = "productName") Pageable pageable
-    ) {
-        return PageResponse.from(inventoryService.listProductSummaries(search, branchId, expiringSoon, pageable));
+            @PageableDefault(size = 10, sort = "productName") Pageable pageable) {
+        return PageResponse.from(inventoryQuery.listProductSummaries(search, branchId, expiringSoon, pageable));
     }
 
     /** Returns paginated stock lots matching the optional inventory filters. */
@@ -58,9 +59,8 @@ public class StockLotAdminController {
             @RequestParam(required = false) Long productId,
             @RequestParam(required = false) Long branchId,
             @RequestParam(defaultValue = "false") boolean expiringSoon,
-            @PageableDefault(size = 10, sort = "expirationDate") Pageable pageable
-    ) {
-        return PageResponse.from(inventoryService.listLots(search, productId, branchId, expiringSoon, pageable));
+            @PageableDefault(size = 10, sort = "expirationDate") Pageable pageable) {
+        return PageResponse.from(inventoryQuery.listLots(search, productId, branchId, expiringSoon, pageable));
     }
 
     /** Registers a new stock lot and its PURCHASE_ENTRY movement. */
@@ -68,7 +68,7 @@ public class StockLotAdminController {
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
     @ResponseStatus(HttpStatus.CREATED)
     public StockLotDto create(@Valid @RequestBody CreateStockLotRequest request) {
-        return inventoryService.createStockLot(request);
+        return stockCommand.createStockLot(request);
     }
 
     /** Deducts stock using FEFO policy. Records a MANUAL_ADJUSTMENT movement. */
@@ -76,29 +76,19 @@ public class StockLotAdminController {
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @ResponseStatus(HttpStatus.OK)
     public DeductionPlan deduct(@Valid @RequestBody StockDeductionRequest request) {
-        return inventoryService.deductStock(
-                request.productId(),
-                request.branchId(),
-                request.quantity(),
-                StockMovementType.MANUAL_ADJUSTMENT
-        );
+        return stockCommand.deductManualStock(
+                request.productId(), request.branchId(), request.quantity(), request.reason());
     }
 
-    /**
-     * Applies a manual stock adjustment with mandatory reason.
-     * Positive quantity increases stock, negative decreases it using FEFO.
-     */
+    /** Applies a manual stock adjustment with mandatory reason. */
     @PostMapping("/adjustments")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
     @ResponseStatus(HttpStatus.OK)
     public void adjust(@Valid @RequestBody StockAdjustmentRequest request) {
-        inventoryService.adjustStock(request);
+        stockCommand.adjustStock(request);
     }
 
-    /**
-     * Returns paginated stock movements with optional type, product, branch,
-     * and date-range filters.
-     */
+    /** Returns paginated stock movements with optional filters. */
     @GetMapping("/movements")
     public PageResponse<StockMovementDto> listMovements(
             @RequestParam(required = false) StockMovementType type,
@@ -107,8 +97,7 @@ public class StockLotAdminController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) LocalDate from,
             @RequestParam(required = false) LocalDate to,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-        return PageResponse.from(inventoryService.listMovements(type, productId, branchId, search, from, to, pageable));
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return PageResponse.from(inventoryQuery.listMovements(type, productId, branchId, search, from, to, pageable));
     }
 }

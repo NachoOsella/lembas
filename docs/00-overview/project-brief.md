@@ -40,15 +40,18 @@ This project eliminates those gaps by providing a single system that:
 | Module | Description |
 |---|---|
 | Auth | Registration (CUSTOMER), login, JWT, role-based access |
-| Catalog | Categories, products, barcodes, images, online publication status |
-| Inventory | Stock lots, FEFO deduction, movements, adjustments, expiry alerts |
+| Users | Internal user management (ADMIN, MANAGER, EMPLOYEE) with branch assignment |
+| Catalog | Categories, products, barcodes, images, online publication status, pricing rules |
+| Content | Legal content (Terms and Conditions, FAQ) for public store |
+| Inventory | Stock lots, FEFO deduction, movements, adjustments, expiry alerts, purchase receipt entry |
 | Orders | Unified POS and ONLINE orders, items with snapshots, state machine |
-| Payments | Unified payment table, Mercado Pago integration, manual payments |
+| Payments | Unified payment table, Mercado Pago integration, manual payments, webhook |
 | Cash Register | Opening, manual movements, closing with cash count and discrepancy justification |
 | POS (Point of Sale) | Fast product search, barcode scanning, multi-method payment |
-| Suppliers | Supplier registry, product-supplier association with manual cost |
-| Reports | Daily dashboard, cash closure report, rule-based recommendations |
-| Audit | Logging of critical actions (price changes, stock adjustments, cancellations) |
+| Suppliers | Supplier registry, product-supplier association, purchase orders, price update batches |
+| Reports | Daily dashboard, cash closure report, rule-based recommendations, sales/employees/inventory/suppliers reports |
+| Audit | Logging of critical actions (stub -- implementation deferred to post-MVP) |
+| Shared | Cross-cutting DTOs, exceptions, branch management, security configuration |
 
 ## What is the differential value?
 

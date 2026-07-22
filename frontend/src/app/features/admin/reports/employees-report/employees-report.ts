@@ -1,36 +1,41 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
-import { ReportsService } from '../../../../core/services/reports';
-import { UserService } from '../../../../core/services/user';
-import { CurrencyArPipe } from '../../../../core/pipes/currency-ar.pipe';
-import { Branch } from '../../../../shared/models/user';
-import {
-  EmployeePerformanceDto,
-  EmployeeReportDto,
-  ReportKpiDto,
-} from '../../../../shared/models/reports';
-import { DashboardStatCardDto } from '../../../../shared/models/dashboard';
+import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { DataExport } from '@shared/components/data-export/data-export';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
 
-import { AppButton } from '../../../../shared/components/app-button/app-button';
+import { DashboardChart } from '@features/dashboard/public-api';
+import { DashboardStatCard } from '@features/dashboard/public-api';
+import { ReportsService } from '@features/reports/data-access/reports';
+import { currentMonthRange, toReportIsoDate } from '@features/reports/domain/report-filters';
+import { employeesExport } from '@features/reports/domain/report-export';
 import {
-  AppDataTable,
-  ColumnDef,
-} from '../../../../shared/components/app-data-table/app-data-table';
-import { AppDatePicker } from '../../../../shared/components/app-date-picker/app-date-picker';
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { AppReportFilterBar } from '../../../../shared/components/app-report-filter-bar/app-report-filter-bar';
-import { AppReportSectionHead } from '../../../../shared/components/app-report-section-head/app-report-section-head';
-import { DashboardChart } from '../../../../shared/components/dashboard-chart/dashboard-chart';
-import { DashboardStatCard } from '../../../../shared/components/dashboard-stat-card/dashboard-stat-card';
-import { DataExport, ExportData } from '../../../../shared/components/data-export/data-export';
-import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
-import { AppToast } from '../../../../shared/components/app-toast/app-toast';
+  employeeRoleLabel,
+  hasPositiveValue,
+  mapEmployeeRevenueChart,
+  mapReportKpis,
+} from '@features/reports/public-api';
+import type { EmployeePerformanceDto, EmployeeReportDto } from '@features/reports/domain/reports';
+import { ReportRequestState } from '@features/reports/public-api';
+import { AppReportFilterBar } from '@features/reports/public-api';
+import { AppReportGrid } from '@features/reports/public-api';
+import { AppReportPanel } from '@features/reports/public-api';
+import { UserService } from '@features/users/data-access/user';
+import type { Branch } from '@features/users/domain/user';
 
 /** Employee performance report based on attributable POS and cash activity. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-employees-report',
   imports: [
     AppButton,
@@ -38,7 +43,8 @@ import { AppToast } from '../../../../shared/components/app-toast/app-toast';
     AppDatePicker,
     AppPageHeader,
     AppReportFilterBar,
-    AppReportSectionHead,
+    AppReportGrid,
+    AppReportPanel,
     AppSelect,
     AppToast,
     CurrencyArPipe,
@@ -52,18 +58,18 @@ import { AppToast } from '../../../../shared/components/app-toast/app-toast';
   templateUrl: './employees-report.html',
   styleUrl: './employees-report.css',
 })
-export class EmployeesReportPageComponent implements OnInit {
+export class EmployeesReportPageComponent implements OnInit, OnDestroy {
   private readonly reports = inject(ReportsService);
   private readonly userService = inject(UserService);
+  private readonly requestState = new ReportRequestState<EmployeeReportDto | null>();
 
   protected readonly fromDate = signal<Date | null>(null);
   protected readonly toDate = signal<Date | null>(null);
   protected readonly branchId = signal<number | null>(null);
   protected readonly branches = signal<Branch[]>([]);
-  protected readonly loading = signal(true);
-  protected readonly errorMessage = signal<string | null>(null);
-  protected readonly data = signal<EmployeeReportDto | null>(null);
-
+  protected readonly loading = this.requestState.loading;
+  protected readonly errorMessage = this.requestState.errorMessage;
+  protected readonly data = this.requestState.data;
   protected readonly branchOptions = computed(() =>
     this.branches().map((branch) => ({ label: branch.name, value: branch.id })),
   );
@@ -71,38 +77,25 @@ export class EmployeesReportPageComponent implements OnInit {
     ...(this.data()?.employees ?? []),
   ]);
   protected readonly hasData = computed(() => this.rows().length > 0);
-  protected readonly employeeLabels = computed(() => this.rows().map((row) => row.employeeName));
-  protected readonly revenueValues = computed(() => this.rows().map((row) => row.posRevenue));
+  protected readonly revenueChart = computed(() => mapEmployeeRevenueChart(this.rows()));
   protected readonly salesValues = computed(() => this.rows().map((row) => row.posSalesCount));
   protected readonly differenceValues = computed(() =>
     this.rows().map((row) => row.cashDifferenceAbsolute),
   );
   protected readonly hasPerformanceData = computed(
-    () =>
-      this.revenueValues().some((value) => value > 0) ||
-      this.salesValues().some((value) => value > 0),
+    () => hasPositiveValue(this.revenueChart().values) || hasPositiveValue(this.salesValues()),
   );
   protected readonly hasCashDifferenceData = computed(() =>
-    this.differenceValues().some((value) => value > 0),
+    hasPositiveValue(this.differenceValues()),
   );
   protected readonly totalRevenue = computed(() =>
     new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS',
       maximumFractionDigits: 0,
-    }).format(this.revenueValues().reduce((total, value) => total + value, 0)),
+    }).format(this.revenueChart().values.reduce((total, value) => total + value, 0)),
   );
-  protected readonly statCards = computed<DashboardStatCardDto[]>(() =>
-    (this.data()?.kpis ?? []).map((kpi: ReportKpiDto) => ({
-      label: kpi.label,
-      value: kpi.value,
-      subtitle: kpi.subtitle ?? null,
-      iconName: kpi.iconName,
-      colorStyle: kpi.colorStyle,
-      trend: kpi.trend ?? null,
-      trendPercentage: kpi.trendPercentage ?? null,
-    })),
-  );
+  protected readonly statCards = computed(() => mapReportKpis(this.data()?.kpis ?? []));
 
   protected readonly columns: ColumnDef[] = [
     { field: 'employeeName', header: 'Operador', sortable: true },
@@ -116,14 +109,16 @@ export class EmployeesReportPageComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    const now = new Date();
-    this.fromDate.set(new Date(now.getFullYear(), now.getMonth(), 1));
-    this.toDate.set(now);
+    this.resetDateRange();
     this.userService.listBranches().subscribe({
       next: (branches) => this.branches.set(branches),
       error: () => this.branches.set([]),
     });
     this.load();
+  }
+
+  ngOnDestroy(): void {
+    this.requestState.destroy();
   }
 
   protected onFromChange(date: Date | null): void {
@@ -142,76 +137,38 @@ export class EmployeesReportPageComponent implements OnInit {
   }
 
   protected onClearFilters(): void {
-    const now = new Date();
-    this.fromDate.set(new Date(now.getFullYear(), now.getMonth(), 1));
-    this.toDate.set(now);
+    this.resetDateRange();
     this.branchId.set(null);
     this.load();
   }
 
   protected onRefresh(): void {
-    this.load();
+    this.requestState.retry();
   }
 
-  protected exportData(): ExportData {
-    return {
-      filename: 'reporte_operativo_empleados',
-      columns: [
-        { key: 'employee', label: 'Operador' },
-        { key: 'role', label: 'Rol' },
-        { key: 'posSales', label: 'Ventas POS' },
-        { key: 'posRevenue', label: 'Facturacion POS' },
-        { key: 'averageTicket', label: 'Ticket promedio' },
-        { key: 'opened', label: 'Aperturas de caja' },
-        { key: 'closed', label: 'Cierres de caja' },
-        { key: 'difference', label: 'Desvios absolutos' },
-      ],
-      rows: this.rows().map((row) => ({
-        employee: row.employeeName,
-        role: roleLabel(row.role),
-        posSales: row.posSalesCount,
-        posRevenue: row.posRevenue,
-        averageTicket: row.averageTicket,
-        opened: row.cashSessionsOpened,
-        closed: row.cashSessionsClosed,
-        difference: row.cashDifferenceAbsolute,
-      })),
-    };
+  protected exportData() {
+    return employeesExport(this.rows());
   }
 
   protected roleLabel(role: string): string {
-    return roleLabel(role);
+    return employeeRoleLabel(role);
+  }
+
+  private resetDateRange(): void {
+    const range = currentMonthRange();
+    this.fromDate.set(range.from);
+    this.toDate.set(range.to);
   }
 
   private load(): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-    this.reports
-      .getEmployeeReport(toIsoDate(this.fromDate()), toIsoDate(this.toDate()), this.branchId())
-      .subscribe({
-        next: (data) => {
-          this.data.set(data);
-          this.loading.set(false);
-          if (!data) {
-            this.errorMessage.set('El reporte de empleados todavia no esta disponible.');
-          }
-        },
-        error: () => {
-          this.errorMessage.set('No se pudo cargar el reporte de empleados.');
-          this.loading.set(false);
-        },
-      });
+    this.requestState.load(
+      () =>
+        this.reports.getEmployeeReport(
+          toReportIsoDate(this.fromDate()),
+          toReportIsoDate(this.toDate()),
+          this.branchId(),
+        ),
+      'No se pudo cargar el reporte de empleados.',
+    );
   }
-}
-
-function toIsoDate(date: Date | null): string | null {
-  if (!date) return null;
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function roleLabel(role: string): string {
-  return { ADMIN: 'Administrador', MANAGER: 'Gerente', EMPLOYEE: 'Empleado' }[role] ?? role;
 }

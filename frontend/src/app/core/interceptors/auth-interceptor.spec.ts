@@ -1,12 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  HttpErrorResponse,
-  HttpInterceptorFn,
-  HttpRequest,
-  HttpHandlerFn,
-  HttpHeaders,
-  HttpResponse,
-} from '@angular/common/http';
+import type { HttpInterceptorFn, HttpHandlerFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpRequest, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 
 import { authInterceptor } from './auth-interceptor';

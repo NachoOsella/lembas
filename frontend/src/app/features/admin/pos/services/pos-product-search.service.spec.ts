@@ -1,14 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  HttpTestingController,
-  provideHttpClientTesting,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 
-import {
-  PosProductSearchItem,
-  PosProductSearchService,
-} from './pos-product-search.service';
+import type { PosProductSearchItem } from './pos-product-search.service';
+import { PosProductSearchService } from './pos-product-search.service';
 
 /** Unit tests for {@link PosProductSearchService}. */
 describe('PosProductSearchService', () => {
@@ -17,7 +12,7 @@ describe('PosProductSearchService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [PosProductSearchService, provideHttpClient(), provideHttpClientTesting()],
     });
     service = TestBed.inject(PosProductSearchService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -40,9 +35,7 @@ describe('PosProductSearchService', () => {
 
   it('returns an empty observable without hitting HTTP when the query is null', () => {
     let received: PosProductSearchItem[] | undefined;
-    service
-      .search(null as unknown as string, 1)
-      .subscribe((items) => (received = items));
+    service.search(null as unknown as string, 1).subscribe((items) => (received = items));
     expect(received).toEqual([]);
     httpMock.expectNone(() => true);
   });

@@ -8,14 +8,15 @@ import {
   signal,
 } from '@angular/core';
 
-import { PaymentMethod } from '../../../../../shared/models/order';
-import { PosCartLine, PosCartStore } from '../../state/pos-cart.store';
+import type { PaymentMethod } from '@features/orders/domain/order';
+import type { PosCartLine } from '../../state/pos-cart.store';
+import { PosCartStore } from '../../state/pos-cart.store';
 
-import { AppBadge } from '../../../../../shared/components/app-badge/app-badge';
-import { AppButton } from '../../../../../shared/components/app-button/app-button';
-import { AppInputNumber } from '../../../../../shared/components/app-input-number/app-input-number';
-import { AppSectionCard } from '../../../../../shared/components/app-section-card/app-section-card';
-import { EmptyState } from '../../../../../shared/components/empty-state/empty-state';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppInputNumber } from '@shared/components/app-input-number/app-input-number';
+import { AppSectionCard } from '@shared/components/app-section-card/app-section-card';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
 
 import { PosPaymentSelectorComponent } from '../pos-payment-selector/pos-payment-selector';
 
@@ -73,9 +74,7 @@ export class PosCartComponent {
   protected readonly cashReceived = signal<number | null>(null);
 
   /** CASH requires the cashier to enter how much was received. */
-  protected readonly requiresCash = computed(
-    () => this.selectedMethod() === 'CASH',
-  );
+  protected readonly requiresCash = computed(() => this.selectedMethod() === 'CASH');
 
   /** Cash short: entered amount is below the total. */
   protected readonly cashShort = computed(() => {

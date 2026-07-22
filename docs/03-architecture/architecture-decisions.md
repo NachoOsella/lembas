@@ -50,7 +50,7 @@
 | ADR-046 | order_type = POS for in-store sales | Identifies counter sales clearly |
 | ADR-047 | Simple reports with direct queries | No aggregated tables or scheduled jobs |
 | ADR-048 | Purchase orders do not affect stock; purchase receipts do | Orders represent expected purchases. Confirmed receipts create lots and `PURCHASE_ENTRY` movements |
-| ADR-049 | Dedicated commercial price history | `product_sale_price_history` and `supplier_product_cost_history` are used for price history; `audit_logs` records actors and critical actions |
+| ADR-049 | Dedicated commercial price history | `product_sale_price_history` and `supplier_product_cost_history` are used for price history; a dedicated `audit_logs` table is deferred to post-MVP |
 
 ## ADR format
 

@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
@@ -9,9 +10,9 @@ import { of, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import { ProductDetail } from './product-detail';
-import { CatalogService } from '../../../core/services/catalog';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
-import { ProductSummary } from '../../../shared/models/product';
+import { CatalogService } from '@features/catalog/data-access/catalog';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
+import type { ProductSummary } from '@features/catalog/domain/product';
 
 const MOCK_PRODUCT: ProductSummary = {
   id: 1,

@@ -1,6 +1,6 @@
-import { Routes } from '@angular/router';
-import { authGuard } from '../../core/guards/auth-guard';
-import { adminGuard, adminOnlyGuard, roleGuard } from '../../core/guards/admin-guard';
+import type { Routes } from '@angular/router';
+import { authGuard } from '@core/guards/auth-guard';
+import { adminGuard, adminOnlyGuard, roleGuard } from '@core/guards/admin-guard';
 
 export default [
   {

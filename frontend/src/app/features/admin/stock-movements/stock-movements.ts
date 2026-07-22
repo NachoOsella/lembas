@@ -1,20 +1,24 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { DecimalPipe } from '@angular/common';
 
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppDataTable, ColumnDef } from '../../../shared/components/app-data-table/app-data-table';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppSearchBar } from '../../../shared/components/app-search-bar/app-search-bar';
-import { AppSelect } from '../../../shared/components/app-select/app-select';
-import { InventoryService } from '../../../core/services/inventory';
-import { UserService } from '../../../core/services/user';
-import { getApiError } from '../../../shared/models/api-error';
-import { StockMovementDto, MOVEMENT_TYPE_LABELS, MOVEMENT_TYPE_SEVERITY } from '../../../shared/models/inventory';
-import { Branch } from '../../../shared/models/user';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppSearchBar } from '@shared/components/app-search-bar/app-search-bar';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { InventoryService } from '@features/inventory/data-access/inventory';
+import { UserService } from '@features/users/data-access/user';
+import { getApiError } from '@shared/types/api-error';
+import type { StockMovementDto } from '@features/inventory/domain/inventory';
+import { MOVEMENT_TYPE_LABELS, MOVEMENT_TYPE_SEVERITY } from '@features/inventory/domain/inventory';
+import type { Branch } from '@features/users/domain/user';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-stock-movements',
   imports: [
     DatePipe,
@@ -32,6 +36,7 @@ import { Branch } from '../../../shared/models/user';
 export class StockMovements {
   private readonly inventoryService = inject(InventoryService);
   private readonly userService = inject(UserService);
+  private readonly errorMapping = inject(ErrorMappingService);
 
   readonly columns: ColumnDef[] = [
     { field: 'type', header: 'Tipo', sortable: true, width: '10rem' },
@@ -57,10 +62,12 @@ export class StockMovements {
   readonly branchOptions = signal<{ label: string; value: number }[]>([]);
 
   /** Builds the type filter dropdown options from the available movement types. */
-  readonly typeFilterOptions = computed(() => {
+  readonly typeFilterOptions = computed<
+    readonly { readonly label: string; readonly value: string | null }[]
+  >(() => {
     const entries = Object.entries(MOVEMENT_TYPE_LABELS);
     return [
-      { label: 'Todos los tipos', value: null as string | null },
+      { label: 'Todos los tipos', value: null },
       ...entries.map(([value, label]) => ({ label, value })),
     ];
   });
@@ -87,24 +94,31 @@ export class StockMovements {
 
     const sortParam = `${this.sortField()},${this.sortOrder() === -1 ? 'desc' : 'asc'}`;
 
-    this.inventoryService.listMovements({
-      search: this.searchTerm().trim() || undefined,
-      type: this.typeFilter() ?? undefined,
-      branchId: this.branchFilter(),
-      page: Math.floor(this.first() / this.pageSize()),
-      size: this.pageSize(),
-      sort: sortParam,
-    }).subscribe({
-      next: (page) => {
-        this.movements.set(page.content);
-        this.totalRecords.set(page.totalElements);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.error.set(getApiError(err)?.message ?? 'Error al cargar movimientos');
-      },
-    });
+    this.inventoryService
+      .listMovements({
+        search: this.searchTerm().trim() || undefined,
+        type: this.typeFilter() ?? undefined,
+        branchId: this.branchFilter(),
+        page: Math.floor(this.first() / this.pageSize()),
+        size: this.pageSize(),
+        sort: sortParam,
+      })
+      .subscribe({
+        next: (page) => {
+          this.movements.set(page.content);
+          this.totalRecords.set(page.totalElements);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.loading.set(false);
+          const apiError = getApiError(err);
+          this.error.set(
+            apiError
+              ? this.errorMapping.getMessage(apiError.code)
+              : 'No pudimos cargar los movimientos.',
+          );
+        },
+      });
   }
 
   onSearch(query: string): void {

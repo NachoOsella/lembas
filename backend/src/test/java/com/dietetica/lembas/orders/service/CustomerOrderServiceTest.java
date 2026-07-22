@@ -1,35 +1,33 @@
 package com.dietetica.lembas.orders.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import com.dietetica.lembas.catalog.api.ProductLookup;
 import com.dietetica.lembas.catalog.model.Product;
 import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
-import com.dietetica.lembas.catalog.repository.ProductRepository;
-import com.dietetica.lembas.inventory.repository.StockLotRepository;
+import com.dietetica.lembas.inventory.api.InventoryQuery;
 import com.dietetica.lembas.orders.dto.CreateOnlineOrderItemRequest;
 import com.dietetica.lembas.orders.dto.CreateOnlineOrderRequest;
 import com.dietetica.lembas.orders.dto.OrderCreatedDto;
 import com.dietetica.lembas.orders.model.OrderStatus;
 import com.dietetica.lembas.orders.model.OrderType;
 import com.dietetica.lembas.orders.repository.OrderRepository;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.branch.model.Branch;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link CustomerOrderService}.
@@ -48,14 +46,19 @@ class CustomerOrderServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
+
     @Mock
-    private ProductRepository productRepository;
+    private ProductLookup productLookup;
+
     @Mock
-    private BranchRepository branchRepository;
+    private BranchQuery branchQuery;
+
     @Mock
-    private StockLotRepository stockLotRepository;
+    private InventoryQuery inventoryQuery;
+
     @Mock
     private OrderNumberGenerator orderNumberGenerator;
+
     @Mock
     private OrderMapper orderMapper;
 
@@ -68,11 +71,9 @@ class CustomerOrderServiceTest {
         Branch branch = branch();
         Product product = product("Yerba Mate");
 
-        when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
-        when(productRepository.findByIdAndActiveTrueAndOnlineStatus(1L, ProductOnlineStatus.PUBLISHED))
-                .thenReturn(Optional.of(product));
-        when(stockLotRepository.calculateAvailableQuantity(1L, 1L))
-                .thenReturn(new BigDecimal("10"));
+        when(branchQuery.findActiveById(1L)).thenReturn(Optional.of(branch));
+        when(productLookup.findPublishedById(1L)).thenReturn(Optional.of(product));
+        when(inventoryQuery.calculateAvailableQuantity(1L, 1L)).thenReturn(new BigDecimal("10"));
         when(orderNumberGenerator.next(OrderType.ONLINE)).thenReturn("ON-20260612-000001");
 
         // Capture the order passed to save()
@@ -86,10 +87,7 @@ class CustomerOrderServiceTest {
         });
 
         CreateOnlineOrderRequest request = new CreateOnlineOrderRequest(
-                1L,
-                List.of(new CreateOnlineOrderItemRequest(1L, new BigDecimal("2"))),
-                null
-        );
+                1L, List.of(new CreateOnlineOrderItemRequest(1L, new BigDecimal("2"))), null);
 
         OrderCreatedDto result = customerOrderService.createOnlineOrder(request, customer);
 
@@ -106,17 +104,12 @@ class CustomerOrderServiceTest {
         Branch branch = branch();
         Product product = product("Alfajor sin TACC");
 
-        when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
-        when(productRepository.findByIdAndActiveTrueAndOnlineStatus(1L, ProductOnlineStatus.PUBLISHED))
-                .thenReturn(Optional.of(product));
-        when(stockLotRepository.calculateAvailableQuantity(1L, 1L))
-                .thenReturn(new BigDecimal("3"));
+        when(branchQuery.findActiveById(1L)).thenReturn(Optional.of(branch));
+        when(productLookup.findPublishedById(1L)).thenReturn(Optional.of(product));
+        when(inventoryQuery.calculateAvailableQuantity(1L, 1L)).thenReturn(new BigDecimal("3"));
 
         CreateOnlineOrderRequest request = new CreateOnlineOrderRequest(
-                1L,
-                List.of(new CreateOnlineOrderItemRequest(1L, new BigDecimal("5"))),
-                null
-        );
+                1L, List.of(new CreateOnlineOrderItemRequest(1L, new BigDecimal("5"))), null);
 
         assertThatThrownBy(() -> customerOrderService.createOnlineOrder(request, customer))
                 .isInstanceOf(DomainException.class)
@@ -131,15 +124,11 @@ class CustomerOrderServiceTest {
         User customer = customer();
         Branch branch = branch();
 
-        when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
-        when(productRepository.findByIdAndActiveTrueAndOnlineStatus(1L, ProductOnlineStatus.PUBLISHED))
-                .thenReturn(Optional.empty());
+        when(branchQuery.findActiveById(1L)).thenReturn(Optional.of(branch));
+        when(productLookup.findPublishedById(1L)).thenReturn(Optional.empty());
 
-        CreateOnlineOrderRequest request = new CreateOnlineOrderRequest(
-                1L,
-                List.of(new CreateOnlineOrderItemRequest(1L, BigDecimal.ONE)),
-                null
-        );
+        CreateOnlineOrderRequest request =
+                new CreateOnlineOrderRequest(1L, List.of(new CreateOnlineOrderItemRequest(1L, BigDecimal.ONE)), null);
 
         assertThatThrownBy(() -> customerOrderService.createOnlineOrder(request, customer))
                 .isInstanceOf(DomainException.class)
@@ -153,13 +142,10 @@ class CustomerOrderServiceTest {
     void shouldThrowBranchNotFoundWhenBranchDoesNotExist() {
         User customer = customer();
 
-        when(branchRepository.findById(999L)).thenReturn(Optional.empty());
+        when(branchQuery.findActiveById(999L)).thenReturn(Optional.empty());
 
-        CreateOnlineOrderRequest request = new CreateOnlineOrderRequest(
-                999L,
-                List.of(new CreateOnlineOrderItemRequest(1L, BigDecimal.ONE)),
-                null
-        );
+        CreateOnlineOrderRequest request =
+                new CreateOnlineOrderRequest(999L, List.of(new CreateOnlineOrderItemRequest(1L, BigDecimal.ONE)), null);
 
         assertThatThrownBy(() -> customerOrderService.createOnlineOrder(request, customer))
                 .isInstanceOf(DomainException.class)
@@ -175,13 +161,10 @@ class CustomerOrderServiceTest {
         Branch inactiveBranch = branch();
         setField(inactiveBranch, "active", false);
 
-        when(branchRepository.findById(1L)).thenReturn(Optional.of(inactiveBranch));
+        when(branchQuery.findActiveById(1L)).thenReturn(Optional.empty());
 
-        CreateOnlineOrderRequest request = new CreateOnlineOrderRequest(
-                1L,
-                List.of(new CreateOnlineOrderItemRequest(1L, BigDecimal.ONE)),
-                null
-        );
+        CreateOnlineOrderRequest request =
+                new CreateOnlineOrderRequest(1L, List.of(new CreateOnlineOrderItemRequest(1L, BigDecimal.ONE)), null);
 
         assertThatThrownBy(() -> customerOrderService.createOnlineOrder(request, customer))
                 .isInstanceOf(DomainException.class)
@@ -195,11 +178,8 @@ class CustomerOrderServiceTest {
     void shouldThrowAccessDeniedWhenUserIsNotCustomer() {
         User employee = new User(1L, "emp@lembas.com", "hash", "Emp", "LOYEE", null, Role.EMPLOYEE);
 
-        CreateOnlineOrderRequest request = new CreateOnlineOrderRequest(
-                1L,
-                List.of(new CreateOnlineOrderItemRequest(1L, BigDecimal.ONE)),
-                null
-        );
+        CreateOnlineOrderRequest request =
+                new CreateOnlineOrderRequest(1L, List.of(new CreateOnlineOrderItemRequest(1L, BigDecimal.ONE)), null);
 
         assertThatThrownBy(() -> customerOrderService.createOnlineOrder(request, employee))
                 .isInstanceOf(DomainException.class)
@@ -211,11 +191,8 @@ class CustomerOrderServiceTest {
 
     @Test
     void shouldThrowAccessDeniedWhenUserIsNull() {
-        CreateOnlineOrderRequest request = new CreateOnlineOrderRequest(
-                1L,
-                List.of(new CreateOnlineOrderItemRequest(1L, BigDecimal.ONE)),
-                null
-        );
+        CreateOnlineOrderRequest request =
+                new CreateOnlineOrderRequest(1L, List.of(new CreateOnlineOrderItemRequest(1L, BigDecimal.ONE)), null);
 
         assertThatThrownBy(() -> customerOrderService.createOnlineOrder(request, null))
                 .isInstanceOf(DomainException.class)
@@ -231,11 +208,9 @@ class CustomerOrderServiceTest {
         Branch branch = branch();
         Product product = product("Granola");
 
-        when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
-        when(productRepository.findByIdAndActiveTrueAndOnlineStatus(1L, ProductOnlineStatus.PUBLISHED))
-                .thenReturn(Optional.of(product));
-        when(stockLotRepository.calculateAvailableQuantity(1L, 1L))
-                .thenReturn(new BigDecimal("20"));
+        when(branchQuery.findActiveById(1L)).thenReturn(Optional.of(branch));
+        when(productLookup.findPublishedById(1L)).thenReturn(Optional.of(product));
+        when(inventoryQuery.calculateAvailableQuantity(1L, 1L)).thenReturn(new BigDecimal("20"));
         when(orderNumberGenerator.next(OrderType.ONLINE)).thenReturn("ON-20260612-000002");
         when(orderRepository.save(any())).thenAnswer(invocation -> {
             var order = invocation.getArgument(0);
@@ -250,10 +225,8 @@ class CustomerOrderServiceTest {
                 1L,
                 List.of(
                         new CreateOnlineOrderItemRequest(1L, new BigDecimal("2")),
-                        new CreateOnlineOrderItemRequest(1L, new BigDecimal("3"))
-                ),
-                null
-        );
+                        new CreateOnlineOrderItemRequest(1L, new BigDecimal("3"))),
+                null);
 
         OrderCreatedDto result = customerOrderService.createOnlineOrder(request, customer);
 

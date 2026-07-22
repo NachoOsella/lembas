@@ -1,11 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ApiErrorResponse } from '../../shared/models/api-error';
-
-/**
- * Re-export for backward compatibility with existing imports.
- * @deprecated Import directly from 'shared/models/api-error' instead.
- */
-export type { ApiErrorResponse, ApiFieldError } from '../../shared/models/api-error';
+import type { ApiErrorResponse } from '@shared/types/api-error';
 
 /**
  * Centralized service for mapping backend error codes to user-friendly Spanish messages.
@@ -123,7 +117,8 @@ export class ErrorMappingService {
     // Cash register errors
     CASH_SESSION_ALREADY_OPEN:
       'Ya hay una caja abierta para esta sucursal. Cerrala antes de abrir una nueva.',
-    CASH_SESSION_NOT_FOUND: 'No hay una caja abierta para esta sucursal. Abrí una y reintentá la venta.',
+    CASH_SESSION_NOT_FOUND:
+      'No hay una caja abierta para esta sucursal. Abrí una y reintentá la venta.',
     CASH_BRANCH_REQUIRED: 'Debes seleccionar una sucursal para gestionar la caja.',
     CASH_MOVEMENT_CLOSED_SESSION: 'No se pueden agregar movimientos a una caja ya cerrada.',
     CASH_SESSION_ALREADY_CLOSED: 'La caja ya esta cerrada.',

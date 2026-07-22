@@ -6,12 +6,52 @@
   display: block;
 }
 
-/* -- Pill row (desktop) --------------------------------------------- */
+/* -- Filter toolbar and quick categories ---------------------------- */
+
+.catnav-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.catnav-toolbar__copy {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.catnav-toolbar__label {
+  color: var(--color-primary-darkest);
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
+.catnav-toolbar__count {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.catnav-toolbar__selected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-primary-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.catnav-toolbar__selected i {
+  color: var(--color-primary);
+}
 
 .catnav-pills {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.1rem 0.1rem 0.35rem;
+  scrollbar-width: thin;
 }
 
 .catnav-pills__item {
@@ -112,14 +152,14 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(56rem, calc(100vw - 2rem));
-  max-height: min(80vh, 44rem);
+  width: min(64rem, calc(100vw - 2rem));
+  max-height: min(82vh, 46rem);
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(7, 95, 54, 0.1);
   border-radius: 1.25rem;
   background: var(--color-surface-warmest);
-  box-shadow: 0 24px 80px rgba(7, 40, 26, 0.22);
+  box-shadow: 0 1rem 3rem rgba(7, 40, 26, 0.2);
   animation: catnav-scale-in 0.22s cubic-bezier(0.2, 0.8, 0.24, 1.02);
   overflow: hidden;
 }
@@ -129,7 +169,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.5rem 1.5rem 0;
+  padding: 1.35rem 1.5rem 0;
 }
 
 .catnav-modal__label {
@@ -151,6 +191,16 @@
   line-height: 1.15;
   font-family: var(--font-sans);
   letter-spacing: -0.03em;
+}
+
+.catnav-modal__selection {
+  margin: 0.45rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+}
+
+.catnav-modal__selection strong {
+  color: var(--color-primary-dark);
 }
 
 .catnav-modal__close {
@@ -184,13 +234,30 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  margin: 0.85rem 1.5rem 0;
-  border: 1px solid rgba(47, 141, 114, 0.14);
-  border-radius: 999px;
-  background: var(--color-surface);
+  margin: 1rem 1.5rem 0;
+  padding: 0.15rem 0.9rem;
+  border: 1px solid var(--color-border-warm);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-warm);
   color: var(--color-primary);
-  padding: 0 1rem;
-  transition: border-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.catnav-modal__search app-input {
+  flex: 1;
+  min-width: 0;
+}
+
+:host ::ng-deep .catnav-modal__search .p-inputtext {
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.5rem 0.25rem;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .catnav-modal__search:focus-within {
@@ -221,24 +288,30 @@
 
 .catnav-modal__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: start;
+  gap: 0.6rem;
   padding: 1rem 1.5rem 1.5rem;
   overflow-y: auto;
   flex: 1;
 }
 
 .catnav-modal__card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 0.85rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 4.2rem;
+  border: 1px solid var(--color-border-neutral);
+  border-radius: var(--radius-card);
   background: var(--color-surface);
-  padding: 0.85rem 1rem;
+  padding: 0.7rem 0.75rem;
   text-align: left;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .catnav-modal__card:hover {
@@ -249,15 +322,42 @@
 .catnav-modal__card--active {
   border-color: var(--color-primary);
   background: var(--color-surface-faint);
-  box-shadow: 0 0 0 1px var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
 }
 
 .catnav-modal__card:active {
   transform: scale(0.98);
 }
 
+.catnav-modal__card-icon {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-mint-wash-light);
+  color: var(--color-primary);
+  font-size: 0.78rem;
+}
+
+.catnav-modal__card-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.16rem;
+}
+
+.catnav-modal__card-check {
+  color: transparent;
+  font-size: 0.75rem;
+}
+
+.catnav-modal__card--active .catnav-modal__card-check {
+  color: var(--color-primary);
+}
+
 .catnav-modal__card-name {
-  font-size: 0.88rem;
+  overflow: hidden;
+  font-size: 0.82rem;
   font-weight: 700;
   line-height: 1.2;
   font-family: var(--font-sans);
@@ -365,6 +465,7 @@
 }
 
 @media (max-width: 767px) {
+  .catnav-toolbar,
   .catnav-pills {
     display: none;
   }
@@ -444,6 +545,26 @@
     animation: catnav-slide-up 0.28s cubic-bezier(0.2, 0.8, 0.24, 1);
   }
 
+  .catnav-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .catnav-toolbar__selected {
+    padding-left: 0.1rem;
+  }
+
+  .catnav-modal__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .catnav-modal__card {
+    min-height: 4rem;
+  }
+}
+
+@media (max-width: 30rem) {
   .catnav-modal__grid {
     grid-template-columns: 1fr;
   }

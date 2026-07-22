@@ -4,7 +4,6 @@ import com.dietetica.lembas.cash.dto.CashCloseRequest;
 import com.dietetica.lembas.cash.dto.CashEntryDto;
 import com.dietetica.lembas.cash.dto.CashMovementDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
-import com.dietetica.lembas.cash.dto.CashTotalsByMethodDto;
 import com.dietetica.lembas.cash.dto.CreateCashMovementRequest;
 import com.dietetica.lembas.cash.dto.OpenCashSessionRequest;
 import com.dietetica.lembas.cash.model.CashMovement;
@@ -12,20 +11,14 @@ import com.dietetica.lembas.cash.model.CashSession;
 import com.dietetica.lembas.cash.model.CashSessionStatus;
 import com.dietetica.lembas.cash.repository.CashMovementRepository;
 import com.dietetica.lembas.cash.repository.CashSessionRepository;
+import com.dietetica.lembas.payments.api.CashPaymentQuery;
 import com.dietetica.lembas.payments.model.Payment;
-import com.dietetica.lembas.payments.model.PaymentMethod;
-import com.dietetica.lembas.payments.model.PaymentStatus;
-import com.dietetica.lembas.payments.repository.PaymentRepository;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.branch.model.Branch;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import com.dietetica.lembas.users.api.UserDirectory;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
-import com.dietetica.lembas.users.repository.UserRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
@@ -33,6 +26,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use cases for the cash register module.
@@ -53,6 +49,7 @@ public class CashService {
 
     /** Error codes used by the cash module; documented in {@code docs/05-api/error-handling.md}. */
     static final String CODE_CASH_SESSION_ALREADY_OPEN = "CASH_SESSION_ALREADY_OPEN";
+
     static final String CODE_CASH_SESSION_NOT_FOUND = "CASH_SESSION_NOT_FOUND";
     static final String CODE_CASH_BRANCH_REQUIRED = "CASH_BRANCH_REQUIRED";
     static final String CODE_INVALID_USER_BRANCH = "INVALID_USER_BRANCH";
@@ -63,31 +60,30 @@ public class CashService {
     static final String CODE_CASH_DIFFERENCE_REASON_REQUIRED = "CASH_DIFFERENCE_REASON_REQUIRED";
 
     private final CashSessionRepository cashSessionRepository;
-    private final BranchRepository branchRepository;
+    private final BranchQuery branchQuery;
     private final CashSessionMapper cashSessionMapper;
     private final CashMovementRepository cashMovementRepository;
     private final CashMovementMapper cashMovementMapper;
-    private final PaymentRepository paymentRepository;
-    private final UserRepository userRepository;
+    private final CashPaymentQuery cashPaymentQuery;
+    private final UserDirectory userDirectory;
     private final CashCloseCalculator cashCloseCalculator;
 
     public CashService(
             CashSessionRepository cashSessionRepository,
-            BranchRepository branchRepository,
+            BranchQuery branchQuery,
             CashSessionMapper cashSessionMapper,
             CashMovementRepository cashMovementRepository,
             CashMovementMapper cashMovementMapper,
-            PaymentRepository paymentRepository,
-            UserRepository userRepository,
-            CashCloseCalculator cashCloseCalculator
-    ) {
+            CashPaymentQuery cashPaymentQuery,
+            UserDirectory userDirectory,
+            CashCloseCalculator cashCloseCalculator) {
         this.cashSessionRepository = cashSessionRepository;
-        this.branchRepository = branchRepository;
+        this.branchQuery = branchQuery;
         this.cashSessionMapper = cashSessionMapper;
         this.cashMovementRepository = cashMovementRepository;
         this.cashMovementMapper = cashMovementMapper;
-        this.paymentRepository = paymentRepository;
-        this.userRepository = userRepository;
+        this.cashPaymentQuery = cashPaymentQuery;
+        this.userDirectory = userDirectory;
         this.cashCloseCalculator = cashCloseCalculator;
     }
 
@@ -108,8 +104,7 @@ public class CashService {
             throw new DomainException(
                     CODE_CASH_SESSION_ALREADY_OPEN,
                     HttpStatus.CONFLICT,
-                    "A cash session is already open for branch " + branch.getId()
-            );
+                    "A cash session is already open for branch " + branch.getId());
         }
 
         CashSession session = new CashSession();
@@ -133,8 +128,7 @@ public class CashService {
                 throw new DomainException(
                         CODE_CASH_SESSION_ALREADY_OPEN,
                         HttpStatus.CONFLICT,
-                        "A cash session is already open for branch " + branch.getId()
-                );
+                        "A cash session is already open for branch " + branch.getId());
             }
             throw ex;
         }
@@ -145,9 +139,7 @@ public class CashService {
      * Detects whether the given {@link org.springframework.dao.DataIntegrityViolationException}
      * was caused by the partial unique index that enforces one OPEN session per branch.
      */
-    private static boolean isOneOpenPerBranchViolation(
-            org.springframework.dao.DataIntegrityViolationException ex
-    ) {
+    private static boolean isOneOpenPerBranchViolation(org.springframework.dao.DataIntegrityViolationException ex) {
         String combined = collectMessages(ex);
         if (combined == null) {
             return false;
@@ -184,14 +176,25 @@ public class CashService {
     public CashSessionDto getCurrentSession(Long branchId, User currentUser) {
         ensureInternalUser(currentUser);
         Long resolvedBranchId = resolveBranchIdForCurrent(branchId, currentUser);
-        Optional<CashSession> session = cashSessionRepository
-                .findFirstByBranchIdAndStatusOrderByOpenedAtDesc(resolvedBranchId, CashSessionStatus.OPEN);
-        return session.map(cashSessionMapper::toDto)
-                .orElseThrow(() -> new DomainException(
-                        CODE_CASH_SESSION_NOT_FOUND,
-                        HttpStatus.NOT_FOUND,
-                        "No open cash session for branch " + resolvedBranchId
-                ));
+        Optional<CashSession> session = cashSessionRepository.findFirstByBranchIdAndStatusOrderByOpenedAtDesc(
+                resolvedBranchId, CashSessionStatus.OPEN);
+        return session.map(cashSessionMapper::toDto).orElseThrow(() -> cashSessionNotFound(resolvedBranchId));
+    }
+
+    /**
+     * Acquires and validates the OPEN session used by a POS sale.
+     *
+     * <p>The lock participates in the caller's transaction, so a concurrent close
+     * cannot complete until the complete sale has committed or rolled back.</p>
+     */
+    @Transactional
+    public CashSessionDto getCurrentSessionForUpdate(Long branchId, User currentUser) {
+        ensureInternalUser(currentUser);
+        Long resolvedBranchId = resolveBranchIdForCurrent(branchId, currentUser);
+        return cashSessionRepository
+                .findOpenByBranchIdForUpdate(resolvedBranchId, CashSessionStatus.OPEN)
+                .map(cashSessionMapper::toDto)
+                .orElseThrow(() -> cashSessionNotFound(resolvedBranchId));
     }
 
     /**
@@ -203,12 +206,10 @@ public class CashService {
      */
     @Transactional(readOnly = true)
     public CashSessionDto getSessionById(Long id) {
-        CashSession session = cashSessionRepository.findById(id)
+        CashSession session = cashSessionRepository
+                .findById(id)
                 .orElseThrow(() -> new DomainException(
-                        CODE_CASH_SESSION_NOT_FOUND,
-                        HttpStatus.NOT_FOUND,
-                        "Cash session not found"
-                ));
+                        CODE_CASH_SESSION_NOT_FOUND, HttpStatus.NOT_FOUND, "Cash session not found"));
         List<CashEntryDto> entries = buildUnifiedEntries(id);
         return cashSessionMapper.toDto(session, entries);
     }
@@ -224,29 +225,29 @@ public class CashService {
      */
     private List<CashEntryDto> buildUnifiedEntries(Long sessionId) {
         List<CashEntryDto> entries = new ArrayList<>();
-        cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(sessionId)
+        cashMovementRepository
+                .findByCashSessionIdOrderByCreatedAtAsc(sessionId)
                 .forEach(movement -> entries.add(toEntry(movement)));
         // Include every APPROVED payment regardless of method so the FE
         // timeline shows QR, transfers, card, etc. alongside cash. The
         // physical-cash calculations on top of this list keep filtering by
         // CASH; the table here is a chronological activity log.
-        paymentRepository.findByCashSessionIdAndStatusOrderByIdAsc(
-                sessionId, PaymentStatus.APPROVED
-        ).forEach(payment -> entries.add(toEntry(payment)));
-        entries.sort(Comparator
-                .comparing(CashEntryDto::occurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
+        cashPaymentQuery.findApprovedForCashSession(sessionId).forEach(payment -> entries.add(toEntry(payment)));
+        entries.sort(Comparator.comparing(CashEntryDto::occurredAt, Comparator.nullsLast(Comparator.naturalOrder()))
                 .thenComparing(CashEntryDto::id, Comparator.nullsLast(Comparator.naturalOrder())));
         return entries;
     }
 
     /** Adapts a manual movement to the unified entry shape. */
     private CashEntryDto toEntry(CashMovement movement) {
-        String direction = switch (movement.getType()) {
-            case CASH_IN -> "IN";
-            case CASH_OUT -> "OUT";
-            case ADJUSTMENT -> "NEUTRAL";
-        };
-        String method = movement.getMethod() == null ? null : movement.getMethod().name();
+        String direction =
+                switch (movement.getType()) {
+                    case CASH_IN -> "IN";
+                    case CASH_OUT -> "OUT";
+                    case ADJUSTMENT -> "NEUTRAL";
+                };
+        String method =
+                movement.getMethod() == null ? null : movement.getMethod().name();
         String userName = userFullName(movement.getCreatedByUser());
         return new CashEntryDto(
                 "MANUAL",
@@ -258,13 +259,13 @@ public class CashService {
                 movement.getReason(),
                 userName,
                 movement.getCreatedAt(),
-                null
-        );
+                null);
     }
 
     /** Adapts an APPROVED CASH payment to the unified entry shape. */
     private CashEntryDto toEntry(Payment payment) {
-        String orderNumber = payment.getOrder() == null ? null : payment.getOrder().getOrderNumber();
+        String orderNumber =
+                payment.getOrder() == null ? null : payment.getOrder().getOrderNumber();
         String orderLabel = orderNumber == null ? "Sin pedido" : "Pedido #" + orderNumber;
         return new CashEntryDto(
                 "PAYMENT",
@@ -276,8 +277,7 @@ public class CashService {
                 orderNumber == null ? "Pago registrado" : "Pago " + orderLabel,
                 orderLabel,
                 payment.getApprovedAt() != null ? payment.getApprovedAt() : payment.getCreatedAt(),
-                payment.getOrder() == null ? null : payment.getOrder().getId()
-        );
+                payment.getOrder() == null ? null : payment.getOrder().getId());
     }
 
     private static String userFullName(User user) {
@@ -302,28 +302,22 @@ public class CashService {
     @Transactional
     public CashMovementDto addMovement(Long sessionId, CreateCashMovementRequest request, User currentUser) {
         ensureInternalUser(currentUser);
-        CashSession session = cashSessionRepository.findById(sessionId)
+        CashSession session = cashSessionRepository
+                .findByIdForUpdate(sessionId)
                 .orElseThrow(() -> new DomainException(
-                        CODE_CASH_SESSION_NOT_FOUND,
-                        HttpStatus.NOT_FOUND,
-                        "Cash session not found"
-                ));
+                        CODE_CASH_SESSION_NOT_FOUND, HttpStatus.NOT_FOUND, "Cash session not found"));
 
         if (session.getStatus() == CashSessionStatus.CLOSED) {
             throw new DomainException(
                     CODE_CASH_MOVEMENT_CLOSED_SESSION,
                     HttpStatus.BAD_REQUEST,
-                    "Cannot add movements to a closed cash session"
-            );
+                    "Cannot add movements to a closed cash session");
         }
 
         // amount != 0 is enforced by the DB CHECK; double-check at service level for early feedback.
         if (request.amount().compareTo(java.math.BigDecimal.ZERO) == 0) {
             throw new DomainException(
-                    "VALIDATION_ERROR",
-                    HttpStatus.BAD_REQUEST,
-                    "Movement amount must be different from zero"
-            );
+                    "VALIDATION_ERROR", HttpStatus.BAD_REQUEST, "Movement amount must be different from zero");
         }
 
         CashMovement movement = new CashMovement();
@@ -333,12 +327,10 @@ public class CashService {
         // (an extra UPDATE on the users row) which can race with concurrent updates
         // and surface as a misleading constraint violation. Re-load the user inside
         // this transaction so the FK is satisfied by a managed reference instead.
-        movement.setCreatedByUser(userRepository.findById(currentUser.getId())
+        movement.setCreatedByUser(userDirectory
+                .findById(currentUser.getId())
                 .orElseThrow(() -> new DomainException(
-                        CODE_ACCESS_DENIED,
-                        HttpStatus.FORBIDDEN,
-                        "The authenticated user is no longer valid"
-                )));
+                        CODE_ACCESS_DENIED, HttpStatus.FORBIDDEN, "The authenticated user is no longer valid")));
         movement.setType(request.type());
         movement.setMethod(request.method());
         movement.setAmount(request.amount());
@@ -378,47 +370,35 @@ public class CashService {
         // clear code rather than a NullPointerException later. Done before any
         // DB lookup so the request is short-circuited on bad input.
         if (request.countedCashAmount() == null) {
-            throw new DomainException(
-                    "VALIDATION_ERROR",
-                    HttpStatus.BAD_REQUEST,
-                    "countedCashAmount is required"
-            );
+            throw new DomainException("VALIDATION_ERROR", HttpStatus.BAD_REQUEST, "countedCashAmount is required");
         }
 
-        CashSession session = cashSessionRepository.findById(sessionId)
+        CashSession session = cashSessionRepository
+                .findByIdForUpdate(sessionId)
                 .orElseThrow(() -> new DomainException(
-                        CODE_CASH_SESSION_NOT_FOUND,
-                        HttpStatus.NOT_FOUND,
-                        "Cash session not found"
-                ));
+                        CODE_CASH_SESSION_NOT_FOUND, HttpStatus.NOT_FOUND, "Cash session not found"));
 
         if (session.getStatus() == CashSessionStatus.CLOSED) {
             throw new DomainException(
                     CODE_CASH_SESSION_ALREADY_CLOSED,
                     HttpStatus.CONFLICT,
-                    "Cash session " + sessionId + " is already closed"
-            );
+                    "Cash session " + sessionId + " is already closed");
         }
 
         // Re-load the closer inside the transaction so the FK is satisfied by a
         // managed reference (same defensive pattern as addMovement).
-        User closer = userRepository.findById(currentUser.getId())
+        User closer = userDirectory
+                .findById(currentUser.getId())
                 .orElseThrow(() -> new DomainException(
-                        CODE_ACCESS_DENIED,
-                        HttpStatus.FORBIDDEN,
-                        "The authenticated user is no longer valid"
-                ));
+                        CODE_ACCESS_DENIED, HttpStatus.FORBIDDEN, "The authenticated user is no longer valid"));
 
         // Load the inputs the calculator needs. Manual movements are already
         // ordered by createdAt; payments are filtered to APPROVED so cancelled
         // and refunded ones never affect the drawer.
-        List<CashMovement> movements = cashMovementRepository
-                .findByCashSessionIdOrderByCreatedAtAsc(sessionId);
-        List<Payment> approvedPayments = paymentRepository
-                .findByCashSessionIdAndStatusOrderByIdAsc(sessionId, PaymentStatus.APPROVED);
+        List<CashMovement> movements = cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(sessionId);
+        List<Payment> approvedPayments = cashPaymentQuery.findApprovedForCashSession(sessionId);
 
-        CashCloseCalculator.CashCloseResult calc = cashCloseCalculator
-                .calculate(session, approvedPayments, movements);
+        CashCloseCalculator.CashCloseResult calc = cashCloseCalculator.calculate(session, approvedPayments, movements);
 
         BigDecimal counted = request.countedCashAmount().setScale(2, RoundingMode.HALF_UP);
         BigDecimal expected = calc.expectedCashAmount();
@@ -429,8 +409,7 @@ public class CashService {
             throw new DomainException(
                     CODE_CASH_DIFFERENCE_REASON_REQUIRED,
                     HttpStatus.BAD_REQUEST,
-                    "A non-zero cash difference requires a justification"
-            );
+                    "A non-zero cash difference requires a justification");
         }
 
         // Persist the close metadata. The @PreUpdate hook refreshes updatedAt.
@@ -449,6 +428,11 @@ public class CashService {
         // totals-by-method breakdown for the close report.
         List<CashEntryDto> entries = buildUnifiedEntries(sessionId);
         return cashSessionMapper.toDto(saved, entries, calc.totalsByMethod());
+    }
+
+    private DomainException cashSessionNotFound(Long branchId) {
+        return new DomainException(
+                CODE_CASH_SESSION_NOT_FOUND, HttpStatus.NOT_FOUND, "No open cash session for branch " + branchId);
     }
 
     /** Rejects customers from any cash endpoint. */
@@ -471,27 +455,20 @@ public class CashService {
                 throw new DomainException(
                         CODE_CASH_BRANCH_REQUIRED,
                         HttpStatus.BAD_REQUEST,
-                        "ADMIN must select a branch to open a cash session"
-                );
+                        "ADMIN must select a branch to open a cash session");
             }
             branchId = request.branchId();
         } else {
             branchId = user.getBranchId();
             if (branchId == null) {
                 throw new DomainException(
-                        CODE_INVALID_USER_BRANCH,
-                        HttpStatus.BAD_REQUEST,
-                        "User has no assigned branch"
-                );
+                        CODE_INVALID_USER_BRANCH, HttpStatus.BAD_REQUEST, "User has no assigned branch");
             }
         }
-        return branchRepository.findById(branchId)
-                .filter(Branch::isActive)
-                .orElseThrow(() -> new DomainException(
-                        CODE_BRANCH_NOT_FOUND,
-                        HttpStatus.NOT_FOUND,
-                        "Branch not found"
-                ));
+        return branchQuery
+                .findActiveById(branchId)
+                .orElseThrow(
+                        () -> new DomainException(CODE_BRANCH_NOT_FOUND, HttpStatus.NOT_FOUND, "Branch not found"));
     }
 
     /** Resolves the branch id for current-session reads, mirroring the open resolution. */
@@ -501,17 +478,12 @@ public class CashService {
                 throw new DomainException(
                         CODE_CASH_BRANCH_REQUIRED,
                         HttpStatus.BAD_REQUEST,
-                        "ADMIN must select a branch to query the current cash session"
-                );
+                        "ADMIN must select a branch to query the current cash session");
             }
             return requestedBranchId;
         }
         if (user.getBranchId() == null) {
-            throw new DomainException(
-                    CODE_INVALID_USER_BRANCH,
-                    HttpStatus.BAD_REQUEST,
-                    "User has no assigned branch"
-            );
+            throw new DomainException(CODE_INVALID_USER_BRANCH, HttpStatus.BAD_REQUEST, "User has no assigned branch");
         }
         return user.getBranchId();
     }

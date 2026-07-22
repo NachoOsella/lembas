@@ -1,18 +1,17 @@
 package com.dietetica.lembas.inventory.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.dietetica.lembas.inventory.dto.DeductionPlan;
 import com.dietetica.lembas.inventory.model.StockLot;
 import com.dietetica.lembas.inventory.model.StockLotStatus;
 import com.dietetica.lembas.shared.exception.DomainException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** Pure unit tests for FEFO deduction policy without any Spring dependencies. */
 class FefoStockDeductionPolicyTest {
@@ -116,6 +115,14 @@ class FefoStockDeductionPolicyTest {
     }
 
     @Test
+    void shouldThrowWhenRequestedQuantityIsNull() {
+        assertThatThrownBy(() -> policy.plan(List.of(lot(1L, "10.000", null)), null))
+                .isInstanceOf(DomainException.class)
+                .extracting("code")
+                .isEqualTo("INVALID_DEDUCTION_QUANTITY");
+    }
+
+    @Test
     void shouldThrowOnEmptyLotList() {
         assertThatThrownBy(() -> policy.plan(List.of(), BigDecimal.valueOf(5)))
                 .isInstanceOf(DomainException.class)
@@ -134,6 +141,46 @@ class FefoStockDeductionPolicyTest {
         assertThat(plan.entries()).hasSize(1);
         assertThat(plan.entries().get(0).stockLotId()).isEqualTo(2L);
         assertThat(plan.entries().get(0).quantityToDeduct()).isEqualByComparingTo("3");
+    }
+
+    @Test
+    void shouldUseLotIdAsDeterministicTieBreakerForEqualExpirationDates() {
+        LocalDate sameExpirationDate = LocalDate.of(2026, 7, 1);
+        StockLot firstByLotId = lot(10L, "2.000", sameExpirationDate);
+        StockLot secondByLotId = lot(11L, "2.000", sameExpirationDate);
+
+        DeductionPlan plan = policy.plan(List.of(secondByLotId, firstByLotId), BigDecimal.valueOf(3));
+
+        assertThat(plan.entries())
+                .extracting(DeductionPlan.DeductionEntry::stockLotId)
+                .containsExactly(10L, 11L);
+        assertThat(plan.entries())
+                .extracting(DeductionPlan.DeductionEntry::quantityToDeduct)
+                .usingComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .containsExactly(BigDecimal.valueOf(2), BigDecimal.ONE);
+    }
+
+    @Test
+    void shouldNotMutateLotsWhenPlanning() {
+        StockLot later = lot(2L, "5.000", LocalDate.of(2026, 8, 1));
+        StockLot earlier = lot(1L, "3.000", LocalDate.of(2026, 7, 1));
+
+        policy.plan(List.of(later, earlier), BigDecimal.ONE);
+
+        assertThat(later.getQuantityAvailable()).isEqualByComparingTo("5");
+        assertThat(earlier.getQuantityAvailable()).isEqualByComparingTo("3");
+    }
+
+    @Test
+    void shouldPlaceNullExpirationAfterDatedLotsRegardlessOfInputOrder() {
+        StockLot noDate = lot(1L, "5.000", null);
+        StockLot dated = lot(2L, "3.000", LocalDate.of(2026, 7, 1));
+
+        DeductionPlan plan = policy.plan(List.of(noDate, dated), BigDecimal.valueOf(4));
+
+        assertThat(plan.entries())
+                .extracting(DeductionPlan.DeductionEntry::stockLotId)
+                .containsExactly(2L, 1L);
     }
 
     @Test

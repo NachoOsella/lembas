@@ -15,7 +15,6 @@
     @if (loading() && !data()) {
       <app-loading-spinner label="Cargando dashboard..." surface="card" />
     } @else if (data()) {
-      <!-- Date + refresh toolbar ---------------------------------------- -->
       <app-report-filter-bar
         caption="Operaciones"
         title="Resumen del dia"
@@ -52,30 +51,21 @@
         </app-button>
       </app-report-filter-bar>
 
-      <!-- Stat cards (6 core KPIs) ---------------------------------------- -->
-      <section class="dashboard__section" aria-label="Indicadores">
-        <app-report-section-head
-          eyebrow="Hoy"
-          title="Indicadores del dia"
-          description="Resumen consolidado de ventas, transacciones y alertas operativas."
-        />
-        <div class="dashboard__cards-row">
+      <section class="dashboard__section" aria-label="Indicadores diarios">
+        <app-report-grid layout="metrics">
           @for (card of compactCards(); track card.label) {
             <app-dashboard-stat-card [card]="card" />
           }
-        </div>
+        </app-report-grid>
       </section>
 
-      <!-- Charts: sales by hour + payment methods ------------------------- -->
       @if (hasChartData()) {
-        <section class="dashboard__section" aria-label="Graficos">
-          <app-report-section-head
-            eyebrow="Distribucion"
-            title="Ventas y metodos de pago"
-            description="Ventas por hora del dia y la participacion de cada medio de pago en la facturacion."
-          />
-          <div class="dashboard__charts">
-            <div class="dashboard__chart-wrap">
+        <section class="dashboard__section" aria-label="Ventas y metodos de pago">
+          <app-report-grid layout="emphasis">
+            <app-report-panel
+              title="Ventas por hora"
+              description="Pedidos online y ventas presenciales registradas durante el dia."
+            >
               <app-dashboard-chart
                 type="bar"
                 [labels]="hourLabels()"
@@ -89,8 +79,11 @@
                 emptyMessage="Aun no se registraron ventas en el dia."
                 [height]="'300px'"
               />
-            </div>
-            <div class="dashboard__chart-wrap">
+            </app-report-panel>
+            <app-report-panel
+              title="Medios de pago"
+              description="Participacion de cada medio sobre la facturacion diaria."
+            >
               <app-dashboard-chart
                 type="doughnut"
                 [labels]="methodLabels()"
@@ -102,56 +95,56 @@
                 [centerLabel]="data()?.todaySales?.value ?? null"
                 centerSubLabel="Total facturado"
               />
-            </div>
-          </div>
+            </app-report-panel>
+          </app-report-grid>
         </section>
       }
 
-      <!-- Top products ---------------------------------------------------- -->
       @if (topProducts().length > 0) {
-        <section class="dashboard__section" aria-label="Top productos">
-          <app-report-section-head
-            eyebrow="Hoy"
-            title="Top productos del dia"
-            description="Los 10 productos con mayor volumen de venta."
-          >
-            <app-data-export slot="actions" [data]="topProductsExport()" />
-          </app-report-section-head>
-          <app-top-products-table [products]="topProducts()" [loading]="loading()" />
+        <section class="dashboard__section" aria-label="Productos destacados">
+          <app-report-grid layout="single">
+            <app-report-panel
+              title="Productos destacados"
+              description="Los 10 productos con mayor volumen de venta durante el dia."
+            >
+              <app-data-export panel-actions [data]="topProductsExport()" />
+              <app-top-products-table [products]="topProducts()" [loading]="loading()" />
+            </app-report-panel>
+          </app-report-grid>
         </section>
       }
 
-      <!-- Recommendations ------------------------------------------------- -->
-      <section class="dashboard__section" aria-label="Recomendaciones">
-        <app-report-section-head
-          eyebrow="Alertas"
-          title="Recomendaciones"
-          description="Sugerencias automaticas segun reglas de stock y rotacion."
-        >
-          <app-button
-            slot="actions"
-            [variant]="'ghost'"
-            [size]="'sm'"
-            [icon]="'pi pi-arrow-right'"
-            (click)="onGoToRecommendations()"
+      <section class="dashboard__section" aria-label="Recomendaciones operativas">
+        <app-report-grid layout="single">
+          <app-report-panel
+            title="Recomendaciones operativas"
+            description="Sugerencias generadas segun las reglas de stock y rotacion."
           >
-            Ver todas
-          </app-button>
-        </app-report-section-head>
-        @if (recommendationsLoading()) {
-          <app-loading-spinner label="Cargando recomendaciones..." surface="card" />
-        } @else if (dashboardRecommendations().length === 0) {
-          <div class="dashboard__recommendations-empty">
-            <i class="pi pi-check-circle" aria-hidden="true"></i>
-            <span>Todo en orden. No hay alertas activas en este momento.</span>
-          </div>
-        } @else {
-          <div class="dashboard__recommendations">
-            @for (rec of dashboardRecommendations(); track rec.id) {
-              <app-recommendation-card [recommendation]="rec" />
+            <app-button
+              panel-actions
+              [variant]="'ghost'"
+              [size]="'sm'"
+              [icon]="'pi pi-arrow-right'"
+              (click)="onGoToRecommendations()"
+            >
+              Ver todas
+            </app-button>
+            @if (recommendationsLoading()) {
+              <app-loading-spinner label="Cargando recomendaciones..." surface="card" />
+            } @else if (dashboardRecommendations().length === 0) {
+              <div class="dashboard__recommendations-empty">
+                <i class="pi pi-check-circle" aria-hidden="true"></i>
+                <span>Todo en orden. No hay alertas activas en este momento.</span>
+              </div>
+            } @else {
+              <div class="dashboard__recommendations">
+                @for (rec of dashboardRecommendations(); track rec.id) {
+                  <app-recommendation-card [recommendation]="rec" />
+                }
+              </div>
             }
-          </div>
-        }
+          </app-report-panel>
+        </app-report-grid>
       </section>
     }
   }

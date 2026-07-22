@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Lombok-generated members are outside the handwritten source quality gate. -->
+    <Match>
+        <Source name="~.*lombok.*"/>
+    </Match>
+</FindBugsFilter>

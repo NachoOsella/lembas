@@ -1,133 +1,49 @@
 :host {
   display: block;
   min-width: 0;
-  max-width: 100%;
   padding: clamp(0.75rem, 1.6vw, 1.4rem);
 }
 
 :host > app-page-header {
   display: block;
-  margin-bottom: 1.1rem;
+  margin-bottom: 1.25rem;
 }
 
 .dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-  margin-top: 0;
-  max-width: 100%;
+  display: grid;
+  gap: clamp(1.25rem, 2vw, 1.75rem);
+  max-width: 100rem;
+  margin: 0 auto;
 }
-
-
-/* Stat cards grid -------------------------------------------------------- */
 
 .dashboard__section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.dashboard__cards-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-/* Charts grid ------------------------------------------------------------ */
-
-.dashboard__charts {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: 0.85rem;
-}
-
-.dashboard__chart-wrap {
   min-width: 0;
-  background: var(--color-surface);
-  border: 1px solid rgba(7, 95, 54, 0.1);
-  border-radius: var(--radius-card, 12px);
-  padding: clamp(1rem, 2vw, 1.35rem);
-  box-shadow: var(--shadow-card);
-  min-height: 0;
-  overflow: hidden;
 }
-
-/* Top products sits on canvas with its own shell */
-.dashboard__section > app-top-products-table {
-  display: block;
-}
-
-/* Recommendations list --------------------------------------------------- */
 
 .dashboard__recommendations {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
+  display: grid;
+  gap: 0.75rem;
 }
 
 .dashboard__recommendations-empty {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 1rem 1rem;
-  background: var(--color-surface);
-  border: 1px dashed rgba(7, 95, 54, 0.18);
-  border-radius: var(--radius-card, 12px);
+  gap: 0.65rem;
+  min-height: 6rem;
+  padding: 1rem 0;
   color: var(--color-text-muted);
-  font-size: 0.85rem;
+  border-top: 1px solid var(--color-border-warm);
+  font-size: 0.88rem;
 }
 
 .dashboard__recommendations-empty i {
-  font-size: 1.1rem;
+  flex: 0 0 auto;
   color: var(--color-primary);
-  flex-shrink: 0;
-}
-
-/* Responsive ------------------------------------------------------------- */
-
-@media (max-width: 1100px) {
-  .dashboard__cards-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .dashboard__charts {
-    grid-template-columns: 1fr;
-  }
+  font-size: 1.2rem;
 }
 
 @media (max-width: 48rem) {
   :host {
     padding: 0;
-  }
-
-  :host > app-page-header {
-    margin-bottom: 0.85rem;
-  }
-
-  :host ::ng-deep .page-header {
-    padding: 1.15rem;
-  }
-
-  :host ::ng-deep .page-header__description {
-    margin-top: 0.7rem;
-    line-height: 1.5;
-  }
-
-  .dashboard__cards-row {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard {
-    gap: 1rem;
-  }
-
-  .dashboard__chart-wrap {
-    padding: 0.85rem;
-  }
-}
-
-@media (min-width: 1400px) {
-  .dashboard__cards-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

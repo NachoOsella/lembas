@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
 import { PosCartComponent } from './pos-cart';
@@ -15,13 +16,10 @@ describe('PosCartComponent', () => {
     return c as unknown as Record<string, unknown>;
   }
 
-  async function createComponent(
-    canCheckout = true,
-    processing = false,
-  ): Promise<void> {
+  async function createComponent(canCheckout = true, processing = false): Promise<void> {
     TestBed.configureTestingModule({
       imports: [PosCartComponent],
-      providers: [provideNoopAnimations()],
+      providers: [provideNoopAnimations(), PosCartStore],
     });
     await TestBed.compileComponents();
     fixture = TestBed.createComponent(PosCartComponent);
@@ -43,18 +41,14 @@ describe('PosCartComponent', () => {
 
   it('renders the empty state when the cart is empty', async () => {
     await createComponent();
-    const empty = fixture.nativeElement.querySelector(
-      'app-empty-state',
-    );
+    const empty = fixture.nativeElement.querySelector('app-empty-state');
     expect(empty).toBeTruthy();
   });
 
   it('does not render the totals or checkout button when empty', async () => {
     await createComponent();
     expect(fixture.nativeElement.querySelector('[data-testid="pos-cart-total"]')).toBeFalsy();
-    expect(
-      fixture.nativeElement.querySelector('[data-testid="pos-checkout-button"]'),
-    ).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('[data-testid="pos-checkout-button"]')).toBeFalsy();
   });
 
   it('renders one row per cart line with name, quantity, unit price and subtotal', async () => {
@@ -64,9 +58,7 @@ describe('PosCartComponent', () => {
     cart.setQuantity(1, 2);
     fixture.detectChanges();
 
-    const rows = fixture.nativeElement.querySelectorAll(
-      '[data-testid^="pos-cart-line-"]',
-    );
+    const rows = fixture.nativeElement.querySelectorAll('[data-testid^="pos-cart-line-"]');
     expect(rows.length).toBe(2);
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
@@ -185,12 +177,8 @@ describe('PosCartComponent', () => {
       '[data-testid="pos-checkout-button"]',
     ) as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
-    expect(
-      fixture.nativeElement.querySelector('[data-testid="cash-short"]'),
-    ).toBeTruthy();
-    expect(
-      fixture.nativeElement.querySelector('[data-testid="cash-change"]'),
-    ).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('[data-testid="cash-short"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-testid="cash-change"]')).toBeFalsy();
 
     // Exact total: button enabled
     (unsafe(component)['cashReceived'] as { set(v: number | null): void }).set(1000);
@@ -203,9 +191,7 @@ describe('PosCartComponent', () => {
     // Above total: change badge shown
     (unsafe(component)['cashReceived'] as { set(v: number | null): void }).set(1500);
     fixture.detectChanges();
-    expect(
-      fixture.nativeElement.querySelector('[data-testid="cash-change"]'),
-    ).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-testid="cash-change"]')).toBeTruthy();
   });
 
   it('emits checkoutRequested when the user clicks Cobrar and the form is valid', async () => {

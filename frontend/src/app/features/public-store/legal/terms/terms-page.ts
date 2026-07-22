@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
-import { LegalContentService } from '../../../../core/services/legal-content';
-import { TermsDocument } from '../../../../shared/models/legal-content';
-import { AppEyebrow } from '../../../../shared/components/app-eyebrow/app-eyebrow';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../../shared/components/loading-spinner/loading-spinner';
+import { LegalContentService } from '@features/catalog/data-access/legal-content';
+import type { TermsDocument } from '@features/catalog/domain/legal-content';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
 
 /**
  * Public terms and conditions page.

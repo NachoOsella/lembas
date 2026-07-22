@@ -1,6 +1,7 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 
-import { PRODUCT_STATUS_BADGES } from '../../models/product-status';
+import { PRODUCT_STATUS_BADGES } from '@features/catalog/presentation/product-status';
 import { StatusBadge } from './status-badge';
 
 /** Tests the reusable status badge component. */

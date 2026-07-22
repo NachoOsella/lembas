@@ -1,4 +1,12 @@
-import { Component, ViewEncapsulation, input, model, output, signal } from '@angular/core';
+import {
+  Component,
+  ViewEncapsulation,
+  input,
+  model,
+  output,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Dialog } from 'primeng/dialog';
 
@@ -8,6 +16,7 @@ import { AppButton } from '../app-button/app-button';
 export type ConfirmDialogMode = 'confirm' | 'confirm-with-reason';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-confirm-dialog',
   host: { class: 'confirm-dialog-host' },
   imports: [AppButton, Dialog, FormsModule],

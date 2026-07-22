@@ -1,24 +1,25 @@
 package com.dietetica.lembas.payments.service;
 
+import com.dietetica.lembas.orders.api.OrderCommand;
+import com.dietetica.lembas.orders.api.OrderLock;
 import com.dietetica.lembas.orders.model.Order;
 import com.dietetica.lembas.orders.model.OrderStatus;
-import com.dietetica.lembas.orders.repository.OrderRepository;
+import com.dietetica.lembas.payments.PaymentErrorCodes;
 import com.dietetica.lembas.payments.dto.MercadoPagoWebhookPayload;
 import com.dietetica.lembas.payments.gateway.PaymentGateway;
 import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.payments.model.PaymentStatus;
 import com.dietetica.lembas.payments.repository.PaymentRepository;
-import com.dietetica.lembas.payments.PaymentErrorCodes;
 import com.dietetica.lembas.shared.exception.DomainException;
+import jakarta.persistence.EntityManager;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Idempotent processor for inbound Mercado Pago webhook notifications.
@@ -44,26 +45,31 @@ public class MercadoPagoWebhookProcessor {
     private static final Logger log = LoggerFactory.getLogger(MercadoPagoWebhookProcessor.class);
 
     private final PaymentRepository paymentRepository;
-    private final OrderRepository orderRepository;
+    private final OrderLock orderLock;
+    private final OrderCommand orderCommand;
     private final PaymentGateway paymentGateway;
     private final WebhookToPaymentStatusMapper statusMapper;
     private final WebhookOrderEffectApplier orderEffectApplier;
     private final WebhookMetadataSerializer metadataSerializer;
+    private final EntityManager entityManager;
 
     public MercadoPagoWebhookProcessor(
             PaymentRepository paymentRepository,
-            OrderRepository orderRepository,
+            OrderLock orderLock,
+            OrderCommand orderCommand,
             PaymentGateway paymentGateway,
             WebhookToPaymentStatusMapper statusMapper,
             WebhookOrderEffectApplier orderEffectApplier,
-            WebhookMetadataSerializer metadataSerializer
-    ) {
+            WebhookMetadataSerializer metadataSerializer,
+            EntityManager entityManager) {
         this.paymentRepository = paymentRepository;
-        this.orderRepository = orderRepository;
+        this.orderLock = orderLock;
+        this.orderCommand = orderCommand;
         this.paymentGateway = paymentGateway;
         this.statusMapper = statusMapper;
         this.orderEffectApplier = orderEffectApplier;
         this.metadataSerializer = metadataSerializer;
+        this.entityManager = entityManager;
     }
 
     /**
@@ -79,7 +85,8 @@ public class MercadoPagoWebhookProcessor {
             return Optional.empty();
         }
         Optional<GatewayPaymentLookup> lookup = paymentGateway.findPayment(paymentId);
-        if (lookup.isEmpty() && isMerchantOrderNotification(payload)
+        if (lookup.isEmpty()
+                && isMerchantOrderNotification(payload)
                 && paymentGateway instanceof MercadoPagoGateway mpGateway) {
             log.debug("Payment {} not found directly; trying merchant_order lookup", paymentId);
             lookup = mpGateway.findPaymentByMerchantOrderId(paymentId);
@@ -90,39 +97,55 @@ public class MercadoPagoWebhookProcessor {
         }
         GatewayPaymentLookup providerState = lookup.get();
         PaymentStatus newStatus = statusMapper.map(providerState.status());
-        Payment payment = findPayment(paymentId, providerState)
+        Payment matchedPayment = findPayment(paymentId, providerState)
                 .orElseThrow(() -> new DomainException(
                         PaymentErrorCodes.PAYMENT_NOT_FOUND,
                         HttpStatus.NOT_FOUND,
                         "Payment not found for provider id " + paymentId));
+        Long matchedPaymentId = matchedPayment.getId();
+        Long orderId = matchedPayment.getOrder() == null
+                ? null
+                : matchedPayment.getOrder().getId();
+        if (orderId == null) {
+            throw new DomainException(
+                    PaymentErrorCodes.PAYMENT_NOT_FOUND,
+                    HttpStatus.NOT_FOUND,
+                    "Payment has no order for provider id " + paymentId);
+        }
+
+        // Drop preliminary lookup state. A competing transaction may commit while this
+        // transaction waits for the order lock, so both rows must be read again afterwards.
+        entityManager.clear();
+        Order order = lockOrder(orderId);
+        Payment payment = lockPayment(matchedPaymentId, orderId);
+
         if (shouldSkipAsAlreadyProcessed(payment.getStatus(), newStatus)) {
-            log.info("Skipping already-processed payment {} (current={}, new={})",
-                    payment.getId(), payment.getStatus(), newStatus);
+            log.info(
+                    "Skipping already-processed payment {} (current={}, new={})",
+                    payment.getId(),
+                    payment.getStatus(),
+                    newStatus);
             return Optional.of(payment.getId());
         }
-        // Attach the provider payment id to the local row only when the row
-        // was matched by external_reference (i.e. the local id was missing).
-        // Rows matched directly by providerPaymentId already carry the id.
+        // Attach identifiers only when the local row was matched by preference or reference.
         if (payment.getProviderPaymentId() == null) {
             String externalReference = metadataValue(providerState, "external_reference");
             attachProviderIdentifiers(payment, paymentId, externalReference);
         }
         applyPaymentState(payment, newStatus, providerState);
-        applyOrderEffect(payment, newStatus);
+        applyOrderEffect(order, payment, newStatus);
         return Optional.of(payment.getId());
     }
 
     /**
-     * Returns true when the local payment is already in a terminal state that
-     * matches the incoming status, so reprocessing the same event would be a
-     * no-op. Forward transitions such as APPROVED -> REFUNDED are still
-     * applied because they reflect a new business event from the provider.
+     * Skips duplicate or stale events after a terminal local state is committed.
+     * APPROVED to REFUNDED is the only supported forward transition from a terminal state.
      */
     private boolean shouldSkipAsAlreadyProcessed(PaymentStatus current, PaymentStatus incoming) {
         if (!statusMapper.isTerminal(current)) {
             return false;
         }
-        return current == incoming;
+        return !(current == PaymentStatus.APPROVED && incoming == PaymentStatus.REFUNDED);
     }
 
     /**
@@ -161,7 +184,8 @@ public class MercadoPagoWebhookProcessor {
         }
         String preferenceId = metadataValue(lookup, "preference_id");
         if (preferenceId != null) {
-            Optional<Payment> byPreference = paymentRepository.findFirstByProviderPreferenceIdOrderByIdAsc(preferenceId);
+            Optional<Payment> byPreference =
+                    paymentRepository.findFirstByProviderPreferenceIdOrderByIdAsc(preferenceId);
             if (byPreference.isPresent()) {
                 return byPreference;
             }
@@ -176,9 +200,7 @@ public class MercadoPagoWebhookProcessor {
             return byStoredExternalReference;
         }
         return paymentRepository.findFirstByOrderOrderNumberAndStatusInOrderByIdAsc(
-                externalReference,
-                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)
-        );
+                externalReference, List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS));
     }
 
     /**
@@ -202,6 +224,31 @@ public class MercadoPagoWebhookProcessor {
         return value.toString();
     }
 
+    /** Locks and re-reads the order before any payment row is locked. */
+    private Order lockOrder(Long orderId) {
+        return orderLock
+                .lockById(orderId)
+                .orElseThrow(() -> new DomainException(
+                        PaymentErrorCodes.PAYMENT_NOT_FOUND, HttpStatus.NOT_FOUND, "Order not found for payment"));
+    }
+
+    /** Locks and re-reads the matched payment after its owning order lock. */
+    private Payment lockPayment(Long paymentId, Long expectedOrderId) {
+        Payment payment = paymentRepository
+                .findByIdForUpdate(paymentId)
+                .orElseThrow(() -> new DomainException(
+                        PaymentErrorCodes.PAYMENT_NOT_FOUND, HttpStatus.NOT_FOUND, "Payment no longer exists"));
+        Long actualOrderId =
+                payment.getOrder() == null ? null : payment.getOrder().getId();
+        if (!expectedOrderId.equals(actualOrderId)) {
+            throw new DomainException(
+                    PaymentErrorCodes.PAYMENT_NOT_FOUND,
+                    HttpStatus.CONFLICT,
+                    "Payment order changed while processing webhook");
+        }
+        return payment;
+    }
+
     /** Updates the payment row with the latest provider-reported state. */
     private void applyPaymentState(Payment payment, PaymentStatus newStatus, GatewayPaymentLookup providerState) {
         payment.setStatus(newStatus);
@@ -212,21 +259,21 @@ public class MercadoPagoWebhookProcessor {
         paymentRepository.save(payment);
     }
 
-    /** Applies the order-level effects for the new payment status. */
-    private void applyOrderEffect(Payment payment, PaymentStatus newStatus) {
-        Order order = payment.getOrder();
-        if (order == null) {
-            log.warn("Payment {} has no order attached; skipping order effect", payment.getId());
-            return;
-        }
+    /** Applies order effects using the state re-read under the order lock. */
+    private void applyOrderEffect(Order order, Payment payment, PaymentStatus newStatus) {
         if (newStatus == PaymentStatus.APPROVED && order.getStatus() == OrderStatus.PENDING_PAYMENT) {
             orderEffectApplier.markPaidAndDeductStock(order);
         } else if (newStatus == PaymentStatus.REJECTED && order.getStatus() == OrderStatus.PENDING_PAYMENT) {
             orderEffectApplier.markPaymentFailed(order, payment);
-        } else if (newStatus == PaymentStatus.REFUNDED && order.getStatus() == OrderStatus.PAID) {
+        } else if (newStatus == PaymentStatus.REFUNDED && hasReversibleStock(order.getStatus())) {
             orderEffectApplier.markRefunded(order);
         }
-        orderRepository.save(order);
+        orderCommand.save(order);
+    }
+
+    /** Returns true for paid fulfillment states whose sale movements have not been reversed. */
+    private static boolean hasReversibleStock(OrderStatus status) {
+        return status == OrderStatus.PAID || status == OrderStatus.PREPARING || status == OrderStatus.READY;
     }
 
     /** Returns true for IPN webhooks that reference a merchant_order instead of a payment. */

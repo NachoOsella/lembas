@@ -1,4 +1,4 @@
-import { Component, input, model } from '@angular/core';
+import { Component, input, model, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePicker } from 'primeng/datepicker';
 
@@ -20,6 +20,7 @@ import { DatePicker } from 'primeng/datepicker';
  * ```
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-date-picker',
   imports: [FormsModule, DatePicker],
   templateUrl: './app-date-picker.html',

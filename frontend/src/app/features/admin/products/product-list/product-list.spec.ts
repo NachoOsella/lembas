@@ -1,12 +1,13 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
 
-import { CategoryService } from '../../../../core/services/category';
-import { ProductService } from '../../../../core/services/product';
+import { CategoryService } from '@features/catalog/data-access/category';
+import { ProductService } from '@features/catalog/data-access/product';
 import { ProductList } from './product-list';
 
 /** Tests the admin product table filters and deletion flow. */
@@ -231,11 +232,11 @@ describe('ProductList', () => {
       id: 1,
       name: 'Test',
       onlineStatus: 'DRAFT',
-    } as unknown as import('../../../../shared/models/product').ProductSummary;
+    } as unknown as import('@features/catalog/domain/product').ProductSummary;
     const actions = (
       component as unknown as {
         statusActions: (
-          p: import('../../../../shared/models/product').ProductSummary,
+          p: import('@features/catalog/domain/product').ProductSummary,
         ) => { label: string }[];
       }
     ).statusActions(product);
@@ -249,17 +250,17 @@ describe('ProductList', () => {
       id: 1,
       name: 'Test',
       onlineStatus: 'DRAFT',
-    } as unknown as import('../../../../shared/models/product').ProductSummary;
+    } as unknown as import('@features/catalog/domain/product').ProductSummary;
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('../../../../shared/models/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
-          p: import('../../../../shared/models/product').ProductSummary,
-          a: import('../../../../shared/models/product-status').ProductStatusAction,
+          p: import('@features/catalog/domain/product').ProductSummary,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);
@@ -280,17 +281,17 @@ describe('ProductList', () => {
       id: 7,
       name: 'Granola',
       onlineStatus: 'DRAFT',
-    } as unknown as import('../../../../shared/models/product').ProductSummary;
+    } as unknown as import('@features/catalog/domain/product').ProductSummary;
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('../../../../shared/models/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
-          p: import('../../../../shared/models/product').ProductSummary,
-          a: import('../../../../shared/models/product-status').ProductStatusAction,
+          p: import('@features/catalog/domain/product').ProductSummary,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);
@@ -309,17 +310,17 @@ describe('ProductList', () => {
       id: 7,
       name: 'Granola',
       onlineStatus: 'DRAFT',
-    } as unknown as import('../../../../shared/models/product').ProductSummary;
+    } as unknown as import('@features/catalog/domain/product').ProductSummary;
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('../../../../shared/models/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
-          p: import('../../../../shared/models/product').ProductSummary,
-          a: import('../../../../shared/models/product-status').ProductStatusAction,
+          p: import('@features/catalog/domain/product').ProductSummary,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);
@@ -334,17 +335,17 @@ describe('ProductList', () => {
       id: 1,
       name: 'Test',
       onlineStatus: 'DRAFT',
-    } as unknown as import('../../../../shared/models/product').ProductSummary;
+    } as unknown as import('@features/catalog/domain/product').ProductSummary;
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('../../../../shared/models/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
-          p: import('../../../../shared/models/product').ProductSummary,
-          a: import('../../../../shared/models/product-status').ProductStatusAction,
+          p: import('@features/catalog/domain/product').ProductSummary,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);
@@ -368,7 +369,11 @@ describe('ProductList', () => {
       throwError(
         () =>
           new HttpErrorResponse({
-            error: { code: 'PRODUCT_HAS_ORDERS' },
+            error: {
+              status: 409,
+              code: 'PRODUCT_HAS_ORDERS',
+              message: 'Product has orders.',
+            },
             status: 409,
             statusText: 'Conflict',
           }),
@@ -428,7 +433,11 @@ describe('ProductList', () => {
       throwError(
         () =>
           new HttpErrorResponse({
-            error: { code: 'PRODUCT_STATUS_INVALID_TRANSITION' },
+            error: {
+              status: 409,
+              code: 'PRODUCT_STATUS_INVALID_TRANSITION',
+              message: 'Invalid product status transition.',
+            },
             status: 409,
             statusText: 'Conflict',
           }),
@@ -439,17 +448,17 @@ describe('ProductList', () => {
       id: 7,
       name: 'Granola',
       onlineStatus: 'DRAFT',
-    } as unknown as import('../../../../shared/models/product').ProductSummary;
+    } as unknown as import('@features/catalog/domain/product').ProductSummary;
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('../../../../shared/models/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
-          p: import('../../../../shared/models/product').ProductSummary,
-          a: import('../../../../shared/models/product-status').ProductStatusAction,
+          p: import('@features/catalog/domain/product').ProductSummary,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);
@@ -484,17 +493,17 @@ describe('ProductList', () => {
       id: 7,
       name: 'Granola',
       onlineStatus: 'DRAFT',
-    } as unknown as import('../../../../shared/models/product').ProductSummary;
+    } as unknown as import('@features/catalog/domain/product').ProductSummary;
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('../../../../shared/models/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
-          p: import('../../../../shared/models/product').ProductSummary,
-          a: import('../../../../shared/models/product-status').ProductStatusAction,
+          p: import('@features/catalog/domain/product').ProductSummary,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);

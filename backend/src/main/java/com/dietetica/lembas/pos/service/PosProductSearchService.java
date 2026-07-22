@@ -1,20 +1,20 @@
 package com.dietetica.lembas.pos.service;
 
+import com.dietetica.lembas.catalog.api.ProductLookup;
+import com.dietetica.lembas.catalog.api.ProductSearch;
 import com.dietetica.lembas.catalog.model.Product;
-import com.dietetica.lembas.catalog.repository.ProductRepository;
-import com.dietetica.lembas.inventory.repository.StockLotRepository;
+import com.dietetica.lembas.inventory.api.InventoryQuery;
 import com.dietetica.lembas.pos.dto.PosProductSearchItemDto;
 import com.dietetica.lembas.shared.exception.DomainException;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Locale;
-import java.util.regex.Pattern;
 
 /**
  * POS product search use case.
@@ -45,15 +45,15 @@ public class PosProductSearchService {
     /** Hard cap on the raw query length to avoid abuse and unbounded LIKE scans. */
     static final int MAX_QUERY_LENGTH = 100;
 
-    private final ProductRepository productRepository;
-    private final StockLotRepository stockLotRepository;
+    private final ProductLookup productLookup;
+    private final ProductSearch productSearch;
+    private final InventoryQuery inventoryQuery;
 
     public PosProductSearchService(
-            ProductRepository productRepository,
-            StockLotRepository stockLotRepository
-    ) {
-        this.productRepository = productRepository;
-        this.stockLotRepository = stockLotRepository;
+            ProductLookup productLookup, ProductSearch productSearch, InventoryQuery inventoryQuery) {
+        this.productLookup = productLookup;
+        this.productSearch = productSearch;
+        this.inventoryQuery = inventoryQuery;
     }
 
     /**
@@ -69,33 +69,26 @@ public class PosProductSearchService {
     @Transactional(readOnly = true)
     public List<PosProductSearchItemDto> search(String rawQuery, Long branchId) {
         if (rawQuery == null || rawQuery.isBlank()) {
-            throw new DomainException(
-                    "POS_QUERY_REQUIRED",
-                    HttpStatus.BAD_REQUEST,
-                    "Search query is required"
-            );
+            throw new DomainException("POS_QUERY_REQUIRED", HttpStatus.BAD_REQUEST, "Search query is required");
         }
         String query = rawQuery.trim();
         if (query.length() > MAX_QUERY_LENGTH) {
             throw new DomainException(
                     "POS_QUERY_TOO_LONG",
                     HttpStatus.BAD_REQUEST,
-                    "Search query must be at most " + MAX_QUERY_LENGTH + " characters"
-            );
+                    "Search query must be at most " + MAX_QUERY_LENGTH + " characters");
         }
 
         if (BARCODE_PATTERN.matcher(query).matches()) {
-            return productRepository.findByBarcodeIgnoreCaseAndActiveTrue(query)
+            return productLookup
+                    .findActiveByBarcode(query)
                     .map(product -> List.of(toDto(product, branchId)))
                     .orElseGet(List::of);
         }
 
         String lowered = query.toLowerCase(Locale.ROOT);
-        var page = productRepository.searchStoreProducts(
-                lowered,
-                null,
-                PageRequest.of(0, MAX_RESULTS, Sort.by("name").ascending())
-        );
+        var page = productSearch.searchPublished(
+                lowered, null, PageRequest.of(0, MAX_RESULTS, Sort.by("name").ascending()));
         return page.getContent().stream()
                 .map(product -> toDto(product, branchId))
                 .toList();
@@ -105,9 +98,8 @@ public class PosProductSearchService {
      * Maps a catalog product into the POS DTO and resolves its branch stock.
      */
     private PosProductSearchItemDto toDto(Product product, Long branchId) {
-        BigDecimal stock = branchId == null
-                ? null
-                : stockLotRepository.calculateAvailableQuantity(product.getId(), branchId);
+        BigDecimal stock =
+                branchId == null ? null : inventoryQuery.calculateAvailableQuantity(product.getId(), branchId);
         return new PosProductSearchItemDto(
                 product.getId(),
                 product.getName(),
@@ -115,7 +107,6 @@ public class PosProductSearchService {
                 product.getBarcode(),
                 product.getSalePrice(),
                 stock,
-                product.getImageUrl()
-        );
+                product.getImageUrl());
     }
 }

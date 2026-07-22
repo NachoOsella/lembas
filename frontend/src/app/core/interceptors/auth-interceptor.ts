@@ -1,13 +1,15 @@
-import {
-  HttpErrorResponse,
+import type {
   HttpEvent,
   HttpHandlerFn,
   HttpInterceptorFn,
   HttpRequest,
 } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, finalize, Observable, shareReplay, switchMap, throwError } from 'rxjs';
-import { AuthResponse, AuthService } from '../services/auth';
+import type { Observable } from 'rxjs';
+import { catchError, finalize, shareReplay, switchMap, throwError } from 'rxjs';
+import type { AuthResponse } from '../services/auth';
+import { AuthService } from '../services/auth';
 
 /** Shared refresh request so parallel 401 responses trigger only one rotation. */
 let refreshInFlight$: Observable<AuthResponse> | null = null;

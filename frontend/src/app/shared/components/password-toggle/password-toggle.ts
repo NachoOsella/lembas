@@ -1,4 +1,4 @@
-import { Component, input, model } from '@angular/core';
+import { Component, input, model, ChangeDetectionStrategy } from '@angular/core';
 
 /**
  * Reusable password visibility toggle button.
@@ -13,6 +13,7 @@ import { Component, input, model } from '@angular/core';
  * ```
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-password-toggle',
   templateUrl: './password-toggle.html',
   styleUrl: './password-toggle.css',

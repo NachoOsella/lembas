@@ -1,9 +1,11 @@
-import { Component } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 
 import { SeverityPill } from './severity-pill';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [SeverityPill],
   template: `<app-severity-pill [tone]="tone">PAID</app-severity-pill>`,
@@ -15,7 +17,9 @@ class HostPillComponent {
 describe('SeverityPill', () => {
   let fixture: ComponentFixture<HostPillComponent>;
 
-  async function configure(tone: 'success' | 'warn' | 'danger' | 'neutral' = 'neutral'): Promise<void> {
+  async function configure(
+    tone: 'success' | 'warn' | 'danger' | 'neutral' = 'neutral',
+  ): Promise<void> {
     await TestBed.configureTestingModule({
       imports: [HostPillComponent],
     }).compileComponents();

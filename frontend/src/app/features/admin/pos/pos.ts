@@ -1,9 +1,9 @@
+import type { OnInit } from '@angular/core';
 import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
   HostListener,
-  OnInit,
   computed,
   inject,
   signal,
@@ -13,27 +13,29 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
-import { AuthService } from '../../../core/services/auth';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { UserService } from '../../../core/services/user';
-import { Branch } from '../../../shared/models/user';
-import { getApiError } from '../../../shared/models/api-error';
-import { OrderDetail } from '../../../shared/models/order';
-import { CashSessionDto } from '../../../shared/models/cash-session';
+import { AuthService } from '@core/services/auth';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { UserService } from '@features/users/data-access/user';
+import type { Branch } from '@features/users/domain/user';
+import { getApiError } from '@shared/types/api-error';
+import type { OrderDetail } from '@features/orders/domain/order';
+import type { CashSessionDto } from '@features/cash/domain/cash-session';
 
-import { CashService } from '../../../core/services/cash';
+import { CashService } from '@features/cash/data-access/cash';
 
-import { AppBadge } from '../../../shared/components/app-badge/app-badge';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { AppSelect } from '../../../shared/components/app-select/app-select';
-import { AppToast } from '../../../shared/components/app-toast/app-toast';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { AppToast } from '@shared/components/app-toast/app-toast';
 
 import { PosCartComponent } from './components/pos-cart/pos-cart';
 import { PosCheckoutResultDialogComponent } from './components/pos-checkout-result-dialog/pos-checkout-result-dialog';
 import { PosProductSearchComponent } from './components/pos-product-search/pos-product-search';
 import { PosCartStore } from './state/pos-cart.store';
-import { CreatePosSaleRequest, PosSaleService } from './services/pos-sale.service';
+import type { CreatePosSaleRequest } from './services/pos-sale.service';
+import { PosSaleService } from './services/pos-sale.service';
+import { PosProductSearchService } from './services/pos-product-search.service';
 
 /**
  * POS landing page (S3-US09, S3-US10, S3-US11).
@@ -63,6 +65,7 @@ import { CreatePosSaleRequest, PosSaleService } from './services/pos-sale.servic
   ],
   templateUrl: './pos.html',
   styleUrl: './pos.css',
+  providers: [PosCartStore, PosSaleService, PosProductSearchService],
 })
 export class AdminPosPage implements OnInit {
   private readonly auth = inject(AuthService);
@@ -74,6 +77,7 @@ export class AdminPosPage implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private checkoutRefreshInFlight = false;
 
   protected readonly cartLines = this.cart.lines;
   protected readonly hasItems = computed(() => this.cartLines().length > 0);
@@ -154,15 +158,17 @@ export class AdminPosPage implements OnInit {
    */
   @HostListener('document:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
-    if (event.key !== 'F8') {
-      return;
-    }
-    if (this.processing()) {
+    if (event.key !== 'F8' || this.processing() || this.checkoutRefreshInFlight) {
       return;
     }
     event.preventDefault();
-    this.refreshCashSession();
-    this.onCheckout();
+    this.checkoutRefreshInFlight = true;
+    this.loadCashSession((session) => {
+      this.checkoutRefreshInFlight = false;
+      if (session !== null) {
+        this.onCheckout();
+      }
+    });
   }
 
   /**
@@ -287,11 +293,12 @@ export class AdminPosPage implements OnInit {
       });
   }
 
-  private loadCashSession(): void {
+  private loadCashSession(onLoaded?: (session: CashSessionDto | null) => void): void {
     const branchId = this.selectedBranchId();
     if (this.isAdmin() && branchId == null) {
       this.cashSession.set(null);
       this.cashSessionLoading.set(false);
+      onLoaded?.(null);
       return;
     }
 
@@ -303,10 +310,12 @@ export class AdminPosPage implements OnInit {
         next: (session) => {
           this.cashSession.set(session);
           this.cashSessionLoading.set(false);
+          onLoaded?.(session);
         },
         error: () => {
           this.cashSession.set(null);
           this.cashSessionLoading.set(false);
+          onLoaded?.(null);
         },
       });
   }

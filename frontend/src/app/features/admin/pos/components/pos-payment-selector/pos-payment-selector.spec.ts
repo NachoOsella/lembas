@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 
 import { PosPaymentSelectorComponent } from './pos-payment-selector';
 
@@ -23,14 +24,10 @@ describe('PosPaymentSelectorComponent', () => {
 
   it('renders one pill per supported POS payment method', () => {
     createComponent();
-    const options = fixture.nativeElement.querySelectorAll(
-      '.pos-payment-selector__option',
-    );
+    const options = fixture.nativeElement.querySelectorAll('.pos-payment-selector__option');
     // CASH, QR, TRANSFER, DEBIT_CARD, CREDIT_CARD = 5 (no CHECKOUT_PRO / OTHER)
     expect(options.length).toBe(5);
-    const labels = Array.from(options).map(
-      (b) => (b as HTMLElement).textContent?.trim() ?? '',
-    );
+    const labels = Array.from(options).map((b) => (b as HTMLElement).textContent?.trim() ?? '');
     expect(labels).toEqual(['Efectivo', 'QR', 'Transferencia', 'Debito', 'Credito']);
   });
 

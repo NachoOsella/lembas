@@ -1,6 +1,7 @@
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
@@ -31,7 +32,7 @@ describe('CashOverviewPageComponent', () => {
   afterEach(() => http.verify());
 
   it('loads the cash overview for the initial 30-day range', () => {
-    const branchesRequest = http.expectOne('/api/admin/branches');
+    const branchesRequest = http.expectOne('/api/store/branches');
     branchesRequest.flush([]);
     const reportRequest = http.expectOne(
       (request) => request.url === '/api/admin/reports/cash-overview',

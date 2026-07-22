@@ -6,16 +6,11 @@ import com.dietetica.lembas.auth.dto.RegisterRequest;
 import com.dietetica.lembas.auth.model.RefreshToken;
 import com.dietetica.lembas.auth.repository.RefreshTokenRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import com.dietetica.lembas.users.api.UserDirectory;
 import com.dietetica.lembas.users.model.User;
-import com.dietetica.lembas.users.repository.UserRepository;
 import com.dietetica.lembas.users.service.UserBranchPolicy;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -23,6 +18,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Locale;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Application service for authentication use cases.
@@ -36,17 +35,21 @@ public class AuthService {
 
     private static final Duration REVOKED_TOKEN_RETENTION = Duration.ofDays(30);
 
-    private final UserRepository userRepository;
+    private final UserDirectory userDirectory;
     private final AuthMapper authMapper;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final UserBranchPolicy userBranchPolicy;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    public AuthService(UserRepository userRepository, AuthMapper authMapper,
-                       JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder,
-                       UserBranchPolicy userBranchPolicy, RefreshTokenRepository refreshTokenRepository) {
-        this.userRepository = userRepository;
+    public AuthService(
+            UserDirectory userDirectory,
+            AuthMapper authMapper,
+            JwtTokenProvider jwtTokenProvider,
+            PasswordEncoder passwordEncoder,
+            UserBranchPolicy userBranchPolicy,
+            RefreshTokenRepository refreshTokenRepository) {
+        this.userDirectory = userDirectory;
         this.authMapper = authMapper;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
@@ -67,18 +70,15 @@ public class AuthService {
      */
     @Transactional
     public AuthResponse registerCustomer(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.email().trim().toLowerCase(Locale.ROOT))) {
+        if (userDirectory.existsByEmail(request.email().trim().toLowerCase(Locale.ROOT))) {
             throw new DomainException(
-                    "EMAIL_DUPLICATED",
-                    HttpStatus.CONFLICT,
-                    "An account with this email address already exists"
-            );
+                    "EMAIL_DUPLICATED", HttpStatus.CONFLICT, "An account with this email address already exists");
         }
 
         String encodedPassword = passwordEncoder.encode(request.password());
         User user = authMapper.toEntity(request, encodedPassword);
         userBranchPolicy.validate(user.getRole(), user.getBranchId());
-        User savedUser = userRepository.save(user);
+        User savedUser = userDirectory.registerCustomer(user);
 
         String accessToken = jwtTokenProvider.createAccessToken(savedUser);
         String refreshToken = issueRefreshToken(savedUser);
@@ -108,27 +108,20 @@ public class AuthService {
     public AuthResponse authenticate(LoginRequest request) {
         String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
 
-        User user = userRepository.findByEmail(normalizedEmail)
+        User user = userDirectory
+                .findByEmail(normalizedEmail)
                 .orElseThrow(() -> new DomainException(
-                        "INVALID_CREDENTIALS",
-                        HttpStatus.UNAUTHORIZED,
-                        "Invalid email or password"
-                ));
+                        "INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED, "Invalid email or password"));
 
         if (!user.isEnabled()) {
             throw new DomainException(
                     "ACCOUNT_DISABLED",
                     HttpStatus.FORBIDDEN,
-                    "Your account has been disabled. Please contact support."
-            );
+                    "Your account has been disabled. Please contact support.");
         }
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new DomainException(
-                    "INVALID_CREDENTIALS",
-                    HttpStatus.UNAUTHORIZED,
-                    "Invalid email or password"
-            );
+            throw new DomainException("INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
         String accessToken = jwtTokenProvider.createAccessToken(user);
@@ -156,8 +149,8 @@ public class AuthService {
         String tokenHash = hashToken(rawRefreshToken);
         Instant now = Instant.now();
 
-        RefreshToken currentToken = refreshTokenRepository.findByTokenHash(tokenHash)
-                .orElseThrow(this::invalidRefreshToken);
+        RefreshToken currentToken =
+                refreshTokenRepository.findByTokenHash(tokenHash).orElseThrow(this::invalidRefreshToken);
 
         User user = currentToken.getUser();
         if (currentToken.getRevokedAt() != null) {
@@ -206,8 +199,7 @@ public class AuthService {
             return;
         }
         String tokenHash = hashToken(rawRefreshToken);
-        refreshTokenRepository.findByTokenHash(tokenHash)
-                .ifPresent(refreshToken -> refreshToken.revoke(Instant.now()));
+        refreshTokenRepository.findByTokenHash(tokenHash).ifPresent(refreshToken -> refreshToken.revoke(Instant.now()));
     }
 
     /** Creates and persists a new active refresh token for the user. */
@@ -216,12 +208,8 @@ public class AuthService {
         cleanupObsoleteRefreshTokens(user, now);
 
         String rawRefreshToken = jwtTokenProvider.createRefreshToken(user);
-        RefreshToken refreshToken = new RefreshToken(
-                user,
-                hashToken(rawRefreshToken),
-                now.plus(JwtTokenProvider.REFRESH_EXPIRATION),
-                now
-        );
+        RefreshToken refreshToken =
+                new RefreshToken(user, hashToken(rawRefreshToken), now.plus(JwtTokenProvider.REFRESH_EXPIRATION), now);
         refreshTokenRepository.save(refreshToken);
         return rawRefreshToken;
     }
@@ -258,9 +246,6 @@ public class AuthService {
     /** Builds the standard invalid-refresh-token error without leaking details. */
     private DomainException invalidRefreshToken() {
         return new DomainException(
-                "INVALID_REFRESH_TOKEN",
-                HttpStatus.UNAUTHORIZED,
-                "Invalid or expired refresh token"
-        );
+                "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED, "Invalid or expired refresh token");
     }
 }

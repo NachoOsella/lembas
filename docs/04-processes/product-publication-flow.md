@@ -31,4 +31,4 @@ DRAFT → PUBLISHED → PAUSED → PUBLISHED
 - PAUSED hides the product temporarily without losing configuration
 - HIDDEN is a permanent removal from the online catalog (soft delete for store)
 - Only ADMIN and MANAGER can change the online status
-- The online status change is audited
+- The online status change requires MANAGER or ADMIN role (enforced via `@PreAuthorize`); a future `audit_logs` table would record the event permanently

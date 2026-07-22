@@ -16,50 +16,84 @@
 
 ```text
 src/app/
-  core/           -- Auth, interceptors, guards, layout
-  shared/         -- Reusable UI components, pipes, models
+  core/             -- Auth, interceptors, guards, layout
+  shared/           -- Reusable UI components, pipes, models
   features/
-    public-store/ -- Public catalog (no auth required)
-      catalog/
-      product-detail/
-    customer/     -- Authenticated customer (CUSTOMER role)
+    auth/           -- Login and registration
+    branches/       -- Branch selection and store-branch state
+    cash/           -- Cash register opening, detail, movement form, closing
+    catalog/        -- Product grid, selector, status badges
+    checkout/       -- Cart state (localStorage)
+    customer/       -- Authenticated customer (CUSTOMER role)
       profile/
       orders/
       order-detail/
-      checkout/   -- MP redirect, payment result
-    admin/        -- Backoffice (ADMIN/MANAGER/EMPLOYEE)
-      dashboard/
-      products/
-      inventory/
-      orders/
-      pos/        -- Point of Sale
-      cash/       -- Open, close, movements
-      suppliers/
-      reports/
-      users/
-    auth/         -- Login and registration
+      payment-callback/
+    dashboard/      -- Operational dashboard with stat cards, charts, top products
+    dev/            -- Component showcase (/dev/ui)
+    inventory/      -- Stock table, toolbar, adjustment form, lot form
+    orders/         -- Order state, presentation, stores (shared across admin + customer)
+    public-store/   -- Public catalog (no auth required)
+      catalog/
+      product-detail/
+      legal/        -- Terms and Conditions, FAQ
+    reports/        -- Report filter bar, grid, panel, recommendation cards
+    suppliers/      -- Price update batches, purchase orders, supplier management
+    users/          -- Internal user management
+    admin/          -- Backoffice shell (layout, navigation, routes)
+      admin-layout/
 ```
 
 ## Route structure
 
 ```text
-/store                    → Public catalog
-/store/product/:id       → Product detail
-/auth/login              → Login
-/auth/register           → Registration
-/cart                    → Local cart page
-/customer/orders         → Customer order history
-/customer/orders/:id     → Customer order detail
-/customer/profile        → Customer profile
-/admin                   → Backoffice dashboard
-  /admin/products        → Product management
-  /admin/stock           → Stock and lots
-  /admin/orders          → Order management
-  /admin/pos             → Point of Sale
-  /admin/cash            → Cash register
-  /admin/suppliers       → Supplier management
-  /admin/reports         → Reports and recommendations
-  /admin/users           → Internal user management
+/store                        → Public catalog (default redirect /catalog → /store)
+/store/catalog                → Public catalog with products
+/store/products/:id           → Product detail
+/store/terms                  → Terms and Conditions
+/store/faq                    → FAQ
+/auth/login                   → Login
+/auth/register                → Registration
+/cart                         → Local cart page
+/customer/orders              → Customer order history
+/customer/orders/:id          → Customer order detail
+/customer/profile             → Customer profile
+/customer/payment/callback    → Payment result (MP redirect)
+/error/500                    → Generic error page
+/admin                        → Backoffice dashboard
+  /admin/dashboard             → Operational dashboard
+  /admin/categories            → Category management
+  /admin/products              → Product management
+    /admin/products/new        → New product form
+    /admin/products/:id/edit   → Edit product form
+  /admin/inventory              → Stock and lots
+    /admin/inventory/product/:productId/lots → Lots for a product
+  /admin/stock/entry            → Stock entry via purchase receipt
+  /admin/stock/receipts         → Purchase receipt management
+  /admin/receps                 → Purchase receipts (Spanish alias)
+  /admin/receipts               → Purchase receipts (alias)
+  /admin/stock/movements        → Stock movement history
+  /admin/orders                 → Order list
+    /admin/orders/:id           → Order detail
+  /admin/pos                    → Point of Sale
+  /admin/cash                   → Cash register landing
+  /admin/cash/open              → Open cash session
+  /admin/cash/history           → Cash session history
+    /admin/cash/history/:sessionId → Cash session detail (history)
+  /admin/cash/:id               → Cash session detail (direct)
+  /admin/cash/close/:sessionId  → Close cash session
+  /admin/suppliers              → Supplier management
+    /admin/suppliers/:id/products → Supplier product associations
+  /admin/purchase-orders        → Purchase order management
+  /admin/pricing                → Price update batches
+  /admin/reports                → Reports hub
+  /admin/reports/cash           → Cash overview report
+  /admin/reports/sales          → Sales report
+  /admin/reports/employees      → Employee performance report
+  /admin/reports/inventory      → Inventory valuation report
+  /admin/reports/suppliers      → Supplier performance report
+  /admin/recommendations        → Rule-based recommendations
+  /admin/users                  → Internal user management
 ```
 
 ## Shopping cart (localStorage)
@@ -86,7 +120,7 @@ class CartService {
 2. Frontend calls POST /api/customer/orders
 3. Backend creates order (PENDING_PAYMENT) and payment (PENDING)
 4. Frontend receives orderId
-5. Frontend calls POST /api/customer/orders/{orderId}/checkout/mp
+5. Frontend calls POST /api/customer/orders/{orderId}/payments/preference
 6. Backend creates MP preference
 7. Frontend receives initPoint
 8. Frontend redirects to MP (window.location.href = initPoint)
@@ -95,13 +129,14 @@ class CartService {
 11. MP webhook processes in background
 ```
 
-## Guards
+## Guards (functional)
 
 | Guard | Routes | Logic |
 |---|---|---|
-| AuthGuard | /customer/**, /admin/** | Redirect to /auth/login if not authenticated |
-| AdminGuard | /admin/** | Requires ADMIN, MANAGER, or EMPLOYEE role |
-| CustomerGuard | /customer/** | Requires CUSTOMER role |
+| `authGuard` | /customer/**, /admin/** | Redirect to /auth/login if not authenticated |
+| `customerGuard` | /customer/** | Requires CUSTOMER role |
+| `adminGuard` | /admin/** | Requires ADMIN, MANAGER, or EMPLOYEE role |
+| `roleGuard(...roles)` | Specific admin sub-routes | Requires one of the specified roles; used for fine-grained access (e.g., dashboard, categories, reports, users)
 
 ## UI principles
 

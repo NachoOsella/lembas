@@ -1,26 +1,33 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { MessageService } from 'primeng/api';
 
-import { CategoryService } from '../../../../core/services/category';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { CategoryDto } from '../../../../shared/models/category';
-import { getApiError } from '../../../../shared/models/api-error';
-import { AppBadge } from '../../../../shared/components/app-badge/app-badge';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import {
-  AppDataTable,
-  ColumnDef,
-} from '../../../../shared/components/app-data-table/app-data-table';
-import { AppSearchBar } from '../../../../shared/components/app-search-bar/app-search-bar';
-import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
-import { AppPageHeader } from '../../../../shared/components/app-page-header/app-page-header';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
+import { CategoryService } from '@features/catalog/data-access/category';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import type { CategoryDto } from '@features/catalog/domain/category';
+import { getApiError } from '@shared/types/api-error';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
+import { AppButton } from '@shared/components/app-button/app-button';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
+import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
+import { AppSearchBar } from '@shared/components/app-search-bar/app-search-bar';
+import { ConfirmDialog } from '@shared/components/confirm-dialog/confirm-dialog';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 
 /** Time window for collapsing duplicate error toasts in this component. */
 const DUPLICATE_TOAST_MS = 2000;
 
 /** Displays the admin category directory using shared Lembas table and action components. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-category-list',
   imports: [
     AppBadge,

@@ -1,0 +1,99 @@
+.orders-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.orders-toolbar__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+  max-width: 22rem;
+}
+
+.orders-toolbar__kicker {
+  margin: 0;
+  color: var(--color-bark, #9a5b19);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.orders-toolbar__title {
+  margin: 0;
+  color: var(--color-text, rgba(0, 0, 0, 0.87));
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+}
+
+.orders-toolbar__actions {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.orders-toolbar__actions app-select {
+  width: 11rem;
+  flex: 0 0 auto;
+}
+
+.orders-toolbar__actions app-date-picker {
+  width: 9.5rem;
+  flex: 0 0 auto;
+}
+
+.orders-toolbar__search {
+  width: 18rem;
+  flex: 0 1 auto;
+  min-width: 12rem;
+  max-width: 24rem;
+}
+
+@media (max-width: 768px) {
+  .orders-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .orders-toolbar__info {
+    max-width: none;
+    width: 100%;
+  }
+
+  .orders-toolbar__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .orders-toolbar__actions app-select,
+  .orders-toolbar__actions app-date-picker {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .orders-toolbar__search {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .orders-toolbar__actions app-button {
+    grid-column: 1 / -1;
+  }
+}

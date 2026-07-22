@@ -1,9 +1,8 @@
-import { Component, input } from '@angular/core';
-import { Card } from 'primeng/card';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-section-card',
-  imports: [Card],
   templateUrl: './app-section-card.html',
   styleUrl: './app-section-card.css',
 })

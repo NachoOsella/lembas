@@ -1,19 +1,28 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, input, output, signal, computed } from '@angular/core';
+import {
+  Component,
+  inject,
+  input,
+  output,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AppSelect } from '../../../../shared/components/app-select/app-select';
+import { AppSelect } from '@shared/components/app-select/app-select';
 import { MessageService } from 'primeng/api';
 
-import { ApiErrorResponse, getApiError } from '../../../../shared/models/api-error';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { AuthService } from '../../../../core/services/auth';
-import { UserService } from '../../../../core/services/user';
-import { Branch, InternalRole, UserResponse } from '../../../../shared/models/user';
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
-import { AppModal } from '../../../../shared/components/app-modal/app-modal';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
-import { FormSection } from '../../../../shared/components/form-section/form-section';
+import type { ApiErrorResponse } from '@shared/types/api-error';
+import { getApiError } from '@shared/types/api-error';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { AuthService } from '@core/services/auth';
+import { UserService } from '@features/users/data-access/user';
+import type { Branch, InternalRole, UserResponse } from '@features/users/domain/user';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { AppModal } from '@shared/components/app-modal/app-modal';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { FormSection } from '@shared/components/form-section/form-section';
 
 /** Options for the role selector (internal roles only). */
 const ROLE_OPTIONS: { label: string; value: InternalRole }[] = [
@@ -37,6 +46,7 @@ const ROLE_ICON: Record<InternalRole, string> = {
 };
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-user-form',
   imports: [FormsModule, AppSelect, AppButton, AppFormField, AppModal, ErrorAlert, FormSection],
   templateUrl: './user-form.html',
@@ -280,8 +290,7 @@ export class UserForm {
     if ((this.formPhone().trim() || null) !== user.phone)
       request['phone'] = this.formPhone().trim();
     // Never send a role change for the current user (backend also blocks it)
-    if (!this.isEditingSelf() && this.formRole() !== user.role)
-      request['role'] = this.formRole();
+    if (!this.isEditingSelf() && this.formRole() !== user.role) request['role'] = this.formRole();
     if (branchId !== user.branchId) request['branchId'] = branchId;
 
     if (Object.keys(request).length === 0) {

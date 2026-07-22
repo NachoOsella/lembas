@@ -1,4 +1,4 @@
-import { Component, input, model } from '@angular/core';
+import { Component, input, model, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Checkbox } from 'primeng/checkbox';
 
@@ -10,6 +10,7 @@ import { Checkbox } from 'primeng/checkbox';
  * leaf-green checked state, and comfortable spacing on desktop and mobile.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-check-option',
   imports: [Checkbox, FormsModule],
   templateUrl: './app-check-option.html',

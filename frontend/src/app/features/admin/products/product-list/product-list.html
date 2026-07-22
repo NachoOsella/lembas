@@ -84,7 +84,12 @@
           </td>
           <td>
             <div class="table-actions">
-              <app-menu #statusMenu [model]="statusActions(product)" [popup]="true" appendTo="body" />
+              <app-menu
+                #statusMenu
+                [model]="statusActions(product)"
+                [popup]="true"
+                appendTo="body"
+              />
               <app-button
                 variant="ghost"
                 size="sm"

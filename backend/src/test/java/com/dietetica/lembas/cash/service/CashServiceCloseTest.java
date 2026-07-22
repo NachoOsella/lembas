@@ -1,5 +1,13 @@
 package com.dietetica.lembas.cash.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.dietetica.lembas.cash.dto.CashCloseRequest;
 import com.dietetica.lembas.cash.dto.CashEntryDto;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
@@ -11,15 +19,17 @@ import com.dietetica.lembas.cash.model.CashSession;
 import com.dietetica.lembas.cash.model.CashSessionStatus;
 import com.dietetica.lembas.cash.repository.CashMovementRepository;
 import com.dietetica.lembas.cash.repository.CashSessionRepository;
+import com.dietetica.lembas.payments.api.CashPaymentQuery;
 import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.payments.model.PaymentMethod;
-import com.dietetica.lembas.payments.model.PaymentStatus;
-import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.exception.DomainException;
+import com.dietetica.lembas.users.api.UserDirectory;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
-import com.dietetica.lembas.users.repository.UserRepository;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,18 +37,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Service-level tests for the close use case (S3-US08).
@@ -58,14 +56,26 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CashServiceCloseTest {
 
-    @Mock private CashSessionRepository cashSessionRepository;
-    @Mock private CashMovementRepository cashMovementRepository;
-    @Mock private CashSessionMapper cashSessionMapper;
-    @Mock private PaymentRepository paymentRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private CashCloseCalculator cashCloseCalculator;
+    @Mock
+    private CashSessionRepository cashSessionRepository;
 
-    @InjectMocks private CashService cashService;
+    @Mock
+    private CashMovementRepository cashMovementRepository;
+
+    @Mock
+    private CashSessionMapper cashSessionMapper;
+
+    @Mock
+    private CashPaymentQuery paymentRepository;
+
+    @Mock
+    private UserDirectory userRepository;
+
+    @Mock
+    private CashCloseCalculator cashCloseCalculator;
+
+    @InjectMocks
+    private CashService cashService;
 
     @Test
     void closePersistsExpectedCountedDifferenceAndCloser() {
@@ -76,10 +86,9 @@ class CashServiceCloseTest {
         CashMovement cashIn = movement(CashMovementType.CASH_IN, CashMovementMethod.CASH, "200.00");
         Payment cashPayment = payment(PaymentMethod.CASH, "300.00");
 
-        when(cashSessionRepository.findById(1L)).thenReturn(Optional.of(session));
+        when(cashSessionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(session));
         when(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(1L)).thenReturn(List.of(cashIn));
-        when(paymentRepository.findByCashSessionIdAndStatusOrderByIdAsc(1L, PaymentStatus.APPROVED))
-                .thenReturn(List.of(cashPayment));
+        when(paymentRepository.findApprovedForCashSession(1L)).thenReturn(List.of(cashPayment));
         when(userRepository.findById(2L)).thenReturn(Optional.of(closer));
         when(cashSessionRepository.save(any(CashSession.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -90,24 +99,36 @@ class CashServiceCloseTest {
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 new BigDecimal("600.00"),
-                new CashTotalsByMethodDto(java.util.Map.of(
-                        "CASH", new BigDecimal("300.00"),
-                        "TRANSFER", BigDecimal.ZERO
-                ), java.util.Map.of("CASH", new BigDecimal("200.00")))
-        );
+                new CashTotalsByMethodDto(
+                        java.util.Map.of("CASH", new BigDecimal("300.00"), "TRANSFER", BigDecimal.ZERO),
+                        java.util.Map.of("CASH", new BigDecimal("200.00"))));
         when(cashCloseCalculator.calculate(any(), any(), any())).thenReturn(calc);
         when(cashSessionMapper.toDto(any(CashSession.class), any(), any()))
                 .thenReturn(new CashSessionDto(
-                        1L, CashSessionStatus.CLOSED, 1L, "Branch 1",
-                        1L, "Manager", new BigDecimal("100.00"), null, null,
-                        new BigDecimal("600.00"), new BigDecimal("550.00"), new BigDecimal("-50.00"),
-                        "Faltante por error de conteo", 2L, "Employee", null, null, null, null,
-                        List.<CashEntryDto>of(), null
-                ));
+                        1L,
+                        CashSessionStatus.CLOSED,
+                        1L,
+                        "Branch 1",
+                        1L,
+                        "Manager",
+                        new BigDecimal("100.00"),
+                        null,
+                        null,
+                        new BigDecimal("600.00"),
+                        new BigDecimal("550.00"),
+                        new BigDecimal("-50.00"),
+                        "Faltante por error de conteo",
+                        2L,
+                        "Employee",
+                        null,
+                        null,
+                        null,
+                        null,
+                        List.<CashEntryDto>of(),
+                        null));
 
-        CashCloseRequest request = new CashCloseRequest(
-                new BigDecimal("550.00"), "Cierre OK", "Faltante por error de conteo"
-        );
+        CashCloseRequest request =
+                new CashCloseRequest(new BigDecimal("550.00"), "Cierre OK", "Faltante por error de conteo");
 
         CashSessionDto response = cashService.closeCashSession(1L, request, closer);
 
@@ -133,21 +154,35 @@ class CashServiceCloseTest {
         User closer = user(Role.ADMIN, 99L, null);
         CashSession session = openSession(1L, opener, new BigDecimal("100.00"));
 
-        when(cashSessionRepository.findById(1L)).thenReturn(Optional.of(session));
+        when(cashSessionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(session));
         when(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(1L)).thenReturn(List.of());
-        when(paymentRepository.findByCashSessionIdAndStatusOrderByIdAsc(1L, PaymentStatus.APPROVED))
-                .thenReturn(List.of());
+        when(paymentRepository.findApprovedForCashSession(1L)).thenReturn(List.of());
         when(userRepository.findById(99L)).thenReturn(Optional.of(closer));
         when(cashSessionRepository.save(any(CashSession.class))).thenAnswer(inv -> inv.getArgument(0));
         when(cashCloseCalculator.calculate(any(), any(), any())).thenReturn(emptyResult(new BigDecimal("100.00")));
         when(cashSessionMapper.toDto(any(CashSession.class), any(), any()))
                 .thenReturn(new CashSessionDto(
-                        1L, CashSessionStatus.CLOSED, 1L, "Branch 1",
-                        1L, "Manager", new BigDecimal("100.00"), null, null,
-                        new BigDecimal("100.00"), new BigDecimal("100.00"), BigDecimal.ZERO,
-                        null, 99L, "Admin", null, null, null, null,
-                        List.<CashEntryDto>of(), null
-                ));
+                        1L,
+                        CashSessionStatus.CLOSED,
+                        1L,
+                        "Branch 1",
+                        1L,
+                        "Manager",
+                        new BigDecimal("100.00"),
+                        null,
+                        null,
+                        new BigDecimal("100.00"),
+                        new BigDecimal("100.00"),
+                        BigDecimal.ZERO,
+                        null,
+                        99L,
+                        "Admin",
+                        null,
+                        null,
+                        null,
+                        null,
+                        List.<CashEntryDto>of(),
+                        null));
 
         CashCloseRequest request = new CashCloseRequest(new BigDecimal("100.00"), null, null);
         CashSessionDto response = cashService.closeCashSession(1L, request, closer);
@@ -164,7 +199,7 @@ class CashServiceCloseTest {
         org.mockito.Mockito.lenient().when(session.getStatus()).thenReturn(CashSessionStatus.CLOSED);
         org.mockito.Mockito.lenient().when(session.getClosedAt()).thenReturn(java.time.OffsetDateTime.now());
 
-        when(cashSessionRepository.findById(1L)).thenReturn(Optional.of(session));
+        when(cashSessionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(session));
 
         CashCloseRequest request = new CashCloseRequest(new BigDecimal("100.00"), null, null);
 
@@ -193,13 +228,13 @@ class CashServiceCloseTest {
                     assertThat(de.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
                 });
 
-        verify(cashSessionRepository, never()).findById(any());
+        verify(cashSessionRepository, never()).findByIdForUpdate(any());
     }
 
     @Test
     void closeRaisesNotFoundWhenSessionMissing() {
         User closer = user(Role.MANAGER, 1L, 1L);
-        when(cashSessionRepository.findById(404L)).thenReturn(Optional.empty());
+        when(cashSessionRepository.findByIdForUpdate(404L)).thenReturn(Optional.empty());
 
         CashCloseRequest request = new CashCloseRequest(new BigDecimal("100.00"), null, null);
 
@@ -217,10 +252,9 @@ class CashServiceCloseTest {
         User closer = user(Role.MANAGER, 1L, 1L);
         CashSession session = openSession(1L, closer, new BigDecimal("100.00"));
 
-        when(cashSessionRepository.findById(1L)).thenReturn(Optional.of(session));
+        when(cashSessionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(session));
         when(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(1L)).thenReturn(List.of());
-        when(paymentRepository.findByCashSessionIdAndStatusOrderByIdAsc(1L, PaymentStatus.APPROVED))
-                .thenReturn(List.of());
+        when(paymentRepository.findApprovedForCashSession(1L)).thenReturn(List.of());
         when(userRepository.findById(1L)).thenReturn(Optional.of(closer));
         when(cashCloseCalculator.calculate(any(), any(), any())).thenReturn(emptyResult(new BigDecimal("100.00")));
 
@@ -243,21 +277,35 @@ class CashServiceCloseTest {
         User closer = user(Role.MANAGER, 1L, 1L);
         CashSession session = openSession(1L, closer, new BigDecimal("100.00"));
 
-        when(cashSessionRepository.findById(1L)).thenReturn(Optional.of(session));
+        when(cashSessionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(session));
         when(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(1L)).thenReturn(List.of());
-        when(paymentRepository.findByCashSessionIdAndStatusOrderByIdAsc(1L, PaymentStatus.APPROVED))
-                .thenReturn(List.of());
+        when(paymentRepository.findApprovedForCashSession(1L)).thenReturn(List.of());
         when(userRepository.findById(1L)).thenReturn(Optional.of(closer));
         when(cashSessionRepository.save(any(CashSession.class))).thenAnswer(inv -> inv.getArgument(0));
         when(cashCloseCalculator.calculate(any(), any(), any())).thenReturn(emptyResult(new BigDecimal("100.00")));
         when(cashSessionMapper.toDto(any(CashSession.class), any(), any()))
                 .thenReturn(new CashSessionDto(
-                        1L, CashSessionStatus.CLOSED, 1L, "Branch 1",
-                        1L, "Manager", new BigDecimal("100.00"), null, null,
-                        new BigDecimal("100.00"), new BigDecimal("100.00"), BigDecimal.ZERO,
-                        null, 1L, "Manager", null, null, null, null,
-                        List.<CashEntryDto>of(), null
-                ));
+                        1L,
+                        CashSessionStatus.CLOSED,
+                        1L,
+                        "Branch 1",
+                        1L,
+                        "Manager",
+                        new BigDecimal("100.00"),
+                        null,
+                        null,
+                        new BigDecimal("100.00"),
+                        new BigDecimal("100.00"),
+                        BigDecimal.ZERO,
+                        null,
+                        1L,
+                        "Manager",
+                        null,
+                        null,
+                        null,
+                        null,
+                        List.<CashEntryDto>of(),
+                        null));
 
         CashCloseRequest request = new CashCloseRequest(new BigDecimal("100.00"), null, "   ");
 
@@ -290,30 +338,47 @@ class CashServiceCloseTest {
         User closer = user(Role.MANAGER, 1L, 1L);
         CashSession session = openSession(1L, closer, new BigDecimal("0.00"));
 
-        when(cashSessionRepository.findById(1L)).thenReturn(Optional.of(session));
+        when(cashSessionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(session));
         when(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(1L)).thenReturn(List.of());
-        when(paymentRepository.findByCashSessionIdAndStatusOrderByIdAsc(1L, PaymentStatus.APPROVED))
-                .thenReturn(List.of());
+        when(paymentRepository.findApprovedForCashSession(1L)).thenReturn(List.of());
         when(userRepository.findById(1L)).thenReturn(Optional.of(closer));
         when(cashSessionRepository.save(any(CashSession.class))).thenAnswer(inv -> inv.getArgument(0));
 
         CashTotalsByMethodDto totals = new CashTotalsByMethodDto(
                 java.util.Map.of("CASH", new BigDecimal("100.00"), "QR", new BigDecimal("50.00")),
-                java.util.Map.of("CASH", new BigDecimal("25.00"))
-        );
+                java.util.Map.of("CASH", new BigDecimal("25.00")));
         CashCloseCalculator.CashCloseResult calc = new CashCloseCalculator.CashCloseResult(
-                BigDecimal.ZERO, new BigDecimal("100.00"), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                new BigDecimal("100.00"), totals
-        );
+                BigDecimal.ZERO,
+                new BigDecimal("100.00"),
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                new BigDecimal("100.00"),
+                totals);
         when(cashCloseCalculator.calculate(any(), any(), any())).thenReturn(calc);
         when(cashSessionMapper.toDto(any(CashSession.class), any(), eq(totals)))
                 .thenReturn(new CashSessionDto(
-                        1L, CashSessionStatus.CLOSED, 1L, "Branch 1",
-                        1L, "Manager", new BigDecimal("0.00"), null, null,
-                        new BigDecimal("100.00"), new BigDecimal("100.00"), BigDecimal.ZERO,
-                        null, 1L, "Manager", null, null, null, null,
-                        List.<CashEntryDto>of(), totals
-                ));
+                        1L,
+                        CashSessionStatus.CLOSED,
+                        1L,
+                        "Branch 1",
+                        1L,
+                        "Manager",
+                        new BigDecimal("0.00"),
+                        null,
+                        null,
+                        new BigDecimal("100.00"),
+                        new BigDecimal("100.00"),
+                        BigDecimal.ZERO,
+                        null,
+                        1L,
+                        "Manager",
+                        null,
+                        null,
+                        null,
+                        null,
+                        List.<CashEntryDto>of(),
+                        totals));
 
         CashCloseRequest request = new CashCloseRequest(new BigDecimal("100.00"), null, null);
         CashSessionDto response = cashService.closeCashSession(1L, request, closer);
@@ -323,8 +388,7 @@ class CashServiceCloseTest {
         assertThat(response.totalsByMethod().paymentsByMethod())
                 .containsEntry("CASH", new BigDecimal("100.00"))
                 .containsEntry("QR", new BigDecimal("50.00"));
-        assertThat(response.totalsByMethod().movementsByMethod())
-                .containsEntry("CASH", new BigDecimal("25.00"));
+        assertThat(response.totalsByMethod().movementsByMethod()).containsEntry("CASH", new BigDecimal("25.00"));
     }
 
     @Test
@@ -332,21 +396,35 @@ class CashServiceCloseTest {
         User closer = user(Role.MANAGER, 1L, 1L);
         CashSession session = openSession(1L, closer, new BigDecimal("100.00"));
 
-        when(cashSessionRepository.findById(1L)).thenReturn(Optional.of(session));
+        when(cashSessionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(session));
         when(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(1L)).thenReturn(List.of());
-        when(paymentRepository.findByCashSessionIdAndStatusOrderByIdAsc(1L, PaymentStatus.APPROVED))
-                .thenReturn(List.of());
+        when(paymentRepository.findApprovedForCashSession(1L)).thenReturn(List.of());
         when(userRepository.findById(1L)).thenReturn(Optional.of(closer));
         when(cashSessionRepository.save(any(CashSession.class))).thenAnswer(inv -> inv.getArgument(0));
         when(cashCloseCalculator.calculate(any(), any(), any())).thenReturn(emptyResult(new BigDecimal("100.00")));
         when(cashSessionMapper.toDto(any(CashSession.class), any(), any()))
                 .thenReturn(new CashSessionDto(
-                        1L, CashSessionStatus.CLOSED, 1L, "Branch 1",
-                        1L, "Manager", new BigDecimal("100.00"), null, null,
-                        new BigDecimal("100.00"), new BigDecimal("100.00"), BigDecimal.ZERO,
-                        null, 1L, "Manager", null, null, null, null,
-                        List.<CashEntryDto>of(), null
-                ));
+                        1L,
+                        CashSessionStatus.CLOSED,
+                        1L,
+                        "Branch 1",
+                        1L,
+                        "Manager",
+                        new BigDecimal("100.00"),
+                        null,
+                        null,
+                        new BigDecimal("100.00"),
+                        new BigDecimal("100.00"),
+                        BigDecimal.ZERO,
+                        null,
+                        1L,
+                        "Manager",
+                        null,
+                        null,
+                        null,
+                        null,
+                        List.<CashEntryDto>of(),
+                        null));
 
         CashCloseRequest request = new CashCloseRequest(new BigDecimal("100.00"), "  ", "   ");
 
@@ -422,8 +500,12 @@ class CashServiceCloseTest {
 
     private static CashCloseCalculator.CashCloseResult emptyResult(java.math.BigDecimal expected) {
         return new CashCloseCalculator.CashCloseResult(
-                expected, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                expected, CashTotalsByMethodDto.empty()
-        );
+                expected,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                expected,
+                CashTotalsByMethodDto.empty());
     }
 }

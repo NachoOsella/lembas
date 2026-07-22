@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import type { Routes } from '@angular/router';
 
 import { authGuard } from './core/guards/auth-guard';
 import { adminGuard } from './core/guards/admin-guard';
@@ -32,13 +32,6 @@ export const routes: Routes = [
     path: 'admin',
     loadChildren: () => import('./features/admin/admin.routes'),
     canActivate: [authGuard, adminGuard],
-  },
-  {
-    path: 'dev/ui',
-    loadComponent: () =>
-      import('./features/dev/component-showcase/component-showcase').then(
-        (m) => m.ComponentShowcase,
-      ),
   },
   {
     path: 'error/500',

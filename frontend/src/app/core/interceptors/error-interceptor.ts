@@ -1,4 +1,5 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
+import type { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -64,7 +65,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const messageService = inject(MessageService);
 
   return next(req).pipe(
-    catchError((error: HttpErrorResponse) => {
+    catchError((error: unknown) => {
+      if (!(error instanceof HttpErrorResponse)) {
+        return throwError(() => error);
+      }
+
       const handledByComponent = isComponentOwnedRequest(req.url);
 
       switch (error.status) {

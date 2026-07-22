@@ -1,10 +1,11 @@
-import { Component, computed, input, model, signal } from '@angular/core';
+import { Component, computed, input, model, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputText } from 'primeng/inputtext';
 import { AppInput } from '../app-input/app-input';
 import { AppFieldHint } from '../app-field-hint/app-field-hint';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-form-field',
   imports: [AppInput, AppFieldHint, FormsModule, InputText],
   templateUrl: './app-form-field.html',

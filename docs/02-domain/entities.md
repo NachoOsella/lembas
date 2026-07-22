@@ -26,18 +26,20 @@
 | 20 | `payments` | Payments | Unified payment entity for online and in-store payments |
 | 21 | `cash_sessions` | Cash | Cash register sessions, open/close per shift |
 | 22 | `cash_movements` | Cash | Manual cash movements during a session |
-| 23 | `audit_logs` | Audit | Audit trail for critical actions |
+| 23 | `audit_logs` | Audit | Audit trail for critical actions (stub -- table not yet created, see limitation below) |
+| 24 | `refresh_tokens` | Auth | JWT refresh tokens for session renewal |
 
 ## Optional
 
 | # | Table | Domain | Purpose |
 |---|---|---|---|
-| 24 | `product_promotions` | Promotions | Simple per-product discounts |
+| 25 | `product_promotions` | Promotions | Simple per-product discounts |
 
 ## Post-MVP entities identified for future
 
 | Entity | Why deferred |
 |---|---|
+| `audit_logs` | Audit trail table not yet implemented in MVP. Dedicated history tables (`product_sale_price_history`, `supplier_product_cost_history`) and entity `created_at` timestamps provide equivalent traceability for current operations |
 | `customer_addresses` | Pickup only in MVP. Needed for home delivery |
 | `carts`, `cart_items` | Cart is frontend localStorage |
 | `branch_product_stock` | `stock_lots` is sufficient |
@@ -49,6 +51,7 @@
 | `roles`, `user_roles` | Role stored as direct field |
 | `companies` | Single business |
 | `coupons` | Post-MVP |
+| `notifications` | Order tracking is pull-based (customer checks status) |
 
 ## Key entity details
 
@@ -70,7 +73,7 @@
 - Global catalog item, not per branch
 - `sale_price` is the current operational sale price used by POS and online store
 - Sale price history is stored in `product_sale_price_history`
-- `audit_logs` records who changed prices, but it is not the source for commercial price history queries
+- Price history is stored in `product_sale_price_history` (with `created_by_user_id`); a future `audit_logs` table would provide a consolidated audit trail
 - `online_status`: DRAFT, PUBLISHED, PAUSED, HIDDEN
 - `image_url`: single image, served from the file system through Nginx
 

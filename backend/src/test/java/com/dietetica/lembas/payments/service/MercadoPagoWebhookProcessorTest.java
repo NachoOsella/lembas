@@ -1,11 +1,21 @@
 package com.dietetica.lembas.payments.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.dietetica.lembas.orders.api.OrderCommand;
+import com.dietetica.lembas.orders.api.OrderLock;
 import com.dietetica.lembas.orders.model.FulfillmentType;
 import com.dietetica.lembas.orders.model.Order;
 import com.dietetica.lembas.orders.model.OrderItem;
 import com.dietetica.lembas.orders.model.OrderStatus;
 import com.dietetica.lembas.orders.model.OrderType;
-import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.payments.dto.MercadoPagoWebhookPayload;
 import com.dietetica.lembas.payments.gateway.PaymentGateway;
 import com.dietetica.lembas.payments.model.Payment;
@@ -16,23 +26,14 @@ import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 /**
  * Unit tests for {@link MercadoPagoWebhookProcessor}.
@@ -44,34 +45,47 @@ import static org.mockito.Mockito.when;
 class MercadoPagoWebhookProcessorTest {
 
     private PaymentRepository paymentRepository;
-    private OrderRepository orderRepository;
+    private OrderLock orderLock;
+    private OrderCommand orderCommand;
     private PaymentGateway paymentGateway;
     private WebhookToPaymentStatusMapper mapper;
     private WebhookOrderEffectApplier applier;
+    private EntityManager entityManager;
     private MercadoPagoWebhookProcessor processor;
 
     @BeforeEach
     void setUp() {
         paymentRepository = mock(PaymentRepository.class);
-        orderRepository = mock(OrderRepository.class);
+        orderLock = mock(OrderLock.class);
+        orderCommand = mock(OrderCommand.class);
         paymentGateway = mock(PaymentGateway.class);
         mapper = new WebhookToPaymentStatusMapper();
         applier = mock(WebhookOrderEffectApplier.class);
+        entityManager = mock(EntityManager.class);
         WebhookMetadataSerializer metadataSerializer = new WebhookMetadataSerializer(new ObjectMapper());
         processor = new MercadoPagoWebhookProcessor(
-                paymentRepository, orderRepository, paymentGateway, mapper, applier, metadataSerializer);
+                paymentRepository,
+                orderLock,
+                orderCommand,
+                paymentGateway,
+                mapper,
+                applier,
+                metadataSerializer,
+                entityManager);
     }
 
     @Test
     void shouldApprovePaymentAndApplyOrderEffectOnApprovedWebhook() {
         Order order = newOrder();
         Payment payment = pendingPayment(order);
+        stubLockedRows(payment);
 
-        when(paymentGateway.findPayment("PAY-1")).thenReturn(Optional.of(
-                new GatewayPaymentLookup("PAY-1", "approved", new BigDecimal("1500.00"), "ARS", Map.of("preference_id", "PREF-1"))));
+        when(paymentGateway.findPayment("PAY-1"))
+                .thenReturn(Optional.of(new GatewayPaymentLookup(
+                        "PAY-1", "approved", new BigDecimal("1500.00"), "ARS", Map.of("preference_id", "PREF-1"))));
         when(paymentRepository.findByProviderPaymentId("PAY-1")).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderCommand.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         MercadoPagoWebhookPayload payload = payload("payment", "PAY-1", "PAY-1");
         Optional<Long> result = processor.process(payload);
@@ -80,6 +94,9 @@ class MercadoPagoWebhookProcessorTest {
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.APPROVED);
         verify(applier, times(1)).markPaidAndDeductStock(order);
         verify(applier, never()).markPaymentFailed(any(), any());
+        org.mockito.InOrder locks = org.mockito.Mockito.inOrder(orderLock, paymentRepository);
+        locks.verify(orderLock).lockById(order.getId());
+        locks.verify(paymentRepository).findByIdForUpdate(payment.getId());
     }
 
     @Test
@@ -87,9 +104,11 @@ class MercadoPagoWebhookProcessorTest {
         Order order = newOrder();
         Payment payment = pendingPayment(order);
         payment.setStatus(PaymentStatus.APPROVED);
+        stubLockedRows(payment);
 
-        when(paymentGateway.findPayment("PAY-1")).thenReturn(Optional.of(
-                new GatewayPaymentLookup("PAY-1", "approved", new BigDecimal("1500.00"), "ARS", Map.of())));
+        when(paymentGateway.findPayment("PAY-1"))
+                .thenReturn(Optional.of(
+                        new GatewayPaymentLookup("PAY-1", "approved", new BigDecimal("1500.00"), "ARS", Map.of())));
         when(paymentRepository.findByProviderPaymentId("PAY-1")).thenReturn(Optional.of(payment));
 
         Optional<Long> result = processor.process(payload("payment", "PAY-1", "PAY-1"));
@@ -100,19 +119,48 @@ class MercadoPagoWebhookProcessorTest {
     }
 
     @Test
+    void shouldUseTerminalStateReReadAfterLocksInsteadOfPreliminaryLookup() {
+        Order preliminaryOrder = newOrder();
+        Payment preliminaryPayment = pendingPayment(preliminaryOrder);
+        Order lockedOrder = newOrder();
+        lockedOrder.setStatus(OrderStatus.CANCELLED);
+        Payment lockedPayment = pendingPayment(lockedOrder);
+        lockedPayment.setStatus(PaymentStatus.CANCELLED);
+
+        when(paymentGateway.findPayment("PAY-1"))
+                .thenReturn(Optional.of(
+                        new GatewayPaymentLookup("PAY-1", "approved", new BigDecimal("1500.00"), "ARS", Map.of())));
+        when(paymentRepository.findByProviderPaymentId("PAY-1")).thenReturn(Optional.of(preliminaryPayment));
+        when(orderLock.lockById(preliminaryOrder.getId())).thenReturn(Optional.of(lockedOrder));
+        when(paymentRepository.findByIdForUpdate(preliminaryPayment.getId())).thenReturn(Optional.of(lockedPayment));
+
+        Optional<Long> result = processor.process(payload("payment", "PAY-1", "PAY-1"));
+
+        assertThat(result).contains(lockedPayment.getId());
+        verify(paymentRepository, never()).save(any());
+        verify(orderCommand, never()).save(any());
+        verify(applier, never()).markPaidAndDeductStock(any());
+    }
+
+    @Test
     void shouldMatchPendingPaymentByExternalReferenceWhenProviderPaymentIdIsNew() {
         Order order = newOrder();
         Payment payment = pendingPayment(order);
         payment.setExternalReference(order.getOrderNumber());
+        stubLockedRows(payment);
 
-        when(paymentGateway.findPayment("PAY-EXT")).thenReturn(Optional.of(
-                new GatewayPaymentLookup("PAY-EXT", "approved", new BigDecimal("1500.00"), "ARS",
+        when(paymentGateway.findPayment("PAY-EXT"))
+                .thenReturn(Optional.of(new GatewayPaymentLookup(
+                        "PAY-EXT",
+                        "approved",
+                        new BigDecimal("1500.00"),
+                        "ARS",
                         Map.of("external_reference", order.getOrderNumber()))));
         when(paymentRepository.findByProviderPaymentId("PAY-EXT")).thenReturn(Optional.empty());
         when(paymentRepository.findFirstByExternalReferenceOrderByIdAsc(order.getOrderNumber()))
                 .thenReturn(Optional.of(payment));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderCommand.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Optional<Long> result = processor.process(payload("payment", "PAY-EXT", "PAY-EXT"));
 
@@ -126,18 +174,23 @@ class MercadoPagoWebhookProcessorTest {
     void shouldMatchHistoricalPendingPaymentByOrderNumberWhenExternalReferenceWasNotStored() {
         Order order = newOrder();
         Payment payment = pendingPayment(order);
+        stubLockedRows(payment);
 
-        when(paymentGateway.findPayment("PAY-OLD")).thenReturn(Optional.of(
-                new GatewayPaymentLookup("PAY-OLD", "approved", new BigDecimal("1500.00"), "ARS",
+        when(paymentGateway.findPayment("PAY-OLD"))
+                .thenReturn(Optional.of(new GatewayPaymentLookup(
+                        "PAY-OLD",
+                        "approved",
+                        new BigDecimal("1500.00"),
+                        "ARS",
                         Map.of("external_reference", order.getOrderNumber()))));
         when(paymentRepository.findByProviderPaymentId("PAY-OLD")).thenReturn(Optional.empty());
         when(paymentRepository.findFirstByExternalReferenceOrderByIdAsc(order.getOrderNumber()))
                 .thenReturn(Optional.empty());
         when(paymentRepository.findFirstByOrderOrderNumberAndStatusInOrderByIdAsc(
-                order.getOrderNumber(), List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                        order.getOrderNumber(), List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
                 .thenReturn(Optional.of(payment));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderCommand.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Optional<Long> result = processor.process(payload("payment", "PAY-OLD", "PAY-OLD"));
 
@@ -151,12 +204,14 @@ class MercadoPagoWebhookProcessorTest {
     void shouldMarkPaymentFailedWhenProviderRejects() {
         Order order = newOrder();
         Payment payment = pendingPayment(order);
+        stubLockedRows(payment);
 
-        when(paymentGateway.findPayment("PAY-2")).thenReturn(Optional.of(
-                new GatewayPaymentLookup("PAY-2", "rejected", new BigDecimal("1500.00"), "ARS", Map.of())));
+        when(paymentGateway.findPayment("PAY-2"))
+                .thenReturn(Optional.of(
+                        new GatewayPaymentLookup("PAY-2", "rejected", new BigDecimal("1500.00"), "ARS", Map.of())));
         when(paymentRepository.findByProviderPaymentId("PAY-2")).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderCommand.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Optional<Long> result = processor.process(payload("payment", "PAY-2", "PAY-2"));
 
@@ -177,8 +232,7 @@ class MercadoPagoWebhookProcessorTest {
 
     @Test
     void shouldReturnEmptyWhenPayloadHasNoPaymentId() {
-        Optional<Long> result = processor.process(
-                new MercadoPagoWebhookPayload("plan", null, null, null, null, null));
+        Optional<Long> result = processor.process(new MercadoPagoWebhookPayload("plan", null, null, null, null, null));
 
         assertThat(result).isEmpty();
         verify(paymentGateway, never()).findPayment(any());
@@ -194,25 +248,29 @@ class MercadoPagoWebhookProcessorTest {
 
     @Test
     void shouldThrowWhenPaymentCannotBeMatchedLocally() {
-        when(paymentGateway.findPayment("PAY-9")).thenReturn(Optional.of(
-                new GatewayPaymentLookup("PAY-9", "approved", new BigDecimal("1500.00"), "ARS", Map.of())));
+        when(paymentGateway.findPayment("PAY-9"))
+                .thenReturn(Optional.of(
+                        new GatewayPaymentLookup("PAY-9", "approved", new BigDecimal("1500.00"), "ARS", Map.of())));
         when(paymentRepository.findByProviderPaymentId("PAY-9")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> processor.process(payload("payment", "PAY-9", "PAY-9")))
                 .isInstanceOf(DomainException.class)
-                .extracting("code").isEqualTo("PAYMENT_NOT_FOUND");
+                .extracting("code")
+                .isEqualTo("PAYMENT_NOT_FOUND");
     }
 
     @Test
     void shouldFallbackToInProcessWhenProviderStatusUnknown() {
         Order order = newOrder();
         Payment payment = pendingPayment(order);
+        stubLockedRows(payment);
 
-        when(paymentGateway.findPayment("PAY-3")).thenReturn(Optional.of(
-                new GatewayPaymentLookup("PAY-3", "some-future-status", new BigDecimal("1500.00"), "ARS", Map.of())));
+        when(paymentGateway.findPayment("PAY-3"))
+                .thenReturn(Optional.of(new GatewayPaymentLookup(
+                        "PAY-3", "some-future-status", new BigDecimal("1500.00"), "ARS", Map.of())));
         when(paymentRepository.findByProviderPaymentId("PAY-3")).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderCommand.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         processor.process(payload("payment", "PAY-3", "PAY-3"));
 
@@ -225,12 +283,14 @@ class MercadoPagoWebhookProcessorTest {
         order.setStatus(OrderStatus.PAID);
         Payment payment = pendingPayment(order);
         payment.setStatus(PaymentStatus.APPROVED);
+        stubLockedRows(payment);
 
-        when(paymentGateway.findPayment("PAY-4")).thenReturn(Optional.of(
-                new GatewayPaymentLookup("PAY-4", "refunded", new BigDecimal("1500.00"), "ARS", Map.of())));
+        when(paymentGateway.findPayment("PAY-4"))
+                .thenReturn(Optional.of(
+                        new GatewayPaymentLookup("PAY-4", "refunded", new BigDecimal("1500.00"), "ARS", Map.of())));
         when(paymentRepository.findByProviderPaymentId("PAY-4")).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderCommand.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         processor.process(payload("payment", "PAY-4", "PAY-4"));
 
@@ -241,19 +301,23 @@ class MercadoPagoWebhookProcessorTest {
     void shouldSanitizeCardAndTokenFieldsInStoredMetadata() {
         Order order = newOrder();
         Payment payment = pendingPayment(order);
+        stubLockedRows(payment);
         ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
 
-        when(paymentGateway.findPayment("PAY-5")).thenReturn(Optional.of(
-                new GatewayPaymentLookup("PAY-5", "approved", new BigDecimal("1500.00"), "ARS",
+        when(paymentGateway.findPayment("PAY-5"))
+                .thenReturn(Optional.of(new GatewayPaymentLookup(
+                        "PAY-5",
+                        "approved",
+                        new BigDecimal("1500.00"),
+                        "ARS",
                         Map.of(
                                 "preference_id", "PREF-1",
                                 "card", Map.of("first_six_digits", "123456"),
                                 "token", "should-be-dropped",
-                                "status", "approved"
-                        ))));
+                                "status", "approved"))));
         when(paymentRepository.findByProviderPaymentId("PAY-5")).thenReturn(Optional.of(payment));
         when(paymentRepository.save(captor.capture())).thenAnswer(inv -> inv.getArgument(0));
-        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(orderCommand.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         processor.process(payload("payment", "PAY-5", "PAY-5"));
 
@@ -261,6 +325,11 @@ class MercadoPagoWebhookProcessorTest {
         assertThat(metadata).doesNotContain("card");
         assertThat(metadata).doesNotContain("token");
         assertThat(metadata).contains("providerPaymentId");
+    }
+
+    private void stubLockedRows(Payment payment) {
+        when(orderLock.lockById(payment.getOrder().getId())).thenReturn(Optional.of(payment.getOrder()));
+        when(paymentRepository.findByIdForUpdate(payment.getId())).thenReturn(Optional.of(payment));
     }
 
     private static MercadoPagoWebhookPayload payload(String type, String topLevelId, String dataId) {

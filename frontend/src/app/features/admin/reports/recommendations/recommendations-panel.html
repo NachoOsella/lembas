@@ -56,6 +56,8 @@
       title="No se pudieron cargar las recomendaciones"
       [message]="errorMessage() ?? ''"
     />
+  } @else if (loading() && recommendations().length === 0) {
+    <app-loading-spinner label="Cargando recomendaciones..." surface="card" />
   } @else {
     <app-data-table
       [data]="recommendations()"

@@ -35,7 +35,7 @@ sequenceDiagram
 
     Note over C,DB: 3. MP CHECKOUT
     C->>FE: Proceed to payment
-    FE->>BE: POST /api/customer/orders/{orderId}/checkout/mp
+    FE->>BE: POST /api/customer/orders/{orderId}/payments/preference
     BE->>MP: Create payment preference
     MP-->>BE: { initPoint, preferenceId }
     BE->>DB: UPDATE payment SET provider_preference_id, external_reference

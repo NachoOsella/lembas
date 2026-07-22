@@ -1,49 +1,37 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
 
-import { CustomerCheckoutService } from '../../../core/services/customer-checkout';
-import { CustomerOrderService } from '../../../core/services/customer-order';
-import { CurrencyArPipe } from '../../../core/pipes/currency-ar.pipe';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { ShortDateArPipe } from '../../../core/pipes/short-date-ar.pipe';
+import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
+import { ShortDateArPipe } from '@core/pipes/short-date-ar.pipe';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import type { SeverityPillTone } from '@shared/components/severity-pill/severity-pill';
+import { SeverityPill } from '@shared/components/severity-pill/severity-pill';
+import type { OrderStatus, PaymentStatus } from '@features/orders/domain/order';
+import { orderStatusLabel, paymentStatusLabel } from '@features/orders/domain/order';
 import {
-  OrderDetail as OrderDetailData,
-  OrderStatus,
-  orderStatusLabel,
-  orderStatusSeverity,
-  paymentStatusLabel,
-  paymentStatusSeverity,
-  PaymentMethod,
-  PaymentStatus,
-} from '../../../shared/models/order';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
-import { SeverityPill, SeverityPillTone } from '../../../shared/components/severity-pill/severity-pill';
+  buildCustomerOrderTimeline,
+  orderStatusTone,
+  paymentMethodLabel,
+  paymentStatusTone,
+} from '@features/orders/public-api';
+import { CustomerOrderDetailStore } from '@features/orders/public-api';
 
-/** Visual state for one step in the order journey. */
-type TimelineStepState = 'done' | 'current' | 'upcoming' | 'alert';
-
-/** A single step in the order status timeline. */
-interface TimelineStep {
-  readonly label: string;
-  readonly description: string;
-  readonly date: string | null;
-  readonly icon: string;
-  readonly state: TimelineStepState;
-}
-
-/**
- * Full detail view for one customer-owned order.
- *
- * <p>Guards on the parent route enforce auth + CUSTOMER role.</p>
- */
 @Component({
   selector: 'app-order-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [CustomerOrderDetailStore],
   imports: [
     AppButton,
     AppEyebrow,
@@ -59,249 +47,62 @@ interface TimelineStep {
 export class OrderDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly service = inject(CustomerOrderService);
-  private readonly checkoutService = inject(CustomerCheckoutService);
-  private readonly errorMapping = inject(ErrorMappingService);
-  private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
+  protected readonly store = inject(CustomerOrderDetailStore);
 
-  protected readonly loading = signal(true);
-  protected readonly errorCode = signal<string | null>(null);
-  protected readonly order = signal<OrderDetailData | null>(null);
-  protected readonly paying = signal(false);
-
-  /** Whether the order is in a state that allows the customer to initiate payment. */
-  protected readonly canPay = computed(() => {
-    const status = this.order()?.status;
-    return status === 'PENDING_PAYMENT' || status === 'PAYMENT_FAILED';
+  private readonly invalidRoute = signal('');
+  protected readonly loading = computed(
+    () => this.invalidRoute().length === 0 && this.store.loading(),
+  );
+  protected readonly errorMessage = computed(
+    () => this.invalidRoute() || this.store.errorMessage(),
+  );
+  protected readonly order = this.store.order;
+  protected readonly paying = this.store.paying;
+  protected readonly canPay = this.store.canPay;
+  protected readonly timeline = computed(() => {
+    const order = this.order();
+    return order ? buildCustomerOrderTimeline(order) : [];
   });
-
-  /** Human-readable error message derived from the backend error code. */
-  protected readonly errorMessage = computed(() => {
-    const code = this.errorCode();
-    if (code === 'ORDER_NOT_FOUND') {
-      return 'El pedido no existe o no te pertenece.';
-    }
-    if (code === 'FORBIDDEN') {
-      return 'No tenes acceso a este pedido.';
-    }
-    return code ? 'No pudimos cargar el pedido. Intentá nuevamente.' : null;
-  });
-
-  /** Builds a chronological timeline from the order timestamps. */
-  protected readonly timeline = computed((): TimelineStep[] => {
-    const o = this.order();
-    if (!o) return [];
-
-    const status = o.status;
-    const normalFlow: TimelineStep[] = [
-      this.timelineStep(
-        'Pedido creado',
-        'Recibimos tu pedido y lo dejamos listo para avanzar.',
-        o.createdAt,
-        'pi pi-receipt',
-        'done',
-      ),
-      this.timelineStep(
-        'Pago pendiente',
-        'El pedido queda reservado para iniciar el pago cuando quieras.',
-        null,
-        'pi pi-wallet',
-        status === 'PENDING_PAYMENT' ? 'current' : 'done',
-      ),
-      this.timelineStep(
-        'Pago confirmado',
-        'Acreditamos el pago correctamente.',
-        o.paidAt,
-        'pi pi-check-circle',
-        status === 'PAID'
-          ? 'current'
-          : ['PREPARING', 'READY', 'DELIVERED'].includes(status)
-            ? 'done'
-            : 'upcoming',
-      ),
-      this.timelineStep(
-        'Preparando',
-        'Estamos armando tu pedido con criterio FEFO.',
-        o.preparedAt,
-        'pi pi-box',
-        status === 'PREPARING'
-          ? 'current'
-          : ['READY', 'DELIVERED'].includes(status)
-            ? 'done'
-            : 'upcoming',
-      ),
-      this.timelineStep(
-        'Listo para retirar',
-        `Te esperamos en la sucursal ${o.branchName}.`,
-        null,
-        'pi pi-map-marker',
-        status === 'READY' ? 'current' : status === 'DELIVERED' ? 'done' : 'upcoming',
-      ),
-      this.timelineStep(
-        'Entregado',
-        'Pedido retirado en sucursal. Gracias por elegir Lembas.',
-        o.deliveredAt,
-        'pi pi-shopping-bag',
-        status === 'DELIVERED' ? 'current' : 'upcoming',
-      ),
-    ];
-
-    if (status === 'CANCELLED') {
-      return [
-        normalFlow[0],
-        this.timelineStep(
-          'Cancelado',
-          'El pedido fue cancelado y cualquier stock afectado se revierte.',
-          o.cancelledAt,
-          'pi pi-times-circle',
-          'alert',
-        ),
-      ];
-    }
-
-    if (status === 'PAYMENT_FAILED') {
-      return [
-        normalFlow[0],
-        this.timelineStep(
-          'Pago rechazado',
-          'No se pudo confirmar el pago. Podés intentar nuevamente.',
-          null,
-          'pi pi-exclamation-triangle',
-          'alert',
-        ),
-      ];
-    }
-
-    return normalFlow;
-  });
-
-  /** Creates a timeline step with a consistent shape for the template. */
-  private timelineStep(
-    label: string,
-    description: string,
-    date: string | null,
-    icon: string,
-    state: TimelineStepState,
-  ): TimelineStep {
-    return { label, description, date, icon, state };
-  }
 
   ngOnInit(): void {
-    // Subscribe to the paramMap observable so navigating from /customer/orders/1
-    // to /customer/orders/2 (without unmounting the component) reloads the
-    // detail automatically.
-    this.route.paramMap
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((params) => {
-        const id = Number(params.get('id'));
-        if (!id) {
-          this.errorCode.set('ORDER_NOT_FOUND');
-          this.loading.set(false);
-          return;
-        }
-        this.loadOrder(id);
-      });
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const value = params.get('id');
+      const id = value === null ? NaN : Number(value);
+      if (!Number.isInteger(id) || id <= 0) {
+        this.invalidRoute.set('No se especifico un ID de pedido.');
+        return;
+      }
+      this.invalidRoute.set('');
+      this.store.load(id);
+    });
   }
 
-  /** Fetches the order detail from the backend. */
-  private loadOrder(id: number): void {
-    this.loading.set(true);
-    this.errorCode.set(null);
-    this.service.getOrder(id)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (data) => {
-          this.order.set(data);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          this.errorCode.set(err?.error?.code ?? 'UNKNOWN');
-          this.loading.set(false);
-        },
-      });
-  }
-
-  /** Navigates to the Mercado Pago checkout flow. */
   protected goToPayment(): void {
-    const current = this.order();
-    if (!current || this.paying()) {
-      return;
-    }
-    if (current.status !== 'PENDING_PAYMENT' && current.status !== 'PAYMENT_FAILED') {
-      return;
-    }
-    this.paying.set(true);
-    this.checkoutService.createPreference(current.id)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response) => {
-          if (response.initPoint) {
-            window.location.href = response.initPoint;
-            return;
-          }
-          this.paying.set(false);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'No se pudo iniciar el pago',
-            detail: 'Mercado Pago no devolvio una URL de redireccion.',
-          });
-        },
-        error: (err: unknown) => {
-          this.paying.set(false);
-          const code = (err as { error?: { code?: string } } | null)?.error?.code;
-          this.messageService.add({
-            severity: 'error',
-            summary: 'No se pudo iniciar el pago',
-            detail: this.errorMapping.getMessage(code ?? 'INTERNAL_ERROR'),
-          });
-        },
-      });
+    this.store.pay();
   }
 
-  /** Navigates back to the customer orders list. */
   protected backToOrders(): void {
     this.router.navigate(['/customer/orders']);
   }
 
-  /** Returns a human-readable label for the given order status. */
   protected statusLabel(status: OrderStatus): string {
     return orderStatusLabel(status);
   }
 
-  /** Maps the PrimeNG-style order status severity to the severity-pill tone vocabulary. */
   protected orderStatusTone(status: OrderStatus): SeverityPillTone {
-    return primeNgToTone(orderStatusSeverity(status));
+    return orderStatusTone(status);
   }
 
-  /** Returns a human-readable label for a payment status. */
-  protected paymentStatusLabel(status: PaymentStatus | string): string {
-    return paymentStatusLabel(status as PaymentStatus);
+  protected paymentStatusLabel(status: PaymentStatus): string {
+    return paymentStatusLabel(status);
   }
 
-  /** Returns the severity-pill tone for a payment status. */
-  protected paymentStatusTone(status: PaymentStatus | string): SeverityPillTone {
-    return primeNgToTone(paymentStatusSeverity(status as PaymentStatus));
+  protected paymentStatusTone(status: PaymentStatus): SeverityPillTone {
+    return paymentStatusTone(status);
   }
 
-  /** Returns a human-readable label for a payment method. */
-  protected paymentMethodLabel(method: PaymentMethod | string): string {
-    return method === 'CHECKOUT_PRO' ? 'Mercado Pago' : String(method);
-  }
-}
-
-/** Maps the PrimeNG severity keys emitted by the order/payment mappers to the severity-pill tones. */
-function primeNgToTone(severity: string | undefined): SeverityPillTone {
-  switch (severity) {
-    case 'success':
-      return 'success';
-    case 'warn':
-    case 'warning':
-      return 'warn';
-    case 'danger':
-    case 'error':
-      return 'danger';
-    default:
-      return 'neutral';
+  protected paymentMethodLabelFor(method: string): string {
+    return paymentMethodLabel(method);
   }
 }

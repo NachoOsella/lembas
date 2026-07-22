@@ -6,9 +6,8 @@ import java.util.List;
 /**
  * Result of planning a FEFO stock deduction for one product in one branch.
  *
- * <p>The plan lists which lots to deduct from, in FEFO order, and by how much.
- * The caller (typically {@code InventoryService.deductStock()}) applies the
- * plan inside a single transaction with pessimistic locking.</p>
+ * <p>The plan lists which lots to deduct from, in FEFO order, and by how much. The stock command
+ * boundary applies the plan inside a single transaction with pessimistic locking.</p>
  *
  * @param entries        ordered list of lot-level deductions
  * @param totalRequested quantity that was requested (must be &gt; 0)
@@ -16,11 +15,7 @@ import java.util.List;
  * @param fullySatisfied true when {@code totalRequested <= totalAvailable}
  */
 public record DeductionPlan(
-        List<DeductionEntry> entries,
-        BigDecimal totalRequested,
-        BigDecimal totalAvailable,
-        boolean fullySatisfied
-) {
+        List<DeductionEntry> entries, BigDecimal totalRequested, BigDecimal totalAvailable, boolean fullySatisfied) {
 
     /**
      * One lot-level deduction inside a FEFO plan.
@@ -34,7 +29,5 @@ public record DeductionPlan(
             Long stockLotId,
             BigDecimal quantityToDeduct,
             BigDecimal lotAvailableBefore,
-            BigDecimal lotAvailableAfter
-    ) {
-    }
+            BigDecimal lotAvailableAfter) {}
 }

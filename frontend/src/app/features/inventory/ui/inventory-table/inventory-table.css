@@ -1,0 +1,13 @@
+.inventory-qty {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  align-items: center;
+  justify-content: flex-end;
+}

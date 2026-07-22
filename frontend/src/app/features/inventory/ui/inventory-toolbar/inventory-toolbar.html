@@ -1,0 +1,29 @@
+<div class="table-toolbar__info">
+  <p class="table-toolbar__kicker">Stock disponible</p>
+  <h2 class="table-toolbar__title">Productos con stock</h2>
+</div>
+<div class="table-toolbar__actions">
+  <div class="table-toolbar__filters">
+    <app-search-bar
+      [value]="search()"
+      placeholder="Buscar por producto..."
+      (search)="searchChanged.emit($event)"
+      (clear)="searchChanged.emit('')"
+    />
+    <app-select
+      [value]="branchId()"
+      (valueChange)="branchChanged.emit($event)"
+      [options]="branchOptions()"
+      placeholder="Sucursal"
+      [showClear]="true"
+    />
+    <div class="inventory-expiring-toggle">
+      <app-toggle-switch
+        [checked]="expiringSoon()"
+        (checkedChange)="expiringSoonChanged.emit($event)"
+        [ariaLabel]="'Filtrar solo productos proximos a vencer'"
+      />
+      <label class="inventory-expiring-label">Prox. a vencer</label>
+    </div>
+  </div>
+</div>

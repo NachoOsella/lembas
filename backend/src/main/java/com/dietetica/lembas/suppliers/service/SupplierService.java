@@ -1,7 +1,7 @@
 package com.dietetica.lembas.suppliers.service;
 
+import com.dietetica.lembas.catalog.api.ProductLookup;
 import com.dietetica.lembas.catalog.model.Product;
-import com.dietetica.lembas.catalog.repository.ProductRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.suppliers.dto.SupplierDto;
 import com.dietetica.lembas.suppliers.dto.SupplierProductCostHistoryDto;
@@ -14,6 +14,8 @@ import com.dietetica.lembas.suppliers.model.SupplierProductCostHistory;
 import com.dietetica.lembas.suppliers.repository.SupplierProductCostHistoryRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierProductRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierRepository;
+import java.math.BigDecimal;
+import java.util.Locale;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,27 +24,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.Locale;
-
 /** Application service for suppliers, supplier products, and replacement cost history. */
 @Service
 public class SupplierService {
     private final SupplierRepository supplierRepository;
     private final SupplierProductRepository supplierProductRepository;
     private final SupplierProductCostHistoryRepository costHistoryRepository;
-    private final ProductRepository productRepository;
+    private final ProductLookup productLookup;
 
     public SupplierService(
             SupplierRepository supplierRepository,
             SupplierProductRepository supplierProductRepository,
             SupplierProductCostHistoryRepository costHistoryRepository,
-            ProductRepository productRepository
-    ) {
+            ProductLookup productLookup) {
         this.supplierRepository = supplierRepository;
         this.supplierProductRepository = supplierProductRepository;
         this.costHistoryRepository = costHistoryRepository;
-        this.productRepository = productRepository;
+        this.productLookup = productLookup;
     }
 
     /** Lists active suppliers with optional text search. */
@@ -50,9 +48,13 @@ public class SupplierService {
     public Page<SupplierDto> listSuppliers(String search, Pageable pageable) {
         String normalized = normalizeSearch(search);
         if (normalized == null) {
-            return supplierRepository.findByActiveTrue(mapSupplierSort(pageable)).map(this::toDto);
+            return supplierRepository
+                    .findByActiveTrue(mapSupplierSort(pageable))
+                    .map(this::toDto);
         }
-        return supplierRepository.searchActive(normalized, mapSupplierSort(pageable)).map(this::toDto);
+        return supplierRepository
+                .searchActive(normalized, mapSupplierSort(pageable))
+                .map(this::toDto);
     }
 
     /** Returns one active supplier for edit screens. */
@@ -88,13 +90,15 @@ public class SupplierService {
 
     /** Lists active product-supplier associations. */
     @Transactional(readOnly = true)
-    public Page<SupplierProductDto> listSupplierProducts(Long productId, Long supplierId, String search, Pageable pageable) {
+    public Page<SupplierProductDto> listSupplierProducts(
+            Long productId, Long supplierId, String search, Pageable pageable) {
         String normalized = normalizeSearch(search);
         Page<SupplierProduct> page;
         if (normalized == null) {
             page = supplierProductRepository.findByActive(productId, supplierId, mapSupplierProductSort(pageable));
         } else {
-            page = supplierProductRepository.searchActive(productId, supplierId, normalized, mapSupplierProductSort(pageable));
+            page = supplierProductRepository.searchActive(
+                    productId, supplierId, normalized, mapSupplierProductSort(pageable));
         }
         return page.map(this::toDto);
     }
@@ -132,7 +136,8 @@ public class SupplierService {
         supplierProduct.setSupplier(supplier);
         applySupplierProductRequest(supplierProduct, request);
         if (oldCost == null || oldCost.compareTo(supplierProduct.getCurrentCost()) != 0) {
-            costHistoryRepository.save(costHistory(supplierProduct, oldCost, supplierProduct.getCurrentCost(), "MANUAL_UPDATE"));
+            costHistoryRepository.save(
+                    costHistory(supplierProduct, oldCost, supplierProduct.getCurrentCost(), "MANUAL_UPDATE"));
         }
         return toDto(supplierProduct);
     }
@@ -148,7 +153,8 @@ public class SupplierService {
     @Transactional(readOnly = true)
     public Page<SupplierProductCostHistoryDto> listCostHistory(Long supplierProductId, Pageable pageable) {
         findSupplierProduct(supplierProductId);
-        return costHistoryRepository.findBySupplierProductIdOrderByValidFromDesc(supplierProductId, pageable)
+        return costHistoryRepository
+                .findBySupplierProductIdOrderByValidFromDesc(supplierProductId, pageable)
                 .map(this::toDto);
     }
 
@@ -170,9 +176,11 @@ public class SupplierService {
     private void validateSupplierProductUnique(Long productId, Long supplierId, Long currentId) {
         boolean duplicated = currentId == null
                 ? supplierProductRepository.existsByProductIdAndSupplierIdAndActiveTrue(productId, supplierId)
-                : supplierProductRepository.existsByProductIdAndSupplierIdAndActiveTrueAndIdNot(productId, supplierId, currentId);
+                : supplierProductRepository.existsByProductIdAndSupplierIdAndActiveTrueAndIdNot(
+                        productId, supplierId, currentId);
         if (duplicated) {
-            throw new DomainException("SUPPLIER_PRODUCT_DUPLICATED", HttpStatus.CONFLICT, "Product already associated with supplier");
+            throw new DomainException(
+                    "SUPPLIER_PRODUCT_DUPLICATED", HttpStatus.CONFLICT, "Product already associated with supplier");
         }
     }
 
@@ -193,7 +201,8 @@ public class SupplierService {
     }
 
     /** Builds a replacement cost history row for manual supplier-product changes. */
-    private SupplierProductCostHistory costHistory(SupplierProduct supplierProduct, BigDecimal oldCost, BigDecimal newCost, String source) {
+    private SupplierProductCostHistory costHistory(
+            SupplierProduct supplierProduct, BigDecimal oldCost, BigDecimal newCost, String source) {
         SupplierProductCostHistory history = new SupplierProductCostHistory();
         history.setSupplierProduct(supplierProduct);
         history.setOldCost(oldCost);
@@ -206,19 +215,24 @@ public class SupplierService {
 
     /** Finds an active supplier or throws the uniform domain error. */
     private Supplier findSupplier(Long id) {
-        return supplierRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(() -> new DomainException("SUPPLIER_NOT_FOUND", HttpStatus.NOT_FOUND, "Supplier not found"));
+        return supplierRepository
+                .findByIdAndActiveTrue(id)
+                .orElseThrow(
+                        () -> new DomainException("SUPPLIER_NOT_FOUND", HttpStatus.NOT_FOUND, "Supplier not found"));
     }
 
     /** Finds an active product-supplier association or throws the uniform domain error. */
     private SupplierProduct findSupplierProduct(Long id) {
-        return supplierProductRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(() -> new DomainException("SUPPLIER_PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Supplier product not found"));
+        return supplierProductRepository
+                .findByIdAndActiveTrue(id)
+                .orElseThrow(() -> new DomainException(
+                        "SUPPLIER_PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Supplier product not found"));
     }
 
     /** Finds an active product or throws the uniform domain error. */
     private Product findProduct(Long id) {
-        return productRepository.findByIdAndActiveTrue(id)
+        return productLookup
+                .findActiveById(id)
                 .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
     }
 
@@ -234,11 +248,12 @@ public class SupplierService {
         }
         Sort sort = Sort.unsorted();
         for (Sort.Order order : pageable.getSort()) {
-            String property = switch (order.getProperty()) {
-                case "productName" -> "product.name";
-                case "supplierName" -> "supplier.name";
-                default -> order.getProperty();
-            };
+            String property =
+                    switch (order.getProperty()) {
+                        case "productName" -> "product.name";
+                        case "supplierName" -> "supplier.name";
+                        default -> order.getProperty();
+                    };
             sort = sort.and(Sort.by(new Sort.Order(order.getDirection(), property)));
         }
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
@@ -256,7 +271,13 @@ public class SupplierService {
 
     /** Maps a supplier entity to API DTO. */
     private SupplierDto toDto(Supplier supplier) {
-        return new SupplierDto(supplier.getId(), supplier.getName(), supplier.getContactName(), supplier.getPhone(), supplier.getEmail(), supplier.getCuit());
+        return new SupplierDto(
+                supplier.getId(),
+                supplier.getName(),
+                supplier.getContactName(),
+                supplier.getPhone(),
+                supplier.getEmail(),
+                supplier.getCuit());
     }
 
     /** Maps a product-supplier entity to API DTO. */
@@ -272,8 +293,7 @@ public class SupplierService {
                 supplier.getName(),
                 supplierProduct.getSupplierSku(),
                 supplierProduct.getCurrentCost(),
-                supplierProduct.isPreferred()
-        );
+                supplierProduct.isPreferred());
     }
 
     /** Maps a cost-history entity to API DTO. */
@@ -285,7 +305,6 @@ public class SupplierService {
                 history.getNewCost(),
                 history.getSource(),
                 history.getValidFrom(),
-                history.getCreatedAt()
-        );
+                history.getCreatedAt());
     }
 }

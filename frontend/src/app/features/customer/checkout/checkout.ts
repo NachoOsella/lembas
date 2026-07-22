@@ -2,22 +2,35 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
-import { AuthService } from '../../../core/services/auth';
-import { Cart, CartItem } from '../../../core/services/cart';
-import { CurrencyArPipe } from '../../../core/pipes/currency-ar.pipe';
-import { CustomerCheckoutService } from '../../../core/services/customer-checkout';
-import { CustomerOrderService, OrderCreated } from '../../../core/services/customer-order';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { EmptyState } from '../../../shared/components/empty-state/empty-state';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { QuantityStepper } from '../../../shared/components/quantity-stepper/quantity-stepper';
+import { AuthService } from '@core/services/auth';
+import type { CartItem } from '@features/checkout/public-api';
+import { Cart } from '@features/checkout/public-api';
+import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
+import { CustomerCheckoutService } from '@features/checkout/data-access/customer-checkout';
+import type { OrderCreated } from '@features/orders/data-access/customer-order';
+import { CustomerOrderService } from '@features/orders/data-access/customer-order';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { getApiError } from '@shared/types/api-error';
+import { QuantityStepper } from '@shared/components/quantity-stepper/quantity-stepper';
 
 @Component({
   selector: 'app-checkout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, AppButton, AppEyebrow, EmptyState, ErrorAlert, QuantityStepper, CurrencyArPipe],
+  imports: [
+    RouterLink,
+    AppButton,
+    AppEyebrow,
+    AppSelect,
+    EmptyState,
+    ErrorAlert,
+    QuantityStepper,
+    CurrencyArPipe,
+  ],
   templateUrl: './checkout.html',
   styleUrl: './checkout.css',
 })
@@ -82,6 +95,16 @@ export class Checkout {
     () => this.branchSelection.selectedBranchId() == null,
   );
 
+  /** Options for changing the pickup branch before order confirmation. */
+  protected readonly branchOptions = computed(() =>
+    this.branchSelection.branches().map((branch) => ({ label: branch.name, value: branch.id })),
+  );
+
+  /** Updates the pickup branch without leaving checkout. */
+  protected onBranchChange(branchId: number | null): void {
+    this.branchSelection.selectBranch(branchId);
+  }
+
   /** Returns the maximum quantity allowed for an item based on known stock. */
   protected maxQuantity(item: CartItem): number {
     return item.availableStock != null ? Math.max(1, Math.floor(item.availableStock)) : 99;
@@ -107,9 +130,16 @@ export class Checkout {
     this.submitting.set(true);
     this.errorCode.set(null);
 
+    const branchId = this.branchSelection.selectedBranchId();
+    if (branchId === null) {
+      this.errorCode.set('BRANCH_NOT_FOUND');
+      this.submitting.set(false);
+      return;
+    }
+
     this.customerOrderService
       .createOrder({
-        branchId: this.branchSelection.selectedBranchId()!,
+        branchId,
         items: this.cart.items().map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
@@ -128,7 +158,7 @@ export class Checkout {
           });
         },
         error: (error) => {
-          this.errorCode.set(error?.error?.code ?? 'UNKNOWN');
+          this.errorCode.set(getCheckoutErrorCode(error));
           this.submitting.set(false);
         },
       });
@@ -152,7 +182,7 @@ export class Checkout {
         window.location.href = preference.initPoint;
       },
       error: (error) => {
-        this.errorCode.set(error?.error?.code ?? 'PAYMENT_PREFERENCE_FAILED');
+        this.errorCode.set(getCheckoutErrorCode(error, 'PAYMENT_PREFERENCE_FAILED'));
         this.redirecting.set(false);
       },
     });
@@ -162,4 +192,18 @@ export class Checkout {
   protected continueShopping(): void {
     this.router.navigate(['/store/products']);
   }
+}
+
+function getCheckoutErrorCode(error: unknown, fallback = 'UNKNOWN'): string {
+  const apiError = getApiError(error);
+  if (apiError) return apiError.code;
+
+  if (typeof error !== 'object' || error === null || !('error' in error)) {
+    return fallback;
+  }
+  const payload = error.error;
+  if (typeof payload !== 'object' || payload === null || !('code' in payload)) {
+    return fallback;
+  }
+  return typeof payload.code === 'string' && payload.code.length > 0 ? payload.code : fallback;
 }

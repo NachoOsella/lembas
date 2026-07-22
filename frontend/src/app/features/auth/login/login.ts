@@ -1,19 +1,21 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { form, FormField, submit, required, email, minLength } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 
-import { AuthService, LoginRequest } from '../../../core/services/auth';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { ApiErrorResponse } from '../../../shared/models/api-error';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { AppInput } from '../../../shared/components/app-input/app-input';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppToast } from '../../../shared/components/app-toast/app-toast';
-import { PasswordToggle } from '../../../shared/components/password-toggle/password-toggle';
+import type { LoginRequest } from '@core/services/auth';
+import { AuthService } from '@core/services/auth';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import type { ApiErrorResponse } from '@shared/types/api-error';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { AppInput } from '@shared/components/app-input/app-input';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { PasswordToggle } from '@shared/components/password-toggle/password-toggle';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-login',
   imports: [ErrorAlert, AppToast, FormField, RouterLink, AppInput, AppButton, PasswordToggle],
   templateUrl: './login.html',
@@ -46,8 +48,8 @@ export class Login {
   });
 
   /** The return URL passed by route guards, if any. Preserved so the register link carries it. */
-  protected readonly returnUrl = computed(() =>
-    this.route.snapshot.queryParamMap.get('returnUrl') ?? null,
+  protected readonly returnUrl = computed(
+    () => this.route.snapshot.queryParamMap.get('returnUrl') ?? null,
   );
 
   /** Whether the email field has user input and currently fails validation. */

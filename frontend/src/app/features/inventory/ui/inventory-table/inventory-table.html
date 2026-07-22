@@ -1,0 +1,55 @@
+<app-data-table
+  [data]="products()"
+  [columns]="columns()"
+  [loading]="loading()"
+  [sortable]="true"
+  [paginated]="true"
+  [lazy]="true"
+  [totalRecords]="totalRecords()"
+  [first]="first()"
+  [rows]="rows()"
+  [rowsPerPageOptions]="[10, 20, 50]"
+  (pageChange)="pageChanged.emit($event)"
+  (sortChange)="sortChanged.emit($event)"
+  emptyTitle="No hay stock disponible"
+  emptyDescription="Registra una recepcion de mercaderia para que aparezcan los primeros productos con stock."
+  [emptyActionLabel]="canManage() ? 'Ir a recepciones' : null"
+  (emptyAction)="emptyAction.emit()"
+>
+  <ng-template #toolbar>
+    <ng-content />
+  </ng-template>
+
+  <ng-template #body let-item>
+    <tr>
+      <td>
+        <strong>{{ item.productName }}</strong>
+      </td>
+      <td>{{ item.branchName }}</td>
+      <td class="inventory-qty">{{ formatQuantity(item.totalAvailable) }}</td>
+      <td>{{ formatDate(item.nearestExpirationDate) }}</td>
+      @if (canManage()) {
+        <td>
+          <div class="table-actions">
+            <app-button
+              variant="ghost"
+              size="sm"
+              icon="pi pi-list"
+              [iconOnly]="true"
+              [ariaLabel]="'Ver lotes de ' + item.productName + ' en ' + item.branchName"
+              (click)="viewLots.emit(item)"
+            />
+            <app-button
+              variant="ghost"
+              size="sm"
+              icon="pi pi-sliders-v"
+              [iconOnly]="true"
+              [ariaLabel]="'Ajustar stock de ' + item.productName"
+              (click)="adjust.emit(item)"
+            />
+          </div>
+        </td>
+      }
+    </tr>
+  </ng-template>
+</app-data-table>

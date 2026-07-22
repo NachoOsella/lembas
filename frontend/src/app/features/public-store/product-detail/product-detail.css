@@ -38,6 +38,24 @@
   .product-detail-hero__image {
     aspect-ratio: 1 / 1;
   }
+
+  .product-detail-hero__info {
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+  }
+}
+
+.product-detail-hero__purchase {
+  align-items: stretch;
+  padding: 1rem;
+  border: 1px solid var(--color-border-warm);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-warmest);
+}
+
+.product-detail-hero__purchase app-quantity-stepper {
+  align-self: center;
 }
 
 /* ── Add-to-order button: generous padding per DESING spec ── */

@@ -67,7 +67,9 @@
 
     <ng-template #body let-order>
       <tr>
-        <td><strong>#{{ order.id }}</strong></td>
+        <td>
+          <strong>#{{ order.id }}</strong>
+        </td>
         <td>{{ order.supplierName }}</td>
         <td>{{ order.branchName }}</td>
         <td><app-status-badge [status]="order.status" [config]="statusBadges" /></td>
@@ -76,17 +78,52 @@
         <td>
           <div class="table-actions">
             @if (canEdit(order)) {
-              <app-button variant="ghost" size="sm" icon="pi pi-pencil" [iconOnly]="true" [ariaLabel]="'Editar orden ' + order.id" (click)="openEdit(order)" />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-pencil"
+                [iconOnly]="true"
+                [ariaLabel]="'Editar orden ' + order.id"
+                (click)="openEdit(order)"
+              />
             }
             @if (canConfirm(order)) {
-              <app-button variant="ghost" size="sm" icon="pi pi-check" [iconOnly]="true" [ariaLabel]="'Confirmar orden ' + order.id" (click)="confirm(order)" />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-check"
+                [iconOnly]="true"
+                [ariaLabel]="'Confirmar orden ' + order.id"
+                (click)="confirm(order)"
+              />
             }
             @if (canSend(order)) {
-              <app-button variant="ghost" size="sm" icon="pi pi-send" [iconOnly]="true" [ariaLabel]="'Marcar enviada ' + order.id" (click)="markSent(order)" />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-send"
+                [iconOnly]="true"
+                [ariaLabel]="'Marcar enviada ' + order.id"
+                (click)="markSent(order)"
+              />
             }
-            <app-button variant="ghost" size="sm" icon="pi pi-download" [iconOnly]="true" [ariaLabel]="'Descargar PDF orden ' + order.id" (click)="downloadPdf(order)" />
+            <app-button
+              variant="ghost"
+              size="sm"
+              icon="pi pi-download"
+              [iconOnly]="true"
+              [ariaLabel]="'Descargar PDF orden ' + order.id"
+              (click)="downloadPdf(order)"
+            />
             @if (canCancel(order)) {
-              <app-button variant="ghost" size="sm" icon="pi pi-times" [iconOnly]="true" [ariaLabel]="'Cancelar orden ' + order.id" (click)="openCancel(order)" />
+              <app-button
+                variant="ghost"
+                size="sm"
+                icon="pi pi-times"
+                [iconOnly]="true"
+                [ariaLabel]="'Cancelar orden ' + order.id"
+                (click)="openCancel(order)"
+              />
             }
           </div>
         </td>
@@ -95,11 +132,24 @@
   </app-data-table>
 </div>
 
-<app-modal [(visible)]="dialogVisible" [title]="editingOrder() ? 'Editar orden de compra' : 'Nueva orden de compra'" [width]="'min(64rem, 96vw)'">
+<app-modal
+  [(visible)]="dialogVisible"
+  [title]="editingOrder() ? 'Editar orden de compra' : 'Nueva orden de compra'"
+  [width]="'min(64rem, 96vw)'"
+>
   <form class="purchase-order-form" (ngSubmit)="save()" novalidate>
-    <app-form-section [index]="1" title="Datos generales" description="Selecciona proveedor, sucursal y fecha esperada.">
+    <app-form-section
+      [index]="1"
+      title="Datos generales"
+      description="Selecciona proveedor, sucursal y fecha esperada."
+    >
       <div class="purchase-order-form__grid">
-        <app-control-field label="Proveedor" forId="po-supplier" [required]="true" [error]="submitted() && !supplierId() ? 'Selecciona un proveedor.' : ''">
+        <app-control-field
+          label="Proveedor"
+          forId="po-supplier"
+          [required]="true"
+          [error]="submitted() && !supplierId() ? 'Selecciona un proveedor.' : ''"
+        >
           <app-select
             inputId="po-supplier"
             [value]="supplierId()"
@@ -112,7 +162,12 @@
           />
         </app-control-field>
 
-        <app-control-field label="Sucursal" forId="po-branch" [required]="true" [error]="submitted() && !branchId() ? 'Selecciona una sucursal.' : ''">
+        <app-control-field
+          label="Sucursal"
+          forId="po-branch"
+          [required]="true"
+          [error]="submitted() && !branchId() ? 'Selecciona una sucursal.' : ''"
+        >
           <app-select
             inputId="po-branch"
             [value]="branchId()"
@@ -146,9 +201,17 @@
       </div>
     </app-form-section>
 
-    <app-form-section [index]="2" title="Items" description="Agrega productos asociados al proveedor. El costo se precarga y puede editarse.">
+    <app-form-section
+      [index]="2"
+      title="Items"
+      description="Agrega productos asociados al proveedor. El costo se precarga y puede editarse."
+    >
       <div class="purchase-order-item-picker">
-        <app-control-field label="Producto del proveedor" forId="po-item-product" hint="Solo se muestran productos asociados al proveedor seleccionado.">
+        <app-control-field
+          label="Producto del proveedor"
+          forId="po-item-product"
+          hint="Solo se muestran productos asociados al proveedor seleccionado."
+        >
           <app-select
             inputId="po-item-product"
             [value]="selectedSupplierProductId()"
@@ -193,22 +256,49 @@
           <tr>
             <td>
               <strong>{{ item.productName }}</strong>
-              <small class="purchase-order-item-muted">{{ item.supplierSku || 'Sin SKU proveedor' }}</small>
+              <small class="purchase-order-item-muted">{{
+                item.supplierSku || 'Sin SKU proveedor'
+              }}</small>
             </td>
             <td>
-              <app-control-field label="Cantidad" [error]="submitted() && (item.quantityOrdered ?? 0) <= 0 ? 'Mayor a cero.' : ''">
-                <app-input-number [(value)]="item.quantityOrdered" mode="decimal" [min]="0" [maxFractionDigits]="3" />
+              <app-control-field
+                label="Cantidad"
+                [error]="submitted() && (item.quantityOrdered ?? 0) <= 0 ? 'Mayor a cero.' : ''"
+              >
+                <app-input-number
+                  [(value)]="item.quantityOrdered"
+                  mode="decimal"
+                  [min]="0"
+                  [maxFractionDigits]="3"
+                />
               </app-control-field>
             </td>
             <td>
-              <app-control-field label="Costo unitario" [error]="submitted() && (item.unitCost ?? 0) < 0 ? 'No puede ser negativo.' : ''">
-                <app-input-number [(value)]="item.unitCost" mode="currency" currency="ARS" locale="es-AR" [min]="0" [maxFractionDigits]="2" />
+              <app-control-field
+                label="Costo unitario"
+                [error]="submitted() && (item.unitCost ?? 0) < 0 ? 'No puede ser negativo.' : ''"
+              >
+                <app-input-number
+                  [(value)]="item.unitCost"
+                  mode="currency"
+                  currency="ARS"
+                  locale="es-AR"
+                  [min]="0"
+                  [maxFractionDigits]="2"
+                />
               </app-control-field>
             </td>
             <td>{{ formatPrice(itemSubtotal(item)) }}</td>
             <td>
               <div class="table-actions">
-                <app-button variant="ghost" size="sm" icon="pi pi-trash" [iconOnly]="true" [ariaLabel]="'Quitar ' + item.productName" (click)="removeItem(item.supplierProductId)" />
+                <app-button
+                  variant="ghost"
+                  size="sm"
+                  icon="pi pi-trash"
+                  [iconOnly]="true"
+                  [ariaLabel]="'Quitar ' + item.productName"
+                  (click)="removeItem(item.supplierProductId)"
+                />
               </div>
             </td>
           </tr>
@@ -222,13 +312,19 @@
     </app-form-section>
 
     <div class="purchase-order-form__actions">
-      <app-button type="button" variant="secondary" (click)="dialogVisible.set(false)">Cancelar</app-button>
+      <app-button type="button" variant="secondary" (click)="dialogVisible.set(false)"
+        >Cancelar</app-button
+      >
       <app-button type="submit" [loading]="saving()">Guardar orden</app-button>
     </div>
   </form>
 </app-modal>
 
-<app-modal [(visible)]="cancelDialogVisible" title="Cancelar orden de compra" [width]="'min(32rem, 92vw)'">
+<app-modal
+  [(visible)]="cancelDialogVisible"
+  title="Cancelar orden de compra"
+  [width]="'min(32rem, 92vw)'"
+>
   <div class="purchase-order-cancel">
     <app-form-field
       label="Motivo"

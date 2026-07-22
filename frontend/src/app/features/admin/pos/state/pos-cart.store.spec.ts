@@ -7,7 +7,7 @@ describe('PosCartStore', () => {
   let store: PosCartStore;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [PosCartStore] });
     store = TestBed.inject(PosCartStore);
   });
 

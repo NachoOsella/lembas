@@ -45,7 +45,15 @@
     >
       Limpiar
     </app-button>
-    <app-data-export slot="actions" [data]="exportData()" />
+    <app-button
+      slot="actions"
+      variant="primary"
+      size="sm"
+      icon="pi pi-refresh"
+      [loading]="loading()"
+      (click)="onRefresh()"
+      >Actualizar</app-button
+    ><app-data-export slot="actions" [data]="exportData()" />
   </app-report-filter-bar>
 
   <section class="cash-history__section" aria-label="Listado de sesiones">

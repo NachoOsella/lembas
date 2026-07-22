@@ -1,32 +1,30 @@
 package com.dietetica.lembas.reports.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
+
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import com.dietetica.lembas.cash.service.CashService;
 import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.reports.repository.ReportQueryRepository;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the pure helpers inside {@link ReportService}.
@@ -41,12 +39,16 @@ class ReportServiceTest {
 
     @Mock
     private ReportQueryRepository reportRepository;
+
     @Mock
     private SecurityContextHelper securityContextHelper;
+
     @Mock
-    private BranchRepository branchRepository;
+    private BranchQuery branchQuery;
+
     @Mock
     private CashService cashService;
+
     @Mock
     private PaymentRepository paymentRepository;
 
@@ -68,17 +70,20 @@ class ReportServiceTest {
 
     @Test
     void trendReturnsUpWhenCurrentGreater() {
-        assertThat(ReportService.trend(new BigDecimal("120"), new BigDecimal("100"))).isEqualTo("UP");
+        assertThat(ReportService.trend(new BigDecimal("120"), new BigDecimal("100")))
+                .isEqualTo("UP");
     }
 
     @Test
     void trendReturnsDownWhenCurrentLower() {
-        assertThat(ReportService.trend(new BigDecimal("80"), new BigDecimal("100"))).isEqualTo("DOWN");
+        assertThat(ReportService.trend(new BigDecimal("80"), new BigDecimal("100")))
+                .isEqualTo("DOWN");
     }
 
     @Test
     void trendReturnsFlatWhenEqual() {
-        assertThat(ReportService.trend(new BigDecimal("100"), new BigDecimal("100"))).isEqualTo("FLAT");
+        assertThat(ReportService.trend(new BigDecimal("100"), new BigDecimal("100")))
+                .isEqualTo("FLAT");
     }
 
     @Test
@@ -96,7 +101,8 @@ class ReportServiceTest {
 
     @Test
     void percentageDiffReturnsNullWhenPreviousZeroAndCurrentZero() {
-        assertThat(ReportService.percentageDiff(new BigDecimal("0"), new BigDecimal("0"))).isNull();
+        assertThat(ReportService.percentageDiff(new BigDecimal("0"), new BigDecimal("0")))
+                .isNull();
     }
 
     @Test
@@ -109,18 +115,18 @@ class ReportServiceTest {
     void salesReportAcceptsSqlDatesReturnedByPostgresNativeQuery() {
         when(securityContextHelper.getCurrentUser()).thenReturn(admin);
         when(reportRepository.totalAndAverageRevenue(any(), any(), isNull()))
-                .thenReturn(new BigDecimal[]{new BigDecimal("150.00"), new BigDecimal("75.00")});
+                .thenReturn(new BigDecimal[] {new BigDecimal("150.00"), new BigDecimal("75.00")});
         when(reportRepository.countConfirmedOrders(any(), any(), isNull())).thenReturn(2L);
         when(reportRepository.countCancelledOrders(any(), any(), isNull())).thenReturn(0L);
         when(reportRepository.costOfGoodsSold(any(), any(), isNull())).thenReturn(new BigDecimal("90.00"));
-        when(reportRepository.salesByDay(any(), any(), isNull())).thenReturn(List.<Object[]>of(
-                new Object[]{java.sql.Date.valueOf("2026-07-01"), new BigDecimal("150.00"), 2L}));
+        when(reportRepository.salesByDay(any(), any(), isNull()))
+                .thenReturn(List.<Object[]>of(
+                        new Object[] {java.sql.Date.valueOf("2026-07-01"), new BigDecimal("150.00"), 2L}));
         when(reportRepository.salesByMethod(any(), any(), isNull())).thenReturn(List.of());
         when(reportRepository.salesByCategory(any(), any(), isNull())).thenReturn(List.of());
         when(reportRepository.topProducts(any(), any(), isNull(), anyInt())).thenReturn(List.of());
 
-        var report = reportService.getSalesReport(
-                LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 1), null);
+        var report = reportService.getSalesReport(LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 1), null);
 
         assertThat(report.series()).hasSize(1);
         assertThat(report.series().getFirst().value()).isEqualByComparingTo("150.00");
@@ -133,19 +139,17 @@ class ReportServiceTest {
     @Test
     void employeeReportMergesPosAndCashActivityByEmployee() {
         when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-        when(reportRepository.employeePosPerformance(any(), any(), isNull())).thenReturn(List.<Object[]>of(
-                new Object[]{10L, "Carla", "Cajero", Role.EMPLOYEE, 2L,
-                        new BigDecimal("3000.00"), new BigDecimal("1500.00")}
-        ));
-        when(reportRepository.employeeCashOpenPerformance(any(), any(), isNull())).thenReturn(List.<Object[]>of(
-                new Object[]{10L, "Carla", "Cajero", Role.EMPLOYEE, 1L}
-        ));
-        when(reportRepository.employeeCashClosePerformance(any(), any(), isNull())).thenReturn(List.<Object[]>of(
-                new Object[]{10L, "Carla", "Cajero", Role.EMPLOYEE, 1L, new BigDecimal("50.00")}
-        ));
+        when(reportRepository.employeePosPerformance(any(), any(), isNull()))
+                .thenReturn(List.<Object[]>of(new Object[] {
+                    10L, "Carla", "Cajero", Role.EMPLOYEE, 2L, new BigDecimal("3000.00"), new BigDecimal("1500.00")
+                }));
+        when(reportRepository.employeeCashOpenPerformance(any(), any(), isNull()))
+                .thenReturn(List.<Object[]>of(new Object[] {10L, "Carla", "Cajero", Role.EMPLOYEE, 1L}));
+        when(reportRepository.employeeCashClosePerformance(any(), any(), isNull()))
+                .thenReturn(List.<Object[]>of(
+                        new Object[] {10L, "Carla", "Cajero", Role.EMPLOYEE, 1L, new BigDecimal("50.00")}));
 
-        var report = reportService.getEmployeeReport(
-                LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 31), null);
+        var report = reportService.getEmployeeReport(LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 31), null);
 
         assertThat(report.employees()).hasSize(1);
         var employee = report.employees().getFirst();
@@ -178,10 +182,10 @@ class ReportServiceTest {
     @Test
     void getDashboardAsAdminWithValidBranchScopesReport() {
         when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-        when(branchRepository.existsByIdAndActiveTrue(3L)).thenReturn(true);
+        when(branchQuery.existsActive(3L)).thenReturn(true);
         // Branch entity is constructed via reflection; the name is set directly.
         com.dietetica.lembas.shared.branch.model.Branch b = newBranch(3L, "Centro");
-        when(branchRepository.findById(3L)).thenReturn(java.util.Optional.of(b));
+        when(branchQuery.findById(3L)).thenReturn(java.util.Optional.of(b));
         stubEmptyAggregations();
         when(reportRepository.countActiveProducts()).thenReturn(0L);
         when(reportRepository.countActiveSuppliers()).thenReturn(0L);
@@ -194,7 +198,7 @@ class ReportServiceTest {
     @Test
     void getDashboardAsAdminWithInvalidBranchThrows404() {
         when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-        when(branchRepository.existsByIdAndActiveTrue(99L)).thenReturn(false);
+        when(branchQuery.existsActive(99L)).thenReturn(false);
 
         assertThatThrownBy(() -> reportService.getDashboard(null, 99L))
                 .isInstanceOf(DomainException.class)
@@ -204,7 +208,7 @@ class ReportServiceTest {
     @Test
     void getDashboardAsManagerForcesOwnBranch() {
         when(securityContextHelper.getCurrentUser()).thenReturn(manager);
-        when(branchRepository.findById(7L)).thenReturn(java.util.Optional.of(newBranch(7L, "Sucursal 7")));
+        when(branchQuery.findById(7L)).thenReturn(java.util.Optional.of(newBranch(7L, "Sucursal 7")));
         stubEmptyAggregations();
         when(reportRepository.countActiveProducts()).thenReturn(0L);
         when(reportRepository.countActiveSuppliers()).thenReturn(0L);
@@ -220,7 +224,7 @@ class ReportServiceTest {
         when(securityContextHelper.getCurrentUser()).thenReturn(manager);
         // manager already has branchId=7, so we should not throw for own branch
         // but the test verifies behaviour for branchId=null:
-        when(branchRepository.findById(7L)).thenReturn(java.util.Optional.of(newBranch(7L, "Sucursal 7")));
+        when(branchQuery.findById(7L)).thenReturn(java.util.Optional.of(newBranch(7L, "Sucursal 7")));
         stubEmptyAggregations();
         when(reportRepository.countActiveProducts()).thenReturn(0L);
         when(reportRepository.countActiveSuppliers()).thenReturn(0L);
@@ -245,13 +249,15 @@ class ReportServiceTest {
 
     private void stubEmptyAggregations() {
         when(reportRepository.totalAndAverageRevenue(any(), any(), any()))
-                .thenReturn(new BigDecimal[]{BigDecimal.ZERO.setScale(2), BigDecimal.ZERO.setScale(2)});
+                .thenReturn(new BigDecimal[] {BigDecimal.ZERO.setScale(2), BigDecimal.ZERO.setScale(2)});
         when(reportRepository.countConfirmedOrders(any(), any(), any())).thenReturn(0L);
         when(reportRepository.countPendingOrders(any())).thenReturn(0L);
         when(reportRepository.lowStockProducts(any())).thenReturn(java.util.List.of());
         when(reportRepository.expiringLots(eq(30), any())).thenReturn(java.util.List.of());
         when(reportRepository.revenueByType(any(), any(), any())).thenReturn(java.util.List.of());
-        lenient().when(reportRepository.topProducts(any(), any(), any(), anyInt())).thenReturn(java.util.List.of());
+        lenient()
+                .when(reportRepository.topProducts(any(), any(), any(), anyInt()))
+                .thenReturn(java.util.List.of());
         when(reportRepository.salesByHour(any(), any())).thenReturn(buildEmptyHourSeries());
         when(reportRepository.salesByMethod(any(), any(), any())).thenReturn(java.util.List.of());
     }
@@ -259,8 +265,7 @@ class ReportServiceTest {
     private java.util.List<com.dietetica.lembas.reports.dto.SalesByHourDto> buildEmptyHourSeries() {
         java.util.List<com.dietetica.lembas.reports.dto.SalesByHourDto> out = new java.util.ArrayList<>();
         for (int h = 0; h < 24; h++) {
-            out.add(new com.dietetica.lembas.reports.dto.SalesByHourDto(
-                    h, 0L, BigDecimal.ZERO.setScale(2), 0L, 0L));
+            out.add(new com.dietetica.lembas.reports.dto.SalesByHourDto(h, 0L, BigDecimal.ZERO.setScale(2), 0L, 0L));
         }
         return out;
     }
@@ -280,13 +285,16 @@ class ReportServiceTest {
             throw new RuntimeException(e);
         }
         try {
-            java.lang.reflect.Field idField = com.dietetica.lembas.shared.branch.model.Branch.class.getDeclaredField("id");
+            java.lang.reflect.Field idField =
+                    com.dietetica.lembas.shared.branch.model.Branch.class.getDeclaredField("id");
             idField.setAccessible(true);
             idField.set(b, id);
-            java.lang.reflect.Field nameField = com.dietetica.lembas.shared.branch.model.Branch.class.getDeclaredField("name");
+            java.lang.reflect.Field nameField =
+                    com.dietetica.lembas.shared.branch.model.Branch.class.getDeclaredField("name");
             nameField.setAccessible(true);
             nameField.set(b, name);
-            java.lang.reflect.Field activeField = com.dietetica.lembas.shared.branch.model.Branch.class.getDeclaredField("active");
+            java.lang.reflect.Field activeField =
+                    com.dietetica.lembas.shared.branch.model.Branch.class.getDeclaredField("active");
             activeField.setAccessible(true);
             activeField.set(b, true);
         } catch (ReflectiveOperationException e) {

@@ -122,4 +122,4 @@ erDiagram
 | Real lot unit cost | Real unit cost paid or invoiced for received merchandise | `stock_lots.unit_cost` |
 | Sold unit price | Price charged at sale time | `order_items.unit_price` |
 
-`audit_logs` records critical actions and actors, but dedicated history tables are the source for price and cost history queries.
+Dedicated history tables (`product_sale_price_history`, `supplier_product_cost_history`) are the source for price and cost history queries. A dedicated `audit_logs` table is planned for the post-MVP phase.

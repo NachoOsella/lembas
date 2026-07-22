@@ -1,13 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { Cart, CartItem } from '../../../core/services/cart';
-import { AuthService } from '../../../core/services/auth';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
-import { CurrencyArPipe } from '../../../core/pipes/currency-ar.pipe';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { EmptyState } from '../../../shared/components/empty-state/empty-state';
+import type { CartItem } from '@features/checkout/public-api';
+import { Cart } from '@features/checkout/public-api';
+import { AuthService } from '@core/services/auth';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
+import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { AppSelect } from '@shared/components/app-select/app-select';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { QuantityStepper } from '@shared/components/quantity-stepper/quantity-stepper';
 
 /**
  * Public cart page accessible to all visitors.
@@ -20,7 +23,7 @@ import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 @Component({
   selector: 'app-cart',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CurrencyArPipe, AppButton, AppEyebrow, EmptyState],
+  imports: [CurrencyArPipe, AppButton, AppEyebrow, AppSelect, EmptyState, QuantityStepper],
   templateUrl: './cart.html',
   styleUrl: './cart.css',
 })
@@ -33,7 +36,8 @@ export default class CartPage {
   /** Label shown for the selected pickup branch. */
   protected readonly branchLabel = computed(() => {
     const selected = this.branchSelection.selectedBranch();
-    return selected?.name ?? 'Sucursal';
+    if (!selected) return 'Sin sucursal seleccionada';
+    return selected.address ? `${selected.name} - ${selected.address}` : selected.name;
   });
 
   /** Whether the user is authenticated (controls the button wording). */
@@ -45,9 +49,17 @@ export default class CartPage {
   );
 
   /** Whether there is a branch selected (needed before checking out). */
-  protected readonly branchMissing = computed(
-    () => !this.branchSelection.selectedBranchId(),
+  protected readonly branchMissing = computed(() => !this.branchSelection.selectedBranchId());
+
+  /** Options for selecting the pickup branch inside the purchase flow. */
+  protected readonly branchOptions = computed(() =>
+    this.branchSelection.branches().map((branch) => ({ label: branch.name, value: branch.id })),
   );
+
+  /** Updates the pickup branch without leaving the cart. */
+  protected onBranchChange(branchId: number | null): void {
+    this.branchSelection.selectBranch(branchId);
+  }
 
   /** Removes a line from the cart. */
   protected removeItem(productId: number): void {

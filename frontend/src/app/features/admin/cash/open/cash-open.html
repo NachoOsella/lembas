@@ -1,20 +1,26 @@
 <app-toast />
 
 <div class="cash-open-page">
-  @if (loading()) {
+  @if (store.loading()) {
     <app-loading-spinner label="Cargando estado de caja..." size="lg" surface="card" />
   } @else {
     <app-page-header eyebrow="Caja" title="Abrir caja">
       <app-badge tone="neutral" icon="pi pi-info-circle">Sin sesion abierta</app-badge>
     </app-page-header>
 
-    @if (errorMessage()) {
-      <app-error-alert [message]="errorMessage()!" />
-    }
-
-    @if (isAdmin() && loadingBranches()) {
+    @if (store.errorMessage(); as error) {
+      <app-error-alert variant="inline" [message]="error">
+        <app-button variant="secondary" size="sm" (click)="retry()">Reintentar</app-button>
+      </app-error-alert>
+    } @else if (isAdmin() && store.loadingBranches()) {
       <app-loading-spinner label="Cargando sucursales..." size="md" surface="plain" />
-    } @else if (formReady()) {
+    } @else if (isAdmin() && branches().length === 0) {
+      <app-empty-state
+        icon="pi pi-building"
+        title="No hay sucursales disponibles"
+        description="No se puede abrir una caja hasta que exista una sucursal operativa."
+      />
+    } @else if (store.hasReadyForm()) {
       <form class="cash-open-form" (submit)="submit(); $event.preventDefault()">
         @if (isAdmin() && branches().length > 0) {
           <app-form-section
@@ -31,7 +37,7 @@
                   optionLabel="label"
                   optionValue="value"
                   placeholder="Seleccionar sucursal"
-                  [value]="branchId()"
+                  [value]="store.branchId()"
                   (valueChange)="onBranchSelected($event)"
                 >
                   <ng-template #selectedItem let-option>
@@ -62,7 +68,11 @@
         >
           <div class="cash-open-form__grid">
             <div class="cash-open-form__field">
-              <app-control-field label="Monto inicial" [required]="true" forId="opening-cash-amount">
+              <app-control-field
+                label="Monto inicial"
+                [required]="true"
+                forId="opening-cash-amount"
+              >
                 <app-input-number
                   inputId="opening-cash-amount"
                   name="opening-cash-amount"
@@ -73,7 +83,7 @@
                   [minFractionDigits]="2"
                   [maxFractionDigits]="2"
                   [value]="openingCashAmount()"
-                  (valueChange)="openingCashAmount.set($event)"
+                  (valueChange)="setOpeningCashAmount($event)"
                 />
               </app-control-field>
 
@@ -99,7 +109,7 @@
                 hint="Solo el equipo interno vera estas notas."
                 testId="opening-notes"
                 [value]="openingNotes()"
-                (valueChange)="openingNotes.set($event)"
+                (valueChange)="setOpeningNotes($event)"
               />
             </div>
           </div>
@@ -112,7 +122,7 @@
           <app-button
             type="submit"
             icon="pi pi-lock-open"
-            [loading]="saving()"
+            [loading]="store.saving()"
             [disabled]="!canSubmit()"
           >
             Abrir caja

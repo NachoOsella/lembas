@@ -130,4 +130,4 @@ When an order is cancelled:
 | Real lot unit cost | `stock_lots.unit_cost` | Frozen at reception time |
 | Sold unit price | `order_items.unit_price` | Frozen at sale time |
 
-`audit_logs` records who performed critical changes, but it is not the source for commercial price history queries.
+Dedicated history tables (`product_sale_price_history`, `supplier_product_cost_history`) are the source for commercial price history queries. A dedicated `audit_logs` table is planned for the post-MVP phase.

@@ -1,8 +1,9 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-button',
   imports: [NgTemplateOutlet, RouterLink],
   templateUrl: './app-button.html',

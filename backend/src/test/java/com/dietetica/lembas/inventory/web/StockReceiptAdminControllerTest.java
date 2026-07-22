@@ -1,5 +1,11 @@
 package com.dietetica.lembas.inventory.web;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.dietetica.lembas.auth.service.JwtAuthenticationFilter;
 import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.auth.service.LembasUserDetailsService;
@@ -11,6 +17,10 @@ import com.dietetica.lembas.suppliers.dto.PurchaseReceiptRequest;
 import com.dietetica.lembas.suppliers.service.PurchaseReceiptService;
 import com.dietetica.lembas.users.web.SecurityConfigForTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -20,17 +30,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** Web slice tests for {@link StockReceiptAdminController}. */
 @WebMvcTest(controllers = {StockReceiptAdminController.class, GlobalExceptionHandler.class})
@@ -62,8 +61,12 @@ class StockReceiptAdminControllerTest {
                 1L,
                 "FAC-1",
                 null,
-                List.of(new PurchaseReceiptItemRequest(100L, BigDecimal.valueOf(2), BigDecimal.valueOf(500), "L-1", LocalDate.now().plusDays(30)))
-        );
+                List.of(new PurchaseReceiptItemRequest(
+                        100L,
+                        BigDecimal.valueOf(2),
+                        BigDecimal.valueOf(500),
+                        "L-1",
+                        LocalDate.now().plusDays(30))));
         when(purchaseReceiptService.confirm(any(PurchaseReceiptRequest.class))).thenReturn(aReceipt());
 
         mockMvc.perform(post("/api/admin/stock/receipts")
@@ -83,8 +86,12 @@ class StockReceiptAdminControllerTest {
                 1L,
                 "FAC-EMP-1",
                 null,
-                List.of(new PurchaseReceiptItemRequest(100L, BigDecimal.ONE, BigDecimal.valueOf(500), "L-EMP", LocalDate.now().plusDays(30)))
-        );
+                List.of(new PurchaseReceiptItemRequest(
+                        100L,
+                        BigDecimal.ONE,
+                        BigDecimal.valueOf(500),
+                        "L-EMP",
+                        LocalDate.now().plusDays(30))));
         when(purchaseReceiptService.confirm(any(PurchaseReceiptRequest.class))).thenReturn(aReceipt());
 
         mockMvc.perform(post("/api/admin/stock/receipts")
@@ -96,7 +103,8 @@ class StockReceiptAdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void Should_return400_when_receiptHasInvalidQuantity() throws Exception {
-        String invalidJson = """
+        String invalidJson =
+                """
                 {
                   "purchaseOrderId": 1,
                   "items": [
@@ -127,7 +135,7 @@ class StockReceiptAdminControllerTest {
                 OffsetDateTime.now(),
                 "RECEIVED",
                 BigDecimal.valueOf(2),
-                List.of(new PurchaseReceiptItemDto(60L, 100L, 10L, "Granola", BigDecimal.valueOf(2), BigDecimal.valueOf(500), "L-1", null, 70L))
-        );
+                List.of(new PurchaseReceiptItemDto(
+                        60L, 100L, 10L, "Granola", BigDecimal.valueOf(2), BigDecimal.valueOf(500), "L-1", null, 70L)));
     }
 }

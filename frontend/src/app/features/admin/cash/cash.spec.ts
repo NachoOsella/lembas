@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MessageService } from 'primeng/api';
@@ -6,9 +7,9 @@ import { of, throwError } from 'rxjs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { Cash } from './cash';
-import { CashService } from '../../../core/services/cash';
-import { AuthService } from '../../../core/services/auth';
-import { CashSessionDto } from '../../../shared/models/cash-session';
+import { CashService } from '@features/cash/data-access/cash';
+import { AuthService } from '@core/services/auth';
+import type { CashSessionDto } from '@features/cash/domain/cash-session';
 
 /** Unit tests for the cash landing redirect component. */
 describe('Cash landing (redirect)', () => {

@@ -16,26 +16,24 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-
 /** Inventory lot for a product in a branch, optionally tied to an expiration date. */
 @Entity
 @Table(
         name = "stock_lots",
         indexes = {
-                @Index(name = "idx_stock_lots_product_id", columnList = "product_id"),
-                @Index(name = "idx_stock_lots_branch_id", columnList = "branch_id"),
-                @Index(name = "idx_stock_lots_expiration_date", columnList = "expiration_date")
-        }
-)
+            @Index(name = "idx_stock_lots_product_id", columnList = "product_id"),
+            @Index(name = "idx_stock_lots_branch_id", columnList = "branch_id"),
+            @Index(name = "idx_stock_lots_expiration_date", columnList = "expiration_date")
+        })
 @Getter
 @Setter
 @NoArgsConstructor

@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
@@ -31,8 +32,7 @@ describe('SalesReportPageComponent', () => {
   });
 
   it('initialises the from-date to the first day of the current month', () => {
-    const testable = component as unknown as { fromDate: () => Date | null };
-    const from = testable.fromDate();
+    const from = component['fromDate']();
     expect(from).toBeTruthy();
     if (from) {
       expect(from.getDate()).toBe(1);
@@ -40,8 +40,7 @@ describe('SalesReportPageComponent', () => {
   });
 
   it('initialises the to-date to today', () => {
-    const testable = component as unknown as { toDate: () => Date | null };
-    const to = testable.toDate();
+    const to = component['toDate']();
     const today = new Date();
     expect(to).toBeTruthy();
     if (to) {

@@ -47,14 +47,16 @@ SecurityFilterChain
   ├── JwtAuthenticationFilter (Authorization header or HttpOnly access cookie)
   └── ExceptionHandlerFilter
 
-Public routes:   POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, POST /api/auth/logout, /api/store/**, /api/webhooks/**, /uploads/**
+Public routes:   POST /api/auth/register, POST /api/auth/login, POST /api/auth/refresh, POST /api/auth/logout, /api/store/**, /api/webhooks/**, /uploads/**, /actuator/health, /api-docs/**, /swagger-ui/**, /swagger-ui.html
 Authenticated:   GET /api/auth/me
 Customer routes: /api/customer/** (role CUSTOMER)
 Admin routes:    /api/admin/** (roles ADMIN, MANAGER, EMPLOYEE; each controller applies the access matrix below)
 POS routes:      /api/pos/** (roles ADMIN, MANAGER, EMPLOYEE)
 ```
 
-### @PreAuthorize annotations
+### @PreAuthorize annotations and route guards
+
+**Backend (@PreAuthorize):**
 
 ```java
 // Public
@@ -74,9 +76,26 @@ POS routes:      /api/pos/** (roles ADMIN, MANAGER, EMPLOYEE)
 @PreAuthorize("hasRole('ADMIN')") on user management, configuration
 ```
 
-## Audit
+**Frontend (functional guards):**
 
-Critical actions are logged in `audit_logs` with user, timestamp, and description:
+| Guard | Routes | Logic |
+|---|---|---|
+| `authGuard` | /customer/**, /admin/** | Checks for valid JWT token; redirects to /auth/login if absent |
+| `customerGuard` | /customer/** | Checks for CUSTOMER role after authGuard |
+| `adminGuard` | /admin/** | Checks for ADMIN, MANAGER, or EMPLOYEE role |
+| `adminOnlyGuard` | /admin/dashboard, /admin/categories | Checks for ADMIN role only |
+| `roleGuard(requiredRoles...)` | Specific routes | Checks for one of the specified roles; used for fine-grained access |
+
+## Audit (deferred)
+
+A dedicated `audit_logs` table is planned for the post-MVP phase. Currently, traceability is achieved through:
+- Dedicated history tables (`product_sale_price_history`, `supplier_product_cost_history`)
+- Entity `created_at`/`updated_at` timestamp fields
+- Append-only `stock_movements` records
+- Order cancellation reasons stored in `orders.cancellation_reason`
+- Mandatory `reason` fields on manual stock adjustments and cash movements
+
+Planned audit events when implemented:
 
 - Price changes
 - Stock adjustments

@@ -1,106 +1,115 @@
 # PROJECT KB
 
-Generated: 2026-05-15
+Generated: 2026-07-21
 
 ## OVERVIEW
 
-Dietetica Lembas: POS+e-commerce modular monolith (NOT microservices). Java 21 + SB 3.5.0 | Angular 21.2 (CLI/Build 21.2.11) + PrimeNG 21.1.7 + Tailwind v4.3 + Vitest 4.0.8 + jsdom 28.0 | PostgreSQL 16. PM: npm 11.14.1.
-Sprint 0: backend/ frontend/ on disk untracked, only docs/ committed on main.
+Dietetica Lembas: locally verified POS + pickup e-commerce modular monolith, not microservices. Java 21 / Spring Boot 3.5.0 / Maven | Angular 21.2 standalone / PrimeNG 21.1.7 Aura / Tailwind 4.3 / Vitest 4 / jsdom 28 | PostgreSQL 16 | Node 22.14 / npm 11.14.1.
 
 ## STRUCTURE
 
-- backend/ (SB 3.5.0, Maven): 11 feature modules {auth,users,catalog,inventory,orders,payments,cash,suppliers,reports,audit} each with 5 sub-pkgs {model,repository,service,web,dto}/ -- all package-info stubs. Only 3 real classes: LembasBackendApplication, SecurityConfig, OpenApiConfig.
-- frontend/ (Angular 21.2 standalone): PrimeNG+Aura+Tailwind. app/ with core/ (guards,interceptors,services stubs), features/ (public-store,auth,customer,admin stubs), shared/ (empty models). @angular/build:application + :unit-test (Vitest).
-- docs/: 50 files (domain, architecture, API, dev, deploy, academic).
+- `backend/`: feature packages `audit,auth,cash,catalog,content,inventory,orders,payments,pos,reports,suppliers,users`; shared infrastructure under `shared/`.
+- Backend feature shape: `model,repository,service,web,dto`; module contracts live in `api/`; inventory also separates orchestration in `application/`; payment provider code lives in `gateway/`.
+- `frontend/`: `core/`, `shared/`, and feature slices. Domain features expose `public-api.ts`; `scripts/check-feature-boundaries.mjs` rejects deep cross-feature imports.
+- `docker/`: PostgreSQL, backend, Nginx frontend, and optional ngrok sandbox tunnel. Images run non-root; Nginx rejects TRACE.
+- `docs/`: product, domain, architecture, processes, API, development, deployment, and academic evidence.
 
-## CMDS
+## COMMANDS
 
-- Backend install/test/run: cd backend && ./mvnw {dependency:resolve,test,spring-boot:run -Dspring-boot.run.profiles=dev}
-- Frontend install: cd frontend && npm install
-- Frontend run/test/build/format: cd frontend && npm {start,run test,run build} / npx prettier --write "src/**/*.{ts,html,css}"
-- Git scaffold: git add backend/ frontend/ && git commit -m "feat: scaffold..."
-- No docker-compose.yml yet. Flyway migrations dir = .gitkeep. Backend smoke excludes DB autoconfig intentionally (passes offline).
+```bash
+# Backend
+cd backend && ./mvnw test
+cd backend && ./mvnw clean verify
+cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+
+# Frontend
+cd frontend && npm ci
+cd frontend && npm start
+cd frontend && npm run boundaries
+cd frontend && npm run verify
+cd frontend && npm run test:coverage
+
+# Containers
+cp docker/.env.example docker/.env
+docker compose --env-file docker/.env -f docker/compose.yml up --build
+docker compose --env-file docker/.env.example -f docker/compose.yml config --quiet
+docker build -f docker/backend.Dockerfile -t lembas-backend:verify .
+docker build -f docker/frontend.Dockerfile -t lembas-frontend:verify .
+```
+
+Do not run Maven, Angular, and Docker heavy gates concurrently; execute them sequentially to avoid RAM pressure. Current clean baseline: backend 920 tests; frontend 986 tests. Coverage floors: statements 75%, branches 74%, functions 55%, lines 78%.
 
 ## GIT
 
-Do not commit changes unless the user explicitly asks for a commit. Never work directly on main: all implementation work must happen on a user-story branch. Conventional commits: feat fix docs refactor test chore.
+- Never commit, push, reset, stash, or switch branches unless explicitly requested.
+- Never implement directly on `main`; use a user-story branch.
+- Preserve unrelated working-tree changes. Conventional commit types: `feat|fix|docs|refactor|test|chore`.
 
-## BE (JAVA)
+## BACKEND RULES
 
-- Pkg by feature: com.dietetica.lembas.<module>/{model,repository,service,web,dto}
-- Thin controllers, DTOs for API (no JPA entities exposed). Constructor injection only.
-- Business rules live in services; extract helper classes only when a real complexity appears.
-- Mercado Pago integration lives in the payments module; add an abstraction only if a second provider is required.
-- Error handling: throw DomainException(code,status,message) from services; single @ControllerAdvice -> ApiError {status,code,message,details,timestamp,path}. Document new codes in docs/05-api/api-guidelines.md.
-- Stock: @Lock(PESSIMISTIC_WRITE), open-in-view:false, ddl-auto:validate + Flyway.
-- Security: CSRF disabled, stateless. Public: /api/auth/**, /api/store/**, /api/webhooks/**, /uploads/**, /actuator/health, /api-docs/**, /swagger-ui/**.
+- Package by feature. Thin controllers; DTOs at HTTP boundaries; never expose JPA entities.
+- Constructor injection only. Business rules belong in services/application services.
+- Cross-module calls must use the owning module's `api/` contract; never access another module's repository. ArchUnit enforces this.
+- Public contracts currently cover catalog lookup/search/pricing, inventory queries/commands/receipts, order query/command/locking, payment queries, branches, and users.
+- Architecture allowlists for cross-module repositories, controller repositories, and field injection are empty. The sole shared-feature exception is `SecurityConfig -> JwtAuthenticationFilter` infrastructure wiring.
+- Throw `DomainException(code,status,message)` from services. `GlobalExceptionHandler` returns `ApiError {status,code,message,details,timestamp,path}`. Document new codes in `docs/05-api/api-guidelines.md` and `error-handling.md`.
+- Mercado Pago stays in `payments`; do not add a provider abstraction until a second provider exists. Webhook signature failures also use `ApiError`.
+- Persistence: `open-in-view:false`, `ddl-auto:validate`, Flyway only. Use pessimistic locks for contested aggregates and a consistent lock order. Concurrency tests use latches/barriers and `TransactionTemplate`, never sleeps.
 
-## FE (ANGULAR)
+## FRONTEND RULES
 
-- Standalone components, signals (no NgRx), PrimeNG+Tailwind v4 (no Material).
-- Prefer PrimeNG components/directives for UI controls whenever available (buttons, inputs, password fields, dialogs, messages, tables, menus, etc.); avoid plain HTML + Tailwind-only controls when a PrimeNG equivalent exists. Use Tailwind/custom CSS mainly for layout, spacing, and brand-specific refinements around PrimeNG components.
-- All-states pattern (loading/error/empty/data). Services hold state.
-- Error handling: map user copy by ApiError.code via ErrorMappingService/shared ApiErrorResponse; do not show raw backend messages except controlled fallbacks. Use interceptor for network/5xx/global auth errors.
-- Functional guards CanActivateFn: admin=[authGuard,adminGuard], customer=[authGuard,customerGuard].
-- Lazy routes (loadChildren/loadComponent): /store, /auth (login/register), /customer (profile|orders|checkout), /admin (dashboard|products|inventory|orders|pos|cash|suppliers|reports|users).
-- Aura theme via providePrimeNG(). tsconfig: strict+module preserve.
-- Specs: TestBed.configureTestingModule({imports:[Component]}), describe/it/expect.
+- Standalone components and signals; no NgRx. Strict TypeScript with preserved modules.
+- Import another feature only through its `public-api.ts`; run `npm run boundaries` after changing feature imports.
+- Prefer PrimeNG controls. Use Tailwind/custom CSS for layout and brand refinement; no Angular Material.
+- Use loading/error/empty/data states. State belongs in feature stores/services.
+- Map `ApiError.code` to controlled user copy; never display raw backend messages except an intentional fallback. Global network/5xx/auth behavior belongs in interceptors.
+- Use lazy routes and functional guards. Admin routes require auth + staff role guards; customer routes require auth + customer guard.
+- Specs import standalone components through TestBed and use Vitest `describe/it/expect`.
 
-## DB
+## SECURITY
 
-snake_case plural (stock_lots, order_items). id BIGSERIAL. entity_id FK. TIMESTAMPTZ audit. CHECK constraints (not lookup tables). Flyway versioned migrations only (no JPA auto-DDL).
+- Stateless JWT auth in HttpOnly, same-site cookies; secure cookies are forced by production policy. CSRF is disabled; origin validation protects cookie-authenticated unsafe requests.
+- Public: auth register/login/refresh/logout, `/api/store/**`, `/api/webhooks/**`, `/uploads/**`, health, OpenAPI, Swagger. `/api/customer/**` is CUSTOMER-only; `/api/pos/**` and `/api/admin/**` are staff-only. TRACE is denied.
+- Never use real secrets in source or examples. Real CI, DNS, TLS, secrets, and public Mercado Pago callback validation remain deployment tasks.
 
-## TESTS
+## DATABASE
 
-BE: JUnit5+AssertJ (unit, @WebMvcTest, Testcontainers). FE: Vitest 4.0.8+jsdom 28.0. Critical: FEFO, MP webhook idempotency, POS+sale+stock, cash close discrepancy, cancellation+stock reversal.
+- PostgreSQL names: plural `snake_case`; IDs `BIGSERIAL`; foreign keys `<entity>_id`; audit timestamps `TIMESTAMPTZ`; enums enforced with CHECK constraints where practical.
+- Never edit an applied migration or use JPA auto-DDL. Add the next versioned migration and preserve all existing migration files.
 
-## DOMAIN
+## DOMAIN INVARIANTS
 
-1. Unified order: order.type=POS|ONLINE (same table, same FEFO). payment.cash_session_id null for online, required for in-store.
-2. FEFO: expiration_date ASC NULLS LAST (lots w/o dates consumed last).
-3. Stock deducted at payment confirmation (not at creation/delivery).
-4. Cash register = physical cash only (QR/transfer/cards = informational at close).
-5. DELIVERED = handed at branch pickup. Cancellation reverses same lots via stock_movements traced by order_id.
-6. POS status=PAID only (DB CHECK). supplier_products UNIQUE(product_id, supplier_id).
-7. Pickup only. No stock_reservations or branch_product_stock tables.
+1. One order model: `type=POS|ONLINE`; both consume inventory through the same FEFO policy.
+2. FEFO order: `expiration_date ASC NULLS LAST`; undated lots are consumed last.
+3. Stock is deducted on payment confirmation, never on order creation or pickup.
+4. Online deduction preflights grouped demand, locks lots deterministically, and never partially mutates stock. Insufficient stock becomes `STOCK_CONFLICT` without passing through `PAID`.
+5. Webhook delivery is idempotent. Lock order is order then payment. Cancellation/refund restores the exact consumed lots once.
+6. POS orders are `PAID`; `payment.cash_session_id` is required in-store and null online.
+7. Cash sessions reconcile physical cash only; QR, transfer, and card amounts are informational. Closing is serialized against sales/manual movements and duplicate closes.
+8. Purchase receipt locks its order and cannot over-receive concurrently.
+9. `DELIVERED` means handed over at branch pickup. Pickup only: no delivery, guest checkout, stock reservations, or `branch_product_stock`.
+10. `supplier_products` is unique by `(product_id,supplier_id)`.
+
+## CRITICAL TESTS
+
+Never weaken or skip coverage for FEFO, webhook signature/idempotency/concurrency, POS sale + stock + cash, online lifecycle and stock conflict, exact-lot cancellation/refund reversal, cash-close discrepancy/concurrency, and purchase over-receipt concurrency. Full lifecycle coverage lives in `backend/src/test/java/com/dietetica/lembas/integration/` plus focused feature integration tests.
 
 ## HARD NO
 
-Microservices, msg queues, Redis, separate POS/ONLINE models, home delivery, fiscal invoicing, guest checkout, AI/LLM, mobile app, notifications, Angular Material, exposing JPA entities from controllers, field injection, skipping critical tests, working directly on main.
-
-## GOTCHAS
-
-- docs/04-processes/fefo-stock-deduction-flow.md (renamed from stock-reservation) -- no reservation exists.
-- Scaffold NOT committed: first Sprint 1 = git add backend/ frontend/ && git commit.
-- Angular docs ref v18 but @angular/core ^21.2.0 -- use v21 patterns (resource API, @angular/build).
-- Tailwind v4: @import "tailwindcss", no tailwind.config.js. PrimeNG: Aura from @primeuix/themes (not legacy).
-- DESING.md = design spec (37KB). Pi skills: angular-developer, frontend-designer, java-expert, docs-agent, review.
-
-## ADRS
-
-013=Stock timing (stock), 022=Unified orders (orders), 040=Pickup only (checkout), 009=Pkg-by-feature (new modules), 012=Controller-DTO (endpoints), 017=Security (auth), 025=Payment integration (payments), 031=Audit logging (audit), 037=Testing pyramid (tests).
+Microservices, message queues, Redis, separate POS/ONLINE models, reservations, home delivery, fiscal invoicing, guest checkout, AI features, mobile apps, notifications, Angular Material, cross-module repositories, controller-to-repository access, field injection, exposed JPA entities, edited historical migrations, skipped critical tests, or direct work on `main`.
 
 ## WHERE
 
-- Overview/scope: docs/00-overview/{project-brief,scope}.md
-- Domain model/entities/rules: docs/02-domain/{domain-model,entities,business-rules}.md
-- Stock/Order/Payment/Cash rules: docs/02-domain/{stock-rules,order-rules,payment-rules,cash-register-rules}.md
-- State machines: docs/02-domain/state-machines.md
-- Architecture/security/DB: docs/03-architecture/
-- 47 ADRs: docs/03-architecture/architecture-decisions.md
-- API endpoints/errors/DTOs: docs/05-api/{endpoints,error-handling,dto-conventions}.md
-- BE/FE conventions: docs/06-development/{backend-conventions,frontend-conventions}.md
-- Coding standards/testing/setup: docs/06-development/{coding-standards,testing-strategy,setup}.md
-- MVP/roadmap/epics: docs/01-product/{mvp,roadmap,epics}.md
-- Integrations (MP): docs/03-architecture/integrations.md
-- Deployment/env: docs/07-deployment/
-- App config: backend/src/main/resources/application.yml
-- SecurityConfig: backend/.../shared/config/SecurityConfig.java
-- FE config/routes: frontend/src/app/{app.config,app.routes}.ts
-- Design: frontend/DESING.md
+- Scope/domain: `docs/00-overview/`, `docs/02-domain/`
+- Architecture/security/DB/ADRs: `docs/03-architecture/`
+- Business flows: `docs/04-processes/`
+- API/errors/DTOs: `docs/05-api/`
+- Coding/testing/setup/git: `docs/06-development/`
+- Docker/env/production: `docs/07-deployment/`
+- Deferred work and thesis prompt: `docs/refactoring-execution-plan.md`
+- Backend config/security: `backend/src/main/resources/application.yml`, `backend/.../shared/config/SecurityConfig.java`
+- Frontend config/routes/design: `frontend/src/app/{app.config,app.routes}.ts`, `frontend/DESING.md`
 
-## AI Usage Documentation
-Update `docs/ai-usage-log.md` only for meaningful AI-assisted changes.
-Do not log minor edits, typo fixes, formatting changes, small renames, or trivial implementation details.
-Log only considerable changes, such as creating files/modules, generating documentation, implementing meaningful parts of a feature, refactoring important code, modifying business logic, or changing architecture/configuration.
-Keep entries concise. The log should be a historical record of relevant AI-assisted changes, not a detailed changelog.
+## AI USAGE LOG
+
+Update `docs/ai-usage-log.md` only for meaningful generated modules/docs, business logic, architecture, or configuration changes. Do not log formatting, typo fixes, trivial renames, or minor implementation details. Keep entries concise and historical.

@@ -15,27 +15,25 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-
 /** Append-only trace entry for a stock change applied to a lot. */
 @Entity
 @Table(
         name = "stock_movements",
         indexes = {
-                @Index(name = "idx_stock_movements_product_id", columnList = "product_id"),
-                @Index(name = "idx_stock_movements_branch_id", columnList = "branch_id"),
-                @Index(name = "idx_stock_movements_stock_lot_id", columnList = "stock_lot_id"),
-                @Index(name = "idx_stock_movements_order_id", columnList = "order_id"),
-                @Index(name = "idx_stock_movements_created_at", columnList = "created_at")
-        }
-)
+            @Index(name = "idx_stock_movements_product_id", columnList = "product_id"),
+            @Index(name = "idx_stock_movements_branch_id", columnList = "branch_id"),
+            @Index(name = "idx_stock_movements_stock_lot_id", columnList = "stock_lot_id"),
+            @Index(name = "idx_stock_movements_order_id", columnList = "order_id"),
+            @Index(name = "idx_stock_movements_created_at", columnList = "created_at")
+        })
 @Getter
 @Setter
 @NoArgsConstructor

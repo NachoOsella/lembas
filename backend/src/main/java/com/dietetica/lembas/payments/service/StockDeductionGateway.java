@@ -3,11 +3,9 @@ package com.dietetica.lembas.payments.service;
 import com.dietetica.lembas.orders.model.Order;
 
 /**
- * Abstraction over the FEFO stock deduction triggered when a Mercado Pago
- * payment is approved.
+ * Payments-owned contract for stock effects triggered by provider status changes.
  *
- * <p>Implemented by the inventory module so the payments layer stays free of
- * inventory-specific imports and tests can swap a deterministic fake.</p>
+ * <p>Implemented by the inventory module so payments does not import inventory internals.</p>
  */
 public interface StockDeductionGateway {
 
@@ -18,4 +16,11 @@ public interface StockDeductionGateway {
      *         cannot be satisfied (caller should mark the order as STOCK_CONFLICT).
      */
     boolean deductForOrder(Order order);
+
+    /**
+     * Restores the exact lots consumed by the order's original sale movements.
+     *
+     * @return the number of original sale movements reversed
+     */
+    int reverseForOrder(Long orderId);
 }

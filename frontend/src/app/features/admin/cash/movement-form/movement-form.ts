@@ -1,24 +1,35 @@
-import { Component, inject, input, output, signal, computed } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import {
+  DestroyRef,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { form, required, submit, validate } from '@angular/forms/signals';
 import { MessageService } from 'primeng/api';
 
-import { CashService } from '../../../../core/services/cash';
-import { ErrorMappingService } from '../../../../core/services/error-mapping';
-import { getApiError } from '../../../../shared/models/api-error';
+import { CashService } from '@features/cash/data-access/cash';
 import {
-  CashMovementMethod,
-  CashMovementType,
-  CreateCashMovementRequest,
-} from '../../../../shared/models/cash-session';
+  isCashMovementFormValid,
+  parseCashAmount,
+  toCashMovementRequest,
+} from '@features/cash/domain/cash-forms';
+import type { CashMovementFormModel } from '@features/cash/domain/cash-forms';
+import type { CashMovementMethod, CashMovementType } from '@features/cash/domain/cash-session';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
 
-import { AppButton } from '../../../../shared/components/app-button/app-button';
-import { AppControlField } from '../../../../shared/components/app-control-field/app-control-field';
-import { AppFormField } from '../../../../shared/components/app-form-field/app-form-field';
-import { AppInputNumber } from '../../../../shared/components/app-input-number/app-input-number';
-import { AppToast } from '../../../../shared/components/app-toast/app-toast';
-import { ErrorAlert } from '../../../../shared/components/error-alert/error-alert';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppControlField } from '@shared/components/app-control-field/app-control-field';
+import { AppFormField } from '@shared/components/app-form-field/app-form-field';
+import { AppInputNumber } from '@shared/components/app-input-number/app-input-number';
+import { AppToast } from '@shared/components/app-toast/app-toast';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 
-/** Visual + semantic description for a movement-type chip. */
 interface TypeOption {
   readonly value: CashMovementType;
   readonly label: string;
@@ -27,7 +38,6 @@ interface TypeOption {
   readonly tone: 'in' | 'out' | 'adjust';
 }
 
-/** Visual + semantic description for a method chip. */
 interface MethodOption {
   readonly value: CashMovementMethod;
   readonly label: string;
@@ -64,25 +74,11 @@ const METHOD_OPTIONS: ReadonlyArray<MethodOption> = [
   { value: 'OTHER', label: 'Otro', icon: 'pi pi-ellipsis-h' },
 ];
 
-/**
- * Form to register a manual cash movement in an OPEN session.
- *
- * Uses visual pill selectors (type + method) instead of native dropdowns to
- * keep the cash session workflow fast and reduce friction for the cashier.
- *
- * Emits {@code movementAdded} when the backend confirms the creation.
- */
+/** Presentational movement form with a typed signal-form model and command state. */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-movement-form',
-  imports: [
-    AppButton,
-    AppControlField,
-    AppFormField,
-    AppInputNumber,
-    AppToast,
-    ErrorAlert,
-    FormsModule,
-  ],
+  imports: [AppButton, AppControlField, AppFormField, AppInputNumber, AppToast, ErrorAlert],
   templateUrl: './movement-form.html',
   styleUrl: './movement-form.css',
 })
@@ -90,56 +86,69 @@ export class MovementForm {
   private readonly cashService = inject(CashService);
   private readonly messageService = inject(MessageService);
   private readonly errorMapping = inject(ErrorMappingService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  /** Cash session id the movement belongs to. */
   readonly sessionId = input.required<number>();
-  /** When true the form is disabled (session is CLOSED). */
   readonly disabled = input(false);
-
-  /** Emitted after a successful movement creation. */
   readonly movementAdded = output<void>();
-
-  /** Emitted when the user dismisses the form without saving. */
   readonly cancelled = output<void>();
 
-  protected readonly type = signal<CashMovementType | null>(null);
-  protected readonly method = signal<CashMovementMethod | null>(null);
-  protected readonly amount = signal<number | null>(null);
-  protected readonly reason = signal('');
+  protected readonly model = signal<CashMovementFormModel>({
+    type: '',
+    method: '',
+    amount: '',
+    reason: '',
+  });
+  protected readonly movementForm = form(this.model, (schema) => {
+    required(schema.type, { message: 'Selecciona el tipo de movimiento.' });
+    validate(schema.type, ({ value }) =>
+      value() === ''
+        ? { kind: 'missingType', message: 'Selecciona el tipo de movimiento.' }
+        : undefined,
+    );
+    required(schema.method, { message: 'Selecciona el metodo.' });
+    validate(schema.method, ({ value }) =>
+      value() === '' ? { kind: 'missingMethod', message: 'Selecciona el metodo.' } : undefined,
+    );
+    required(schema.amount, { message: 'El monto es obligatorio.' });
+    validate(schema.amount, ({ value }) => {
+      const amount = parseCashAmount(value());
+      return amount !== null && amount !== 0
+        ? undefined
+        : { kind: 'invalidAmount', message: 'El monto debe ser distinto de cero.' };
+    });
+    required(schema.reason, { message: 'El motivo es obligatorio.' });
+  });
+
+  protected readonly type = computed(() => (this.model().type === '' ? null : this.model().type));
+  protected readonly method = computed(() =>
+    this.model().method === '' ? null : this.model().method,
+  );
+  protected readonly amount = computed(() => parseCashAmount(this.model().amount));
+  protected readonly reason = computed(() => this.model().reason);
   protected readonly saving = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
-
-  protected readonly canSubmit = computed(
-    () =>
-      this.type() != null &&
-      this.method() != null &&
-      this.amount() != null &&
-      this.amount() !== 0 &&
-      this.reason().trim().length > 0 &&
-      !this.saving() &&
-      !this.disabled(),
-  );
-
   protected readonly typeOptions = TYPE_OPTIONS;
   protected readonly methodOptions = METHOD_OPTIONS;
-
-  /** Description of the selected type — drives the contextual hint under amount. */
+  protected readonly canSubmit = computed(
+    () =>
+      !this.disabled() &&
+      !this.saving() &&
+      this.movementForm().valid() &&
+      isCashMovementFormValid(this.model()),
+  );
   protected readonly selectedTypeDescription = computed(() => {
-    const selected = this.typeOptions.find((opt) => opt.value === this.type());
+    const selected = this.typeOptions.find((option) => option.value === this.type());
     return selected?.description ?? null;
   });
-
-  /** Description of the selected method — drives the contextual hint under amount. */
   protected readonly selectedMethodLabel = computed(() => {
-    const selected = this.methodOptions.find((opt) => opt.value === this.method());
+    const selected = this.methodOptions.find((option) => option.value === this.method());
     return selected?.label ?? null;
   });
-
-  /** Live preview of the movement, shown when the form has enough data. */
   protected readonly movementPreview = computed(() => {
     const type = this.type();
     const amount = this.amount();
-    if (!type || amount == null || amount <= 0) {
+    if (!type || amount === null || amount <= 0) {
       return null;
     }
     const sign = type === 'CASH_IN' ? '+' : type === 'CASH_OUT' ? '-' : '±';
@@ -151,21 +160,26 @@ export class MovementForm {
     return `${sign} ${formatted}`;
   });
 
-  protected selectType(value: CashMovementType): void {
-    if (this.disabled()) {
-      return;
+  protected selectType(type: CashMovementType): void {
+    if (!this.disabled()) {
+      this.model.update((value) => ({ ...value, type }));
     }
-    this.type.set(value);
   }
 
-  protected selectMethod(value: CashMovementMethod): void {
-    if (this.disabled()) {
-      return;
+  protected selectMethod(method: CashMovementMethod): void {
+    if (!this.disabled()) {
+      this.model.update((value) => ({ ...value, method }));
     }
-    this.method.set(value);
   }
 
-  /** Emits the cancelled event so the host can close the modal. */
+  protected setAmount(amount: number | null): void {
+    this.model.update((value) => ({ ...value, amount: amount === null ? '' : String(amount) }));
+  }
+
+  protected setReason(reason: string): void {
+    this.model.update((value) => ({ ...value, reason }));
+  }
+
   protected cancel(): void {
     if (this.saving()) {
       return;
@@ -174,49 +188,44 @@ export class MovementForm {
     this.cancelled.emit();
   }
 
-  /** Creates a movement (or negative for CASH_OUT) and resets the form on success. */
   protected submit(): void {
-    const type = this.type();
-    const method = this.method();
-    const amount = this.amount();
-    const reason = this.reason().trim();
-
-    if (!type || !method || amount == null || !reason) {
+    if (!this.canSubmit()) {
       return;
     }
-    this.saving.set(true);
-    this.errorMessage.set(null);
 
-    const request: CreateCashMovementRequest = {
-      type,
-      method,
-      amount: amount.toFixed(2),
-      reason,
-    };
-
-    this.cashService.addMovement(this.sessionId(), request).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.resetForm();
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Movimiento registrado',
-          detail: 'El movimiento de caja fue registrado correctamente.',
+    submit(this.movementForm, async () => {
+      const request = toCashMovementRequest(this.model());
+      if (!request) {
+        return;
+      }
+      this.saving.set(true);
+      this.errorMessage.set(null);
+      this.cashService
+        .addMovement(this.sessionId(), request)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.saving.set(false);
+            this.resetForm();
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Movimiento registrado',
+              detail: 'El movimiento de caja fue registrado correctamente.',
+            });
+            this.movementAdded.emit();
+          },
+          error: (error: unknown) => {
+            this.saving.set(false);
+            this.errorMessage.set(
+              this.messageForError(error, 'No se pudo registrar el movimiento.'),
+            );
+          },
         });
-        this.movementAdded.emit();
-      },
-      error: (err) => {
-        this.saving.set(false);
-        this.errorMessage.set(this.messageForError(err, 'No se pudo registrar el movimiento.'));
-      },
     });
   }
 
   private resetForm(): void {
-    this.type.set(null);
-    this.method.set(null);
-    this.amount.set(null);
-    this.reason.set('');
+    this.model.set({ type: '', method: '', amount: '', reason: '' });
     this.errorMessage.set(null);
   }
 
@@ -228,6 +237,6 @@ export class MovementForm {
     if (apiError.code === 'VALIDATION_ERROR') {
       return this.errorMapping.formatValidationErrors(apiError);
     }
-    return this.errorMapping.getMessage(apiError.code, apiError.message);
+    return this.errorMapping.getMessage(apiError.code, fallback);
   }
 }

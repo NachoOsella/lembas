@@ -1,22 +1,24 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { AdminPosPage } from './pos';
 import { PosProductSearchComponent } from './components/pos-product-search/pos-product-search';
 import { PosCartComponent } from './components/pos-cart/pos-cart';
 import { PosCheckoutResultDialogComponent } from './components/pos-checkout-result-dialog/pos-checkout-result-dialog';
-import { AppPageHeader } from '../../../shared/components/app-page-header/app-page-header';
-import { CashService } from '../../../core/services/cash';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
+import { CashService } from '@features/cash/data-access/cash';
 import { PosSaleService } from './services/pos-sale.service';
+import { PosProductSearchService } from './services/pos-product-search.service';
 import { PosCartStore } from './state/pos-cart.store';
-import { OrderDetail, OrderItem, PaymentSummary } from '../../../shared/models/order';
-import { CashSessionDto } from '../../../shared/models/cash-session';
+import type { OrderDetail, OrderItem, PaymentSummary } from '@features/orders/domain/order';
+import type { CashSessionDto } from '@features/cash/domain/cash-session';
 
 /** Builds a minimal CashSessionDto for the page-level tests. */
 function cashSession(): CashSessionDto {
@@ -53,12 +55,27 @@ function buildOrder(): OrderDetail {
     notes: null,
     cancellationReason: null,
     items: [
-      { id: 1, productId: 100, productName: 'Aceite', productBarcode: '7501',
-        quantity: 1, unitPrice: 500, discountAmount: 0, subtotalAmount: 500 } as OrderItem,
+      {
+        id: 1,
+        productId: 100,
+        productName: 'Aceite',
+        productBarcode: '7501',
+        quantity: 1,
+        unitPrice: 500,
+        discountAmount: 0,
+        subtotalAmount: 500,
+      } as OrderItem,
     ],
     payments: [
-      { id: 1, provider: 'MANUAL', method: 'CASH', status: 'APPROVED',
-        amount: 500, approvedAt: null, createdAt: '' } as PaymentSummary,
+      {
+        id: 1,
+        provider: 'MANUAL',
+        method: 'CASH',
+        status: 'APPROVED',
+        amount: 500,
+        approvedAt: null,
+        createdAt: '',
+      } as PaymentSummary,
     ],
     paidAt: null,
     preparedAt: null,
@@ -97,10 +114,22 @@ describe('AdminPosPage', () => {
         { provide: PosSaleService, useValue: posSale },
       ],
     });
+    TestBed.overrideComponent(AdminPosPage, {
+      add: { providers: [{ provide: PosSaleService, useValue: posSale }] },
+    });
 
     fixture = TestBed.createComponent(AdminPosPage);
     component = fixture.componentInstance;
-    cart = TestBed.inject(PosCartStore);
+    cart = fixture.componentRef.injector.get(PosCartStore);
+    fixture.detectChanges();
+  }
+
+  function selectQrPaymentMethod(): void {
+    const button = fixture.nativeElement.querySelector(
+      '[data-testid="pos-method-QR"]',
+    ) as HTMLButtonElement;
+    expect(button).toBeTruthy();
+    button.click();
     fixture.detectChanges();
   }
 
@@ -130,6 +159,35 @@ describe('AdminPosPage', () => {
     expect(fixture.nativeElement.querySelector('.pos-page__grid')).toBeTruthy();
   });
 
+  it('scopes POS state and data-access services to each page instance', () => {
+    TestBed.configureTestingModule({
+      imports: [AdminPosPage],
+      providers: [
+        provideNoopAnimations(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        MessageService,
+        { provide: CashService, useValue: { currentSession: vi.fn().mockReturnValue(of(null)) } },
+      ],
+    });
+    const firstFixture = TestBed.createComponent(AdminPosPage);
+    const secondFixture = TestBed.createComponent(AdminPosPage);
+
+    expect(firstFixture.componentRef.injector.get(PosCartStore)).not.toBe(
+      secondFixture.componentRef.injector.get(PosCartStore),
+    );
+    expect(firstFixture.componentRef.injector.get(PosSaleService)).not.toBe(
+      secondFixture.componentRef.injector.get(PosSaleService),
+    );
+    expect(firstFixture.componentRef.injector.get(PosProductSearchService)).not.toBe(
+      secondFixture.componentRef.injector.get(PosProductSearchService),
+    );
+
+    firstFixture.destroy();
+    secondFixture.destroy();
+  });
+
   it('probes the current cash session on init and renders the success badge', () => {
     configure();
     expect(cashService.currentSession).toHaveBeenCalled();
@@ -141,7 +199,11 @@ describe('AdminPosPage', () => {
   });
 
   it('shows the missing cash badge and "Abrir caja" button when no session is open', () => {
-    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    cashService = {
+      currentSession: vi
+        .fn()
+        .mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))),
+    };
     posSale = { createSale: vi.fn() };
     TestBed.configureTestingModule({
       imports: [AdminPosPage],
@@ -157,16 +219,12 @@ describe('AdminPosPage', () => {
     });
     fixture = TestBed.createComponent(AdminPosPage);
     component = fixture.componentInstance;
-    cart = TestBed.inject(PosCartStore);
+    cart = fixture.componentRef.injector.get(PosCartStore);
     fixture.detectChanges();
 
-    const missing = fixture.nativeElement.querySelector(
-      '[data-testid="cash-session-missing"]',
-    );
+    const missing = fixture.nativeElement.querySelector('[data-testid="cash-session-missing"]');
     expect(missing).toBeTruthy();
-    const openBtn = fixture.nativeElement.querySelector(
-      '[data-testid="open-cash-button"]',
-    );
+    const openBtn = fixture.nativeElement.querySelector('[data-testid="open-cash-button"]');
     expect(openBtn).toBeTruthy();
   });
 
@@ -189,7 +247,11 @@ describe('AdminPosPage', () => {
   });
 
   it('does not call createSale when there is no cash session (even with a method)', () => {
-    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    cashService = {
+      currentSession: vi
+        .fn()
+        .mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))),
+    };
     posSale = { createSale: vi.fn() };
     TestBed.configureTestingModule({
       imports: [AdminPosPage],
@@ -205,7 +267,7 @@ describe('AdminPosPage', () => {
     });
     fixture = TestBed.createComponent(AdminPosPage);
     component = fixture.componentInstance;
-    cart = TestBed.inject(PosCartStore);
+    cart = fixture.componentRef.injector.get(PosCartStore);
     fixture.detectChanges();
     cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
     // Selection lives in the cart component (private); simulate via a click flow
@@ -234,8 +296,7 @@ describe('AdminPosPage', () => {
     );
     expect(cartInstance).toBeTruthy();
     const cartComp = cartInstance.componentInstance as PosCartComponent;
-    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod']
-      .set('QR');
+    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod'].set('QR');
     fixture.detectChanges();
 
     component.onCheckout();
@@ -260,17 +321,14 @@ describe('AdminPosPage', () => {
       (el) => el.componentInstance instanceof PosCartComponent,
     );
     const cartComp = cartInstance.componentInstance as PosCartComponent;
-    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod']
-      .set('QR');
+    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod'].set('QR');
     fixture.detectChanges();
 
     component.onCheckout();
     fixture.detectChanges();
 
     expect(cart.lines()).toEqual([]);
-    const dialog = document.body.querySelector(
-      '[data-testid="pos-checkout-result-dialog"]',
-    );
+    const dialog = document.body.querySelector('[data-testid="pos-checkout-result-dialog"]');
     expect(dialog).toBeTruthy();
     // Result dialog renders into body (PrimeNG appendTo='body')
     expect(document.body.textContent).toContain('PS-20260630-000001');
@@ -294,8 +352,7 @@ describe('AdminPosPage', () => {
       (el) => el.componentInstance instanceof PosCartComponent,
     );
     const cartComp = cartInstance.componentInstance as PosCartComponent;
-    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod']
-      .set('QR');
+    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod'].set('QR');
     fixture.detectChanges();
 
     component.onCheckout();
@@ -321,8 +378,7 @@ describe('AdminPosPage', () => {
       (el) => el.componentInstance instanceof PosCartComponent,
     );
     const cartComp = cartInstance.componentInstance as PosCartComponent;
-    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod']
-      .set('QR');
+    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod'].set('QR');
     fixture.detectChanges();
 
     const event = new KeyboardEvent('keydown', { key: 'F8' });
@@ -339,7 +395,11 @@ describe('AdminPosPage', () => {
   });
 
   it('does nothing on F8 when the cash session is missing', () => {
-    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    cashService = {
+      currentSession: vi
+        .fn()
+        .mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))),
+    };
     posSale = { createSale: vi.fn() };
     TestBed.configureTestingModule({
       imports: [AdminPosPage],
@@ -355,7 +415,7 @@ describe('AdminPosPage', () => {
     });
     fixture = TestBed.createComponent(AdminPosPage);
     component = fixture.componentInstance;
-    cart = TestBed.inject(PosCartStore);
+    cart = fixture.componentRef.injector.get(PosCartStore);
     cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
     fixture.detectChanges();
 
@@ -431,6 +491,87 @@ describe('AdminPosPage', () => {
     expect(cashService.currentSession).toHaveBeenCalledTimes(1);
   });
 
+  it('waits for the F8 cash-session refresh before submitting the sale', () => {
+    const refreshedSession$ = new Subject<CashSessionDto>();
+    cashService = {
+      currentSession: vi
+        .fn()
+        .mockReturnValueOnce(of(cashSession()))
+        .mockReturnValueOnce(refreshedSession$),
+    };
+    posSale = { createSale: vi.fn().mockReturnValue(of(buildOrder())) };
+    configure();
+    cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
+    fixture.detectChanges();
+
+    selectQrPaymentMethod();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8' }));
+    expect(posSale.createSale).not.toHaveBeenCalled();
+
+    refreshedSession$.next(cashSession());
+    expect(posSale.createSale).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not submit on F8 when the refreshed cash session is null', () => {
+    cashService = {
+      currentSession: vi.fn().mockReturnValueOnce(of(cashSession())).mockReturnValueOnce(of(null)),
+    };
+    posSale = { createSale: vi.fn() };
+    configure();
+    cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
+    fixture.detectChanges();
+    selectQrPaymentMethod();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8' }));
+
+    expect(cashService.currentSession).toHaveBeenCalledTimes(2);
+    expect(posSale.createSale).not.toHaveBeenCalled();
+  });
+
+  it('does not submit on F8 when the refreshed cash session errors', () => {
+    cashService = {
+      currentSession: vi
+        .fn()
+        .mockReturnValueOnce(of(cashSession()))
+        .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 404 }))),
+    };
+    posSale = { createSale: vi.fn() };
+    configure();
+    cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
+    fixture.detectChanges();
+    selectQrPaymentMethod();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8' }));
+
+    expect(cashService.currentSession).toHaveBeenCalledTimes(2);
+    expect(posSale.createSale).not.toHaveBeenCalled();
+  });
+
+  it('ignores repeated F8 presses while the cash-session refresh is pending', () => {
+    const refreshedSession$ = new Subject<CashSessionDto>();
+    cashService = {
+      currentSession: vi
+        .fn()
+        .mockReturnValueOnce(of(cashSession()))
+        .mockReturnValueOnce(refreshedSession$),
+    };
+    posSale = { createSale: vi.fn().mockReturnValue(of(buildOrder())) };
+    configure();
+    cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
+    fixture.detectChanges();
+    selectQrPaymentMethod();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8' }));
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F8' }));
+
+    expect(cashService.currentSession).toHaveBeenCalledTimes(2);
+    expect(posSale.createSale).not.toHaveBeenCalled();
+
+    refreshedSession$.next(cashSession());
+    expect(posSale.createSale).toHaveBeenCalledTimes(1);
+  });
+
   it('re-probes the session on F8 so a stale cache is not acted on', () => {
     configure();
     cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
@@ -439,7 +580,11 @@ describe('AdminPosPage', () => {
     const callsBefore = cashService.currentSession.mock.calls.length;
 
     // Simulate the session being closed in another tab right before F8.
-    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    cashService = {
+      currentSession: vi
+        .fn()
+        .mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))),
+    };
     posSale = { createSale: vi.fn() };
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
@@ -456,7 +601,7 @@ describe('AdminPosPage', () => {
     });
     fixture = TestBed.createComponent(AdminPosPage);
     component = fixture.componentInstance;
-    cart = TestBed.inject(PosCartStore);
+    cart = fixture.componentRef.injector.get(PosCartStore);
     cart.addItem({ productId: 1, name: 'Aceite', unitPrice: 500 });
     fixture.detectChanges();
 
@@ -480,14 +625,16 @@ describe('AdminPosPage', () => {
 
   it('shows the refresh button when the cash session is open', () => {
     configure();
-    const btn = fixture.nativeElement.querySelector(
-      '[data-testid="refresh-cash-session-button"]',
-    );
+    const btn = fixture.nativeElement.querySelector('[data-testid="refresh-cash-session-button"]');
     expect(btn).toBeTruthy();
   });
 
   it('shows the refresh button when the cash session is missing', () => {
-    cashService = { currentSession: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))) };
+    cashService = {
+      currentSession: vi
+        .fn()
+        .mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 }))),
+    };
     posSale = { createSale: vi.fn() };
     TestBed.configureTestingModule({
       imports: [AdminPosPage],
@@ -503,12 +650,10 @@ describe('AdminPosPage', () => {
     });
     fixture = TestBed.createComponent(AdminPosPage);
     component = fixture.componentInstance;
-    cart = TestBed.inject(PosCartStore);
+    cart = fixture.componentRef.injector.get(PosCartStore);
     fixture.detectChanges();
 
-    const btn = fixture.nativeElement.querySelector(
-      '[data-testid="refresh-cash-session-button"]',
-    );
+    const btn = fixture.nativeElement.querySelector('[data-testid="refresh-cash-session-button"]');
     expect(btn).toBeTruthy();
   });
 
@@ -531,12 +676,10 @@ describe('AdminPosPage', () => {
     fixture.detectChanges();
 
     const cartInstance = fixture.debugElement.query(
-      (el: { componentInstance: unknown }) =>
-        el.componentInstance instanceof PosCartComponent,
+      (el: { componentInstance: unknown }) => el.componentInstance instanceof PosCartComponent,
     );
     const cartComp = cartInstance.componentInstance as PosCartComponent;
-    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod']
-      .set('QR');
+    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod'].set('QR');
     fixture.detectChanges();
 
     const callsBefore = cashService.currentSession.mock.calls.length;
@@ -566,12 +709,10 @@ describe('AdminPosPage', () => {
     fixture.detectChanges();
 
     const cartInstance = fixture.debugElement.query(
-      (el: { componentInstance: unknown }) =>
-        el.componentInstance instanceof PosCartComponent,
+      (el: { componentInstance: unknown }) => el.componentInstance instanceof PosCartComponent,
     );
     const cartComp = cartInstance.componentInstance as PosCartComponent;
-    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod']
-      .set('QR');
+    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod'].set('QR');
     fixture.detectChanges();
 
     const callsBefore = cashService.currentSession.mock.calls.length;
@@ -600,12 +741,10 @@ describe('AdminPosPage', () => {
     fixture.detectChanges();
 
     const cartInstance = fixture.debugElement.query(
-      (el: { componentInstance: unknown }) =>
-        el.componentInstance instanceof PosCartComponent,
+      (el: { componentInstance: unknown }) => el.componentInstance instanceof PosCartComponent,
     );
     const cartComp = cartInstance.componentInstance as PosCartComponent;
-    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod']
-      .set('QR');
+    (cartComp as unknown as Record<string, { set(v: unknown): void }>)['selectedMethod'].set('QR');
     fixture.detectChanges();
 
     const callsBefore = cashService.currentSession.mock.calls.length;

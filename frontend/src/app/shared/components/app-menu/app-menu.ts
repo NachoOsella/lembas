@@ -1,5 +1,5 @@
-import { Component, input, viewChild } from '@angular/core';
-import { MenuItem } from 'primeng/api';
+import { Component, input, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import type { MenuItem } from 'primeng/api';
 import { Menu } from 'primeng/menu';
 
 /**
@@ -19,6 +19,7 @@ import { Menu } from 'primeng/menu';
  * work the same as with PrimeNG's native p-menu.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-menu',
   imports: [Menu],
   templateUrl: './app-menu.html',

@@ -1,6 +1,7 @@
 package com.dietetica.lembas.users.service;
 
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
+import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.dto.CreateInternalUserRequest;
 import com.dietetica.lembas.users.dto.UpdateUserRequest;
@@ -9,16 +10,14 @@ import com.dietetica.lembas.users.dto.UserStatusRequest;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
-import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import java.util.List;
+import java.util.Locale;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Locale;
 
 /**
  * Application service for admin user management (CRUD of internal users).
@@ -33,18 +32,19 @@ public class UserAdminService {
     private static final List<Role> INTERNAL_ROLES = List.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE);
 
     private final UserRepository userRepository;
-    private final BranchRepository branchRepository;
+    private final BranchQuery branchQuery;
     private final UserBranchPolicy userBranchPolicy;
     private final PasswordEncoder passwordEncoder;
     private final SecurityContextHelper securityContextHelper;
 
-    public UserAdminService(UserRepository userRepository,
-                            BranchRepository branchRepository,
-                            UserBranchPolicy userBranchPolicy,
-                            PasswordEncoder passwordEncoder,
-                            SecurityContextHelper securityContextHelper) {
+    public UserAdminService(
+            UserRepository userRepository,
+            BranchQuery branchQuery,
+            UserBranchPolicy userBranchPolicy,
+            PasswordEncoder passwordEncoder,
+            SecurityContextHelper securityContextHelper) {
         this.userRepository = userRepository;
-        this.branchRepository = branchRepository;
+        this.branchQuery = branchQuery;
         this.userBranchPolicy = userBranchPolicy;
         this.passwordEncoder = passwordEncoder;
         this.securityContextHelper = securityContextHelper;
@@ -65,12 +65,12 @@ public class UserAdminService {
             throw new DomainException(
                     "INVALID_ROLE_FILTER",
                     HttpStatus.BAD_REQUEST,
-                    "Customer users cannot be managed from the admin endpoint"
-            );
+                    "Customer users cannot be managed from the admin endpoint");
         }
 
         String normalizedSearch = normalizeSearch(search);
-        return userRepository.findInternalUsers(INTERNAL_ROLES, role, branchId, normalizedSearch, pageable)
+        return userRepository
+                .findInternalUsers(INTERNAL_ROLES, role, branchId, normalizedSearch, pageable)
                 .map(this::toResponse);
     }
 
@@ -101,10 +101,7 @@ public class UserAdminService {
 
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new DomainException(
-                    "EMAIL_DUPLICATED",
-                    HttpStatus.CONFLICT,
-                    "A user with this email address already exists"
-            );
+                    "EMAIL_DUPLICATED", HttpStatus.CONFLICT, "A user with this email address already exists");
         }
 
         String encodedPassword = passwordEncoder.encode(request.password());
@@ -116,8 +113,7 @@ public class UserAdminService {
                 request.firstName().trim(),
                 request.lastName().trim(),
                 request.phone() != null ? request.phone().trim() : null,
-                request.role()
-        );
+                request.role());
 
         userBranchPolicy.validate(user.getRole(), user.getBranchId());
         validateBranchAssignment(user.getRole(), user.getBranchId());
@@ -141,10 +137,7 @@ public class UserAdminService {
             String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
             if (!user.getEmail().equals(normalizedEmail) && userRepository.existsByEmail(normalizedEmail)) {
                 throw new DomainException(
-                        "EMAIL_DUPLICATED",
-                        HttpStatus.CONFLICT,
-                        "A user with this email address already exists"
-                );
+                        "EMAIL_DUPLICATED", HttpStatus.CONFLICT, "A user with this email address already exists");
             }
             user.setEmail(normalizedEmail);
         }
@@ -171,10 +164,7 @@ public class UserAdminService {
             User currentUser = securityContextHelper.getCurrentUser();
             if (user.getId().equals(currentUser.getId())) {
                 throw new DomainException(
-                        "SELF_ROLE_CHANGE_FORBIDDEN",
-                        HttpStatus.FORBIDDEN,
-                        "You cannot change your own role"
-                );
+                        "SELF_ROLE_CHANGE_FORBIDDEN", HttpStatus.FORBIDDEN, "You cannot change your own role");
             }
             user.setRole(request.role());
             if (request.role() == Role.ADMIN) {
@@ -204,13 +194,13 @@ public class UserAdminService {
     public UserResponse updateUserStatus(Long id, UserStatusRequest request) {
         User user = findInternalUserOrThrow(id);
 
-        if (user.getRole() == Role.ADMIN && Boolean.FALSE.equals(request.enabled())
+        if (user.getRole() == Role.ADMIN
+                && Boolean.FALSE.equals(request.enabled())
                 && userRepository.countByRoleAndEnabledTrue(Role.ADMIN) <= 1) {
             throw new DomainException(
                     "LAST_ADMIN_DISABLE_FORBIDDEN",
                     HttpStatus.BAD_REQUEST,
-                    "Cannot disable the last enabled admin user"
-            );
+                    "Cannot disable the last enabled admin user");
         }
 
         user.setEnabled(request.enabled());
@@ -226,21 +216,16 @@ public class UserAdminService {
             return;
         }
 
-        if (!branchRepository.existsById(branchId)) {
+        if (!branchQuery.existsById(branchId)) {
             throw new DomainException(
-                    "BRANCH_NOT_FOUND",
-                    HttpStatus.NOT_FOUND,
-                    "Branch not found with id: " + branchId
-            );
+                    "BRANCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Branch not found with id: " + branchId);
         }
 
-        if ((role == Role.MANAGER || role == Role.EMPLOYEE)
-                && !branchRepository.existsByIdAndActiveTrue(branchId)) {
+        if ((role == Role.MANAGER || role == Role.EMPLOYEE) && !branchQuery.existsActive(branchId)) {
             throw new DomainException(
                     "BRANCH_INACTIVE",
                     HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Manager and employee users must be assigned to an active branch"
-            );
+                    "Manager and employee users must be assigned to an active branch");
         }
     }
 
@@ -248,19 +233,13 @@ public class UserAdminService {
      * Finds an internal user or hides customers from this admin-management boundary.
      */
     private User findInternalUserOrThrow(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new DomainException(
-                        "USER_NOT_FOUND",
-                        HttpStatus.NOT_FOUND,
-                        "User not found with id: " + id
-                ));
+        User user = userRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        new DomainException("USER_NOT_FOUND", HttpStatus.NOT_FOUND, "User not found with id: " + id));
 
         if (user.getRole() == Role.CUSTOMER) {
-            throw new DomainException(
-                    "USER_NOT_FOUND",
-                    HttpStatus.NOT_FOUND,
-                    "User not found with id: " + id
-            );
+            throw new DomainException("USER_NOT_FOUND", HttpStatus.NOT_FOUND, "User not found with id: " + id);
         }
         return user;
     }
@@ -279,7 +258,6 @@ public class UserAdminService {
                 user.getBranchId(),
                 user.isEnabled(),
                 user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
+                user.getUpdatedAt());
     }
 }

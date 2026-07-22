@@ -1,8 +1,8 @@
 package com.dietetica.lembas.suppliers.service;
 
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.branch.model.Branch;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.suppliers.dto.PurchaseOrderDetailDto;
 import com.dietetica.lembas.suppliers.dto.PurchaseOrderItemDto;
@@ -19,6 +19,11 @@ import com.dietetica.lembas.suppliers.repository.SupplierProductRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierRepository;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,40 +32,36 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
 /** Application service for supplier purchase orders and state transitions. */
 @Service
 public class PurchaseOrderService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final SupplierRepository supplierRepository;
     private final SupplierProductRepository supplierProductRepository;
-    private final BranchRepository branchRepository;
+    private final BranchQuery branchQuery;
     private final SecurityContextHelper securityContextHelper;
 
     public PurchaseOrderService(
             PurchaseOrderRepository purchaseOrderRepository,
             SupplierRepository supplierRepository,
             SupplierProductRepository supplierProductRepository,
-            BranchRepository branchRepository,
-            SecurityContextHelper securityContextHelper
-    ) {
+            BranchQuery branchQuery,
+            SecurityContextHelper securityContextHelper) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.supplierRepository = supplierRepository;
         this.supplierProductRepository = supplierProductRepository;
-        this.branchRepository = branchRepository;
+        this.branchQuery = branchQuery;
         this.securityContextHelper = securityContextHelper;
     }
 
     /** Lists purchase orders with optional supplier, branch, and status filters. */
     @Transactional(readOnly = true)
-    public Page<PurchaseOrderSummaryDto> list(Long supplierId, Long branchId, PurchaseOrderStatus status, Pageable pageable) {
+    public Page<PurchaseOrderSummaryDto> list(
+            Long supplierId, Long branchId, PurchaseOrderStatus status, Pageable pageable) {
         Long effectiveBranchId = resolveBranchForUser(branchId);
-        return purchaseOrderRepository.search(supplierId, effectiveBranchId, status, mapSort(pageable)).map(this::toSummaryDto);
+        return purchaseOrderRepository
+                .search(supplierId, effectiveBranchId, status, mapSort(pageable))
+                .map(this::toSummaryDto);
     }
 
     /** Returns a detailed purchase order for view, edit, or PDF preview. */
@@ -147,14 +148,20 @@ public class PurchaseOrderService {
     /** Builds purchase order items, preloading current supplier costs when unit cost is omitted. */
     private List<PurchaseOrderItem> buildItems(Long supplierId, List<PurchaseOrderItemRequest> requests) {
         if (requests == null || requests.isEmpty()) {
-            throw new DomainException("PURCHASE_ORDER_EMPTY", HttpStatus.BAD_REQUEST, "Purchase order must contain at least one item");
+            throw new DomainException(
+                    "PURCHASE_ORDER_EMPTY", HttpStatus.BAD_REQUEST, "Purchase order must contain at least one item");
         }
         List<PurchaseOrderItem> items = new ArrayList<>();
         for (PurchaseOrderItemRequest request : requests) {
-            SupplierProduct supplierProduct = supplierProductRepository.findByIdAndActiveTrue(request.supplierProductId())
-                    .orElseThrow(() -> new DomainException("SUPPLIER_PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Supplier product not found"));
+            SupplierProduct supplierProduct = supplierProductRepository
+                    .findByIdAndActiveTrue(request.supplierProductId())
+                    .orElseThrow(() -> new DomainException(
+                            "SUPPLIER_PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Supplier product not found"));
             if (!supplierProduct.getSupplier().getId().equals(supplierId)) {
-                throw new DomainException("PURCHASE_ORDER_SUPPLIER_PRODUCT_INVALID", HttpStatus.CONFLICT, "Product is not associated with the selected supplier");
+                throw new DomainException(
+                        "PURCHASE_ORDER_SUPPLIER_PRODUCT_INVALID",
+                        HttpStatus.CONFLICT,
+                        "Product is not associated with the selected supplier");
             }
             BigDecimal unitCost = request.unitCost() == null ? supplierProduct.getCurrentCost() : request.unitCost();
             PurchaseOrderItem item = new PurchaseOrderItem();
@@ -183,21 +190,25 @@ public class PurchaseOrderService {
 
     /** Finds an active supplier or throws the standard API error. */
     private Supplier findSupplier(Long id) {
-        return supplierRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(() -> new DomainException("SUPPLIER_NOT_FOUND", HttpStatus.NOT_FOUND, "Supplier not found"));
+        return supplierRepository
+                .findByIdAndActiveTrue(id)
+                .orElseThrow(
+                        () -> new DomainException("SUPPLIER_NOT_FOUND", HttpStatus.NOT_FOUND, "Supplier not found"));
     }
 
     /** Finds an active branch or throws the standard API error. */
     private Branch findBranch(Long id) {
-        return branchRepository.findById(id)
-                .filter(Branch::isActive)
+        return branchQuery
+                .findActiveById(id)
                 .orElseThrow(() -> new DomainException("BRANCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Branch not found"));
     }
 
     /** Finds a purchase order with required associations or throws a domain error. */
     private PurchaseOrder findOrder(Long id) {
-        return purchaseOrderRepository.findWithItemsById(id)
-                .orElseThrow(() -> new DomainException("PURCHASE_ORDER_NOT_FOUND", HttpStatus.NOT_FOUND, "Purchase order not found"));
+        return purchaseOrderRepository
+                .findWithItemsById(id)
+                .orElseThrow(() -> new DomainException(
+                        "PURCHASE_ORDER_NOT_FOUND", HttpStatus.NOT_FOUND, "Purchase order not found"));
     }
 
     /** Restricts branch-scoped staff to purchase orders for their assigned branch. */
@@ -209,8 +220,8 @@ public class PurchaseOrderService {
         if (currentUser.getBranchId() == null
                 || order.getBranch() == null
                 || !currentUser.getBranchId().equals(order.getBranch().getId())) {
-            throw new DomainException("ACCESS_DENIED", HttpStatus.FORBIDDEN,
-                    "Purchase order belongs to another branch");
+            throw new DomainException(
+                    "ACCESS_DENIED", HttpStatus.FORBIDDEN, "Purchase order belongs to another branch");
         }
     }
 
@@ -221,8 +232,7 @@ public class PurchaseOrderService {
             return requestedBranchId;
         }
         if (currentUser.getBranchId() == null) {
-            throw new DomainException("INVALID_USER_BRANCH", HttpStatus.BAD_REQUEST,
-                    "User has no assigned branch");
+            throw new DomainException("INVALID_USER_BRANCH", HttpStatus.BAD_REQUEST, "User has no assigned branch");
         }
         return currentUser.getBranchId();
     }
@@ -237,7 +247,8 @@ public class PurchaseOrderService {
     /** Validates the order still has lines before confirmation. */
     private void ensureHasItems(PurchaseOrder order) {
         if (order.getItems().isEmpty()) {
-            throw new DomainException("PURCHASE_ORDER_EMPTY", HttpStatus.BAD_REQUEST, "Purchase order must contain at least one item");
+            throw new DomainException(
+                    "PURCHASE_ORDER_EMPTY", HttpStatus.BAD_REQUEST, "Purchase order must contain at least one item");
         }
     }
 
@@ -262,11 +273,12 @@ public class PurchaseOrderService {
         }
         Sort mapped = Sort.unsorted();
         for (Sort.Order order : pageable.getSort()) {
-            String property = switch (order.getProperty()) {
-                case "supplierName" -> "supplier.name";
-                case "branchName" -> "branch.name";
-                default -> order.getProperty();
-            };
+            String property =
+                    switch (order.getProperty()) {
+                        case "supplierName" -> "supplier.name";
+                        case "branchName" -> "branch.name";
+                        default -> order.getProperty();
+                    };
             mapped = mapped.and(Sort.by(new Sort.Order(order.getDirection(), property)));
         }
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mapped);
@@ -290,8 +302,7 @@ public class PurchaseOrderService {
                 order.getExpectedDeliveryDate(),
                 calculateTotal(order),
                 order.getItems().size(),
-                order.getCreatedAt()
-        );
+                order.getCreatedAt());
     }
 
     /** Maps an order to a detailed DTO. */
@@ -316,8 +327,7 @@ public class PurchaseOrderService {
                 order.getConfirmedAt(),
                 order.getSentAt(),
                 order.getCancelledAt(),
-                order.getCancellationReason()
-        );
+                order.getCancellationReason());
     }
 
     /** Maps an order item to its DTO. */
@@ -327,11 +337,14 @@ public class PurchaseOrderService {
                 item.getProduct().getId(),
                 item.getProduct().getName(),
                 item.getProduct().getBarcode(),
-                item.getSupplierProduct() == null ? null : item.getSupplierProduct().getId(),
-                item.getSupplierProduct() == null ? null : item.getSupplierProduct().getSupplierSku(),
+                item.getSupplierProduct() == null
+                        ? null
+                        : item.getSupplierProduct().getId(),
+                item.getSupplierProduct() == null
+                        ? null
+                        : item.getSupplierProduct().getSupplierSku(),
                 item.getQuantityOrdered(),
                 item.getUnitCost(),
-                item.getSubtotal()
-        );
+                item.getSubtotal());
     }
 }

@@ -7,11 +7,7 @@
   }
   <!-- Error -->
   @else if (error()) {
-    <app-error-alert
-      variant="inline"
-      [title]="error()"
-      message=""
-    >
+    <app-error-alert variant="inline" [title]="error()" message="">
       <app-button variant="secondary" size="sm" (click)="retry()">Reintentar</app-button>
       <app-button variant="ghost" size="sm" icon="pi pi-arrow-left" routerLink="/admin/orders">
         Volver
@@ -25,12 +21,7 @@
       [eyebrow]="'Pedido ' + o.orderNumber"
       [title]="typeLabel() + ' - ' + (o.customerName || 'Sin cliente')"
     >
-      <app-button
-        variant="secondary"
-        size="sm"
-        icon="pi pi-arrow-left"
-        routerLink="/admin/orders"
-      >
+      <app-button variant="secondary" size="sm" icon="pi pi-arrow-left" routerLink="/admin/orders">
         Volver
       </app-button>
     </app-page-header>
@@ -53,37 +44,7 @@
 
         <!-- Timeline card -->
         <app-section-card eyebrow="Trazabilidad" title="Historial del pedido">
-          <ol class="order-timeline" role="list" aria-label="Historial de estados del pedido">
-            @for (step of buildTimeline(); track step.key; let last = $last) {
-              <li
-                class="order-timeline__step"
-                [class.order-timeline__step--completed]="step.state === 'completed'"
-                [class.order-timeline__step--active]="step.state === 'active'"
-                [class.order-timeline__step--cancelled]="step.state === 'cancelled'"
-                [class.order-timeline__step--last]="last"
-              >
-                <span class="order-timeline__dot" aria-hidden="true">
-                  @if (step.state === 'completed') {
-                    <i class="pi pi-check" aria-hidden="true"></i>
-                  } @else if (step.state === 'cancelled') {
-                    <i class="pi pi-times" aria-hidden="true"></i>
-                  } @else if (step.state === 'active') {
-                    <span class="order-timeline__pulse"></span>
-                  }
-                </span>
-
-                <div class="order-timeline__content">
-                  <span class="order-timeline__label">{{ step.label }}</span>
-                  <span class="order-timeline__description">{{ step.description }}</span>
-                  @if (step.timestamp) {
-                    <time class="order-timeline__time">{{ step.timestamp | shortDateAr }}</time>
-                  } @else {
-                    <span class="order-timeline__time order-timeline__time--pending">Pendiente</span>
-                  }
-                </div>
-              </li>
-            }
-          </ol>
+          <app-order-detail-timeline [steps]="buildTimeline()" />
         </app-section-card>
 
         <!-- Action buttons (ONLINE orders only) -->
@@ -107,8 +68,7 @@
               Confirma el cambio para notificar al cliente y avanzar el flujo de preparacion.
             </p>
           </app-section-card>
-        }
-        @else if (isOnline() && isDelivered()) {
+        } @else if (isOnline() && isDelivered()) {
           <app-section-card eyebrow="Pedido finalizado" title="Ciclo completado">
             <div class="order-detail-complete">
               <div class="order-detail-complete__icon" aria-hidden="true">
@@ -120,18 +80,17 @@
               </div>
             </div>
           </app-section-card>
-        }
-        @else if (isOnline() && isAwaitingPayment()) {
+        } @else if (isOnline() && isAwaitingPayment()) {
           <app-section-card eyebrow="Esperando confirmacion" title="Aun no se puede preparar">
             <p class="order-detail-waiting">
               Las acciones de preparacion estaran disponibles cuando el pago sea confirmado.
             </p>
           </app-section-card>
-        }
-        @else if (o.type === 'POS') {
+        } @else if (o.type === 'POS') {
           <app-section-card eyebrow="Pedido POS" title="Sin flujo de preparacion">
             <p class="order-detail-waiting">
-              Los pedidos presenciales se gestionan directamente desde el punto de venta y no requieren acciones de preparacion.
+              Los pedidos presenciales se gestionan directamente desde el punto de venta y no
+              requieren acciones de preparacion.
             </p>
           </app-section-card>
         }
@@ -140,7 +99,8 @@
         @if (isCancellable()) {
           <app-section-card eyebrow="Accion destructiva" title="Cancelar pedido">
             <p class="order-detail-waiting">
-              La cancelacion revertira el stock descontado (si aplica) y marcara los pagos como cancelados.
+              La cancelacion revertira el stock descontado (si aplica) y marcara los pagos como
+              cancelados.
             </p>
             <button
               type="button"
@@ -275,10 +235,7 @@
                     </span>
                   </div>
                   <div class="order-detail-payments__status">
-                    <app-status-badge
-                      [status]="payment.status"
-                      [config]="paymentStatusBadges"
-                    />
+                    <app-status-badge [status]="payment.status" [config]="paymentStatusBadges" />
                   </div>
                   <div class="order-detail-payments__amount">
                     <strong>{{ payment.amount | currencyAr }}</strong>

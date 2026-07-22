@@ -1,20 +1,30 @@
 import { ViewportScroller } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import type { OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { MenuItem } from 'primeng/api';
+import type { MenuItem } from 'primeng/api';
 
-import { Cart } from '../../../core/services/cart';
-import { CatalogService } from '../../../core/services/catalog';
-import { StoreBranchSelectionService } from '../../../core/services/store-branch-selection';
-import { ProductSummary } from '../../../shared/models/product';
-import { AppBadge } from '../../../shared/components/app-badge/app-badge';
-import { AppBreadcrumb } from '../../../shared/components/app-breadcrumb/app-breadcrumb';
-import { AppButton } from '../../../shared/components/app-button/app-button';
-import { AppEyebrow } from '../../../shared/components/app-eyebrow/app-eyebrow';
-import { ErrorAlert } from '../../../shared/components/error-alert/error-alert';
-import { LoadingSpinner } from '../../../shared/components/loading-spinner/loading-spinner';
-import { ProductGrid } from '../../../shared/components/product-grid/product-grid';
-import { QuantityStepper } from '../../../shared/components/quantity-stepper/quantity-stepper';
+import { Cart } from '@features/checkout/public-api';
+import { CatalogService } from '@features/catalog/data-access/catalog';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
+import type { ProductSummary } from '@features/catalog/domain/product';
+import { AppBadge } from '@shared/components/app-badge/app-badge';
+import { AppBreadcrumb } from '@shared/components/app-breadcrumb/app-breadcrumb';
+import { AppButton } from '@shared/components/app-button/app-button';
+import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import { ProductGrid } from '@features/catalog/public-api';
+import { QuantityStepper } from '@shared/components/quantity-stepper/quantity-stepper';
 
 @Component({
   selector: 'app-product-detail',
@@ -51,6 +61,9 @@ export class ProductDetail implements OnInit {
 
   /** Last branch id used to load detail stock availability. */
   private previousBranchId: number | null = this.branchSelection.selectedBranchId();
+  private productRequestId = 0;
+  private relatedRequestId = 0;
+  private feedbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   /** Temporary feedback state after adding to cart. */
   protected readonly justAdded = signal(false);
@@ -80,7 +93,7 @@ export class ProductDetail implements OnInit {
   ngOnInit(): void {
     // Subscribe to paramMap so the component reacts when navigating between
     // different products (same route pattern, different :id param).
-    const sub = this.route.paramMap.subscribe((params) => {
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const id = Number(params.get('id'));
       if (!id || isNaN(id)) {
         this.error.set(true);
@@ -92,20 +105,23 @@ export class ProductDetail implements OnInit {
       this.loadProduct(id);
       this.viewportScroller.scrollToPosition([0, 0]);
     });
-    this.destroyRef.onDestroy(() => sub.unsubscribe());
+    this.destroyRef.onDestroy(() => this.clearFeedbackTimeout());
   }
 
   private loadProduct(id: number): void {
+    const requestId = ++this.productRequestId;
     this.loading.set(true);
     this.error.set(false);
 
     this.catalogService.getProductDetail(id).subscribe({
       next: (p) => {
+        if (requestId !== this.productRequestId) return;
         this.product.set(p);
         this.loading.set(false);
         this.loadRelatedProducts(p);
       },
       error: () => {
+        if (requestId !== this.productRequestId) return;
         this.error.set(true);
         this.loading.set(false);
       },
@@ -117,32 +133,36 @@ export class ProductDetail implements OnInit {
    * Falls back to featured (recommended) products when the category has no other products.
    */
   private loadRelatedProducts(current: ProductSummary): void {
+    const requestId = ++this.relatedRequestId;
     this.catalogService.getRelatedProducts(current.id).subscribe({
       next: (res) => {
+        if (requestId !== this.relatedRequestId) return;
         if (res.content.length > 0) {
           this.relatedProducts.set(res.content);
           this.relatedTitle.set(`Mas de ${current.categoryName}`);
           this.relatedLink.set({ categoryId: current.categoryId });
         } else {
-          this.loadFeaturedAsFallback();
+          this.loadFeaturedAsFallback(requestId, current.id);
         }
       },
-      error: () => this.loadFeaturedAsFallback(),
+      error: () => {
+        if (requestId === this.relatedRequestId) {
+          this.loadFeaturedAsFallback(requestId, current.id);
+        }
+      },
     });
   }
 
   /** Load featured/recommended products as fallback when no same-category products exist. */
-  private loadFeaturedAsFallback(): void {
+  private loadFeaturedAsFallback(requestId: number, currentProductId: number): void {
     this.catalogService.getFeaturedProducts().subscribe({
       next: (res) => {
-        // Exclude the current product from featured list
-        const p = this.product();
-        const featured = res.content.filter((item) => item.id !== p?.id).slice(0, 6);
+        if (requestId !== this.relatedRequestId) return;
+        const featured = res.content.filter((item) => item.id !== currentProductId).slice(0, 6);
         this.relatedProducts.set(featured);
         this.relatedTitle.set('Recomendados para vos');
-        this.relatedLink.set(null); // No category link for featured
+        this.relatedLink.set(null);
       },
-      // Silently ignore
     });
   }
 
@@ -163,7 +183,18 @@ export class ProductDetail implements OnInit {
 
     // Show temporary feedback
     this.justAdded.set(true);
-    setTimeout(() => this.justAdded.set(false), 2000);
+    this.clearFeedbackTimeout();
+    this.feedbackTimeoutId = setTimeout(() => {
+      this.feedbackTimeoutId = null;
+      this.justAdded.set(false);
+    }, 2000);
+  }
+
+  private clearFeedbackTimeout(): void {
+    if (this.feedbackTimeoutId !== null) {
+      clearTimeout(this.feedbackTimeoutId);
+      this.feedbackTimeoutId = null;
+    }
   }
 
   /** Maximum quantity allowed based on available stock. */

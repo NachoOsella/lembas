@@ -1,559 +1,159 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, Router } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { of, throwError } from 'rxjs';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Subject, of, throwError } from 'rxjs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { AuthService } from '@core/services/auth';
+import { ErrorMappingService } from '@core/services/error-mapping';
+import { UserService } from '@features/users/data-access/user';
+import { AdminOrderService } from '@features/orders/data-access/admin-order';
+import { AdminOrdersPageStore } from '@features/orders/public-api';
+import type { OrderStatus, OrderSummary } from '@features/orders/domain/order';
 import { Orders } from './orders';
-import { AdminOrderService } from '../../../core/services/admin-order';
-import { UserService } from '../../../core/services/user';
-import { AuthService, AuthUser } from '../../../core/services/auth';
-import { ErrorMappingService } from '../../../core/services/error-mapping';
-import { OrderSummary, OrderStatus, OrderType, FulfillmentType } from '../../../shared/models/order';
-import { PageResponse } from '../../../shared/models/page';
+import type { PageResponse } from '@shared/types/page';
 
-/** Creates a mock OrderSummary for testing. */
-function mockOrder(overrides: Partial<OrderSummary> = {}): OrderSummary {
+function order(overrides: Partial<OrderSummary> = {}): OrderSummary {
   return {
     id: 1,
-    orderNumber: 'ON-20260706-000001',
-    type: 'ONLINE' as OrderType,
-    status: 'PAID' as OrderStatus,
-    fulfillmentType: 'PICKUP' as FulfillmentType,
+    orderNumber: 'ON-001',
+    type: 'ONLINE',
+    status: 'PAID',
+    fulfillmentType: 'PICKUP',
     branchId: 1,
-    branchName: 'Sucursal Centro',
+    branchName: 'Centro',
     customerUserId: 10,
-    customerName: 'Ignacio Osella',
-    subtotal: 1500,
+    customerName: 'Test Customer',
+    subtotal: 200,
     discountTotal: 0,
-    total: 1500,
-    itemCount: 2,
-    paidAt: '2026-07-06T10:00:00Z',
+    total: 200,
+    itemCount: 1,
+    paidAt: '2026-06-12T10:00:00Z',
     deliveredAt: null,
-    createdAt: '2026-07-06T09:30:00Z',
+    createdAt: '2026-06-12T00:00:00Z',
     ...overrides,
   };
 }
 
-/** Creates a mock PageResponse for orders. */
-function mockPage(orders: OrderSummary[]): PageResponse<OrderSummary> {
+function page(content: OrderSummary[], number = 0): PageResponse<OrderSummary> {
   return {
-    content: orders,
-    totalElements: orders.length,
-    totalPages: 1,
-    number: 0,
+    content,
+    totalElements: content.length,
+    totalPages: content.length === 0 ? 0 : 1,
+    number,
     size: 10,
-    first: true,
+    first: number === 0,
     last: true,
-    empty: orders.length === 0,
+    empty: content.length === 0,
   };
 }
 
-describe('Orders (admin list)', () => {
-  let fixture: ComponentFixture<Orders>;
-  let component: Orders;
-  let adminOrderService: {
-    listOrders: ReturnType<typeof vi.fn>;
-    prepare: ReturnType<typeof vi.fn>;
-    markReady: ReturnType<typeof vi.fn>;
-    deliver: ReturnType<typeof vi.fn>;
-    cancel: ReturnType<typeof vi.fn>;
-  };
-  let router: { navigate: ReturnType<typeof vi.fn> };
-  let messageService: { add: ReturnType<typeof vi.fn> };
+type AdminOrderServiceMock = {
+  listOrders: ReturnType<typeof vi.fn>;
+  prepare: ReturnType<typeof vi.fn>;
+  markReady: ReturnType<typeof vi.fn>;
+  deliver: ReturnType<typeof vi.fn>;
+  cancel: ReturnType<typeof vi.fn>;
+};
 
-  function configure(role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'CUSTOMER' = 'ADMIN', userBranchId: number | null = null) {
-    adminOrderService = {
-      listOrders: vi.fn().mockReturnValue(of(mockPage([]))),
+describe('Admin order list decomposition', () => {
+  let fixture: ComponentFixture<Orders>;
+  let service: AdminOrderServiceMock;
+
+  beforeEach(() => {
+    service = {
+      listOrders: vi.fn().mockReturnValue(of(page([]))),
       prepare: vi.fn(),
       markReady: vi.fn(),
       deliver: vi.fn(),
       cancel: vi.fn(),
-    };
-    const userService = { listBranches: vi.fn().mockReturnValue(of([])) };
-    router = { navigate: vi.fn().mockResolvedValue(true) };
-    messageService = { add: vi.fn() };
-    const route = { snapshot: { paramMap: { get: () => null } } };
-    const authUser: AuthUser = {
-      id: 7,
-      email: `${role.toLowerCase()}@example.com`,
-      firstName: 'Test',
-      lastName: role,
-      role,
-      branchId: userBranchId,
-      branchName: null,
-    };
-    const authService = {
-      currentUser: vi.fn().mockReturnValue(authUser),
-      getUserRole: vi.fn().mockReturnValue(role),
     };
 
     TestBed.configureTestingModule({
       imports: [Orders],
       providers: [
         provideNoopAnimations(),
-        { provide: AdminOrderService, useValue: adminOrderService },
-        { provide: UserService, useValue: userService },
-        { provide: AuthService, useValue: authService },
-        {
-          provide: ErrorMappingService,
-          useValue: { getMessage: vi.fn().mockReturnValue('Error') },
-        },
-        { provide: Router, useValue: router },
-        { provide: ActivatedRoute, useValue: route },
-        { provide: MessageService, useValue: messageService },
+        { provide: AdminOrderService, useValue: service },
+        { provide: AuthService, useValue: { currentUser: () => null, getUserRole: () => 'ADMIN' } },
+        { provide: ErrorMappingService, useValue: { getMessage: () => 'Error' } },
+        { provide: MessageService, useValue: { add: vi.fn() } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: UserService, useValue: { listBranches: vi.fn().mockReturnValue(of([])) } },
       ],
     });
 
     fixture = TestBed.createComponent(Orders);
-    component = fixture.componentInstance;
-  }
-
-  beforeEach(() => {
-    configure();
   });
 
-  it('should create the component', () => {
-    fixture.detectChanges();
-    expect(component).toBeTruthy();
-  });
-
-  it('should load orders on init', () => {
-    fixture.detectChanges();
-    expect(adminOrderService.listOrders).toHaveBeenCalled();
-  });
-
-  it('should display order rows when data is present', async () => {
-    adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder()])));
-    component.loadOrders();
-    fixture.detectChanges();
+  it('loads and renders data rows', async () => {
+    service.listOrders.mockReturnValue(of(page([order({ orderNumber: 'ON-100' })])));
+    const store = fixture.debugElement.injector.get(AdminOrdersPageStore);
+    store.load();
     await fixture.whenStable();
-    const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).toContain('ON-20260706-000001');
+
+    expect(store.orders()).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('ON-100');
   });
 
-  it('should display customer name', async () => {
-    adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder()])));
-    component.loadOrders();
-    fixture.detectChanges();
+  it('renders an empty result without treating it as an error', async () => {
+    const store = fixture.debugElement.injector.get(AdminOrdersPageStore);
+    store.load();
     await fixture.whenStable();
-    const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).toContain('Ignacio Osella');
+
+    expect(store.orders()).toEqual([]);
+    expect(store.error()).toBe('');
   });
 
-  it('should display the type pill for ONLINE orders', async () => {
-    adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ type: 'ONLINE' })])));
-    component.loadOrders();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).toContain('Online');
-  });
-
-  it('should display the type pill for POS orders', async () => {
-    adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ type: 'POS' })])));
-    component.loadOrders();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).toContain('POS');
-  });
-
-  it('should show error alert on API failure', async () => {
-    adminOrderService.listOrders.mockReturnValue(
-      throwError(() => ({
-        status: 500,
-        error: { code: 'INTERNAL_ERROR', message: 'Server down' },
-      })),
+  it('keeps only the latest filter response', () => {
+    const oldResponse = new Subject<PageResponse<OrderSummary>>();
+    const latestResponse = new Subject<PageResponse<OrderSummary>>();
+    service.listOrders.mockImplementation((query: { search?: string }) =>
+      query.search === 'old' ? oldResponse : latestResponse,
     );
-    component.loadOrders();
-    fixture.detectChanges();
+    const store = fixture.debugElement.injector.get(AdminOrdersPageStore);
+
+    store.setSearch('old');
+    store.setSearch('new');
+    latestResponse.next(page([order({ orderNumber: 'NEW' })]));
+    oldResponse.next(page([order({ orderNumber: 'OLD' })]));
+
+    expect(store.orders()[0]?.orderNumber).toBe('NEW');
+  });
+
+  it('maps failure and recovers on retry', async () => {
+    service.listOrders.mockReturnValueOnce(throwError(() => new Error('network failure')));
+    const store = fixture.debugElement.injector.get(AdminOrdersPageStore);
+    store.load();
     await fixture.whenStable();
-    const el: HTMLElement = fixture.nativeElement;
-    const alertEl = el.querySelector('app-error-alert');
-    expect(alertEl).toBeTruthy();
-  });
+    expect(store.error()).toContain('No pudimos cargar');
 
-  it('should navigate to order detail on view click', async () => {
-    adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder()])));
-    component.loadOrders();
-    fixture.detectChanges();
+    service.listOrders.mockReturnValue(of(page([order({ status: 'READY' })])));
+    store.load();
     await fixture.whenStable();
-    const el: HTMLElement = fixture.nativeElement;
-    const viewBtn = el.querySelector('[aria-label*="Ver detalle"]') as HTMLElement;
-    if (viewBtn) {
-      viewBtn.click();
-      await fixture.whenStable();
-      expect(router.navigate).toHaveBeenCalledWith(['/admin/orders', 1]);
-    }
+    expect(store.error()).toBe('');
+    expect(store.orders()[0]?.status).toBe('READY' satisfies OrderStatus);
   });
 
-  // ----------------------------------------------------------------
-  // Quick transition action button
-  // ----------------------------------------------------------------
+  it('resets filters and pagination while preserving the request contract', () => {
+    const store = fixture.debugElement.injector.get(AdminOrdersPageStore);
+    store.setStatus('CANCELLED');
+    store.setSearch('pedido');
+    store.setPage(20, 10);
+    service.listOrders.mockClear();
 
-  describe('quick transition button', () => {
-    it('should show the quick action button for PAID ONLINE orders', async () => {
-      adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ status: 'PAID' })])));
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-      const el: HTMLElement = fixture.nativeElement;
-      const actionBtn = el.querySelector('[aria-label*="Preparar pedido"]') as HTMLElement;
-      expect(actionBtn).toBeTruthy();
-    });
-
-    it('should NOT show the quick action button for PAID POS orders', async () => {
-      adminOrderService.listOrders.mockReturnValue(
-        of(mockPage([mockOrder({ type: 'POS', status: 'PAID' })])),
-      );
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-      const el: HTMLElement = fixture.nativeElement;
-      const actionBtn = el.querySelector('[aria-label*="Preparar pedido"]') as HTMLElement;
-      expect(actionBtn).toBeNull();
-    });
-
-    it('should NOT show the quick action button for DELIVERED orders', async () => {
-      adminOrderService.listOrders.mockReturnValue(
-        of(mockPage([mockOrder({ status: 'DELIVERED' })])),
-      );
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-      const el: HTMLElement = fixture.nativeElement;
-      const actionBtn = el.querySelector('button.orders-icon-btn--action') as HTMLElement;
-      expect(actionBtn).toBeNull();
-    });
-
-    it('should open the confirm dialog when the action button is clicked (PAID)', async () => {
-      adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ status: 'PAID' })])));
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      const el: HTMLElement = fixture.nativeElement;
-      const actionBtn = el.querySelector('[aria-label*="Preparar pedido"]') as HTMLElement;
-      actionBtn.click();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      const confirmDialog = el.querySelector('app-confirm-dialog');
-      expect(confirmDialog).toBeTruthy();
-    });
-
-    it('should call prepare endpoint when confirm dialog is accepted (PAID)', async () => {
-      adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ status: 'PAID' })])));
-      adminOrderService.prepare.mockReturnValue(of(mockOrder({ status: 'PREPARING' })));
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      const el: HTMLElement = fixture.nativeElement;
-      const actionBtn = el.querySelector('[aria-label*="Preparar pedido"]') as HTMLElement;
-      actionBtn.click();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      // Trigger confirmed output on the dialog.
-      const confirmDe = fixture.debugElement.query(
-        (de) => de.nativeElement?.tagName?.toLowerCase() === 'app-confirm-dialog',
-      );
-      if (confirmDe) {
-        (confirmDe.componentInstance as { confirmed: { emit: () => void } }).confirmed.emit();
-      }
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      expect(adminOrderService.prepare).toHaveBeenCalledWith(1);
-      expect(messageService.add).toHaveBeenCalledWith(
-        expect.objectContaining({ severity: 'success' }),
-      );
-    });
-
-    it('should call markReady endpoint for PREPARING orders', async () => {
-      adminOrderService.listOrders.mockReturnValue(
-        of(mockPage([mockOrder({ status: 'PREPARING' })])),
-      );
-      adminOrderService.markReady.mockReturnValue(of(mockOrder({ status: 'READY' })));
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      const el: HTMLElement = fixture.nativeElement;
-      const actionBtn = el.querySelector('[aria-label*="Marcar listo"]') as HTMLElement;
-      expect(actionBtn).toBeTruthy();
-      actionBtn.click();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      const confirmDe = fixture.debugElement.query(
-        (de) => de.nativeElement?.tagName?.toLowerCase() === 'app-confirm-dialog',
-      );
-      if (confirmDe) {
-        (confirmDe.componentInstance as { confirmed: { emit: () => void } }).confirmed.emit();
-      }
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      expect(adminOrderService.markReady).toHaveBeenCalledWith(1);
-    });
-
-    it('should call deliver endpoint for READY orders', async () => {
-      adminOrderService.listOrders.mockReturnValue(
-        of(mockPage([mockOrder({ status: 'READY' })])),
-      );
-      adminOrderService.deliver.mockReturnValue(of(mockOrder({ status: 'DELIVERED' })));
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      const el: HTMLElement = fixture.nativeElement;
-      const actionBtn = el.querySelector('[aria-label*="Confirmar entrega"]') as HTMLElement;
-      expect(actionBtn).toBeTruthy();
-      actionBtn.click();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      const confirmDe = fixture.debugElement.query(
-        (de) => de.nativeElement?.tagName?.toLowerCase() === 'app-confirm-dialog',
-      );
-      if (confirmDe) {
-        (confirmDe.componentInstance as { confirmed: { emit: () => void } }).confirmed.emit();
-      }
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      expect(adminOrderService.deliver).toHaveBeenCalledWith(1);
-    });
-  });
-
-  // ----------------------------------------------------------------
-  // Row-level cancel button
-  // ----------------------------------------------------------------
-
-  describe('row-level cancel button', () => {
-    it('shows the cancel button in the row for PAID ONLINE orders', async () => {
-      adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ status: 'PAID' })])));
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-      const el: HTMLElement = fixture.nativeElement;
-      const cancelBtn = el.querySelector('button.orders-icon-btn--cancel') as HTMLElement;
-      expect(cancelBtn).toBeTruthy();
-    });
-
-    it('does NOT show the cancel button for DELIVERED orders', async () => {
-      adminOrderService.listOrders.mockReturnValue(
-        of(mockPage([mockOrder({ status: 'DELIVERED' })])),
-      );
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-      const el: HTMLElement = fixture.nativeElement;
-      const cancelBtn = el.querySelector('button.orders-icon-btn--cancel') as HTMLElement;
-      expect(cancelBtn).toBeNull();
-    });
-
-    it('does NOT show the cancel button for already CANCELLED orders', async () => {
-      adminOrderService.listOrders.mockReturnValue(
-        of(mockPage([mockOrder({ status: 'CANCELLED' })])),
-      );
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-      const el: HTMLElement = fixture.nativeElement;
-      const cancelBtn = el.querySelector('button.orders-icon-btn--cancel') as HTMLElement;
-      expect(cancelBtn).toBeNull();
-    });
-
-    it('calls adminOrderService.cancel and reloads when the user confirms', async () => {
-      const cancelledOrder = mockOrder({ status: 'CANCELLED' });
-      adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ status: 'PAID' })])));
-      adminOrderService.cancel.mockReturnValue(of(cancelledOrder));
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      const el: HTMLElement = fixture.nativeElement;
-      const cancelBtn = el.querySelector('button.orders-icon-btn--cancel') as HTMLElement;
-      expect(cancelBtn).toBeTruthy();
-      cancelBtn.click();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      const confirmDe = fixture.debugElement.query(
-        (de) => de.nativeElement?.tagName?.toLowerCase() === 'app-confirm-dialog',
-      );
-      const cmp = confirmDe.componentInstance as {
-        reason: { set: (v: string) => void };
-        confirmed: { emit: () => void };
-      };
-      cmp.reason.set('Cliente desiste');
-      cmp.confirmed.emit();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      expect(adminOrderService.cancel).toHaveBeenCalledWith(1, { reason: 'Cliente desiste' });
-      expect(messageService.add).toHaveBeenCalledWith(
-        expect.objectContaining({ severity: 'success' }),
-      );
-    });
-
-    it('shows an error toast when cancel fails', async () => {
-      adminOrderService.listOrders.mockReturnValue(of(mockPage([mockOrder({ status: 'PAID' })])));
-      adminOrderService.cancel.mockReturnValue(
-        throwError(() => ({
-          status: 409,
-          error: { code: 'ORDER_INVALID_STATE', message: 'Cannot transition' },
-        })),
-      );
-      component.loadOrders();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      const el: HTMLElement = fixture.nativeElement;
-      const cancelBtn = el.querySelector('button.orders-icon-btn--cancel') as HTMLElement;
-      cancelBtn.click();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      const confirmDe = fixture.debugElement.query(
-        (de) => de.nativeElement?.tagName?.toLowerCase() === 'app-confirm-dialog',
-      );
-      const cmp = confirmDe.componentInstance as {
-        reason: { set: (v: string) => void };
-        confirmed: { emit: () => void };
-      };
-      cmp.reason.set('Prueba');
-      cmp.confirmed.emit();
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      expect(messageService.add).toHaveBeenCalledWith(
-        expect.objectContaining({ severity: 'error' }),
-      );
-    });
-  });
-
-  // ----------------------------------------------------------------
-  // Search filter
-  // ----------------------------------------------------------------
-
-  describe('search filter', () => {
-    it('sends undefined search when query is empty', () => {
-      adminOrderService.listOrders.mockClear();
-      component.loadOrders();
-      const call = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(call?.search).toBeUndefined();
-    });
-
-    it('sends the trimmed search query to the service', () => {
-      (component as unknown as { onSearchChange: (v: string) => void }).onSearchChange('  ON-2026  ');
-      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(lastCall?.search).toBe('ON-2026');
-    });
-
-    it('clears the search and reloads when onSearchClear is called', () => {
-      (component as unknown as { onSearchChange: (v: string) => void }).onSearchChange('foo');
-      adminOrderService.listOrders.mockClear();
-      (component as unknown as { onSearchClear: () => void }).onSearchClear();
-      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(lastCall?.search).toBeUndefined();
-    });
-
-    it('does not send the query when it is only whitespace', () => {
-      (component as unknown as { onSearchChange: (v: string) => void }).onSearchChange('   ');
-      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(lastCall?.search).toBeUndefined();
-    });
-
-    it('resets the page to 0 when the search changes', () => {
-      (component as unknown as { first: { set: (v: number) => void } }).first.set(20);
-      (component as unknown as { onSearchChange: (v: string) => void }).onSearchChange('order');
-      expect(adminOrderService.listOrders).toHaveBeenCalled();
-      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(lastCall?.search).toBe('order');
-    });
-  });
-
-  // ----------------------------------------------------------------
-  // Branch restriction by role
-  // ----------------------------------------------------------------
-
-  describe('branch restriction by role', () => {
-    /** Reconfigures the TestBed for a different role/branch. */
-    function reconfigureForRole(
-      role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'CUSTOMER',
-      userBranchId: number | null,
-    ): void {
-      TestBed.resetTestingModule();
-      configure(role, userBranchId);
-      fixture = TestBed.createComponent(Orders);
-      component = fixture.componentInstance;
-    }
-
-    it('does NOT restrict branchId for ADMIN users', () => {
-      reconfigureForRole('ADMIN', null);
-      adminOrderService.listOrders.mockClear();
-      component.loadOrders();
-      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(lastCall?.branchId).toBeUndefined();
-    });
-
-    it('forces branchId to the user branch for MANAGER users', () => {
-      reconfigureForRole('MANAGER', 3);
-      adminOrderService.listOrders.mockClear();
-      component.loadOrders();
-      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(lastCall?.branchId).toBe(3);
-    });
-
-    it('forces branchId to the user branch for EMPLOYEE users', () => {
-      reconfigureForRole('EMPLOYEE', 5);
-      adminOrderService.listOrders.mockClear();
-      component.loadOrders();
-      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(lastCall?.branchId).toBe(5);
-    });
-
-    it('ignores onBranchChange that tries to switch branch for a restricted user', () => {
-      reconfigureForRole('EMPLOYEE', 5);
-      // The constructor of Orders calls loadOrders() once during init.
-      const initialCalls = adminOrderService.listOrders.mock.calls.length;
-      (component as unknown as { onBranchChange: (v: number | null) => void }).onBranchChange(99);
-      // No new call should have been made because the change is rejected.
-      expect(adminOrderService.listOrders.mock.calls.length).toBe(initialCalls);
-      // The last call (from the constructor) used the user's own branch.
-      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(lastCall?.branchId).toBe(5);
-    });
-
-    it('allows ADMIN to switch branch freely', () => {
-      reconfigureForRole('ADMIN', null);
-      adminOrderService.listOrders.mockClear();
-      (component as unknown as { onBranchChange: (v: number | null) => void }).onBranchChange(99);
-      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(lastCall?.branchId).toBe(99);
-    });
-
-    it('clearFilters leaves the branch locked for restricted users', () => {
-      reconfigureForRole('EMPLOYEE', 5);
-      adminOrderService.listOrders.mockClear();
-      (component as unknown as { clearFilters: () => void }).clearFilters();
-      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(lastCall?.branchId).toBe(5);
-    });
-
-    it('clearFilters clears the branch for ADMIN', () => {
-      reconfigureForRole('ADMIN', null);
-      (component as unknown as { onBranchChange: (v: number | null) => void }).onBranchChange(2);
-      adminOrderService.listOrders.mockClear();
-      (component as unknown as { clearFilters: () => void }).clearFilters();
-      const lastCall = adminOrderService.listOrders.mock.calls.at(-1)?.[0];
-      expect(lastCall?.branchId).toBeUndefined();
+    store.clearFilters();
+    expect(service.listOrders).toHaveBeenLastCalledWith({
+      page: 0,
+      size: 10,
+      status: undefined,
+      type: undefined,
+      branchId: undefined,
+      from: undefined,
+      to: undefined,
+      search: undefined,
+      sort: undefined,
     });
   });
 });

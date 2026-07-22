@@ -1,8 +1,9 @@
-import { Component, input, model, output, viewChild } from '@angular/core';
+import { Component, input, model, output, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { AppInput } from '../app-input/app-input';
 import { Button } from 'primeng/button';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-search-bar',
   imports: [AppInput, Button],
   templateUrl: './app-search-bar.html',

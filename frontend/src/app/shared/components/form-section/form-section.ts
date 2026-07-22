@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 /**
  * Generic numbered form section wrapper.
@@ -14,6 +14,7 @@ import { Component, input } from '@angular/core';
  * ```
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-form-section',
   templateUrl: './form-section.html',
   styleUrl: './form-section.css',

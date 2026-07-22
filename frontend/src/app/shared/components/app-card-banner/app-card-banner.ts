@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 /** Position of the decorative blob. */
 export type BlobPosition =
@@ -20,6 +20,7 @@ const BLOB_POSITION_MAP: Record<BlobPosition, string> = {
 };
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-card-banner',
   templateUrl: './app-card-banner.html',
   styleUrl: './app-card-banner.css',

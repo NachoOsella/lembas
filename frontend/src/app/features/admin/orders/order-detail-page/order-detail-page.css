@@ -199,7 +199,10 @@
   letter-spacing: -0.01em;
 }
 
-.order-timeline__step:not(.order-timeline__step--completed):not(.order-timeline__step--cancelled):not(.order-timeline__step--active) .order-timeline__label {
+.order-timeline__step:not(.order-timeline__step--completed):not(
+    .order-timeline__step--cancelled
+  ):not(.order-timeline__step--active)
+  .order-timeline__label {
   color: var(--color-text-muted, rgba(0, 0, 0, 0.58));
   font-weight: 500;
 }

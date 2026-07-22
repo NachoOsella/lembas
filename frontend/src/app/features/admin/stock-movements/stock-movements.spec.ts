@@ -1,10 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import { InventoryService } from '../../../core/services/inventory';
-import { UserService } from '../../../core/services/user';
+import { InventoryService } from '@features/inventory/data-access/inventory';
+import { UserService } from '@features/users/data-access/user';
 import { StockMovements } from './stock-movements';
 
 const MOVEMENTS_PAGE = {
@@ -67,16 +68,15 @@ describe('StockMovements', () => {
     expect(inventoryService.listMovements).toHaveBeenCalledWith(
       expect.objectContaining({ page: 0, size: 10, sort: 'createdAt,desc' }),
     );
-    expect((component as any).movements().length).toBe(1);
+    expect(component.movements().length).toBe(1);
   });
 
   it('Should_sendSearchFilterAndResetPage_when_searching', () => {
-    const cmp = component as any;
-    cmp.first.set(20);
+    component.first.set(20);
 
-    cmp.onSearch('Granola');
+    component.onSearch('Granola');
 
-    expect(cmp.first()).toBe(0);
+    expect(component.first()).toBe(0);
     expect(inventoryService.listMovements).toHaveBeenLastCalledWith(
       expect.objectContaining({ search: 'Granola' }),
     );

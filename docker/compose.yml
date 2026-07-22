@@ -6,7 +6,7 @@
 #   db         PostgreSQL 16
 #   backend    Spring Boot 3 (Java 21)
 #   web        Nginx serving the Angular app
-#   ngrok      Public tunnel for MP sandbox (skips when NGROK_AUTHTOKEN is empty)
+#   ngrok      Optional development-only tunnel for MP sandbox callbacks
 services:
   db:
     image: postgres:16-alpine
@@ -103,6 +103,8 @@ services:
   # and restart the backend:
   #   docker compose up -d --force-recreate backend
   ngrok:
+    profiles:
+      - dev-tunnel
     image: ngrok/ngrok:3
     container_name: lembas-ngrok
     restart: unless-stopped
@@ -111,7 +113,7 @@ services:
     volumes:
       - ./ngrok.yml:/etc/ngrok/ngrok.yml:ro
     ports:
-      - "${NGROK_WEB_PORT:-4040}:4040"
+      - "${NGROK_WEB_BIND_ADDRESS:-127.0.0.1}:${NGROK_WEB_PORT:-4040}:4040"
     depends_on:
       web:
         condition: service_healthy

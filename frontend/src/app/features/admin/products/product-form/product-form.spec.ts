@@ -1,12 +1,13 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of, throwError } from 'rxjs';
 
-import { CategoryService } from '../../../../core/services/category';
-import { ProductService } from '../../../../core/services/product';
+import { CategoryService } from '@features/catalog/data-access/category';
+import { ProductService } from '@features/catalog/data-access/product';
 import { ProductForm } from './product-form';
 
 const mockProduct = {
@@ -300,7 +301,11 @@ describe('ProductForm', () => {
       throwError(
         () =>
           new HttpErrorResponse({
-            error: { code: 'PRODUCT_BARCODE_DUPLICATED' },
+            error: {
+              status: 400,
+              code: 'PRODUCT_BARCODE_DUPLICATED',
+              message: 'Barcode already exists.',
+            },
             status: 400,
             statusText: 'Bad Request',
           }),
@@ -346,7 +351,11 @@ describe('ProductForm', () => {
       throwError(
         () =>
           new HttpErrorResponse({
-            error: { code: 'PRODUCT_NOT_FOUND' },
+            error: {
+              status: 404,
+              code: 'PRODUCT_NOT_FOUND',
+              message: 'Product not found.',
+            },
             status: 404,
             statusText: 'Not Found',
           }),

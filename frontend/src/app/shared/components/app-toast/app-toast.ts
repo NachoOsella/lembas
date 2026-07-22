@@ -1,7 +1,8 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { Toast } from 'primeng/toast';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-toast',
   imports: [Toast],
   templateUrl: './app-toast.html',

@@ -1,0 +1,142 @@
+<header
+  class="app-store-nav sticky top-0 z-[100] w-full border-b border-[#e7e7e7] bg-white transition-shadow duration-200 lg:bg-white/95 lg:backdrop-blur-md"
+>
+  <div
+    class="app-store-nav__inner mx-auto flex h-[64px] w-full max-w-[1600px] items-center justify-between px-4 sm:h-[72px] sm:px-6 md:h-[83px] lg:h-[99px] lg:px-10"
+  >
+    <!-- Brand -->
+    <a [routerLink]="brand().homeRoute" class="app-store-nav__brand" aria-label="Ir al inicio">
+      <img [src]="brand().logoUrl" alt="" width="32" height="32" class="app-store-nav__logo" />
+      <span class="app-store-nav__brand-text">
+        <strong>{{ brand().title }}</strong>
+        <span>{{ brand().subtitle }}</span>
+      </span>
+    </a>
+
+    <!-- Center Navigation + Search -->
+    <div class="app-store-nav__center">
+      <nav class="app-store-nav__links" aria-label="Navegación principal">
+        <a
+          routerLink="/store"
+          routerLinkActive="nav-link--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-link"
+          >Inicio</a
+        >
+        <a routerLink="/store/products" routerLinkActive="nav-link--active" class="nav-link"
+          >Catálogo</a
+        >
+      </nav>
+      @if (showSearch()) {
+        <div class="app-store-nav__search">
+          <app-search-bar
+            [placeholder]="searchPlaceholder()"
+            size="sm"
+            (search)="searchQuery.emit($event)"
+            (clear)="searchQuery.emit('')"
+          />
+        </div>
+      }
+    </div>
+
+    <!-- Actions (right) -->
+    <div class="app-store-nav__actions">
+      <div class="app-store-nav__mobile-actions">
+        <button
+          type="button"
+          class="app-store-nav__mobile-cart"
+          aria-label="Ir al carrito de compras"
+          (click)="cartClick.emit()"
+        >
+          <i class="pi pi-shopping-bag" aria-hidden="true"></i>
+          @if (cartCount() > 0) {
+            <span>{{ cartCount() }}</span>
+          }
+        </button>
+        @if (!isLoggedIn()) {
+          <a
+            routerLink="/auth/login"
+            class="app-store-nav__mobile-account"
+            aria-label="Ingresar a tu cuenta"
+          >
+            <i class="pi pi-user" aria-hidden="true"></i>
+          </a>
+        }
+      </div>
+      <div class="app-store-nav__branch" aria-label="Sucursal de retiro">
+        <i class="pi pi-map-marker app-store-nav__branch-icon" aria-hidden="true"></i>
+        @if (branchesLoading()) {
+          <span class="app-store-nav__branch-label">Cargando...</span>
+        } @else if (branchesError()) {
+          <span class="app-store-nav__branch-label app-store-nav__branch-label--error">
+            Sucursal no disponible
+          </span>
+        } @else if (showBranchDropdown()) {
+          <app-select
+            inputId="store-nav-branch-selector"
+            name="storeNavBranch"
+            placeholder="Sucursal"
+            [options]="branchOptions()"
+            [filter]="false"
+            [showClear]="false"
+            [value]="selectedBranchId()"
+            (valueChange)="branchChange.emit($event)"
+          />
+        } @else {
+          <span class="app-store-nav__branch-label">{{ selectedBranchLabel() }}</span>
+        }
+      </div>
+
+      @if (isLoggedIn()) {
+        <span class="app-store-nav__user-name">{{ userDisplayName() }}</span>
+        <button
+          #storeUserMenuTrigger
+          class="app-store-nav__menu-btn"
+          aria-label="Abrir menu de usuario"
+          (click)="userMenu.toggle($event)"
+        >
+          <i class="pi pi-user" aria-hidden="true"></i>
+        </button>
+        <p-menu
+          #userMenu
+          [model]="userMenuItems()"
+          [popup]="true"
+          appendTo="body"
+          aria-label="Opciones de usuario"
+          styleClass="app-store-nav__dropdown"
+        />
+      } @else {
+        <div class="app-store-nav__auth">
+          <app-button variant="secondary" size="sm" routerLink="/auth/login">Ingresar</app-button>
+          <app-button variant="primary" size="sm" routerLink="/auth/register"
+            >Crear cuenta</app-button
+          >
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Mobile search bar -->
+  @if (showSearch()) {
+    <div class="app-store-nav__search-mobile">
+      <app-search-bar
+        [placeholder]="searchPlaceholder()"
+        size="sm"
+        (search)="searchQuery.emit($event)"
+        (clear)="searchQuery.emit('')"
+      />
+    </div>
+  }
+</header>
+
+<!-- Floating Cart CTA -->
+@if (showFloatingCart()) {
+  <a routerLink="/store/cart" class="app-store-nav__cart" aria-label="Ir al carrito de compras">
+    <i class="pi pi-shopping-bag text-xl"></i>
+    @if (cartCount() > 0) {
+      <span class="app-store-nav__cart-badge">
+        {{ cartCount() }}
+      </span>
+    }
+  </a>
+}

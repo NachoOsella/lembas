@@ -4,11 +4,11 @@
 
 .form-section {
   display: grid;
-  gap: 0.9rem;
+  gap: 1rem;
   padding: 1.25rem;
-  border: 1px solid rgba(7, 95, 54, 0.08);
-  border-radius: 1.15rem;
-  background: var(--color-surface-warmest);
+  background: color-mix(in srgb, var(--color-surface) 82%, var(--color-canvas));
+  border: 1px solid rgba(7, 95, 54, 0.1);
+  border-radius: var(--radius-card, 12px);
 }
 
 .form-section__heading {
@@ -23,7 +23,7 @@
   flex: 0 0 auto;
   width: 2rem;
   height: 2rem;
-  border-radius: 0.8rem;
+  border-radius: 50%;
   background: var(--color-primary-dark);
   color: var(--color-text-on-dark);
   font-size: 0.72rem;
@@ -33,15 +33,16 @@
 .form-section__title {
   margin: 0;
   color: var(--color-primary-dark);
-  font-size: 0.98rem;
+  font-size: 1rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .form-section__description {
-  margin: 0.16rem 0 0;
+  max-width: 65ch;
+  margin: 0.2rem 0 0;
   color: var(--color-text-muted);
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   line-height: 1.45;
 }

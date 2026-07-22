@@ -1,6 +1,10 @@
-import { CashEntryDto, CashEntryDirection, CashEntryKind } from '../../../../shared/models/cash-session';
-import { SeverityPillTone } from '../../../../shared/components/severity-pill/severity-pill';
-import { ColumnDef } from '../../../../shared/components/app-data-table/app-data-table';
+import type {
+  CashEntryDto,
+  CashEntryDirection,
+  CashEntryKind,
+} from '@features/cash/domain/cash-session';
+import type { SeverityPillTone } from '@shared/components/severity-pill/severity-pill';
+import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
 
 /** Cash entry pill tones follow the severity-pill palette. */
 export type CashEntryTone = SeverityPillTone;

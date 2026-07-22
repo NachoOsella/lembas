@@ -1,6 +1,7 @@
 package com.dietetica.lembas.shared.dto;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Standard API error payload returned by the global exception handler.
@@ -12,12 +13,15 @@ import java.time.Instant;
  * @param timestamp the time when the error response was created
  * @param path      the request path that caused the error
  */
-public record ApiError(
-        int status,
-        String code,
-        String message,
-        Object details,
-        Instant timestamp,
-        String path
-) {
+public record ApiError(int status, String code, String message, Object details, Instant timestamp, String path) {
+
+    /**
+     * Stable details shape used by all validation-related errors.
+     *
+     * @param fieldErrors field and message pairs; malformed bodies use an empty list
+     */
+    public record ValidationDetails(List<FieldError> fieldErrors) {}
+
+    /** A single validation failure associated with a request field. */
+    public record FieldError(String field, String message) {}
 }

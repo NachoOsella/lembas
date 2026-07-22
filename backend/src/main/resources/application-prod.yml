@@ -1,3 +1,25 @@
 spring:
   jpa:
     show-sql: false
+  datasource:
+    username: ${DB_USER:}
+    password: ${DB_PASSWORD:}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET:}
+    allowed-origins: ${APP_ALLOWED_ORIGINS:}
+    force-secure-cookies: true
+  mercado-pago:
+    access-token: ${MP_ACCESS_TOKEN:}
+    webhook-secret: ${MP_WEBHOOK_SECRET:}
+    success-url: ${MP_SUCCESS_URL:}
+    failure-url: ${MP_FAILURE_URL:}
+    pending-url: ${MP_PENDING_URL:}
+    notification-url: ${MP_NOTIFICATION_URL:}

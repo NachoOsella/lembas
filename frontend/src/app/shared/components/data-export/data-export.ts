@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 
 import { MessageService } from 'primeng/api';
 
@@ -34,6 +34,7 @@ export interface ExportData {
  * library, so it is safe to drop into any reporting flow.</p>
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-data-export',
   imports: [AppButton],
   template: `

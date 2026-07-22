@@ -250,7 +250,7 @@
             <app-status-badge [status]="item.status" [config]="itemStatusBadges" />
             @if (item.errorMessage) {
               <span class="pricing-row-error">{{
-                errorMessageTranslations[item.errorMessage] || item.errorMessage
+                errorMessageTranslations[item.errorMessage] || 'Revisa los datos de la fila.'
               }}</span>
             }
           </td>
