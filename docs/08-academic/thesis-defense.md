@@ -1,74 +1,98 @@
-# Thesis Defense
+# Defensa de Tesis
 
-## Project summary
+## Resumen del Proyecto
 
-**Title:** Integrated Commercial Management System with E-commerce for Dietetica Lembas
+**Titulo:** Sistema de Gestion Comercial Integrado con E-commerce para Dietetica Lembas
 
-**Type:** Final Degree Project (TPF/Tesis)
+**Tipo:** Proyecto Final de Grado (TPF/Tesis)
 
-**Student:** Single developer
+**Autor:** Ignacio Osella - Legajo 412023
 
-**Duration:** 4 sprints of 2 weeks each (8 weeks total)
+**Duracion:** 4 sprints de 2 semanas cada uno (8 semanas totales)
 
-## Thesis statement
+**Pila tecnologica:** Java 21, Spring Boot 3.5, Angular 21.2 (standalone, Signals), PrimeNG 21.1, PostgreSQL 16, Docker, Mercado Pago
 
-> How to build a unified commercial platform that serves both in-store and online sales from a single shared core, avoiding the common mistake of building two disconnected systems.
+## Tesis
 
-## Defense argument
+> Como construir una plataforma comercial unificada que sirva tanto a ventas en sucursal como a ventas online desde un unico nucleo compartido, evitando el error comun de construir dos sistemas desconectados.
 
-### The problem
+## Argumento de Defensa
 
-Small retailers in Argentina face a fragmented technology landscape:
-- POS systems that do not talk to e-commerce platforms
-- Stock tracked on paper or spreadsheets
-- No unified view of sales, cash, or inventory
-- Perishable products requiring FEFO management
-- Manual price updates across multiple channels
-- No actionable commercial metrics for decision-making
+### El problema
 
-### The solution: three integrated areas
+Los pequenos comercios minoristas en Argentina enfrentan un panorama tecnologico fragmentado:
 
-The system is structured in three interconnected areas:
+- Sistemas POS que no se comunican con plataformas de e-commerce
+- Stock registrado en papel o planillas de calculo
+- Sin vision unificada de ventas, efectivo o inventario
+- Productos perecederos que requieren gestion FEFO (First Expired, First Out)
+- Actualizacion manual de precios en multiples canales
+- Sin metricas comerciales accionables para la toma de decisiones
+- Conciliacion de caja manual y propensa a errores
 
-1. **Backoffice / ERP** -- manages products, stock, suppliers, in-store sales, cash register, orders, and reports
-2. **E-commerce module** -- public catalog, local cart, Mercado Pago checkout, pickup fulfillment
-3. **Intelligent assistant** -- rule-based recommendations (low stock, expiring products, rotation analysis, no-movement detection)
+### La solucion: tres areas integradas
 
-All three areas share a single commercial core. No data silos, no duplication.
+El sistema se estructura en tres areas interconectadas que comparten un unico nucleo comercial:
 
-### Why it is not two systems
+1. **Backoffice / ERP** -- Gestion de productos, stock, proveedores, ventas en sucursal, caja, ordenes y reportes
+2. **Modulo de e-commerce** -- Catalogo publico, carrito local, checkout Mercado Pago, retiro en sucursal
+3. **Asistente inteligente** -- Recomendaciones basadas en reglas de negocio (stock bajo, proximos a vencer, rotacion, sin movimiento)
 
-The core insight: building an ERP and an e-commerce separately and integrating them later is a common failure pattern. This system builds a single commercial core that feeds both channels. Products, stock, orders, payments, and customers are shared entities. The channel (in-store vs online) is just a field on the order.
+Las tres areas comparten un unico nucleo comercial. No hay silos de datos ni duplicacion.
 
-The system goes beyond simple CRUD because it implements complete business processes:
-- Online purchase with real-time stock validation
-- Order state machine with full traceability
-- Payment lifecycle with webhook-driven status updates
-- In-store sale with automatic FEFO stock deduction
-- Cash register with discrepancy detection and audit trail
-- Rule-based recommendations using actual catalog and stock data
-- Assisted price tracking with supplier cost comparison
+### Por que no son dos sistemas separados
 
-### Key technical decisions
+La idea central: construir un ERP y un e-commerce por separado e integrarlos posteriormente es un patron de fracaso frecuente (Fowler, 2002; Vernon, 2013). Este sistema construye un unico nucleo comercial que alimenta ambos canales. Productos, stock, ordenes, pagos y clientes son entidades compartidas. El canal (sucursal vs online) es solo un campo `type` en la orden.
 
-1. **Modular monolith** over microservices (single developer, low complexity)
-2. **Unified order model** (POS and ONLINE share the same table)
-3. **Stock lots as source of truth** (no denormalized stock counts, FEFO built in)
-4. **Stock deducted on payment confirmation** (no separate reservation table)
-5. **Mercado Pago integration** (localized payment processing and webhook handling)
-6. **Cash register controls physical cash only** (other methods are informational at close)
-7. **Rule-based recommendations over AI** -- deterministic, predictable, no hallucination
+El sistema va mas alla del CRUD simple porque implementa procesos de negocio completos:
 
-## What the MVP demonstrates
+- **Compra online** con validacion de stock en tiempo real y pago por Mercado Pago
+- **Maquina de estados de ordenes** con trazabilidad completa (9 estados para ONLINE, 2 para POS)
+- **Ciclo de vida de pagos** con actualizaciones via webhook y maquina de estados de 7 estados
+- **Venta en sucursal** con deduccion FEFO automatica y caja registradora integrada
+- **Cierre de caja** con deteccion de diferencias, motivo obligatorio y pista de auditoria
+- **Recomendaciones** basadas en reglas de negocio usando datos reales de catalogo y stock
+- **Actualizacion de precios** con importacion de listas de proveedores, previsualizacion y aplicacion controlada
+- **Conciliacion de stock** con trazabilidad por lote, movimiento y orden
 
-| Competency | Evidence |
+### Decisiones tecnicas clave
+
+1. **Monolito modular** sobre microservicios (desarrollador unico, complejidad controlada, contratos API explicitos validados con ArchUnit)
+2. **Modelo de orden unificado** (POS y ONLINE comparten la misma tabla)
+3. **Lotes de stock como unica fuente de verdad** (sin tablas desnormalizadas, FEFO incorporado en la consulta)
+4. **Stock deducido al confirmar el pago** (sin tabla de reservas separada, reversal via movimientos de cancelacion)
+5. **Integracion Mercado Pago localizada** (procesamiento de pagos y webhook en el modulo payments, sin abstracciones prematuras)
+6. **Caja registradora controla solo efectivo fisico** (otros metodos son informativos al cierre)
+7. **Recomendaciones basadas en reglas** (deterministicas, predecibles, sin alucinaciones de IA)
+8. **Contratos API entre modulos** (cada modulo expone un paquete `api/`; ArchUnit y el verificador de fronteras del frontend rechazan violaciones)
+
+## Que demuestra el MVP
+
+| Competencia | Evidencia |
 |---|---|
-| Full-stack development | Angular (Signals, standalone components) + Spring Boot from scratch |
-| Database design | 14+ tables, relational integrity, CHECK constraints, Flyway migrations |
-| External API integration | Mercado Pago Checkout Pro with webhook idempotency |
-| Transaction management | FEFO stock deduction with pessimistic locking (SELECT FOR UPDATE) |
-| Testing strategy | Unit (domain policies), integration (Testcontainers), E2E (critical flows) |
-| Project management | Scrum with 4 sprints, 48 user stories, 300 story points, Jira tracking |
-| Software architecture | Modular monolith, layered architecture, DTO mapping |
-| Security | JWT, BCrypt, role-based access (4 roles), route guards, audit logging |
-| Business process modeling | Full sequence diagrams for all 4 critical workflows |
+| Desarrollo full-stack | Angular 21.2 (Signals, standalone) + Spring Boot 3.5 desde cero |
+| Diseno de base de datos | 24 tablas, integridad relacional, CHECK constraints, migraciones Flyway versionadas |
+| Integracion de API externa | Mercado Pago Checkout Pro con preferencias, webhook con verificacion HMAC-SHA256 e idempotencia |
+| Manejo de transacciones | Deduccion FEFO con bloqueo pesimista (SELECT FOR UPDATE), concurrencia con latches |
+| Estrategia de pruebas | Unitarias (servicios), integracion (Testcontainers), controlador (@WebMvcTest), arquitectura (ArchUnit) |
+| Gestion de proyecto | Scrum con 4 sprints, 48 historias de usuario, 300 puntos de historia |
+| Arquitectura de software | Monolito modular con 13 modulos, contratos API, DTOs inmutables, capas separadas |
+| Seguridad | JWT con HttpOnly cookies, BCrypt, RBAC con 4 roles, guards de rutas, auditoria |
+| Modelado de procesos de negocio | Diagramas de secuencia para 11 flujos criticos, diagramas de estado para 4 maquinas |
+
+## Metricas del Proyecto
+
+| Metrica | Valor |
+|---|---|
+| Modulos backend | 13 modulos por funcionalidad |
+| Tablas en base de datos | 24 entidades + 1 secuencia |
+| Migraciones Flyway | 31 versionadas |
+| Endpoints REST | 50+ endpoints |
+| Tests backend | 920 (unitarios, integracion, controlador, arquitectura) |
+| Tests frontend | 986 (componentes, servicios, guards) |
+| Cobertura backend | JaCoCo + SpotBugs |
+| Cobertura frontend | 75% statements, 74% branches, 55% functions, 78% lines |
+| Contratos API entre modulos | 7 paquetes api/ con 15 interfaces |
+| Decisiones arquitectonicas | 49 ADRs documentados |
+| Reglas ArchUnit | 6 reglas activas, allowlists vacias |
+| Funcionalidades frontend | 13 con public-api.ts y verificador de fronteras |

@@ -8,7 +8,7 @@
 - barcode is unique when provided
 - `sale_price` is the current operational sale price used by POS and online store
 - `sale_price` must be >= 0
-- Sale price history is stored in `product_sale_price_history`; `audit_logs` records who performed the change
+- Sale price history is stored in `product_sale_price_history`, which records who performed the change via `created_by_user_id`
 - online_status transitions: DRAFT -> PUBLISHED -> PAUSED -> HIDDEN (and back)
 - A product can exist without any stock (zero stock = not available online)
 - Minimum stock alerts are based on `minimum_stock` field
@@ -84,9 +84,8 @@
 - The dashboard shows only current-day data
 - Cash closure reports show totals by payment method, with cash count verification
 
-## Audit
+## Audit (deferred)
 
-- Critical actions are logged in audit_logs with user, timestamp, and description
-- Logged events: price changes, stock adjustments, purchase receipt confirmations, order cancellations, cash operations
-- Audit logs are not the source for sale price or supplier cost history queries; dedicated history tables are used
-- Audit logs are append-only (no deletion or modification)
+- A dedicated `audit_logs` table is planned but not yet implemented in MVP
+- Current traceability uses dedicated history tables (`product_sale_price_history`, `supplier_product_cost_history`) with `created_by_user_id` references, append-only `stock_movements`, and mandatory `reason` fields
+- Dedicated history tables are the source for commercial price history queries, not an audit log

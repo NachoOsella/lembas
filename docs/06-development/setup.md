@@ -4,8 +4,9 @@
 
 | Tool | Version | Required for |
 |---|---|---|
-| Java | 21+ | Backend |
-| Node.js | 20+ | Frontend |
+| Java | 21+ (verified: 21) | Backend |
+| Node.js | 18+ (verified: 22.14) | Frontend |
+| npm | 10+ (verified: 11.14.1) | Frontend dependencies |
 | Docker | Latest | PostgreSQL, local environment |
 | Docker Compose | Latest | Local infrastructure |
 

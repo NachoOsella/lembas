@@ -84,10 +84,11 @@ feature/
 
 ### Testing
 
-- Jasmine + Karma for unit tests
-- Test components, services, guards, and interceptors
+- Vitest 4 + jsdom 28 for unit tests
+- TestBed for component tests with standalone imports
 - Mock HTTP calls with `HttpClientTestingController`
 - Test all states: loading, empty, error, success
+- Use `describe/it/expect` convention
 
 ## Database (SQL)
 

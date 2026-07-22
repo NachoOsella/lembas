@@ -1,5 +1,23 @@
 # Registro de uso de IA
 
+## 2026-07-21 (documentacion academica)
+
+- `docs/00-overview/`, `docs/00-overview/`, `docs/01-product/`, `docs/02-domain/`, `docs/03-architecture/`, `docs/04-processes/`, `docs/05-api/`, `docs/06-development/`, `docs/07-deployment/`, `docs/08-academic/`, `docs/index.md`, `README.md` -- reconciliacion completa de la documentacion del repositorio contra el estado real post-refactor. Se verificaron modulos backend (agregados `content` y `pos`), contratos API (`api/` packages), migraciones Flyway (actualizada lista V1-V31, eliminadas referencias a V5/V6/V8/V9 inexistentes), endpoints (corregido path de checkout/preference, eliminados endpoints de purchase-receipt inexistentes), estructura frontend (agregadas 13 funcionalidades post-refactor con `public-api.ts`), y marco de pruebas (Vitest/jsdom en lugar de Jasmine/Karma). Se actualizaron 11 archivos de documentacion.
+
+- `docs/08-academic/methodology.md` -- creado documento de metodologia de desarrollo cubriendo Scrum adaptado para un desarrollador, proceso de ingenieria (TDD selectivo, CI local, revision multicapa con ArchUnit/ESLint/SpotBugs), estrategia de calidad (piramide de tests, cobertura minima 75/74/55/78%), revelamiento de uso de IA, y tabla completa de herramientas y versiones.
+
+- `docs/08-academic/bibliography.md` -- creada bibliografia con 20+ referencias en formato APA 7ma edicion, incluyendo documentacion oficial de todas las tecnologias, leyes argentinas, y obras academicas de Evans, Vernon, Fowler, Newman, Gamma, Beck y otros.
+
+- `docs/08-academic/traceability-matrices.md` -- creadas 5 matrices de trazabilidad: 20 requisitos funcionales, 15 requisitos no funcionales, inventario completo de endpoints REST, 68 codigos de error del backend, y 20 flujos criticos con cobertura de pruebas.
+
+- `docs/08-academic/evidence-appendix.md` -- creado apendice de evidencia reproducible con guia de clonacion, resultados de tests (920 backend / 986 frontend), compuertas de calidad, verificacion arquitectonica (7 reglas ArchUnit, allowlists vacias), integridad de migraciones Flyway, invarianzas de dominio, limitaciones conocidas, y referencia de comandos de validacion.
+
+- `docs/08-academic/thesis-defense.md` -- actualizada con metricas del proyecto, competencias demostradas, y argumento de defensa mejorado.
+
+- `docs/08-academic/technical-justification.md` -- expandida con comparacion monolito/monolito-tradicional/microservicios, explicacion detallada de decisiones de dominio, y referencias academicas.
+
+- `docs/index.md` -- creado indice de documentacion con secuencia de lectura recomendada para evaluacion academica.
+
 ## 2026-07-21
 
 - `AGENTS.md` -- refreshed the token-efficient project knowledge base after the modular-monolith refactoring, replacing scaffold-era guidance with current module contracts, boundary enforcement, concurrency invariants, security, Docker/CI commands, quality baselines, and deferred deployment constraints.
@@ -476,6 +494,21 @@
 - `backend/.../reports/repository/ReportQueryRepository.java` -- fix 500 interno en `/api/admin/reports/dashboard` y `/api/admin/reports/cash-sessions`. Causa raiz: PostgreSQL no puede inferir el tipo de parametros nulos en expresiones `? IS NULL OR col = ?` dentro de native SQL y JPQL. Fix: `salesByHour()` reemplaza `(?3 is null or o.branch_id = ?3)` por `o.branch_id = coalesce(cast(?3 as bigint), o.branch_id)`; `cashSessionHistory()` y `countCashSessionHistory()` eliminan los patrones `(:from is null or ...)` y `(:to is null or ...)` y usan sentinelas `FAR_PAST`/`FAR_FUTURE` en el service cuando no se proveen filtros de fecha.
 
 ## 2026-07-13
+
+- `docs/03-architecture/architecture-overview.md` -- corregida tabla de tecnologia: eliminadas filas duplicadas (Containerization, Reverse proxy, Testing) y referencias obsoletas a Jasmine/Karma; reemplazadas por Vitest 4/jsdom 28; agregadas filas de analisis estatico (SpotBugs/Spotless/ESLint/Prettier).
+- `docs/03-architecture/frontend-architecture.md` -- actualizado arbol de rutas con las 30+ rutas reales (product/:id/edit, categorias, inventario, reportes, caja historico, etc.); actualizados nombres de guards funcionales (`authGuard`, `adminGuard`, `customerGuard`, `roleGuard`, `adminOnlyGuard`).
+- `docs/03-architecture/security-architecture.md` -- expandidas anotaciones `@PreAuthorize` con tabla de guards frontend funcionales y sus roles.
+- `docs/05-api/api-guidelines.md` -- corregida referencia a prefijo `/api/v1` (era `/api` en la implementacion); unificada seccion de versionado.
+- `docs/02-domain/payment-rules.md`, `docs/04-processes/online-purchase-pickup-flow.md`, `docs/04-processes/mercado-pago-flow.md` -- corregidos paths de checkout de `checkout/mp` a `payments/preference`.
+- `docs/06-development/backend-conventions.md` -- agregados modulos faltantes `content` y `pos` a la tabla de modulos con sus responsabilidades.
+- `docs/06-development/testing-strategy.md` -- agregado nivel de pruebas Full Integration (@SpringBootTest + Testcontainers) y Architecture (ArchUnit); aclarado que E2E no esta configurado en MVP.
+- `docs/06-development/setup.md` -- actualizados requisitos de Node (22.14), agregado npm 11.14.1.
+- `docs/07-deployment/docker.md` -- reescrito para reflejar la estructura real de `docker/` (compose.yml, backend.Dockerfile, frontend.Dockerfile, nginx.conf) en lugar del scaffold obsoleto; agregada tabla de diferencias dev/prod.
+- `docs/07-deployment/environment-variables.md` -- agregadas variables faltantes `MP_NOTIFICATION_URL` y `APP_ALLOWED_ORIGINS`.
+- `docs/07-deployment/production-deployment.md` -- corregido path de health check de `/api/auth/health` a `/actuator/health`.
+- `README.md` -- agregados comandos faltantes (verify, boundaries, coverage, docker stack).
+- `frontend/README.md` -- reescrito con comandos reales, estructura de proyecto, reglas de boundaries y documentacion de testing Vitest.
+- `docs/index.md` -- no requiere cambios.
 
 - `frontend/src/app/features/admin/dashboard/dashboard.css` -- fix visual: removido `margin-bottom: -0.65rem` en `:host > app-page-header` que causaba que el `app-report-filter-bar` se superpusiera al page-header hero. Lo mismo en sales-report.css, inventory-report.css, suppliers-report.css y cash-session-history.css. Ahora el page-header y el filter-bar fluyen naturalmente sin superposicion.
 - `backend/src/main/resources/db/migration/V30__seed_report_demo_data.sql` -- nueva migracion Flyway con seed comprensivo de datos de prueba para todos los reportes: 35 stock lots con unit_cost, lot_code y expiration_date variados; 6 purchase orders con items para el reporte de proveedores; una cash session CLOSED (ayer) y una OPEN (hoy) con 15 POS orders linkeadas a la sesion correspondiente con pagos MANUAL rotando entre CASH/QR/DEBIT_CARD/CREDIT_CARD; 20 ONLINE orders DELIVERED con pagos MERCADO_PAGO CHECKOUT_PRO distribuidas en los ultimos 14 dias.

@@ -34,6 +34,14 @@ GET /api/store/products/{id}?branchId=
   Response: ProductDetailDto
   Errors:   PRODUCT_NOT_FOUND (404)
 
+GET /api/store/products/featured?branchId=&limit=
+  Response: [ ProductSummaryDto ]
+  Notes:    Featured products for the storefront hero section.
+
+GET /api/store/products/{id}/related?branchId=&limit=
+  Response: [ ProductSummaryDto ]
+  Notes:    Related products from the same category.
+
 GET /api/store/categories
   Response: [ { id, name, productCount } ]
 
@@ -73,9 +81,15 @@ GET /api/customer/orders/{id}
   Response: OrderDetailDto (with payments)
   Errors:   ORDER_NOT_FOUND (404), FORBIDDEN (403)
 
-POST /api/customer/orders/{orderId}/checkout/mp
-  Response: { initPoint, preferenceId }
+POST /api/customer/orders/{orderId}/payments/preference
+  Response: { initPoint, preferenceId, preferenceId: ... }
   Errors:   ORDER_INVALID_STATE (409)
+  Notes:    Creates (or reuses) a Mercado Pago Checkout Pro preference for the order.
+            Returns the initPoint URL the frontend redirects to.
+
+GET /api/customer/orders/{orderId}/payments
+  Response: [ PaymentSummaryDto ]
+  Notes:    Lists payment attempts for the customer's order.
 ```
 
 ## Admin (roles ADMIN, MANAGER, EMPLOYEE)
@@ -109,10 +123,12 @@ DELETE /api/admin/categories/{id}
 ### Stock
 
 ```
+GET    /api/admin/stock/products?branchId=&categoryId=
 GET    /api/admin/stock/lots?productId=&branchId=&expiringSoon=
-POST   /api/admin/stock/receipts     Request: { purchaseOrderId, invoiceNumber?, notes?, items: [{ purchaseOrderItemId, quantityReceived, unitCost, lotCode?, expirationDate? }] }
-POST   /api/admin/stock/deductions   Request: { productId, branchId, quantity, reason? }
-POST   /api/admin/stock/adjustments  Request: { productId, branchId, quantity, reason, stockLotId? }
+POST   /api/admin/stock/lots          Request: { productId, branchId, lotCode?, expirationDate?, quantity, unitCost } (manual lot creation)
+POST   /api/admin/stock/receipts      Request: { purchaseOrderId?, invoiceNumber?, notes?, items: [{ purchaseOrderItemId?, productId?, quantityReceived, unitCost, lotCode?, expirationDate? }] }
+POST   /api/admin/stock/deductions    Request: { productId, branchId, quantity, reason? }
+POST   /api/admin/stock/adjustments   Request: { productId, branchId, quantity, reason, stockLotId? }
 GET    /api/admin/stock/movements?search=&productId=&branchId=&type=&from=&to=&page=&size=
 ```
 
@@ -232,19 +248,17 @@ GET    /api/admin/supplier-products/{id}/cost-history
 GET    /api/admin/purchase-orders?supplierId=&branchId=&status=&page=&size=
 POST   /api/admin/purchase-orders
 GET    /api/admin/purchase-orders/{id}
+PUT    /api/admin/purchase-orders/{id}
 PATCH  /api/admin/purchase-orders/{id}/confirm
 PATCH  /api/admin/purchase-orders/{id}/send
 PATCH  /api/admin/purchase-orders/{id}/cancel  Request: { reason }
-GET    /api/admin/purchase-orders/{id}/pdf
-
-GET    /api/admin/purchase-receipts?purchaseOrderId=&supplierId=&branchId=&status=&page=&size=
-POST   /api/admin/purchase-receipts
-GET    /api/admin/purchase-receipts/{id}
-PATCH  /api/admin/purchase-receipts/{id}/confirm
-PATCH  /api/admin/purchase-receipts/{id}/cancel  Request: { reason }
+GET    /api/admin/purchase-orders/{id}/pdf  (produces application/pdf)
 ```
 
-Notes: purchase orders do not affect stock. Confirming a purchase receipt creates stock lots, PURCHASE_ENTRY movements, and can update supplier replacement cost history if the user approves.
+Notes: purchase orders do not affect stock. Stock is created through purchase receipts;
+the confirmation endpoint is POST /api/admin/stock/receipts (see Stock section above).
+Confirmation creates stock lots, PURCHASE_ENTRY movements, and can update supplier replacement
+cost history if the user approves.
 
 ### Pricing
 

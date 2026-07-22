@@ -7,7 +7,9 @@
 | Unit | Services and helper methods (isolated) | JUnit 5 + Mockito | Fast |
 | Integration | Repositories, database interactions | Testcontainers | Medium |
 | Controller | HTTP endpoints, serialization, security | @WebMvcTest | Medium |
-| E2E | Full frontend-to-backend flows | Playwright / Cypress | Slow |
+| Full integration | Multi-service critical flows (FEFO, POS, webhook, cancellation, cash) | @SpringBootTest + Testcontainers | Medium |
+| Architecture | Module boundary and dependency rules | ArchUnit | Fast |
+| E2E | Not yet configured in MVP (see limitation below) | -- | -- |
 
 ## Backend testing
 
@@ -96,12 +98,13 @@ class ProductAdminControllerTest {
 
 ## Frontend testing
 
-### Unit tests (Jasmine + Karma)
+### Unit tests (Vitest 4 + jsdom 28)
 
-- **Components**: rendering, user interaction, state display
+- **Components**: rendering, user interaction, state display (via TestBed)
 - **Services**: HTTP calls, data transformation, error handling
 - **Guards**: authentication state, role-based access
 - **Interceptors**: token attachment, error mapping
+- **Specs**: use `describe/it/expect` with Vitest, standalone component imports through TestBed
 
 ### What to test
 
@@ -114,9 +117,11 @@ class ProductAdminControllerTest {
 | HttpErrorInterceptor | 401 redirect, 403 forbidden, 409 conflict message, 500 generic error |
 | CashCloseComponent | Expected cash calculation display, discrepancy validation, close confirmation |
 
-### E2E testing
+### E2E testing (deferred)
 
-Critical user flows to cover:
+E2E testing with a dedicated framework (Playwright, Cypress, or Vitest-based integration) is not yet configured in the MVP. The critical user flows listed below are covered by the combination of `@SpringBootTest` integration tests (backend) and Vitest component/service tests (frontend), which together validate every transition in each flow. A dedicated E2E suite is a post-MVP improvement.
+
+Critical flows covered by integration tests:
 
 - Customer registration -> browse catalog -> add to cart -> checkout -> view order
 - Employee login -> open cash register -> POS sale -> close register
@@ -128,5 +133,5 @@ Critical user flows to cover:
 
 - Seed data with realistic products (15-20 items), categories, lots
 - Demo users: admin, manager, employee, customer
-- Demo branch: "Centro"
-- Mock Mercado Pago calls in automated tests
+- Demo branch: "Centro" (primary branch)
+- Mock Mercado Pago calls in automated tests (using mocked HTTP responses, not a sandbox)

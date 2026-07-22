@@ -126,11 +126,16 @@ npm start
 | Task | Command |
 |---|---|
 | Backend tests | `cd backend && ./mvnw test` |
+| Backend verify | `cd backend && ./mvnw clean verify` |
 | Frontend tests | `cd frontend && npm run test` |
+| Frontend verify | `cd frontend && npm run verify` |
+| Frontend boundaries | `cd frontend && npm run boundaries` |
+| Frontend coverage | `cd frontend && npm run test:coverage` |
 | Frontend build | `cd frontend && npm run build` |
 | Start DB only | `cd frontend && npm run docker:up` |
 | Stop DB | `cd frontend && npm run docker:down` |
 | Reset database | `./scripts/reset-db.sh` |
+| Docker stack | `docker compose --env-file docker/.env -f docker/compose.yml up --build` |
 
 ## Documentation
 

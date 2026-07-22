@@ -20,29 +20,36 @@ PostgreSQL 16
 
 ## Migration plan (Flyway)
 
+The following migrations are applied in order. Migration files are immutable once applied; all schema changes go through new versioned migrations.
+
 | Migration | Content |
 |---|---|
 | V1__core.sql | branches, users |
 | V2__catalog.sql | categories, products |
-| V5__orders.sql | orders, order_items (planned; implemented as V25 in current schema history) |
-| V6__payments.sql | payments (planned; implemented as V26 in current schema history) |
-| V27__cash.sql | cash_sessions, cash_movements (+ FK payments.cash_session_id and a partial UNIQUE index for one OPEN session per branch) |
-| V8__optional_promotions.sql | product_promotions |
-| V9__audit.sql | audit_logs |
-| V10__seed_data.sql | Demo data |
+| V10__seed_data.sql | Initial demo data (branch, admin user, base categories) |
+| V11__refresh_tokens.sql | refresh_tokens table for JWT refresh |
+| V12__seed_products.sql | Demo products |
+| V13__fix_demo_product_categories.sql | Category assignment corrections for demo products |
+| V14__seed_more_products.sql | Additional demo products |
+| V15__seed_many_categories.sql | Extended demo category tree |
+| V16__seed_demo_users.sql | Demo employee, manager, customer users |
+| V17__add_active_and_audit_to_categories.sql | Add active flag and audit fields to categories |
 | V18__inventory.sql | stock_lots, stock_movements |
-| V19__inventory_purchasing_links.sql | add supplier and receipt references to stock_lots, add movement reference fields |
+| V19__inventory_purchasing_links.sql | Add supplier and receipt references to stock_lots, movement reference fields |
 | V20__suppliers.sql | suppliers, supplier_products, supplier_product_cost_history |
 | V21__seed_suppliers.sql | Demo suppliers and product-supplier associations |
-| V22__price_history.sql | product_sale_price_history |
-| V23__purchasing.sql | purchase_orders, purchase_order_items, purchase_receipts, purchase_receipt_items |
+| V22__purchase_orders.sql | purchase_orders, purchase_order_items |
+| V23__purchase_receipts.sql | purchase_receipts, purchase_receipt_items |
 | V24__pricing_batches.sql | pricing_rules, price_update_batches, price_update_batch_items |
-| V25__orders.sql | orders, order_items, order_number_seq, FK from stock_movements.order_id |
+| V25__orders.sql | orders, order_items, order_number_seq, FK stock_movements.order_id |
 | V26__payments.sql | payments |
+| V27__cash.sql | cash_sessions, cash_movements (+ FK payments.cash_session_id and partial UNIQUE index for one OPEN session per branch) |
+| V28__orders_cash_session.sql | Add cash_session_id to orders for POS-to-cash linking |
+| V29__add_ready_at_to_orders.sql | Add ready_at timestamp to orders |
+| V30__seed_report_demo_data.sql | Demo report data (additional orders, payments, stock movements) |
+| V31__order_item_category_snapshots.sql | Add category snapshots to order_items for historical reports |
 
-Migration numbers after V18 can be adjusted to the current database history when implementing. Existing deployed migration numbers must never be reused.
-
-Note: `V5__orders.sql` shown in the original plan was shifted to `V25__orders.sql` because the project had already applied migrations up to `V24` by the time S2-US06 was implemented. Likewise, the planned `V6__payments.sql` is implemented as `V26__payments.sql`.
+Note: Early numbered migration slots V3-V9 were consumed during prototyping and removed from the applied history. The current sequence reflects the production migration order after the schema was stabilized. Existing deployed migration numbers are never reused.
 
 ## Key tables
 
@@ -414,21 +421,9 @@ CREATE TABLE cash_movements (
 );
 ```
 
-### Audit
+### Audit (deferred)
 
-```sql
-CREATE TABLE audit_logs (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT REFERENCES users(id),
-    action VARCHAR(100) NOT NULL,
-    entity_type VARCHAR(100) NOT NULL,
-    entity_id BIGINT,
-    description TEXT,
-    created_at TIMESTAMPTZ DEFAULT now()
-);
-```
-
-`audit_logs` records critical actors and actions, while dedicated price history tables are used for commercial price history queries.
+The `audit_logs` table is planned but not yet implemented. Dedicated history tables (`product_sale_price_history`, `supplier_product_cost_history`) and entity `created_at`/`updated_at` timestamp fields provide equivalent traceability for current operations.
 
 ## Key constraints
 

@@ -83,10 +83,12 @@ server {
 ## Health check
 
 ```bash
-# Backend health
-GET /api/auth/health
-Response: { "status": "UP", "version": "1.0.0" }
+# Backend health (via Spring Boot Actuator)
+GET /actuator/health
+Response: { "status": "UP" }
 ```
+
+> Note: The Actuator health endpoint is included in the public permit-all route set in `SecurityConfig`. It exposes only the `health` and `info` endpoints. The `/api/auth/health` path does not exist in the implementation.
 
 ## Backup
 

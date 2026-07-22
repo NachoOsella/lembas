@@ -19,15 +19,17 @@ Each backend module follows:
 |---|---|
 | auth | JWT authentication, registration, login |
 | users | Internal user management (CRUD, enable/disable) |
-| catalog | Categories and products |
-| inventory | Stock lots, movements, FEFO deduction |
-| orders | Unified orders (POS and ONLINE) |
+| catalog | Categories and products, pricing rules |
+| content | Public legal content (Terms and Conditions, FAQ), no persistence |
+| inventory | Stock lots, movements, FEFO deduction, purchase receipt entry |
+| orders | Unified orders (POS and ONLINE), state machine, cancellation |
 | payments | Payment entity, Mercado Pago integration, Mercado Pago webhook endpoint |
 | cash | Cash register sessions and movements |
-| suppliers | Suppliers and supplier-product associations |
-| reports | Dashboard, cash report, recommendations |
+| pos | In-store POS product search and transactional sale creation |
+| suppliers | Suppliers, supplier-product associations, purchase orders, receipts, price update batches |
+| reports | Dashboard, cash report, sales/employees/inventory/suppliers reports, recommendations |
 | audit | Audit log recording |
-| shared | Common DTOs, exceptions, utilities |
+| shared | Common DTOs, exceptions, utilities, branch management, security configuration |
 
 ## Controller conventions
 

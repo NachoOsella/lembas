@@ -16,7 +16,7 @@ sequenceDiagram
     BE->>DB: Close current product_sale_price_history row with valid_to = now()
     BE->>DB: INSERT product_sale_price_history
     BE->>DB: UPDATE products.sale_price
-    BE->>DB: INSERT audit_logs entry
+    Note over BE,DB: audit_logs entry not yet implemented in MVP
 ```
 
 ## Rules
@@ -25,7 +25,7 @@ sequenceDiagram
 |---|---|
 | Operational current price | `products.sale_price` is the value used by catalog queries, POS, and checkout |
 | Dedicated history | `product_sale_price_history` is the source for price history reports |
-| Audit is not price history | `audit_logs` records who changed prices, but reports should not query audit logs for price periods |
+| Audit is not price history | A future `audit_logs` table would record who changed prices, but reports should use dedicated history tables for price periods |
 | Sold price snapshot | `order_items.unit_price` freezes the price charged in a sale |
 | Transactional update | The current price and its history are updated in the same transaction |
 

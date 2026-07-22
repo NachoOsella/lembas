@@ -3,10 +3,10 @@
 ## Base URL
 
 ```
-/api/v1
+/api
 ```
 
-In the MVP, the prefix is `/api` (versioning can be added later if needed).
+Versioning is not applied in the MVP. If breaking changes are needed in the future, endpoints will be prefixed with `/api/v2/` while maintaining backward compatibility.
 
 ## URL spaces
 

@@ -1,59 +1,56 @@
 # Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.11.
+Dietetica Lembas frontend application. Built with Angular 21.2 standalone components, Signals, PrimeNG 21.1 Aura, and Tailwind CSS 4. Tested with Vitest 4 + jsdom 28.
 
-## Development server
+## Prerequisites
 
-To start a local development server, run:
+| Tool | Version |
+|---|---|
+| Node.js | 18+ (verified: 22.14) |
+| npm | 10+ (verified: 11.14.1) |
+| Angular CLI | 21.2.11 |
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Quick start
 
 ```bash
-ng generate component component-name
+npm ci
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+The app runs at `http://localhost:4200/` and proxies `/api` requests to `http://localhost:8080` via `proxy.conf.json`.
 
-```bash
-ng generate --help
+## Commands
+
+| Command | Description |
+|---|---|
+| `npm start` | Start development server |
+| `npm run build` | Production build |
+| `npm test` | Run unit tests (Vitest) |
+| `npm run test:coverage` | Run tests with coverage report |
+| `npm run verify` | Format check + lint + typecheck + test + build |
+| `npm run lint` | Run ESLint |
+| `npm run format:check` | Check Prettier formatting |
+| `npm run boundaries` | Verify feature-boundary import rules |
+| `npm run docker:up` | Start only PostgreSQL via Docker |
+| `npm run docker:down` | Stop PostgreSQL container |
+
+## Project structure
+
+```text
+src/app/
+  core/           -- Auth, interceptors, guards, services
+  shared/         -- Reusable UI components, pipes, models
+  features/       -- Feature slices (admin, auth, public-store, etc.)
+    <feature>/    -- Each feature exports public-api.ts
 ```
 
-## Building
+## Feature boundaries
 
-To build the project run:
+Cross-feature imports are restricted by the `scripts/check-feature-boundaries.mjs` script. A feature may only import another feature through its `public-api.ts`. Run `npm run boundaries` to verify.
 
-```bash
-ng build
-```
+## Testing
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Unit tests use Vitest 4 with jsdom 28 environment.
+- Components are tested through TestBed with standalone imports.
+- HTTP calls are mocked with `HttpClientTestingController`.
+- All components handle loading, empty, error, and data states.
