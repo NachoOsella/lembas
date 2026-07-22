@@ -11,8 +11,10 @@
       </app-button>
     </app-page-header>
 
-    @if (errorMessage()) {
-      <app-error-alert [message]="errorMessage()!" />
+    @if (errorMessage(); as error) {
+      <app-error-alert variant="inline" [message]="error">
+        <app-button variant="secondary" size="sm" (click)="retry()">Reintentar</app-button>
+      </app-error-alert>
     }
 
     <div class="cash-close__session-line">
@@ -68,6 +70,12 @@
           </ng-template>
         </app-data-table>
       </section>
+    } @else {
+      <app-empty-state
+        icon="pi pi-receipt"
+        title="Sin actividad registrada"
+        description="La caja aun no tiene pagos ni movimientos manuales."
+      />
     }
 
     <form class="cash-close__form" (submit)="openConfirm(); $event.preventDefault()">
@@ -94,7 +102,7 @@
                   [minFractionDigits]="2"
                   [maxFractionDigits]="2"
                   [value]="countedCashAmount()"
-                  (valueChange)="countedCashAmount.set($event)"
+                  (valueChange)="setCountedCashAmount($event)"
                 />
               </app-control-field>
             </div>
@@ -121,7 +129,7 @@
             placeholder="Ej: Faltante por error de conteo / Sobrante por vuelto extra"
             testId="cash-difference-reason"
             [value]="cashDifferenceReason()"
-            (valueChange)="cashDifferenceReason.set($event)"
+            (valueChange)="setCashDifferenceReason($event)"
             [error]="isReasonInvalid() ? 'Indica el motivo del sobrante o faltante.' : ''"
             hint="Quedara registrado en el cierre de la caja."
           />
@@ -139,7 +147,7 @@
           placeholder="Observaciones para el equipo"
           testId="cash-closing-notes"
           [value]="closingNotes()"
-          (valueChange)="closingNotes.set($event)"
+          (valueChange)="setClosingNotes($event)"
         />
       </app-form-section>
 
@@ -150,6 +158,12 @@
         </app-button>
       </div>
     </form>
+  }
+
+  @if (!loading() && session() === null && errorMessage(); as routeError) {
+    <app-error-alert variant="inline" [message]="routeError">
+      <app-button variant="secondary" size="sm" (click)="retry()">Reintentar</app-button>
+    </app-error-alert>
   }
 
   @if (session(); as modalSession) {

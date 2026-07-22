@@ -1,5 +1,4 @@
-import { signal } from '@angular/core';
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import type { ComponentFixture } from '@angular/core/testing';
@@ -8,6 +7,7 @@ import { MessageService } from 'primeng/api';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 
 import { OrderDetail } from './order-detail';
+import { ErrorMappingService } from '@core/services/error-mapping';
 import { CustomerCheckoutService } from '@features/checkout/data-access/customer-checkout';
 import { CustomerOrderService } from '@features/orders/data-access/customer-order';
 import type { OrderDetail as OrderDetailData } from '@features/orders/domain/order';
@@ -56,35 +56,45 @@ function detailPayload(overrides: Partial<OrderDetailData> = {}): OrderDetailDat
 }
 
 /** Minimal mock for CustomerOrderService. */
-function mockOrderService(overrides: Partial<CustomerOrderService> = {}): CustomerOrderService {
+type CustomerOrderServiceStub = {
+  createOrder: ReturnType<typeof vi.fn>;
+  getOrders: ReturnType<typeof vi.fn>;
+  getOrder: ReturnType<typeof vi.fn>;
+};
+
+function mockOrderService(
+  overrides: Partial<CustomerOrderServiceStub> = {},
+): CustomerOrderServiceStub {
   return {
     createOrder: vi.fn(),
     getOrders: vi.fn(),
     getOrder: vi.fn().mockReturnValue(of(detailPayload())),
     ...overrides,
-  } as unknown as CustomerOrderService;
+  };
 }
 
 /** Minimal mock for CustomerCheckoutService. */
-function mockCheckoutService(): CustomerCheckoutService {
+type CustomerCheckoutServiceStub = {
+  createPreference: ReturnType<typeof vi.fn>;
+};
+
+function mockCheckoutService(): CustomerCheckoutServiceStub {
   return {
     createPreference: vi
       .fn()
       .mockReturnValue(
         of({ paymentId: 99, preferenceId: 'PREF-1', initPoint: 'https://init/PREF-1' }),
       ),
-  } as unknown as CustomerCheckoutService;
+  };
 }
 
 /** Minimal mock for ActivatedRoute with a paramMap observable. */
-function mockRoute(id: string): ActivatedRoute {
+function mockRoute(id: string) {
   const params$ = new BehaviorSubject(convertToParamMap({ id }));
   return {
-    snapshot: {
-      paramMap: convertToParamMap({ id }),
-    },
+    snapshot: { paramMap: convertToParamMap({ id }) },
     paramMap: params$.asObservable(),
-  } as unknown as ActivatedRoute;
+  };
 }
 
 describe('OrderDetail', () => {
@@ -93,7 +103,7 @@ describe('OrderDetail', () => {
 
   async function configure(
     opts: {
-      orderService?: CustomerOrderService;
+      orderService?: CustomerOrderServiceStub;
       routeId?: string;
     } = {},
   ): Promise<void> {
@@ -110,6 +120,10 @@ describe('OrderDetail', () => {
         { provide: CustomerCheckoutService, useValue: mockCheckoutService() },
         { provide: ActivatedRoute, useValue: route },
         { provide: MessageService, useValue: { add: vi.fn() } },
+        {
+          provide: ErrorMappingService,
+          useValue: { getMessage: vi.fn().mockReturnValue('Mapped error') },
+        },
       ],
     }).compileComponents();
 
@@ -135,7 +149,15 @@ describe('OrderDetail', () => {
 
   it('should show error when order not found', async () => {
     const svc = mockOrderService({
-      getOrder: vi.fn().mockReturnValue(throwError(() => ({ error: { code: 'ORDER_NOT_FOUND' } }))),
+      getOrder: vi.fn().mockReturnValue(
+        throwError(
+          () =>
+            new HttpErrorResponse({
+              status: 404,
+              error: { status: 404, code: 'ORDER_NOT_FOUND', message: 'Not found' },
+            }),
+        ),
+      ),
     });
     await configure({ orderService: svc });
 
@@ -145,7 +167,15 @@ describe('OrderDetail', () => {
 
   it('should show error when forbidden', async () => {
     const svc = mockOrderService({
-      getOrder: vi.fn().mockReturnValue(throwError(() => ({ error: { code: 'FORBIDDEN' } }))),
+      getOrder: vi.fn().mockReturnValue(
+        throwError(
+          () =>
+            new HttpErrorResponse({
+              status: 403,
+              error: { status: 403, code: 'FORBIDDEN', message: 'Forbidden' },
+            }),
+        ),
+      ),
     });
     await configure({ orderService: svc });
 

@@ -1,4 +1,4 @@
-import type { OnInit } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
 import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -7,15 +7,19 @@ import type { ColumnDef } from '@shared/components/app-data-table/app-data-table
 import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
 import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
 import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
-import { AppReportFilterBar } from '@features/reports/ui/app-report-filter-bar/app-report-filter-bar';
-import { AppReportGrid } from '@features/reports/ui/app-report-grid/app-report-grid';
-import { AppReportPanel } from '@features/reports/ui/app-report-panel/app-report-panel';
+import { AppReportFilterBar } from '@features/reports/public-api';
+import { AppReportGrid } from '@features/reports/public-api';
+import { AppReportPanel } from '@features/reports/public-api';
 import { AppSelect } from '@shared/components/app-select/app-select';
 import { AppToast } from '@shared/components/app-toast/app-toast';
-import { DashboardChart } from '@features/dashboard/ui/dashboard-chart/dashboard-chart';
-import { DashboardStatCard } from '@features/dashboard/ui/dashboard-stat-card/dashboard-stat-card';
+import { DashboardChart } from '@features/dashboard/public-api';
+import { DashboardStatCard } from '@features/dashboard/public-api';
 import type { ExportData } from '@shared/components/data-export/data-export';
 import { DataExport } from '@shared/components/data-export/data-export';
+import { toReportIsoDate, trailingDaysRange } from '@features/reports/domain/report-filters';
+import { cashOverviewExport } from '@features/reports/domain/report-export';
+import { paymentMethodLabel } from '@features/reports/public-api';
+import { ReportRequestState } from '@features/reports/public-api';
 import { EmptyState } from '@shared/components/empty-state/empty-state';
 import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
@@ -55,17 +59,18 @@ import type { Branch } from '@features/users/domain/user';
   templateUrl: './cash-overview.html',
   styleUrl: './cash-overview.css',
 })
-export class CashOverviewPageComponent implements OnInit {
+export class CashOverviewPageComponent implements OnInit, OnDestroy {
   private readonly cashReports = inject(CashReportService);
   private readonly userService = inject(UserService);
+  private readonly requestState = new ReportRequestState<CashOverviewDto>();
 
   protected readonly fromDate = signal<Date | null>(null);
   protected readonly toDate = signal<Date | null>(null);
   protected readonly branchId = signal<number | null>(null);
   protected readonly branches = signal<Branch[]>([]);
-  protected readonly data = signal<CashOverviewDto | null>(null);
-  protected readonly loading = signal(true);
-  protected readonly errorMessage = signal<string | null>(null);
+  protected readonly data = this.requestState.data;
+  protected readonly loading = this.requestState.loading;
+  protected readonly errorMessage = this.requestState.errorMessage;
 
   protected readonly branchOptions = computed(() =>
     this.branches().map((branch) => ({ label: branch.name, value: branch.id })),
@@ -137,16 +142,18 @@ export class CashOverviewPageComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    const today = new Date();
-    const from = new Date(today);
-    from.setDate(from.getDate() - 29);
-    this.fromDate.set(from);
-    this.toDate.set(today);
+    const range = trailingDaysRange(30);
+    this.fromDate.set(range.from);
+    this.toDate.set(range.to);
     this.userService.listBranches().subscribe({
       next: (branches) => this.branches.set(branches),
       error: () => this.branches.set([]),
     });
     this.load();
+  }
+
+  ngOnDestroy(): void {
+    this.requestState.destroy();
   }
 
   protected onFromChange(date: Date | null): void {
@@ -165,37 +172,15 @@ export class CashOverviewPageComponent implements OnInit {
   }
 
   protected resetFilters(): void {
-    const today = new Date();
-    const from = new Date(today);
-    from.setDate(from.getDate() - 29);
-    this.fromDate.set(from);
-    this.toDate.set(today);
+    const range = trailingDaysRange(30);
+    this.fromDate.set(range.from);
+    this.toDate.set(range.to);
     this.branchId.set(null);
     this.load();
   }
 
   protected exportData(): ExportData {
-    const data = this.data();
-    if (!data) {
-      return { filename: 'resumen_caja', columns: [], rows: [] };
-    }
-    return {
-      filename: 'resumen_caja',
-      columns: [
-        { key: 'date', label: 'Fecha' },
-        { key: 'closedSessions', label: 'Cierres' },
-        { key: 'expectedCash', label: 'Efectivo esperado' },
-        { key: 'countedCash', label: 'Efectivo contado' },
-        { key: 'difference', label: 'Diferencia' },
-      ],
-      rows: data.dailyCloseSeries.map((point) => ({
-        date: point.date,
-        closedSessions: point.closedSessions,
-        expectedCash: point.expectedCash,
-        countedCash: point.countedCash,
-        difference: point.difference,
-      })),
-    };
+    return cashOverviewExport(this.data());
   }
 
   protected paymentMethodLabel(method: CashMethodTotalDto['method']): string {
@@ -211,26 +196,16 @@ export class CashOverviewPageComponent implements OnInit {
   }
 
   private load(): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-    this.cashReports
-      .getCashOverview(toIsoDate(this.fromDate()), toIsoDate(this.toDate()), this.branchId())
-      .subscribe({
-        next: (data) => {
-          this.data.set(data);
-          this.loading.set(false);
-        },
-        error: () => {
-          this.errorMessage.set('No se pudo cargar el resumen de caja. Intenta nuevamente.');
-          this.loading.set(false);
-        },
-      });
+    this.requestState.load(
+      () =>
+        this.cashReports.getCashOverview(
+          toReportIsoDate(this.fromDate()),
+          toReportIsoDate(this.toDate()),
+          this.branchId(),
+        ),
+      'No se pudo cargar el resumen de caja. Intenta nuevamente.',
+    );
   }
-}
-
-function toIsoDate(date: Date | null): string | null {
-  if (!date) return null;
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 function formatShortDate(date: string): string {
@@ -249,18 +224,4 @@ function formatCurrency(value: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
-}
-
-function paymentMethodLabel(method: string): string {
-  return (
-    {
-      CASH: 'Efectivo',
-      QR: 'QR',
-      TRANSFER: 'Transferencia',
-      DEBIT_CARD: 'Debito',
-      CREDIT_CARD: 'Credito',
-      CHECKOUT_PRO: 'Mercado Pago',
-      OTHER: 'Otros',
-    }[method] ?? method
-  );
 }

@@ -75,7 +75,7 @@
         [minFractionDigits]="2"
         [maxFractionDigits]="2"
         [value]="amount()"
-        (valueChange)="amount.set($event)"
+        (valueChange)="setAmount($event)"
         [disabled]="disabled()"
       />
     </app-control-field>
@@ -126,7 +126,7 @@
       hint="Obligatorio. Queda en la auditoria de la sesion."
       testId="movement-reason"
       [value]="reason()"
-      (valueChange)="reason.set($event)"
+      (valueChange)="setReason($event)"
       [disabled]="disabled()"
     />
   </fieldset>

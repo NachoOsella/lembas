@@ -1,7 +1,6 @@
 package com.dietetica.lembas.orders.service;
 
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
-import com.dietetica.lembas.inventory.service.InventoryService;
 import com.dietetica.lembas.orders.dto.OrderDetailDto;
 import com.dietetica.lembas.orders.dto.OrderSummaryDto;
 import com.dietetica.lembas.orders.model.Order;
@@ -10,11 +9,19 @@ import com.dietetica.lembas.orders.model.OrderType;
 import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.payments.model.PaymentStatus;
+import com.dietetica.lembas.payments.service.PaymentLockService;
+import com.dietetica.lembas.payments.service.StockDeductionGateway;
 import com.dietetica.lembas.shared.dto.PageResponse;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import jakarta.persistence.criteria.Predicate;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -26,22 +33,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-
 /**
  * Admin-facing use cases for order lifecycle management.
  *
  * <p>Provides the preparation, ready, delivery, and cancellation transitions
  * for ONLINE orders, plus filtered listing and detail retrieval. All write
  * operations delegate transition validation to {@link OrderStatePolicy}.
- * Cancellation additionally triggers stock reversal through
- * {@link InventoryService#reverseMovementsForOrder(Long)} when the order had
- * previously deducted stock.</p>
+ * Cancellation additionally triggers stock reversal through the payments-owned
+ * {@link StockDeductionGateway} when the order had previously deducted stock.</p>
  */
 @Service
 public class AdminOrderService {
@@ -58,19 +57,21 @@ public class AdminOrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final OrderStatePolicy statePolicy;
-    private final InventoryService inventoryService;
+    private final StockDeductionGateway stockDeductionGateway;
+    private final PaymentLockService paymentLockService;
     private final SecurityContextHelper securityContextHelper;
 
     public AdminOrderService(
             OrderRepository orderRepository,
             OrderMapper orderMapper,
-            InventoryService inventoryService,
-            SecurityContextHelper securityContextHelper
-    ) {
+            StockDeductionGateway stockDeductionGateway,
+            PaymentLockService paymentLockService,
+            SecurityContextHelper securityContextHelper) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.statePolicy = new OrderStatePolicy();
-        this.inventoryService = inventoryService;
+        this.stockDeductionGateway = stockDeductionGateway;
+        this.paymentLockService = paymentLockService;
         this.securityContextHelper = securityContextHelper;
     }
 
@@ -86,8 +87,7 @@ public class AdminOrderService {
      */
     @Transactional
     public OrderDetailDto prepare(Long orderId) {
-        return transition(orderId, OrderStatus.PREPARING,
-                order -> order.setPreparedAt(OffsetDateTime.now()));
+        return transition(orderId, OrderStatus.PREPARING, order -> order.setPreparedAt(OffsetDateTime.now()));
     }
 
     /**
@@ -98,8 +98,7 @@ public class AdminOrderService {
      */
     @Transactional
     public OrderDetailDto markReady(Long orderId) {
-        return transition(orderId, OrderStatus.READY,
-                order -> order.setReadyAt(OffsetDateTime.now()));
+        return transition(orderId, OrderStatus.READY, order -> order.setReadyAt(OffsetDateTime.now()));
     }
 
     /**
@@ -110,8 +109,7 @@ public class AdminOrderService {
      */
     @Transactional
     public OrderDetailDto deliver(Long orderId) {
-        return transition(orderId, OrderStatus.DELIVERED,
-                order -> order.setDeliveredAt(OffsetDateTime.now()));
+        return transition(orderId, OrderStatus.DELIVERED, order -> order.setDeliveredAt(OffsetDateTime.now()));
     }
 
     /**
@@ -125,9 +123,8 @@ public class AdminOrderService {
      * reason is blank, and with {@code ORDER_REFUNDED_CONFLICT} (409) when any
      * payment has already been REFUNDED.</p>
      *
-     * <p>Stock reversal is delegated to
-     * {@link InventoryService#reverseMovementsForOrder(Long)} and is a no-op for
-     * orders that never had stock deducted. Payments in PENDING or APPROVED
+     * <p>Stock reversal is delegated to {@link StockDeductionGateway#reverseForOrder(Long)}
+     * and is a no-op for orders that never had stock deducted. Payments in PENDING or APPROVED
      * are transitioned to CANCELLED; payments already in REJECTED, EXPIRED,
      * CANCELLED, or REFUNDED are left untouched.</p>
      *
@@ -139,55 +136,50 @@ public class AdminOrderService {
     public OrderDetailDto cancel(Long orderId, String reason) {
         String normalizedReason = reason == null ? null : reason.trim();
         if (normalizedReason == null || normalizedReason.isEmpty()) {
-            throw new DomainException(CODE_CANCEL_REASON_REQUIRED, HttpStatus.BAD_REQUEST,
-                    "Cancellation reason is required");
+            throw new DomainException(
+                    CODE_CANCEL_REASON_REQUIRED, HttpStatus.BAD_REQUEST, "Cancellation reason is required");
         }
         if (normalizedReason.length() > 500) {
-            throw new DomainException(CODE_CANCEL_REASON_REQUIRED, HttpStatus.BAD_REQUEST,
-                    "Reason must be 1-500 characters");
+            throw new DomainException(
+                    CODE_CANCEL_REASON_REQUIRED, HttpStatus.BAD_REQUEST, "Reason must be 1-500 characters");
         }
 
-        Order order = orderRepository.findWithItemsById(orderId)
-                .orElseThrow(() -> new DomainException(CODE_ORDER_NOT_FOUND, HttpStatus.NOT_FOUND,
-                        "Order not found"));
+        Order order = orderRepository
+                .findByIdForUpdate(orderId)
+                .orElseThrow(() -> new DomainException(CODE_ORDER_NOT_FOUND, HttpStatus.NOT_FOUND, "Order not found"));
         ensureBranchAccess(order);
 
-        // 1. State policy: rejects DELIVERED, CANCELLED, and null.
-        statePolicy.validateTransition(order, OrderStatus.CANCELLED);
+        // Lock payments only after the order so cancellation and webhook processing cannot invert locks.
+        List<Payment> payments = paymentLockService.lockForOrder(orderId);
 
-        // 2. Refund sanity: cannot cancel if any payment has been REFUNDED.
-        boolean hasRefundedPayment = order.getPayments().stream()
-                .anyMatch(p -> p.getStatus() == PaymentStatus.REFUNDED);
+        // Re-read state under the locks before validating or applying side effects.
+        statePolicy.validateTransition(order, OrderStatus.CANCELLED);
+        boolean hasRefundedPayment =
+                payments.stream().anyMatch(payment -> payment.getStatus() == PaymentStatus.REFUNDED);
         if (hasRefundedPayment) {
-            throw new DomainException(CODE_REFUNDED_CONFLICT, HttpStatus.CONFLICT,
-                    "Cannot cancel an order with refunded payments");
+            throw new DomainException(
+                    CODE_REFUNDED_CONFLICT, HttpStatus.CONFLICT, "Cannot cancel an order with refunded payments");
         }
 
-        // 3. Stock reversal (no-op for orders that never deducted stock).
-        int reversedCount = inventoryService.reverseMovementsForOrder(order.getId());
+        int reversedCount = stockDeductionGateway.reverseForOrder(order.getId());
         if (reversedCount > 0) {
             log.info("Reversed {} stock movements for order {}", reversedCount, order.getOrderNumber());
         }
 
-        // 4. Update payment status: PENDING, APPROVED -> CANCELLED.
-        for (Payment payment : order.getPayments()) {
-            if (payment.getStatus() == PaymentStatus.PENDING
-                    || payment.getStatus() == PaymentStatus.APPROVED) {
+        for (Payment payment : payments) {
+            if (payment.getStatus() == PaymentStatus.PENDING || payment.getStatus() == PaymentStatus.APPROVED) {
                 payment.setStatus(PaymentStatus.CANCELLED);
             }
         }
 
-        // 5. Update order state.
         order.setStatus(OrderStatus.CANCELLED);
         order.setCancelledAt(OffsetDateTime.now());
         order.setCancellationReason(normalizedReason);
         Order saved = orderRepository.save(order);
 
-        // 6. Audit.
-        Long userId = securityContextHelper.getCurrentUser() == null
-                ? null : securityContextHelper.getCurrentUser().getId();
-        log.info("Order {} cancelled by user {} (reason: {})",
-                saved.getOrderNumber(), userId, normalizedReason);
+        User currentUser = currentUserOrNull();
+        Long userId = currentUser == null ? null : currentUser.getId();
+        log.info("Order {} cancelled by user {} (reason: {})", saved.getOrderNumber(), userId, normalizedReason);
         return orderMapper.toDetailDto(saved);
     }
 
@@ -229,8 +221,7 @@ public class AdminOrderService {
             LocalDate from,
             LocalDate to,
             String search,
-            Pageable pageable
-    ) {
+            Pageable pageable) {
         Long effectiveBranchId = resolveBranchFilter(branchId);
         Specification<Order> spec = buildFilterSpec(status, effectiveBranchId, type, from, to, search);
         Pageable sortedPageable = ensureDefaultSort(pageable);
@@ -277,9 +268,9 @@ public class AdminOrderService {
      */
     @Transactional(readOnly = true)
     public OrderDetailDto getOrder(Long orderId) {
-        Order order = orderRepository.findWithItemsById(orderId)
-                .orElseThrow(() -> new DomainException(CODE_ORDER_NOT_FOUND, HttpStatus.NOT_FOUND,
-                        "Order not found"));
+        Order order = orderRepository
+                .findWithItemsById(orderId)
+                .orElseThrow(() -> new DomainException(CODE_ORDER_NOT_FOUND, HttpStatus.NOT_FOUND, "Order not found"));
         ensureBranchAccess(order);
         return orderMapper.toDetailDto(order);
     }
@@ -291,11 +282,10 @@ public class AdminOrderService {
     /**
      * Shared transition logic: load, validate, apply state+timestamp, persist.
      */
-    private OrderDetailDto transition(Long orderId, OrderStatus target,
-                                      Consumer<Order> timestampSetter) {
-        Order order = orderRepository.findWithItemsById(orderId)
-                .orElseThrow(() -> new DomainException(CODE_ORDER_NOT_FOUND, HttpStatus.NOT_FOUND,
-                        "Order not found"));
+    private OrderDetailDto transition(Long orderId, OrderStatus target, Consumer<Order> timestampSetter) {
+        Order order = orderRepository
+                .findWithItemsById(orderId)
+                .orElseThrow(() -> new DomainException(CODE_ORDER_NOT_FOUND, HttpStatus.NOT_FOUND, "Order not found"));
         ensureBranchAccess(order);
         statePolicy.validateTransition(order, target);
         order.setStatus(target);
@@ -314,8 +304,7 @@ public class AdminOrderService {
         if (currentUser.getBranchId() == null
                 || order.getBranch() == null
                 || !currentUser.getBranchId().equals(order.getBranch().getId())) {
-            throw new DomainException("ACCESS_DENIED", HttpStatus.FORBIDDEN,
-                    "Order belongs to another branch");
+            throw new DomainException("ACCESS_DENIED", HttpStatus.FORBIDDEN, "Order belongs to another branch");
         }
     }
 
@@ -336,9 +325,7 @@ public class AdminOrderService {
      * {@code customerNameSnapshot}. Empty / blank input is treated as no filter.</p>
      */
     private Specification<Order> buildFilterSpec(
-            OrderStatus status, Long branchId, OrderType type,
-            LocalDate from, LocalDate to, String search
-    ) {
+            OrderStatus status, Long branchId, OrderType type, LocalDate from, LocalDate to, String search) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -356,16 +343,15 @@ public class AdminOrderService {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), fromStart));
             }
             if (to != null) {
-                OffsetDateTime toEnd = to.plusDays(1).atStartOfDay(ZoneOffset.UTC).toOffsetDateTime();
+                OffsetDateTime toEnd =
+                        to.plusDays(1).atStartOfDay(ZoneOffset.UTC).toOffsetDateTime();
                 predicates.add(cb.lessThan(root.get("createdAt"), toEnd));
             }
             if (search != null) {
                 String pattern = buildSearchPattern(search);
                 if (pattern != null) {
-                    Predicate orderNumberMatch = cb.like(
-                            cb.lower(root.get("orderNumber")), pattern);
-                    Predicate customerMatch = cb.like(
-                            cb.lower(root.get("customerNameSnapshot")), pattern);
+                    Predicate orderNumberMatch = cb.like(cb.lower(root.get("orderNumber")), pattern);
+                    Predicate customerMatch = cb.like(cb.lower(root.get("customerNameSnapshot")), pattern);
                     predicates.add(cb.or(orderNumberMatch, customerMatch));
                 }
             }
@@ -388,10 +374,7 @@ public class AdminOrderService {
         if (trimmed.isEmpty()) {
             return null;
         }
-        String escaped = trimmed
-                .replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
+        String escaped = trimmed.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
         return "%" + escaped.toLowerCase() + "%";
     }
 
@@ -403,9 +386,6 @@ public class AdminOrderService {
             return pageable;
         }
         return PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "createdAt")
-        );
+                pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
     }
 }

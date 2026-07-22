@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
-import type { CartItem } from '@features/checkout/state/cart';
-import { Cart } from '@features/checkout/state/cart';
+import type { CartItem } from '@features/checkout/public-api';
+import { Cart } from '@features/checkout/public-api';
 import { AuthService } from '@core/services/auth';
-import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
 import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
 import { AppButton } from '@shared/components/app-button/app-button';
 import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';

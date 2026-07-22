@@ -11,7 +11,7 @@ import { MessageService } from 'primeng/api';
 
 import { ProductDetail } from './product-detail';
 import { CatalogService } from '@features/catalog/data-access/catalog';
-import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
 import type { ProductSummary } from '@features/catalog/domain/product';
 
 const MOCK_PRODUCT: ProductSummary = {

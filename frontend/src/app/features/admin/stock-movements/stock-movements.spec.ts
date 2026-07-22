@@ -68,16 +68,15 @@ describe('StockMovements', () => {
     expect(inventoryService.listMovements).toHaveBeenCalledWith(
       expect.objectContaining({ page: 0, size: 10, sort: 'createdAt,desc' }),
     );
-    expect((component as any).movements().length).toBe(1);
+    expect(component.movements().length).toBe(1);
   });
 
   it('Should_sendSearchFilterAndResetPage_when_searching', () => {
-    const cmp = component as any;
-    cmp.first.set(20);
+    component.first.set(20);
 
-    cmp.onSearch('Granola');
+    component.onSearch('Granola');
 
-    expect(cmp.first()).toBe(0);
+    expect(component.first()).toBe(0);
     expect(inventoryService.listMovements).toHaveBeenLastCalledWith(
       expect.objectContaining({ search: 'Granola' }),
     );

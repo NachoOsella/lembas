@@ -10,10 +10,14 @@ import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
 import com.dietetica.lembas.catalog.repository.CategoryRepository;
 import com.dietetica.lembas.catalog.repository.ProductRepository;
 import com.dietetica.lembas.catalog.repository.ProductSalePriceHistoryRepository;
-import com.dietetica.lembas.inventory.repository.StockLotRepository;
+import com.dietetica.lembas.inventory.api.InventoryQuery;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.branch.model.Branch;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -24,12 +28,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 /** Application service for admin product catalog management. */
 @Service
 public class ProductService {
@@ -37,29 +35,32 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductSalePriceHistoryRepository salePriceHistoryRepository;
-    private final StockLotRepository stockLotRepository;
-    private final BranchRepository branchRepository;
+    private final InventoryQuery inventoryQuery;
+    private final BranchQuery branchQuery;
 
     public ProductService(
             ProductRepository productRepository,
             CategoryRepository categoryRepository,
             ObjectProvider<ProductSalePriceHistoryRepository> salePriceHistoryRepository,
-            StockLotRepository stockLotRepository,
-            BranchRepository branchRepository
-    ) {
+            InventoryQuery inventoryQuery,
+            BranchQuery branchQuery) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
-        this.salePriceHistoryRepository = salePriceHistoryRepository == null ? null : salePriceHistoryRepository.getIfAvailable();
-        this.stockLotRepository = stockLotRepository;
-        this.branchRepository = branchRepository;
+        this.salePriceHistoryRepository =
+                salePriceHistoryRepository == null ? null : salePriceHistoryRepository.getIfAvailable();
+        this.inventoryQuery = inventoryQuery;
+        this.branchQuery = branchQuery;
     }
 
     /** Lists active products with optional table filters. */
     @Transactional(readOnly = true)
-    public Page<ProductSummaryDto> listAdminProducts(String search, Long categoryId, ProductOnlineStatus status, Pageable pageable) {
-        String normalizedSearch = search == null || search.isBlank() ? null : search.trim().toLowerCase(Locale.ROOT);
+    public Page<ProductSummaryDto> listAdminProducts(
+            String search, Long categoryId, ProductOnlineStatus status, Pageable pageable) {
+        String normalizedSearch =
+                search == null || search.isBlank() ? null : search.trim().toLowerCase(Locale.ROOT);
         Pageable sortedPageable = mapSort(pageable);
-        return productRepository.searchAdminProducts(normalizedSearch, categoryId, status, sortedPageable)
+        return productRepository
+                .searchAdminProducts(normalizedSearch, categoryId, status, sortedPageable)
                 .map(this::toSummaryDto);
     }
 
@@ -94,7 +95,8 @@ public class ProductService {
         if (salePriceHistoryRepository == null) {
             return new PageImpl<>(java.util.List.of(), pageable, 0);
         }
-        return salePriceHistoryRepository.findByProductIdOrderByValidFromDesc(productId, pageable)
+        return salePriceHistoryRepository
+                .findByProductIdOrderByValidFromDesc(productId, pageable)
                 .map(history -> new ProductSalePriceHistoryDto(
                         history.getId(),
                         history.getProduct().getId(),
@@ -104,8 +106,7 @@ public class ProductService {
                         history.getReason(),
                         history.getSource(),
                         history.getReferenceType(),
-                        history.getReferenceId()
-                ));
+                        history.getReferenceId()));
     }
 
     /** Soft-deletes a product so future stock/order relations can keep history. */
@@ -125,8 +126,7 @@ public class ProductService {
             throw new DomainException(
                     "PRODUCT_STATUS_INVALID_TRANSITION",
                     org.springframework.http.HttpStatus.CONFLICT,
-                    "Product status transition is not allowed"
-            );
+                    "Product status transition is not allowed");
         }
 
         product.setOnlineStatus(targetStatus);
@@ -162,11 +162,16 @@ public class ProductService {
     /** Lists products visible in the public online store without branch availability for legacy callers. */
     @Transactional(readOnly = true)
     public Page<ProductSummaryDto> listStoreProducts(String search, Long categoryId, Pageable pageable) {
-        String normalizedSearch = search == null || search.isBlank() ? null : search.trim().toLowerCase(Locale.ROOT);
+        String normalizedSearch =
+                search == null || search.isBlank() ? null : search.trim().toLowerCase(Locale.ROOT);
         Pageable sortedPageable = pageable.getSort().isUnsorted()
-                ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("name").ascending())
+                ? PageRequest.of(
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        Sort.by("name").ascending())
                 : pageable;
-        return productRepository.searchStoreProducts(normalizedSearch, categoryId, sortedPageable)
+        return productRepository
+                .searchStoreProducts(normalizedSearch, categoryId, sortedPageable)
                 .map(this::toSummaryDto);
     }
 
@@ -174,20 +179,26 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<ProductSummaryDto> listStoreProducts(String search, Long categoryId, Long branchId, Pageable pageable) {
         Long resolvedBranchId = resolveStoreBranchId(branchId);
-        String normalizedSearch = search == null || search.isBlank() ? null : search.trim().toLowerCase(Locale.ROOT);
+        String normalizedSearch =
+                search == null || search.isBlank() ? null : search.trim().toLowerCase(Locale.ROOT);
         Pageable sortedPageable = pageable.getSort().isUnsorted()
-                ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("name").ascending())
+                ? PageRequest.of(
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        Sort.by("name").ascending())
                 : pageable;
 
         Page<Product> products = productRepository.searchStoreProducts(normalizedSearch, categoryId, sortedPageable);
         Map<Long, BigDecimal> availability = availabilityByProduct(products.getContent(), resolvedBranchId);
-        return products.map(product -> toSummaryDto(product, availability.getOrDefault(product.getId(), BigDecimal.ZERO)));
+        return products.map(
+                product -> toSummaryDto(product, availability.getOrDefault(product.getId(), BigDecimal.ZERO)));
     }
 
     /** Returns a product visible in the public online store without branch availability for legacy callers. */
     @Transactional(readOnly = true)
     public ProductDetailDto getStoreProductDetail(Long id) {
-        Product product = productRepository.findByIdAndActiveTrueAndOnlineStatus(id, ProductOnlineStatus.PUBLISHED)
+        Product product = productRepository
+                .findByIdAndActiveTrueAndOnlineStatus(id, ProductOnlineStatus.PUBLISHED)
                 .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
         return toDetailDto(product);
     }
@@ -196,17 +207,18 @@ public class ProductService {
     @Transactional(readOnly = true)
     public ProductDetailDto getStoreProductDetail(Long id, Long branchId) {
         Long resolvedBranchId = resolveStoreBranchId(branchId);
-        Product product = productRepository.findByIdAndActiveTrueAndOnlineStatus(id, ProductOnlineStatus.PUBLISHED)
+        Product product = productRepository
+                .findByIdAndActiveTrueAndOnlineStatus(id, ProductOnlineStatus.PUBLISHED)
                 .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
-        BigDecimal availableStock = stockLotRepository.calculateAvailableQuantity(product.getId(), resolvedBranchId);
+        BigDecimal availableStock = inventoryQuery.calculateAvailableQuantity(product.getId(), resolvedBranchId);
         return toDetailDto(product, availableStock);
     }
 
     /** Returns random published products from the same category without availability for legacy callers. */
     @Transactional(readOnly = true)
     public Page<ProductSummaryDto> listRandomRelatedProducts(Long productId) {
-        Product product = productRepository.findByIdAndActiveTrueAndOnlineStatus(
-                        productId, ProductOnlineStatus.PUBLISHED)
+        Product product = productRepository
+                .findByIdAndActiveTrueAndOnlineStatus(productId, ProductOnlineStatus.PUBLISHED)
                 .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
         Long categoryId = product.getCategory().getId();
         var products = productRepository.findRandomRelatedProducts(categoryId, productId, PageRequest.of(0, 6));
@@ -218,12 +230,11 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<ProductSummaryDto> listRandomRelatedProducts(Long productId, Long branchId) {
         Long resolvedBranchId = resolveStoreBranchId(branchId);
-        Product product = productRepository.findByIdAndActiveTrueAndOnlineStatus(
-                        productId, ProductOnlineStatus.PUBLISHED)
+        Product product = productRepository
+                .findByIdAndActiveTrueAndOnlineStatus(productId, ProductOnlineStatus.PUBLISHED)
                 .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
         Long categoryId = product.getCategory().getId();
-        var products = productRepository.findRandomRelatedProducts(
-                categoryId, productId, PageRequest.of(0, 6));
+        var products = productRepository.findRandomRelatedProducts(categoryId, productId, PageRequest.of(0, 6));
         Map<Long, BigDecimal> availability = availabilityByProduct(products, resolvedBranchId);
         var dtos = products.stream()
                 .map(related -> toSummaryDto(related, availability.getOrDefault(related.getId(), BigDecimal.ZERO)))
@@ -233,8 +244,10 @@ public class ProductService {
 
     /** Copies validated request fields into the entity. */
     private void applyRequest(Product product, ProductRequest request) {
-        Category category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new DomainException("CATEGORY_NOT_FOUND", HttpStatus.NOT_FOUND, "Category not found"));
+        Category category = categoryRepository
+                .findById(request.categoryId())
+                .orElseThrow(
+                        () -> new DomainException("CATEGORY_NOT_FOUND", HttpStatus.NOT_FOUND, "Category not found"));
         product.setCategory(category);
         product.setName(request.name().trim());
         product.setDescription(normalizeBlank(request.description()));
@@ -256,7 +269,8 @@ public class ProductService {
                 ? productRepository.existsByBarcodeIgnoreCaseAndActiveTrue(barcode)
                 : productRepository.existsByBarcodeIgnoreCaseAndActiveTrueAndIdNot(barcode, currentId);
         if (duplicated) {
-            throw new DomainException("PRODUCT_BARCODE_DUPLICATED", HttpStatus.CONFLICT, "Product barcode already exists");
+            throw new DomainException(
+                    "PRODUCT_BARCODE_DUPLICATED", HttpStatus.CONFLICT, "Product barcode already exists");
         }
     }
 
@@ -271,10 +285,11 @@ public class ProductService {
         }
         Sort mappedSort = Sort.unsorted();
         for (Sort.Order order : pageable.getSort()) {
-            String property = switch (order.getProperty()) {
-                case "categoryName" -> "c.name";
-                default -> order.getProperty();
-            };
+            String property =
+                    switch (order.getProperty()) {
+                        case "categoryName" -> "c.name";
+                        default -> order.getProperty();
+                    };
             mappedSort = mappedSort.and(Sort.by(new Sort.Order(order.getDirection(), property)));
         }
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mappedSort);
@@ -282,19 +297,20 @@ public class ProductService {
 
     /** Finds an active product or raises the uniform not-found error. */
     private Product findActiveById(Long id) {
-        return productRepository.findByIdAndActiveTrue(id)
+        return productRepository
+                .findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
     }
 
     /** Resolves the branch used by public stock availability, defaulting to the first active branch. */
     private Long resolveStoreBranchId(Long branchId) {
         if (branchId != null) {
-            if (!branchRepository.existsByIdAndActiveTrue(branchId)) {
+            if (!branchQuery.existsActive(branchId)) {
                 throw new DomainException("BRANCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Branch not found");
             }
             return branchId;
         }
-        return branchRepository.findByActiveTrueOrderByNameAsc().stream()
+        return branchQuery.listActive().stream()
                 .findFirst()
                 .map(Branch::getId)
                 .orElseThrow(() -> new DomainException("BRANCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Branch not found"));
@@ -306,11 +322,7 @@ public class ProductService {
             return Map.of();
         }
         List<Long> productIds = products.stream().map(Product::getId).toList();
-        return stockLotRepository.calculateAvailableQuantityByProductIds(productIds, branchId).stream()
-                .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> (BigDecimal) row[1]
-                ));
+        return inventoryQuery.calculateAvailableQuantityByProductIds(productIds, branchId);
     }
 
     /** Normalizes optional text fields before persistence. */
@@ -336,8 +348,7 @@ public class ProductService {
                 product.getMinimumStock(),
                 product.getImageUrl(),
                 product.getOnlineStatus(),
-                availableStock
-        );
+                availableStock);
     }
 
     /** Maps an entity into the edit/detail DTO without public stock information. */
@@ -359,7 +370,6 @@ public class ProductService {
                 product.getMinimumStock(),
                 product.getImageUrl(),
                 product.getOnlineStatus(),
-                availableStock
-        );
+                availableStock);
     }
 }

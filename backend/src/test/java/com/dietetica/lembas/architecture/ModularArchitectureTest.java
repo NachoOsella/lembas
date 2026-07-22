@@ -55,54 +55,15 @@ class ModularArchitectureTest {
             "suppliers",
             "users");
 
-    private static final Set<DependencyAccess> CROSS_MODULE_REPOSITORY_ALLOWLIST = Set.of(
-            // Authentication still reads the users persistence model during migration.
-            access("auth.service.AuthService", "users.repository.UserRepository"),
-            access("auth.service.LembasUserDetailsService", "users.repository.UserRepository"),
-            // Cash totals and operator identity still read payments/users persistence directly.
-            access("cash.service.CashService", "payments.repository.PaymentRepository"),
-            access("cash.service.CashService", "users.repository.UserRepository"),
-            access("cash.service.CashService", "shared.branch.repository.BranchRepository"),
-            // Catalog, inventory, orders, POS, and suppliers still share persistence lookups.
-            access("catalog.service.ProductService", "inventory.repository.StockLotRepository"),
-            access("catalog.service.ProductService", "shared.branch.repository.BranchRepository"),
-            access("inventory.service.InventoryService", "catalog.repository.ProductRepository"),
-            access("inventory.service.InventoryService", "orders.repository.OrderRepository"),
-            access("inventory.service.InventoryService", "shared.branch.repository.BranchRepository"),
-            access("orders.service.CustomerOrderService", "catalog.repository.ProductRepository"),
-            access("orders.service.CustomerOrderService", "inventory.repository.StockLotRepository"),
-            access("orders.service.CustomerOrderService", "shared.branch.repository.BranchRepository"),
-            access("payments.service.MercadoPagoWebhookProcessor", "orders.repository.OrderRepository"),
-            access("payments.service.PreferenceService", "orders.repository.OrderRepository"),
-            access("pos.service.PosProductSearchService", "catalog.repository.ProductRepository"),
-            access("pos.service.PosProductSearchService", "inventory.repository.StockLotRepository"),
-            access("pos.service.PosSaleService", "catalog.repository.ProductRepository"),
-            access("pos.service.PosSaleService", "inventory.repository.StockLotRepository"),
-            access("pos.service.PosSaleService", "inventory.repository.StockMovementRepository"),
-            access("pos.service.PosSaleService", "orders.repository.OrderRepository"),
-            access("pos.service.PosSaleService", "shared.branch.repository.BranchRepository"),
-            access("reports.service.RecommendationService", "shared.branch.repository.BranchRepository"),
-            access("reports.service.ReportService", "shared.branch.repository.BranchRepository"),
-            access("suppliers.service.PriceUpdateBatchService", "catalog.repository.CategoryRepository"),
-            access("suppliers.service.PriceUpdateBatchService", "catalog.repository.ProductRepository"),
-            access("suppliers.service.PriceUpdateBatchService", "catalog.repository.ProductSalePriceHistoryRepository"),
-            access("suppliers.service.PurchaseOrderService", "shared.branch.repository.BranchRepository"),
-            access("suppliers.service.PurchaseReceiptService", "inventory.repository.StockLotRepository"),
-            access("suppliers.service.PurchaseReceiptService", "inventory.repository.StockMovementRepository"),
-            access("suppliers.service.SupplierService", "catalog.repository.ProductRepository"),
-            access("users.service.UserAdminService", "shared.branch.repository.BranchRepository"));
+    private static final Set<DependencyAccess> CROSS_MODULE_REPOSITORY_ALLOWLIST = Set.of();
 
     private static final Set<DependencyAccess> SHARED_FEATURE_ALLOWLIST = Set.of(
             // Security configuration still wires the authentication filter across the boundary.
             access("shared.config.SecurityConfig", "auth.service.JwtAuthenticationFilter"));
 
-    private static final Set<DependencyAccess> CONTROLLER_REPOSITORY_ALLOWLIST = Set.of(
-            // Customer payment history still performs its read directly until a payment query API exists.
-            access("payments.web.CustomerPaymentController", "payments.repository.PaymentRepository"));
+    private static final Set<DependencyAccess> CONTROLLER_REPOSITORY_ALLOWLIST = Set.of();
 
-    private static final Set<FieldInjection> FIELD_INJECTION_ALLOWLIST = Set.of(
-            // The reporting repository still uses container-managed EntityManager field injection.
-            field("reports.repository.ReportQueryRepository", "em", PersistenceContext.class));
+    private static final Set<FieldInjection> FIELD_INJECTION_ALLOWLIST = Set.of();
 
     private static final ArchRule controllersDoNotDependOnRepositories = classes()
             .that()
@@ -315,6 +276,7 @@ class ModularArchitectureTest {
         return targetPackage.contains(".service")
                 || targetPackage.contains(".dto")
                 || targetPackage.contains(".model")
+                || targetPackage.contains(".api")
                 || (moduleName(sourceClass).equals(moduleName(targetClass)) && targetPackage.contains(".web"));
     }
 

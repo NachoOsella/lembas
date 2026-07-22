@@ -5,7 +5,9 @@
 # Local environment files must not be copied into images.
 .env
 .env.*
-!*.env.example
+**/.env
+**/.env.*
+!**/.env.example
 
 # Backend build outputs and local uploads.
 backend/target

@@ -21,14 +21,11 @@
     }
 
     <!-- Error -->
-    @else if (error()) {
+    @else if (errorMessage(); as message) {
       <div class="mx-auto max-w-lg">
-        <app-error-alert
-          title="No pudimos cargar tus pedidos"
-          message="Intentá nuevamente en unos segundos."
-        />
+        <app-error-alert title="No pudimos cargar tus pedidos" [message]="message" />
         <div class="mt-6 text-center">
-          <app-button variant="secondary" icon="pi pi-refresh" (click)="loadOrders()">
+          <app-button variant="secondary" icon="pi pi-refresh" (click)="retry()">
             Reintentar
           </app-button>
         </div>

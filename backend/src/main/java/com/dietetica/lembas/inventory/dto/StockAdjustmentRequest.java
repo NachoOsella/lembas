@@ -3,7 +3,6 @@ package com.dietetica.lembas.inventory.dto;
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.math.BigDecimal;
 
 /**
@@ -28,6 +27,4 @@ public record StockAdjustmentRequest(
         @NotNull BigDecimal quantity,
         @NotNull @Size(min = 1, max = 500) String reason,
         @NotNull StockMovementType type,
-        Long stockLotId
-) {
-}
+        Long stockLotId) {}

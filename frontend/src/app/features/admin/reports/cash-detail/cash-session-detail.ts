@@ -1,5 +1,5 @@
-import type { OnInit } from '@angular/core';
-import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgClass } from '@angular/common';
 
@@ -11,7 +11,11 @@ import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
 import { AppToast } from '@shared/components/app-toast/app-toast';
 import type { ExportData } from '@shared/components/data-export/data-export';
 import { DataExport } from '@shared/components/data-export/data-export';
-import { DashboardChart } from '@features/dashboard/ui/dashboard-chart/dashboard-chart';
+import { parseReportId } from '@features/reports/domain/report-filters';
+import { cashDetailExport } from '@features/reports/domain/report-export';
+import { paymentMethodLabel } from '@features/reports/public-api';
+import { ReportRequestState } from '@features/reports/public-api';
+import { DashboardChart } from '@features/dashboard/public-api';
 import { EmptyState } from '@shared/components/empty-state/empty-state';
 import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
@@ -45,16 +49,17 @@ import type { CashSessionStatus } from '@features/cash/domain/cash-session';
   templateUrl: './cash-session-detail.html',
   styleUrl: './cash-session-detail.css',
 })
-export class CashSessionDetailReportPageComponent implements OnInit {
+export class CashSessionDetailReportPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly cashReportService = inject(CashReportService);
   private readonly errorMapping = inject(ErrorMappingService);
+  private readonly requestState = new ReportRequestState<CashReportDto>();
 
   /** Page state. */
-  public readonly loading = signal(true);
-  public readonly errorMessage = signal<string | null>(null);
-  public readonly report = signal<CashReportDto | null>(null);
+  public readonly loading = this.requestState.loading;
+  public readonly errorMessage = this.requestState.errorMessage;
+  public readonly report = this.requestState.data;
 
   /** Computed chart data for the payment-method breakdown. */
   protected readonly methodLabels = computed(() => {
@@ -90,8 +95,8 @@ export class CashSessionDetailReportPageComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('sessionId'));
-    if (!Number.isFinite(id) || id <= 0) {
+    const id = parseReportId(this.route.snapshot.paramMap.get('sessionId'));
+    if (!id) {
       this.loading.set(false);
       this.errorMessage.set('Identificador de sesion invalido.');
       return;
@@ -99,8 +104,19 @@ export class CashSessionDetailReportPageComponent implements OnInit {
     this.load(id);
   }
 
+  ngOnDestroy(): void {
+    this.requestState.destroy();
+  }
+
   protected goBack(): void {
     void this.router.navigate(['/admin/cash/history']);
+  }
+
+  protected onRefresh(): void {
+    const id = parseReportId(this.route.snapshot.paramMap.get('sessionId'));
+    if (id) {
+      this.load(id);
+    }
   }
 
   public statusLabel(status: CashSessionStatus): string {
@@ -147,89 +163,17 @@ export class CashSessionDetailReportPageComponent implements OnInit {
 
   /** Builds the CSV export payload for the full session report. */
   public exportData(): ExportData {
-    const data = this.report();
-    if (!data) {
-      return { filename: 'reporte_cierre_caja', columns: [], rows: [] };
-    }
-    return {
-      filename: `reporte_cierre_caja_${data.sessionId}`,
-      columns: [
-        { key: 'label', label: 'Concepto' },
-        { key: 'value', label: 'Valor' },
-      ],
-      rows: [
-        { label: 'Sucursal', value: data.branchName },
-        { label: 'Abrio', value: data.openedByUserName ?? '—' },
-        {
-          label: 'Apertura',
-          value: data.openedAt ? new Date(data.openedAt).toLocaleString('es-AR') : '—',
-        },
-        {
-          label: 'Cerro',
-          value: data.closedByUserName ?? '—',
-        },
-        {
-          label: 'Cierre',
-          value: data.closedAt ? new Date(data.closedAt).toLocaleString('es-AR') : '—',
-        },
-        { label: 'Estado', value: this.statusLabel(data.status) },
-        { label: 'Monto apertura', value: data.openingCashAmount },
-        { label: 'Esperado', value: data.expectedCashAmount ?? '—' },
-        { label: 'Contado', value: data.countedCashAmount ?? '—' },
-        { label: 'Diferencia', value: data.cashDifferenceAmount ?? '—' },
-        { label: 'Motivo diferencia', value: data.cashDifferenceReason ?? '—' },
-        { label: 'Transacciones', value: String(data.totalTransactions) },
-        { label: 'Pedidos POS', value: String(data.posOrdersCount) },
-        { label: 'Total POS', value: data.totalPosRevenue },
-      ],
-    };
+    return cashDetailExport(this.report());
   }
 
   private methodLabel(key: string): string {
-    return (
-      {
-        CASH: 'Efectivo',
-        QR: 'QR',
-        TRANSFER: 'Transferencia',
-        DEBIT_CARD: 'Debito',
-        CREDIT_CARD: 'Credito',
-        CHECKOUT_PRO: 'Mercado Pago',
-        OTHER: 'Otros',
-      }[key] ?? key
-    );
+    return paymentMethodLabel(key);
   }
 
   private load(id: number): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-    this.cashReportService.getCashReport(id).subscribe({
-      next: (report) => {
-        this.report.set(report);
-        this.loading.set(false);
-      },
-      error: (err: unknown) => {
-        this.loading.set(false);
-        const code = extractApiCode(err);
-        this.errorMessage.set(
-          this.errorMapping.getMessage(code ?? 'INTERNAL_ERROR', extractMessage(err) ?? undefined),
-        );
-      },
-    });
+    this.requestState.load(
+      () => this.cashReportService.getCashReport(id),
+      this.errorMapping.getMessage('INTERNAL_ERROR'),
+    );
   }
-}
-
-function extractApiCode(err: unknown): string | null {
-  if (!err || typeof err !== 'object') {
-    return null;
-  }
-  const e = err as { error?: { code?: string } | null };
-  return e.error?.code ?? null;
-}
-
-function extractMessage(err: unknown): string | null {
-  if (!err || typeof err !== 'object') {
-    return null;
-  }
-  const e = err as { error?: { message?: string } | null; message?: string };
-  return e.error?.message ?? e.message ?? null;
 }

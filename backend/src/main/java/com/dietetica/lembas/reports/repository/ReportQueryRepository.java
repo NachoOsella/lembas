@@ -10,10 +10,7 @@ import com.dietetica.lembas.reports.dto.SalesByHourDto;
 import com.dietetica.lembas.reports.dto.SalesByMethodDto;
 import com.dietetica.lembas.reports.dto.TopProductDto;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
-import org.springframework.stereotype.Repository;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -21,6 +18,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.stereotype.Repository;
 
 /**
  * Custom read-only repository that runs the aggregations powering the
@@ -44,8 +42,11 @@ public class ReportQueryRepository {
     /** Business timezone used to assign transactions to local reporting days. */
     public static final ZoneId REPORT_ZONE = ZoneId.of("America/Argentina/Buenos_Aires");
 
-    @PersistenceContext
-    private EntityManager em;
+    private final EntityManager em;
+
+    public ReportQueryRepository(EntityManager em) {
+        this.em = em;
+    }
 
     // ---------------------------------------------------------------------------
     // Dashboard aggregations
@@ -58,7 +59,8 @@ public class ReportQueryRepository {
      *         two decimals; zeros when there are no matching orders.
      */
     public BigDecimal[] totalAndAverageRevenue(OffsetDateTime start, OffsetDateTime end, Long branchId) {
-        String jpql = """
+        String jpql =
+                """
                 select coalesce(sum(o.total), 0), coalesce(avg(o.total), 0)
                 from Order o
                 where o.paidAt >= :start
@@ -77,12 +79,13 @@ public class ReportQueryRepository {
                 .getSingleResult();
         BigDecimal total = toBigDecimal(row[0]);
         BigDecimal avg = toBigDecimal(row[1]).setScale(2, RoundingMode.HALF_UP);
-        return new BigDecimal[]{total.setScale(2, RoundingMode.HALF_UP), avg};
+        return new BigDecimal[] {total.setScale(2, RoundingMode.HALF_UP), avg};
     }
 
     /** Q1b: count of confirmed orders in the period. */
     public long countConfirmedOrders(OffsetDateTime start, OffsetDateTime end, Long branchId) {
-        String jpql = """
+        String jpql =
+                """
                 select count(o)
                 from Order o
                 where o.paidAt >= :start
@@ -109,7 +112,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<Object[]> revenueByType(OffsetDateTime start, OffsetDateTime end, Long branchId) {
-        String jpql = """
+        String jpql =
+                """
                 select o.type, count(o), coalesce(sum(o.total), 0)
                 from Order o
                 where o.paidAt >= :start
@@ -131,7 +135,8 @@ public class ReportQueryRepository {
 
     /** Q3: count of orders in non-terminal states. */
     public long countPendingOrders(Long branchId) {
-        String jpql = """
+        String jpql =
+                """
                 select count(o)
                 from Order o
                 where o.type = com.dietetica.lembas.orders.model.OrderType.ONLINE
@@ -155,7 +160,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<Object[]> lowStockProducts(Long branchId) {
-        String sql = """
+        String sql =
+                """
                 select p.id, p.name, coalesce(sum(l.quantity_available), 0),
                        p.minimum_stock, b.id, b.name
                 from products p
@@ -171,9 +177,7 @@ public class ReportQueryRepository {
                 having coalesce(sum(l.quantity_available), 0) < p.minimum_stock
                 order by b.name, p.name
                 """;
-        return em.createNativeQuery(sql)
-                .setParameter(1, branchId)
-                .getResultList();
+        return em.createNativeQuery(sql).setParameter(1, branchId).getResultList();
     }
 
     /**
@@ -185,7 +189,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<Object[]> expiringLots(int daysAhead, Long branchId) {
-        String jpql = """
+        String jpql =
+                """
                 select l.id, p.id, p.name, l.lotCode, l.expirationDate, l.quantityAvailable
                 from StockLot l
                 join l.product p
@@ -213,7 +218,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<TopProductDto> topProducts(OffsetDateTime start, OffsetDateTime end, Long branchId, int limit) {
-        String jpql = """
+        String jpql =
+                """
                 select oi.product.id, oi.productNameSnapshot, oi.productBarcodeSnapshot,
                        p.imageUrl, p.brandName,
                        oi.categoryIdSnapshot, oi.categoryNameSnapshot,
@@ -251,9 +257,8 @@ public class ReportQueryRepository {
         for (Object[] row : rows) {
             BigDecimal qty = toBigDecimal(row[7]);
             BigDecimal revenue = toBigDecimal(row[8]).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal avgPrice = qty.signum() > 0
-                    ? revenue.divide(qty, 2, RoundingMode.HALF_UP)
-                    : BigDecimal.ZERO.setScale(2);
+            BigDecimal avgPrice =
+                    qty.signum() > 0 ? revenue.divide(qty, 2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2);
             result.add(new TopProductDto(
                     position++,
                     (Long) row[0],
@@ -265,8 +270,7 @@ public class ReportQueryRepository {
                     qty.stripTrailingZeros(),
                     revenue,
                     avgPrice,
-                    (String) row[3]
-            ));
+                    (String) row[3]));
         }
         return result;
     }
@@ -282,7 +286,8 @@ public class ReportQueryRepository {
     public List<SalesByHourDto> salesByHour(LocalDate date, Long branchId) {
         OffsetDateTime start = date.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
         OffsetDateTime end = start.plusDays(1);
-        String sql = """
+        String sql =
+                """
                 select extract(hour from o.paid_at at time zone 'America/Argentina/Buenos_Aires') as hour,
                        count(*) as order_count,
                        coalesce(sum(o.total), 0) as revenue,
@@ -332,7 +337,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<SalesByMethodDto> salesByMethod(OffsetDateTime start, OffsetDateTime end, Long branchId) {
-        String jpql = """
+        String jpql =
+                """
                 select p.method, count(p), coalesce(sum(p.amount), 0)
                 from Payment p
                 join p.order o
@@ -363,17 +369,11 @@ public class ReportQueryRepository {
         for (Object[] row : rows) {
             BigDecimal amount = toBigDecimal(row[2]).setScale(2, RoundingMode.HALF_UP);
             BigDecimal percentage = grandTotal.signum() > 0
-                    ? amount.multiply(BigDecimal.valueOf(100))
-                            .divide(grandTotal, 2, RoundingMode.HALF_UP)
+                    ? amount.multiply(BigDecimal.valueOf(100)).divide(grandTotal, 2, RoundingMode.HALF_UP)
                     : BigDecimal.ZERO.setScale(2);
             String method = row[0] == null ? "OTHER" : row[0].toString();
             result.add(new SalesByMethodDto(
-                    method,
-                    methodLabel(method),
-                    amount,
-                    ((Number) row[1]).longValue(),
-                    percentage
-            ));
+                    method, methodLabel(method), amount, ((Number) row[1]).longValue(), percentage));
         }
         // Sort by amount descending so the doughnut chart shows the largest slice first.
         result.sort((a, b) -> b.totalAmount().compareTo(a.totalAmount()));
@@ -382,17 +382,13 @@ public class ReportQueryRepository {
 
     /** Q-stats: count of active products and active suppliers. */
     public long countActiveProducts() {
-        return em.createQuery(
-                        "select count(p) from Product p where p.active = true",
-                        Long.class)
+        return em.createQuery("select count(p) from Product p where p.active = true", Long.class)
                 .getSingleResult();
     }
 
     /** Q-stats: count of active suppliers. */
     public long countActiveSuppliers() {
-        return em.createQuery(
-                        "select count(s) from Supplier s where s.active = true",
-                        Long.class)
+        return em.createQuery("select count(s) from Supplier s where s.active = true", Long.class)
                 .getSingleResult();
     }
 
@@ -405,7 +401,8 @@ public class ReportQueryRepository {
      * The row contains only raw numeric facts; presentation is handled by the client.
      */
     public Object[] cashOverviewTotals(OffsetDateTime start, OffsetDateTime end, Long branchId) {
-        String sql = """
+        String sql =
+                """
                 select count(*) filter (where cs.status = 'CLOSED'),
                        count(*) filter (where cs.status = 'OPEN'),
                        count(*) filter (where cs.status = 'CLOSED'
@@ -432,12 +429,11 @@ public class ReportQueryRepository {
 
     /** Returns a gap-free daily series based on the sessions' close timestamp. */
     @SuppressWarnings("unchecked")
-    public List<CashOverviewDailyDto> cashOverviewDailySeries(
-            LocalDate from, LocalDate to, Long branchId
-    ) {
+    public List<CashOverviewDailyDto> cashOverviewDailySeries(LocalDate from, LocalDate to, Long branchId) {
         OffsetDateTime start = from.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
         OffsetDateTime end = to.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
-        String sql = """
+        String sql =
+                """
                 select cast(cs.closed_at at time zone
                             'America/Argentina/Buenos_Aires' as date), count(*),
                        coalesce(sum(cs.expected_cash_amount), 0),
@@ -471,8 +467,7 @@ public class ReportQueryRepository {
                     row == null ? 0 : ((Number) row[1]).longValue(),
                     row == null ? BigDecimal.ZERO : toBigDecimal(row[2]),
                     row == null ? BigDecimal.ZERO : toBigDecimal(row[3]),
-                    row == null ? BigDecimal.ZERO : toBigDecimal(row[4])
-            ));
+                    row == null ? BigDecimal.ZERO : toBigDecimal(row[4])));
         }
         return result;
     }
@@ -480,9 +475,9 @@ public class ReportQueryRepository {
     /** Approved payment-method totals for sessions opened in the requested period. */
     @SuppressWarnings("unchecked")
     public List<CashMethodTotalDto> cashOverviewPaymentMethods(
-            OffsetDateTime start, OffsetDateTime end, Long branchId
-    ) {
-        String sql = """
+            OffsetDateTime start, OffsetDateTime end, Long branchId) {
+        String sql =
+                """
                 select p.method, coalesce(sum(p.amount), 0), count(*)
                 from payments p
                 join cash_sessions cs on cs.id = p.cash_session_id
@@ -502,19 +497,16 @@ public class ReportQueryRepository {
         List<CashMethodTotalDto> result = new ArrayList<>(rows.size());
         for (Object[] row : rows) {
             result.add(new CashMethodTotalDto(
-                    row[0] == null ? "OTHER" : row[0].toString(),
-                    toBigDecimal(row[1]),
-                    ((Number) row[2]).longValue()
-            ));
+                    row[0] == null ? "OTHER" : row[0].toString(), toBigDecimal(row[1]), ((Number) row[2]).longValue()));
         }
         return result;
     }
 
     /** Returns the most recent closed sessions with a cash discrepancy. */
     public List<CashSessionSummaryDto> cashSessionsWithDiscrepancy(
-            Long branchId, OffsetDateTime from, OffsetDateTime to, int limit
-    ) {
-        String jpql = """
+            Long branchId, OffsetDateTime from, OffsetDateTime to, int limit) {
+        String jpql =
+                """
                 select new com.dietetica.lembas.reports.dto.CashSessionSummaryDto(
                     cs.id, b.id, b.name,
                     concat(coalesce(o.firstName, ''), ' ', coalesce(o.lastName, '')),
@@ -563,11 +555,17 @@ public class ReportQueryRepository {
      * fields are accepted; anything else falls back to the default.</p>
      */
     public List<CashSessionSummaryDto> cashSessionHistory(
-            Long branchId, OffsetDateTime from, OffsetDateTime to,
-            Long openedBy, Long closedBy, CashSessionStatus status,
-            int first, int pageSize, String sort
-    ) {
-        StringBuilder jpql = new StringBuilder("""
+            Long branchId,
+            OffsetDateTime from,
+            OffsetDateTime to,
+            Long openedBy,
+            Long closedBy,
+            CashSessionStatus status,
+            int first,
+            int pageSize,
+            String sort) {
+        StringBuilder jpql = new StringBuilder(
+                """
                 select new com.dietetica.lembas.reports.dto.CashSessionSummaryDto(
                     cs.id, b.id, b.name,
                     concat(coalesce(o.firstName, ''), ' ', coalesce(o.lastName, '')),
@@ -610,10 +608,14 @@ public class ReportQueryRepository {
 
     /** Count for the history pagination. */
     public long countCashSessionHistory(
-            Long branchId, OffsetDateTime from, OffsetDateTime to,
-            Long openedBy, Long closedBy, CashSessionStatus status
-    ) {
-        String jpql = """
+            Long branchId,
+            OffsetDateTime from,
+            OffsetDateTime to,
+            Long openedBy,
+            Long closedBy,
+            CashSessionStatus status) {
+        String jpql =
+                """
                 select count(cs)
                 from CashSession cs
                 where (:branchId is null or cs.branch.id = :branchId)
@@ -639,30 +641,35 @@ public class ReportQueryRepository {
 
     /** Number of APPROVED payments linked to a cash session. */
     public long countApprovedPayments(Long sessionId) {
-        return em.createQuery("""
+        return em.createQuery(
+                        """
                         select count(p) from Payment p
                         where p.cashSessionId = :sid
                           and p.status = com.dietetica.lembas.payments.model.PaymentStatus.APPROVED
-                        """, Long.class)
+                        """,
+                        Long.class)
                 .setParameter("sid", sessionId)
                 .getSingleResult();
     }
 
     /** Count of POS orders linked to a cash session. */
     public long countPosOrdersForSession(Long sessionId) {
-        return em.createQuery("""
+        return em.createQuery(
+                        """
                         select count(o) from Order o
                         where o.cashSessionId = :sid
                           and o.type = com.dietetica.lembas.orders.model.OrderType.POS
                           and o.status <> com.dietetica.lembas.orders.model.OrderStatus.CANCELLED
-                        """, Long.class)
+                        """,
+                        Long.class)
                 .setParameter("sid", sessionId)
                 .getSingleResult();
     }
 
     /** Sum of APPROVED payment amounts for a cash session. */
     public BigDecimal totalPosRevenueForSession(Long sessionId) {
-        BigDecimal raw = toBigDecimal(em.createQuery("""
+        BigDecimal raw = toBigDecimal(em.createQuery(
+                        """
                         select coalesce(sum(p.amount), 0) from Payment p
                         where p.cashSessionId = :sid
                           and p.status = com.dietetica.lembas.payments.model.PaymentStatus.APPROVED
@@ -678,7 +685,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<CashMovementDto> manualMovementsForSession(Long sessionId) {
-        String jpql = """
+        String jpql =
+                """
                 select new com.dietetica.lembas.cash.dto.CashMovementDto(
                     m.id, m.cashSession.id, m.type, m.method, m.amount,
                     m.reason, m.createdByUser.id,
@@ -690,20 +698,20 @@ public class ReportQueryRepository {
                 where m.cashSession.id = :sid
                 order by m.createdAt asc, m.id asc
                 """;
-        return em.createQuery(jpql)
-                .setParameter("sid", sessionId)
-                .getResultList();
+        return em.createQuery(jpql).setParameter("sid", sessionId).getResultList();
     }
 
     /** Loads a cash session by id, eagerly fetching the opener/closer/branch. */
     public CashSession findSessionById(Long id) {
-        List<CashSession> sessions = em.createQuery("""
+        List<CashSession> sessions = em.createQuery(
+                        """
                         select cs from CashSession cs
                         join fetch cs.branch
                         join fetch cs.openedByUser
                         left join fetch cs.closedByUser
                         where cs.id = :id
-                        """, CashSession.class)
+                        """,
+                        CashSession.class)
                 .setParameter("id", id)
                 .getResultList();
         return sessions.isEmpty() ? null : sessions.get(0);
@@ -724,7 +732,8 @@ public class ReportQueryRepository {
     public List<Object[]> salesByDay(LocalDate from, LocalDate to, Long branchId) {
         OffsetDateTime start = from.atStartOfDay(REPORT_ZONE).toOffsetDateTime();
         OffsetDateTime end = to.plusDays(1).atStartOfDay(REPORT_ZONE).toOffsetDateTime();
-        String sql = """
+        String sql =
+                """
                 select cast(o.paid_at at time zone 'America/Argentina/Buenos_Aires' as date) as day,
                        coalesce(sum(o.total), 0) as revenue,
                        count(*) as order_count
@@ -745,7 +754,8 @@ public class ReportQueryRepository {
 
     /** Returns cost of goods sold from immutable stock-movement cost snapshots. */
     public BigDecimal costOfGoodsSold(OffsetDateTime start, OffsetDateTime end, Long branchId) {
-        String sql = """
+        String sql =
+                """
                 select coalesce(sum(abs(sm.quantity) * sm.unit_cost_snapshot), 0)
                 from stock_movements sm
                 join orders o on o.id = sm.order_id
@@ -757,10 +767,11 @@ public class ReportQueryRepository {
                   and (cast(?3 as bigint) is null or o.branch_id = cast(?3 as bigint))
                 """;
         return toBigDecimal(em.createNativeQuery(sql)
-                .setParameter(1, start)
-                .setParameter(2, end)
-                .setParameter(3, branchId)
-                .getSingleResult()).setScale(2, RoundingMode.HALF_UP);
+                        .setParameter(1, start)
+                        .setParameter(2, end)
+                        .setParameter(3, branchId)
+                        .getSingleResult())
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     /**
@@ -772,7 +783,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<Object[]> salesByCategory(OffsetDateTime start, OffsetDateTime end, Long branchId) {
-        String jpql = """
+        String jpql =
+                """
                 select oi.categoryIdSnapshot,
                        coalesce(oi.categoryNameSnapshot, 'Sin categoria'),
                        coalesce(sum(case when o.subtotal > 0
@@ -806,7 +818,8 @@ public class ReportQueryRepository {
      * "Devoluciones / cancelaciones" KPI on the sales report.
      */
     public long countCancelledOrders(OffsetDateTime start, OffsetDateTime end, Long branchId) {
-        String jpql = """
+        String jpql =
+                """
                 select count(o)
                 from Order o
                 where o.cancelledAt >= :start
@@ -833,7 +846,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<Object[]> stockValueByCategory(Long branchId) {
-        String jpql = """
+        String jpql =
+                """
                 select p.category.id, coalesce(p.category.name, 'Sin categoria'),
                        coalesce(sum(l.quantityAvailable * l.unitCost), 0),
                        coalesce(sum(l.quantityAvailable), 0)
@@ -845,9 +859,7 @@ public class ReportQueryRepository {
                 group by p.category.id, p.category.name
                 order by sum(l.quantityAvailable * l.unitCost) desc
                 """;
-        return em.createQuery(jpql)
-                .setParameter("branchId", branchId)
-                .getResultList();
+        return em.createQuery(jpql).setParameter("branchId", branchId).getResultList();
     }
 
     /**
@@ -861,7 +873,8 @@ public class ReportQueryRepository {
     public List<Object[]> expiringLotsByMonth(int monthsAhead, Long branchId) {
         LocalDate today = LocalDate.now(REPORT_ZONE);
         LocalDate limit = today.withDayOfMonth(1).plusMonths(monthsAhead);
-        String sql = """
+        String sql =
+                """
                 select cast(date_trunc('month', l.expiration_date) as date) as month,
                        count(*) as lot_count,
                        coalesce(sum(l.quantity_available), 0) as units
@@ -893,9 +906,9 @@ public class ReportQueryRepository {
         }
         for (int i = 0; i < monthsAhead; i++) {
             LocalDate month = today.plusMonths(i).withDayOfMonth(1);
-            result.add(new Object[]{month,
-                    lotCounts.getOrDefault(month, 0L),
-                    unitsByMonth.getOrDefault(month, BigDecimal.ZERO)});
+            result.add(new Object[] {
+                month, lotCounts.getOrDefault(month, 0L), unitsByMonth.getOrDefault(month, BigDecimal.ZERO)
+            });
         }
         return result;
     }
@@ -909,7 +922,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<Object[]> topStockByValue(Long branchId, int limit) {
-        String jpql = """
+        String jpql =
+                """
                 select p.id, p.name, c.name,
                        coalesce(sum(l.quantityAvailable * l.unitCost), 0),
                        coalesce(sum(l.quantityAvailable), 0)
@@ -941,7 +955,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<Object[]> purchasesByMonth(OffsetDateTime from, OffsetDateTime to, Long branchId) {
-        String sql = """
+        String sql =
+                """
                 select cast(date_trunc('month', pr.received_at at time zone
                             'America/Argentina/Buenos_Aires') as date) as month,
                        coalesce(sum(pri.quantity_received * pri.unit_cost), 0),
@@ -964,7 +979,8 @@ public class ReportQueryRepository {
 
         List<Object[]> result = new ArrayList<>();
         LocalDate start = from.atZoneSameInstant(REPORT_ZONE).toLocalDate().withDayOfMonth(1);
-        LocalDate end = to.minusNanos(1).atZoneSameInstant(REPORT_ZONE).toLocalDate().withDayOfMonth(1);
+        LocalDate end =
+                to.minusNanos(1).atZoneSameInstant(REPORT_ZONE).toLocalDate().withDayOfMonth(1);
         java.util.Map<LocalDate, BigDecimal> amounts = new java.util.HashMap<>();
         java.util.Map<LocalDate, Long> receipts = new java.util.HashMap<>();
         for (Object[] row : rows) {
@@ -973,9 +989,11 @@ public class ReportQueryRepository {
             receipts.put(month, ((Number) row[2]).longValue());
         }
         for (LocalDate month = start; !month.isAfter(end); month = month.plusMonths(1)) {
-            result.add(new Object[]{month,
-                    amounts.getOrDefault(month, BigDecimal.ZERO.setScale(2)),
-                    BigDecimal.valueOf(receipts.getOrDefault(month, 0L))});
+            result.add(new Object[] {
+                month,
+                amounts.getOrDefault(month, BigDecimal.ZERO.setScale(2)),
+                BigDecimal.valueOf(receipts.getOrDefault(month, 0L))
+            });
         }
         return result;
     }
@@ -986,10 +1004,9 @@ public class ReportQueryRepository {
      * @return list of arrays {@code [supplierId, supplierName, total, orderCount]}.
      */
     @SuppressWarnings("unchecked")
-    public List<Object[]> topSuppliersByVolume(
-            OffsetDateTime from, OffsetDateTime to, Long branchId, int limit
-    ) {
-        String sql = """
+    public List<Object[]> topSuppliersByVolume(OffsetDateTime from, OffsetDateTime to, Long branchId, int limit) {
+        String sql =
+                """
                 select s.id, s.name,
                        coalesce(sum(pri.quantity_received * pri.unit_cost), 0),
                        count(distinct pr.id)
@@ -1019,10 +1036,9 @@ public class ReportQueryRepository {
      * @return list of arrays {@code [supplierId, supplierName, avgDays, orderCount]}.
      */
     @SuppressWarnings("unchecked")
-    public List<Object[]> avgLeadTimeBySupplier(
-            OffsetDateTime from, OffsetDateTime to, Long branchId, int limit
-    ) {
-        String sql = """
+    public List<Object[]> avgLeadTimeBySupplier(OffsetDateTime from, OffsetDateTime to, Long branchId, int limit) {
+        String sql =
+                """
                 with completed_deliveries as (
                     select po.id, po.supplier_id, po.order_date,
                            max(pr.received_at) as completed_at
@@ -1057,7 +1073,8 @@ public class ReportQueryRepository {
      * @return array {@code [receivedCost, receiptCount, avgLeadDays, onTimePercentage]}.
      */
     public Object[] purchaseAggregates(OffsetDateTime from, OffsetDateTime to, Long branchId) {
-        String sql = """
+        String sql =
+                """
                 with period_receipts as (
                     select pr.*
                     from purchase_receipts pr
@@ -1101,7 +1118,8 @@ public class ReportQueryRepository {
      * unitCost}) across all active lots, optionally filtered by branch.
      */
     public BigDecimal totalStockValue(Long branchId) {
-        String jpql = """
+        String jpql =
+                """
                 select coalesce(sum(l.quantityAvailable * l.unitCost), 0)
                 from StockLot l
                 where l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
@@ -1116,7 +1134,8 @@ public class ReportQueryRepository {
     /** Capital at risk in active stock expiring within the requested horizon. */
     public BigDecimal expiringStockValue(int daysAhead, Long branchId) {
         LocalDate today = LocalDate.now(REPORT_ZONE);
-        String jpql = """
+        String jpql =
+                """
                 select coalesce(sum(l.quantityAvailable * l.unitCost), 0)
                 from StockLot l
                 where l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
@@ -1133,13 +1152,15 @@ public class ReportQueryRepository {
 
     /** Counts active lots with positive stock whose expiration date has passed. */
     public long countExpiredLots(Long branchId) {
-        return em.createQuery("""
+        return em.createQuery(
+                        """
                         select count(l) from StockLot l
                         where l.status = com.dietetica.lembas.inventory.model.StockLotStatus.ACTIVE
                           and l.quantityAvailable > 0
                           and l.expirationDate < :today
                           and (:branchId is null or l.branch.id = :branchId)
-                        """, Long.class)
+                        """,
+                        Long.class)
                 .setParameter("today", LocalDate.now(REPORT_ZONE))
                 .setParameter("branchId", branchId)
                 .getSingleResult();
@@ -1152,7 +1173,8 @@ public class ReportQueryRepository {
     /** Q12: products with stock below the configured minimum. */
     @SuppressWarnings("unchecked")
     public List<Object[]> lowStockCandidates(Long branchId) {
-        String sql = """
+        String sql =
+                """
                 select p.id, p.name, c.id, c.name, p.barcode, p.minimum_stock,
                        coalesce(sum(l.quantity_available), 0), b.id, b.name
                 from products p
@@ -1169,15 +1191,14 @@ public class ReportQueryRepository {
                 having coalesce(sum(l.quantity_available), 0) < p.minimum_stock
                 order by b.name, p.name
                 """;
-        return em.createNativeQuery(sql)
-                .setParameter(1, branchId)
-                .getResultList();
+        return em.createNativeQuery(sql).setParameter(1, branchId).getResultList();
     }
 
     /** Q13: lots expiring within 30 days, with positive available stock. */
     @SuppressWarnings("unchecked")
     public List<Object[]> expiringLotCandidates(int daysAhead, Long branchId) {
-        String jpql = """
+        String jpql =
+                """
                 select l.id, p.id, p.name, p.category.id, c.name,
                        l.lotCode, l.expirationDate, l.quantityAvailable
                 from StockLot l
@@ -1201,7 +1222,8 @@ public class ReportQueryRepository {
     /** Q14: high-rotation products (sum of last 7d sales above threshold). */
     @SuppressWarnings("unchecked")
     public List<Object[]> highRotationCandidates(Long branchId, OffsetDateTime since) {
-        String jpql = """
+        String jpql =
+                """
                 select oi.product.id, p.name, p.category.id, c.name, sum(oi.quantity),
                        coalesce((select sum(l.quantityAvailable) from StockLot l
                                  where l.product.id = p.id
@@ -1237,7 +1259,8 @@ public class ReportQueryRepository {
      */
     @SuppressWarnings("unchecked")
     public List<Object[]> noMovementCandidates(Long branchId, OffsetDateTime cutoff) {
-        String jpql = """
+        String jpql =
+                """
                 select p.id, p.name, p.category.id, c.name, p.barcode,
                        coalesce((select sum(l.quantityAvailable)
                                  from StockLot l
@@ -1264,9 +1287,7 @@ public class ReportQueryRepository {
                 where p.active = true
                 order by p.name asc
                 """;
-        return em.createQuery(jpql)
-                .setParameter("branchId", branchId)
-                .getResultList();
+        return em.createQuery(jpql).setParameter("branchId", branchId).getResultList();
     }
 
     // ---------------------------------------------------------------------------
@@ -1279,10 +1300,9 @@ public class ReportQueryRepository {
      * @return rows of {@code [userId, firstName, lastName, role, saleCount, revenue, averageTicket]}
      */
     @SuppressWarnings("unchecked")
-    public List<Object[]> employeePosPerformance(
-            OffsetDateTime start, OffsetDateTime end, Long branchId
-    ) {
-        String jpql = """
+    public List<Object[]> employeePosPerformance(OffsetDateTime start, OffsetDateTime end, Long branchId) {
+        String jpql =
+                """
                 select u.id, u.firstName, u.lastName, u.role,
                        count(o), coalesce(sum(o.total), 0), coalesce(avg(o.total), 0)
                 from Order o
@@ -1307,10 +1327,9 @@ public class ReportQueryRepository {
      * @return rows of {@code [userId, firstName, lastName, role, openedCount]}
      */
     @SuppressWarnings("unchecked")
-    public List<Object[]> employeeCashOpenPerformance(
-            OffsetDateTime start, OffsetDateTime end, Long branchId
-    ) {
-        String jpql = """
+    public List<Object[]> employeeCashOpenPerformance(OffsetDateTime start, OffsetDateTime end, Long branchId) {
+        String jpql =
+                """
                 select u.id, u.firstName, u.lastName, u.role, count(cs)
                 from CashSession cs
                 join cs.openedByUser u
@@ -1332,10 +1351,9 @@ public class ReportQueryRepository {
      * @return rows of {@code [userId, firstName, lastName, role, closedCount, absoluteDifference]}
      */
     @SuppressWarnings("unchecked")
-    public List<Object[]> employeeCashClosePerformance(
-            OffsetDateTime start, OffsetDateTime end, Long branchId
-    ) {
-        String jpql = """
+    public List<Object[]> employeeCashClosePerformance(OffsetDateTime start, OffsetDateTime end, Long branchId) {
+        String jpql =
+                """
                 select u.id, u.firstName, u.lastName, u.role,
                        count(cs), coalesce(sum(abs(cs.cashDifferenceAmount)), 0)
                 from CashSession cs
@@ -1387,13 +1405,14 @@ public class ReportQueryRepository {
         String[] parts = sort.split(",", 2);
         String field = parts[0].trim();
         String direction = parts.length > 1 ? parts[1].trim().toLowerCase() : "desc";
-        String column = switch (field) {
-            case "openedAt", "opened_at" -> "cs.openedAt";
-            case "closedAt", "closed_at" -> "cs.closedAt";
-            case "id" -> "cs.id";
-            case "status" -> "cs.status";
-            default -> "cs.openedAt";
-        };
+        String column =
+                switch (field) {
+                    case "openedAt", "opened_at" -> "cs.openedAt";
+                    case "closedAt", "closed_at" -> "cs.closedAt";
+                    case "id" -> "cs.id";
+                    case "status" -> "cs.status";
+                    default -> "cs.openedAt";
+                };
         if (!direction.equals("asc") && !direction.equals("desc")) {
             direction = "desc";
         }

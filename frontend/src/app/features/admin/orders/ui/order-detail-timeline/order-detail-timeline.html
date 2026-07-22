@@ -1,0 +1,30 @@
+<ol class="order-timeline" role="list" aria-label="Historial de estados del pedido">
+  @for (step of steps(); track step.key; let last = $last) {
+    <li
+      class="order-timeline__step"
+      [class.order-timeline__step--completed]="step.state === 'completed'"
+      [class.order-timeline__step--active]="step.state === 'active'"
+      [class.order-timeline__step--cancelled]="step.state === 'cancelled'"
+      [class.order-timeline__step--last]="last"
+    >
+      <span class="order-timeline__dot" aria-hidden="true">
+        @if (step.state === 'completed') {
+          <i class="pi pi-check" aria-hidden="true"></i>
+        } @else if (step.state === 'cancelled') {
+          <i class="pi pi-times" aria-hidden="true"></i>
+        } @else if (step.state === 'active') {
+          <span class="order-timeline__pulse"></span>
+        }
+      </span>
+      <div class="order-timeline__content">
+        <span class="order-timeline__label">{{ step.label }}</span>
+        <span class="order-timeline__description">{{ step.description }}</span>
+        @if (step.timestamp) {
+          <time class="order-timeline__time">{{ step.timestamp | shortDateAr }}</time>
+        } @else {
+          <span class="order-timeline__time order-timeline__time--pending">Pendiente</span>
+        }
+      </div>
+    </li>
+  }
+</ol>

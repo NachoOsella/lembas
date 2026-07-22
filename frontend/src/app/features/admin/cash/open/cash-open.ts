@@ -1,16 +1,21 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import type { OnInit } from '@angular/core';
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { form, required, submit, validate } from '@angular/forms/signals';
 import { MessageService } from 'primeng/api';
 
-import { CashService } from '@features/cash/data-access/cash';
 import { AuthService } from '@core/services/auth';
-import { UserService } from '@features/users/data-access/user';
-import { ErrorMappingService } from '@core/services/error-mapping';
-import { getApiError } from '@shared/types/api-error';
-import type { Branch } from '@features/users/domain/user';
-import type { OpenCashSessionRequest } from '@features/cash/domain/cash-session';
+import { CashOpenPageStore } from '../state/cash-open-page.store';
+import { parseCashAmount, toOpenCashSessionRequest } from '@features/cash/domain/cash-forms';
+import type { CashOpenFormModel } from '@features/cash/domain/cash-forms';
 
 import { AppBadge } from '@shared/components/app-badge/app-badge';
 import { AppButton } from '@shared/components/app-button/app-button';
@@ -21,6 +26,7 @@ import { AppPageHeader } from '@shared/components/app-page-header/app-page-heade
 import { AppSelect } from '@shared/components/app-select/app-select';
 import { AppToast } from '@shared/components/app-toast/app-toast';
 import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
 import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
 import { FormSection } from '@shared/components/form-section/form-section';
 
@@ -29,17 +35,7 @@ interface BranchOption {
   readonly value: number;
 }
 
-/**
- * Cash opening screen (S3-US06).
- *
- * Lets an internal employee open a cash register for a branch. MANAGER/EMPLOYEE
- * always operate on their assigned branch (read-only badge); ADMIN picks the
- * branch from a dropdown (auto-selected when only one active branch exists).
- *
- * On init it checks whether a session is already open for the resolved branch:
- * if so, it shows a toast and redirects to the existing cash detail (subtask 09).
- * On a successful open it redirects to the new cash detail (subtask 10).
- */
+/** Cash opening page. Branch/session reads and command state live in its page store. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-cash-open',
@@ -53,60 +49,64 @@ interface BranchOption {
     AppSelect,
     AppToast,
     ErrorAlert,
+    EmptyState,
     LoadingSpinner,
     FormSection,
     FormsModule,
   ],
+  providers: [CashOpenPageStore],
   templateUrl: './cash-open.html',
   styleUrl: './cash-open.css',
 })
 export class CashOpen implements OnInit {
-  private readonly cashService = inject(CashService);
   private readonly auth = inject(AuthService);
-  private readonly userService = inject(UserService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
-  private readonly errorMapping = inject(ErrorMappingService);
 
-  protected readonly loading = signal(true);
-  protected readonly loadingBranches = signal(false);
-  protected readonly saving = signal(false);
-  protected readonly errorMessage = signal<string | null>(null);
-
-  /** Selected branch id. For ADMIN this is editable; for non-admin it is read-only. */
-  protected readonly branchId = signal<number | null>(null);
-  protected readonly branches = signal<Branch[]>([]);
-  protected readonly openingCashAmount = signal<number | null>(null);
-  protected readonly openingNotes = signal('');
-
+  protected readonly store = inject(CashOpenPageStore);
+  protected readonly loading = this.store.loading;
+  protected readonly saving = this.store.saving;
+  protected readonly errorMessage = this.store.errorMessage;
+  protected readonly branches = this.store.branches;
   protected readonly role = this.auth.getUserRole();
-
-  /** ADMIN must select a branch; MANAGER/EMPLOYEE always use their assigned branch. */
   protected readonly isAdmin = computed(() => this.role === 'ADMIN');
 
-  protected readonly branchOptions = computed<BranchOption[]>(() =>
-    this.branches().map((b) => ({ label: b.name, value: b.id })),
-  );
+  /** Signal-form model keeps transport values typed and avoids nullable controls. */
+  protected readonly openModel = signal<CashOpenFormModel>({
+    openingCashAmount: '',
+    openingNotes: '',
+  });
 
-  /** Resolved branch label shown next to the form for MANAGER/EMPLOYEE. */
+  protected readonly openForm = form(this.openModel, (schema) => {
+    required(schema.openingCashAmount, { message: 'El monto inicial es obligatorio.' });
+    validate(schema.openingCashAmount, ({ value }) => {
+      const amount = parseCashAmount(value());
+      return amount !== null && amount >= 0
+        ? undefined
+        : { kind: 'invalidAmount', message: 'Ingresa un monto inicial valido.' };
+    });
+  });
+
+  protected readonly branchOptions = computed<BranchOption[]>(() =>
+    this.store.branches().map((branch) => ({ label: branch.name, value: branch.id })),
+  );
   protected readonly resolvedBranchName = computed(() => {
     if (this.isAdmin()) {
-      const selected = this.branches().find((b) => b.id === this.branchId());
-      return selected?.name ?? null;
+      return (
+        this.store.branches().find((branch) => branch.id === this.store.branchId())?.name ?? null
+      );
     }
     return this.auth.currentUser()?.branchName ?? null;
   });
-
-  /** True when the form is ready to be shown (branch resolved + no open session). */
-  protected readonly formReady = computed(() => this.branchId() != null);
-
-  /** Submit is enabled when a branch is resolved and the opening amount is set. */
+  protected readonly openingCashAmount = computed(() =>
+    parseCashAmount(this.openModel().openingCashAmount),
+  );
+  protected readonly openingNotes = computed(() => this.openModel().openingNotes);
   protected readonly canSubmit = computed(
-    () => this.formReady() && this.openingCashAmount() != null && !this.saving() && !this.loading(),
+    () => this.store.hasReadyForm() && this.openForm().valid() && !this.store.saving(),
   );
 
-  /** Quick-set amount chips to speed up the most common opening balances. */
   protected readonly quickAmounts: ReadonlyArray<{
     readonly value: number;
     readonly label: string;
@@ -117,12 +117,27 @@ export class CashOpen implements OnInit {
     { value: 50000, label: '50.000' },
   ];
 
-  ngOnInit(): void {
-    this.initialize();
+  constructor() {
+    effect(() => {
+      const openedSession = this.store.openedSession();
+      if (openedSession) {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Caja abierta',
+          detail: 'La caja fue abierta correctamente.',
+        });
+        void this.router.navigate(['/admin/cash', openedSession.id]);
+        return;
+      }
+
+      const currentSession = this.store.session();
+      if (currentSession) {
+        void this.router.navigate(['/admin/cash', currentSession.id]);
+      }
+    });
   }
 
-  /** Loads branches (ADMIN) or derives the branch (MANAGER/EMPLOYEE) and checks for an open session. */
-  private initialize(): void {
+  ngOnInit(): void {
     const user = this.auth.currentUser();
     if (!user || user.role === 'CUSTOMER') {
       void this.router.navigate(['/admin']);
@@ -130,132 +145,54 @@ export class CashOpen implements OnInit {
     }
 
     if (this.isAdmin()) {
-      this.loadBranches();
+      const rawBranchId = this.route.snapshot.queryParamMap.get('branchId');
+      const parsedBranchId = rawBranchId ? Number(rawBranchId) : Number.NaN;
+      const requestedBranchId =
+        Number.isFinite(parsedBranchId) && parsedBranchId > 0 ? parsedBranchId : null;
+      this.store.loadBranches(requestedBranchId);
       return;
     }
 
-    if (user.branchId == null) {
-      this.loading.set(false);
-      this.errorMessage.set(this.errorMapping.getMessage('INVALID_USER_BRANCH'));
-      return;
-    }
-
-    this.branchId.set(user.branchId);
-    this.checkOpenSession(user.branchId);
+    this.store.selectAssignedBranch(user.branchId ?? null);
   }
 
-  /** Loads active branches and, when only one exists, auto-selects it; then checks for an open session. */
-  private loadBranches(): void {
-    this.loadingBranches.set(true);
-    this.userService.listBranches().subscribe({
-      next: (branches) => {
-        this.branches.set(branches);
-        this.loadingBranches.set(false);
-        const requestedBranchId = Number(this.route.snapshot.queryParamMap.get('branchId'));
-        const requestedBranchExists = branches.some((branch) => branch.id === requestedBranchId);
-        if (requestedBranchExists || branches.length === 1) {
-          const branchId = requestedBranchExists ? requestedBranchId : branches[0].id;
-          this.branchId.set(branchId);
-          this.checkOpenSession(branchId);
-        } else {
-          this.loading.set(false);
-        }
-      },
-      error: (err) => {
-        this.loadingBranches.set(false);
-        this.loading.set(false);
-        this.errorMessage.set(this.messageForError(err, 'No se pudieron cargar las sucursales.'));
-      },
-    });
+  protected onBranchSelected(branchId: number | null): void {
+    this.store.selectBranch(branchId);
   }
 
-  /** Triggered when ADMIN selects a branch: validate non-duplicate-open before rendering the form. */
-  protected onBranchSelected(value: number | null): void {
-    this.branchId.set(value);
-    if (value != null) {
-      this.checkOpenSession(value);
-    }
+  protected setOpeningCashAmount(amount: number | null): void {
+    this.openModel.update((model) => ({
+      ...model,
+      openingCashAmount: amount === null ? '' : String(amount),
+    }));
   }
 
-  /** Applies a quick-amount chip value to the opening amount. */
+  protected setOpeningNotes(notes: string): void {
+    this.openModel.update((model) => ({ ...model, openingNotes: notes }));
+  }
+
   protected applyQuickAmount(value: number): void {
-    this.openingCashAmount.set(value);
+    this.setOpeningCashAmount(value);
   }
 
-  /** Asks the backend for the current OPEN session; if it exists, redirects to its detail. */
-  private checkOpenSession(branchId: number): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-    this.cashService.currentSession(branchId).subscribe({
-      next: (session) => {
-        this.loading.set(false);
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Caja ya abierta',
-          detail: 'Te llevamos al detalle de la caja abierta.',
-        });
-        void this.router.navigate(['/admin/cash', session.id]);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        const apiError = getApiError(err);
-        // CASH_SESSION_NOT_FOUND is the expected "no open session" path: show the form.
-        if (!apiError || apiError.code === 'CASH_SESSION_NOT_FOUND') {
-          return;
-        }
-        if (apiError.code === 'CASH_BRANCH_REQUIRED') {
-          // ADMIN without selection: keep the form to let them pick.
-          return;
-        }
-        this.errorMessage.set(
-          this.messageForError(err, 'No se pudo verificar el estado de la caja.'),
-        );
-      },
-    });
+  protected retry(): void {
+    this.store.retry();
   }
 
-  /** Submits the open request and redirects to the new cash detail on success. */
   protected submit(): void {
-    const branchId = this.branchId();
-    const amount = this.openingCashAmount();
-    if (branchId == null || amount == null) {
+    if (!this.canSubmit()) {
       return;
     }
-    this.saving.set(true);
-    this.errorMessage.set(null);
 
-    const request: OpenCashSessionRequest = {
-      openingCashAmount: amount.toFixed(2),
-      openingNotes: this.openingNotes().trim() || null,
-      branchId: this.isAdmin() ? branchId : null,
-    };
-
-    this.cashService.openSession(request).subscribe({
-      next: (session) => {
-        this.saving.set(false);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Caja abierta',
-          detail: 'La caja fue abierta correctamente.',
-        });
-        void this.router.navigate(['/admin/cash', session.id]);
-      },
-      error: (err) => {
-        this.saving.set(false);
-        this.errorMessage.set(this.messageForError(err, 'No se pudo abrir la caja.'));
-      },
+    submit(this.openForm, async () => {
+      const branchId = this.store.branchId();
+      if (branchId === null) {
+        return;
+      }
+      const request = toOpenCashSessionRequest(this.openModel(), branchId, this.isAdmin());
+      if (request) {
+        this.store.openSession(request);
+      }
     });
-  }
-
-  /** Maps backend API errors to Spanish copy, falling back to a provided message. */
-  private messageForError(error: unknown, fallback: string): string {
-    const apiError = getApiError(error);
-    if (!apiError) {
-      return fallback;
-    }
-    if (apiError.code === 'VALIDATION_ERROR') {
-      return this.errorMapping.formatValidationErrors(apiError);
-    }
-    return this.errorMapping.getMessage(apiError.code);
   }
 }

@@ -111,4 +111,59 @@ describe('InventoryService', () => {
       empty: true,
     });
   });
+
+  it('should list product summaries with the page query contract', () => {
+    service
+      .listProductSummaries({
+        search: 'Granola',
+        branchId: 20,
+        expiringSoon: true,
+        page: 2,
+        size: 20,
+        sort: 'branchName,desc',
+      })
+      .subscribe();
+
+    const req = httpMock.expectOne((request) => request.url === '/api/admin/stock/products');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('search')).toBe('Granola');
+    expect(req.request.params.get('branchId')).toBe('20');
+    expect(req.request.params.get('expiringSoon')).toBe('true');
+    expect(req.request.params.get('page')).toBe('2');
+    expect(req.request.params.get('size')).toBe('20');
+    expect(req.request.params.get('sort')).toBe('branchName,desc');
+    req.flush({
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      number: 2,
+      size: 20,
+      first: false,
+      last: true,
+      empty: true,
+    });
+  });
+
+  it('should post a signed stock adjustment', () => {
+    service
+      .adjustStock({
+        productId: 10,
+        branchId: 20,
+        quantity: -2,
+        reason: 'Damaged packaging',
+        type: 'WASTE',
+      })
+      .subscribe();
+
+    const req = httpMock.expectOne('/api/admin/stock/adjustments');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      productId: 10,
+      branchId: 20,
+      quantity: -2,
+      reason: 'Damaged packaging',
+      type: 'WASTE',
+    });
+    req.flush(null);
+  });
 });

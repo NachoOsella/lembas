@@ -254,13 +254,13 @@ describe('ProductList', () => {
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('@features/catalog/presentation/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
           p: import('@features/catalog/domain/product').ProductSummary,
-          a: import('@features/catalog/presentation/product-status').ProductStatusAction,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);
@@ -285,13 +285,13 @@ describe('ProductList', () => {
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('@features/catalog/presentation/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
           p: import('@features/catalog/domain/product').ProductSummary,
-          a: import('@features/catalog/presentation/product-status').ProductStatusAction,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);
@@ -314,13 +314,13 @@ describe('ProductList', () => {
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('@features/catalog/presentation/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
           p: import('@features/catalog/domain/product').ProductSummary,
-          a: import('@features/catalog/presentation/product-status').ProductStatusAction,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);
@@ -339,13 +339,13 @@ describe('ProductList', () => {
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('@features/catalog/presentation/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
           p: import('@features/catalog/domain/product').ProductSummary,
-          a: import('@features/catalog/presentation/product-status').ProductStatusAction,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);
@@ -452,13 +452,13 @@ describe('ProductList', () => {
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('@features/catalog/presentation/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
           p: import('@features/catalog/domain/product').ProductSummary,
-          a: import('@features/catalog/presentation/product-status').ProductStatusAction,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);
@@ -497,13 +497,13 @@ describe('ProductList', () => {
     const action = {
       targetStatus: 'PUBLISHED',
       label: 'Publicar',
-    } as import('@features/catalog/presentation/product-status').ProductStatusAction;
+    } as import('@features/catalog/public-api').ProductStatusAction;
 
     (
       component as unknown as {
         requestStatusChange: (
           p: import('@features/catalog/domain/product').ProductSummary,
-          a: import('@features/catalog/presentation/product-status').ProductStatusAction,
+          a: import('@features/catalog/public-api').ProductStatusAction,
         ) => void;
       }
     ).requestStatusChange(product, action);

@@ -5,11 +5,11 @@ import { MessageService } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { Ripple } from 'primeng/ripple';
 import type { TabItem, AppMetricItem, ColumnDef } from '@shared/components';
-import type { StoreBrandConfig } from '@features/public-store/ui/app-store-nav/app-store-nav';
-import { AppStoreNav } from '@features/public-store/ui/app-store-nav/app-store-nav';
-import type { StoreFooterLink } from '@features/public-store/ui/app-store-footer/app-store-footer';
-import { AppStoreFooter } from '@features/public-store/ui/app-store-footer/app-store-footer';
-import { StoreProductCard } from '@features/catalog/ui/store-product-card/store-product-card';
+import type { StoreBrandConfig } from '@features/public-store/public-api';
+import { AppStoreNav } from '@features/public-store/public-api';
+import type { StoreFooterLink } from '@features/public-store/public-api';
+import { AppStoreFooter } from '@features/public-store/public-api';
+import { StoreProductCard } from '@features/catalog/public-api';
 import {
   AppBadge,
   AppBreadcrumb,
@@ -36,7 +36,7 @@ import {
   StatusBadge,
 } from '@shared/components';
 import type { ProductSummary } from '@features/catalog/domain/product';
-import { PRODUCT_STATUS_BADGES } from '@features/catalog/presentation/product-status';
+import { PRODUCT_STATUS_BADGES } from '@features/catalog/public-api';
 
 interface ShowcaseLink {
   readonly label: string;

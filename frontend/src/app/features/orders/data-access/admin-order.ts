@@ -2,26 +2,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import type { Observable } from 'rxjs';
 
-import type {
-  OrderDetail,
-  OrderStatus,
-  OrderSummary,
-  OrderType,
-} from '@features/orders/domain/order';
+import type { OrderDetail, OrderSummary } from '@features/orders/domain/order';
+import type { AdminOrdersQuery } from '@features/orders/domain/order-query';
 import type { PageResponse } from '@shared/types/page';
 
-/** Query parameters accepted by the admin orders list endpoint. */
-export interface AdminOrdersQuery {
-  readonly status?: OrderStatus;
-  readonly branchId?: number;
-  readonly type?: OrderType;
-  readonly from?: string;
-  readonly to?: string;
-  readonly search?: string;
-  readonly page?: number;
-  readonly size?: number;
-  readonly sort?: string;
-}
+export type { AdminOrdersQuery } from '@features/orders/domain/order-query';
 
 /** Request body for cancelling an order. Reason is mandatory (1-500 chars). */
 export interface CancelOrderRequest {

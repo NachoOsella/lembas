@@ -4,8 +4,8 @@ import { Router, RouterOutlet } from '@angular/router';
 import type { MenuItem } from 'primeng/api';
 
 import { AuthService } from '@core/services/auth';
-import { Cart } from '@features/checkout/state/cart';
-import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import { Cart } from '@features/checkout/public-api';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
 import type { StoreBrandConfig } from '@features/public-store/ui/app-store-nav/app-store-nav';
 import { AppStoreNav } from '@features/public-store/ui/app-store-nav/app-store-nav';
 import type { StoreFooterLink } from '@features/public-store/ui/app-store-footer/app-store-footer';

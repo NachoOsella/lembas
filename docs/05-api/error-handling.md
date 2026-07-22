@@ -93,6 +93,58 @@ Services may throw `DomainException` directly when a dedicated exception subclas
 | ORDER_INVALID_STATE | Orders | 409 | Order state transition is not allowed in the current status (e.g. cancelling a DELIVERED order) |
 | ORDER_REFUNDED_CONFLICT | Orders | 409 | Cannot cancel an order whose payments have already been REFUNDED |
 
+### Source-inventoried codes not listed above
+
+The current backend also emits the following stable codes. Their statuses below reflect the `DomainException` constructors and payment constants in source; feature modules remain the owners of these rules:
+
+| Code | Module | HTTP status |
+|---|---|---|
+| CATEGORY_HIERARCHY_CYCLE | Catalog | 409 |
+| INVALID_DEDUCTION_QUANTITY | Inventory | 400 |
+| ADJUSTMENT_REASON_REQUIRED | Inventory | 400 |
+| ADJUSTMENT_QUANTITY_ZERO | Inventory | 400 |
+| INVALID_ADJUSTMENT_TYPE | Inventory | 400 |
+| INVALID_ADJUSTMENT_SIGN | Inventory | 400 |
+| STOCK_LOT_MISMATCH | Inventory | 400 |
+| STOCK_LOT_NOT_ACTIVE | Inventory | 409 |
+| INVALID_ROLE_FILTER | Users | 400 |
+| USER_NOT_FOUND | Users | 404 |
+| BRANCH_INACTIVE | Users | 422 |
+| SELF_ROLE_CHANGE_FORBIDDEN | Users | 403 |
+| LAST_ADMIN_DISABLE_FORBIDDEN | Users | 400 |
+| POS_QUERY_REQUIRED | POS | 400 |
+| POS_QUERY_TOO_LONG | POS | 400 |
+| SUPPLIER_CUIT_DUPLICATED | Suppliers | 409 |
+| SUPPLIER_PRODUCT_NOT_FOUND | Suppliers | 404 |
+| SUPPLIER_PRODUCT_DUPLICATED | Suppliers | 409 |
+| PRICE_BATCH_NOT_FOUND | Suppliers | 404 |
+| PRICE_BATCH_INVALID_STATE | Suppliers | 409 |
+| PRICE_BATCH_HAS_UNRESOLVED_ITEMS | Suppliers | 409 |
+| PRICE_BATCH_ITEM_INVALID | Suppliers | 400 |
+| PRICE_BATCH_ITEM_NOT_FOUND | Suppliers | 404 |
+| PRICE_BATCH_FILE_EMPTY | Suppliers | 400 |
+| PRICE_BATCH_FILE_UNSUPPORTED | Suppliers | 400 |
+| PRICE_BATCH_FILE_TOO_LARGE | Suppliers | 400 |
+| PRICE_BATCH_REQUIRED_COLUMNS_MISSING | Suppliers | 400 |
+| MP_INVALID_AMOUNT | Payments | 400 |
+| MP_INVALID_RESPONSE | Payments | 502 |
+| MP_PREFERENCE_REJECTED | Payments | 502 |
+| MP_UNAUTHORIZED | Payments | 502 |
+| MP_NOT_FOUND | Payments | 502 |
+| MP_UPSTREAM_ERROR | Payments | 502 |
+| MP_UNREACHABLE | Payments | 502 |
+| ORDER_NOT_PAYABLE | Payments | 409 |
+| PAYMENT_NOT_FOUND | Payments | 404 |
+| WEBHOOK_SIGNATURE_INVALID | Payments | 401 |
+
+Legacy planned codes that are not emitted by the backend were removed from the active catalog. The implemented cash difference code is `CASH_DIFFERENCE_REASON_REQUIRED`.
+
+### Intentional response paths outside the controller advice
+
+- The origin-validation filter constructs an `ApiError` directly with `INVALID_ORIGIN`, outside `GlobalExceptionHandler`; its payload shape is consistent with the shared DTO.
+- Invalid Mercado Pago webhook signatures propagate through `GlobalExceptionHandler` and return the same `ApiError` contract as other domain failures.
+- `PARENT_INVALID` consistently uses 409, `CATEGORY_NOT_FOUND` uses 404, and `PRICE_BATCH_ITEM_INVALID` uses 400 across their current emitters.
+
 ### Global exception handler
 
 A single `@ControllerAdvice` handles:
@@ -100,12 +152,14 @@ A single `@ControllerAdvice` handles:
 - All DomainException subclasses (map code and status from the exception)
 - MethodArgumentNotValidException (returns VALIDATION_ERROR with field-level details)
 - HttpMessageNotReadableException (returns VALIDATION_ERROR for malformed JSON)
-- AccessDeniedException (returns 403)
-- AuthenticationException (returns 401)
+- AccessDeniedException (returns 403 ACCESS_DENIED)
+- AuthenticationException (returns 401 UNAUTHORIZED)
 - DataIntegrityViolationException (returns 409 DATA_INTEGRITY_VIOLATION)
 - Generic Exception (returns 500 INTERNAL_ERROR, without stack trace)
 
 ### Validation error format
+
+All validation-related errors use the same `details` object. Bean Validation returns one entry per field; malformed JSON returns an empty `fieldErrors` array because no field can be identified. Other error categories keep `details` null unless a feature-specific domain payload is explicitly provided.
 
 ```json
 {

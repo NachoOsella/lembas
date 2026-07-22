@@ -1,4 +1,4 @@
-import type { OnInit } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
 import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgClass } from '@angular/common';
@@ -10,9 +10,12 @@ import { AppDataTable } from '@shared/components/app-data-table/app-data-table';
 import { AppSelect } from '@shared/components/app-select/app-select';
 import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
 import { AppToast } from '@shared/components/app-toast/app-toast';
-import { AppReportFilterBar } from '@features/reports/ui/app-report-filter-bar/app-report-filter-bar';
+import { AppReportFilterBar } from '@features/reports/public-api';
 import type { ExportData } from '@shared/components/data-export/data-export';
 import { DataExport } from '@shared/components/data-export/data-export';
+import { toReportIsoDate } from '@features/reports/domain/report-filters';
+import { cashHistoryExport } from '@features/reports/domain/report-export';
+import { ReportRequestState } from '@features/reports/public-api';
 import { EmptyState } from '@shared/components/empty-state/empty-state';
 import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
@@ -57,10 +60,11 @@ interface StatusFilterOption {
   templateUrl: './cash-session-history.html',
   styleUrl: './cash-session-history.css',
 })
-export class CashSessionHistoryPageComponent implements OnInit {
+export class CashSessionHistoryPageComponent implements OnInit, OnDestroy {
   private readonly cashReportService = inject(CashReportService);
   private readonly errorMapping = inject(ErrorMappingService);
   private readonly router = inject(Router);
+  private readonly requestState = new ReportRequestState<CashSessionHistoryDto>();
 
   /** Filter state. */
   protected readonly fromDate = signal<Date | null>(null);
@@ -70,15 +74,15 @@ export class CashSessionHistoryPageComponent implements OnInit {
   protected readonly pageSize = signal(20);
 
   /** Data state. */
-  protected readonly data = signal<CashSessionHistoryDto | null>(null);
-  protected readonly loading = signal(false);
-  protected readonly errorMessage = signal<string | null>(null);
+  protected readonly data = this.requestState.data;
+  protected readonly loading = this.requestState.loading;
+  protected readonly errorMessage = this.requestState.errorMessage;
 
   /** Status options for the filter dropdown. */
   protected readonly statusOptions: readonly StatusFilterOption[] = [
     { label: 'Todas', value: null },
-    { label: 'Abiertas', value: 'OPEN' as CashSessionStatus },
-    { label: 'Cerradas', value: 'CLOSED' as CashSessionStatus },
+    { label: 'Abiertas', value: 'OPEN' },
+    { label: 'Cerradas', value: 'CLOSED' },
   ];
 
   /** PrimeNG table columns. */
@@ -99,6 +103,10 @@ export class CashSessionHistoryPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  ngOnDestroy(): void {
+    this.requestState.destroy();
   }
 
   protected onStatusChange(value: CashSessionStatus | null): void {
@@ -129,6 +137,10 @@ export class CashSessionHistoryPageComponent implements OnInit {
     this.load();
   }
 
+  protected onRefresh(): void {
+    this.requestState.retry();
+  }
+
   protected clearFilters(): void {
     this.fromDate.set(null);
     this.toDate.set(null);
@@ -139,39 +151,7 @@ export class CashSessionHistoryPageComponent implements OnInit {
 
   /** Builds the CSV export payload for the visible rows. */
   protected exportData(): ExportData {
-    return {
-      filename: 'historial_cierres_caja',
-      columns: [
-        { key: 'openedAt', label: 'Apertura' },
-        { key: 'closedAt', label: 'Cierre' },
-        { key: 'branchName', label: 'Sucursal' },
-        { key: 'openedByUserName', label: 'Abrio' },
-        { key: 'closedByUserName', label: 'Cerro' },
-        { key: 'openingCashAmount', label: 'Apertura $' },
-        { key: 'expectedCashAmount', label: 'Esperado' },
-        { key: 'countedCashAmount', label: 'Contado' },
-        { key: 'cashDifferenceAmount', label: 'Diferencia' },
-        { key: 'cashDifferenceReason', label: 'Motivo' },
-        { key: 'status', label: 'Estado' },
-        { key: 'totalPayments', label: 'Pagos' },
-        { key: 'totalManualMovements', label: 'Movimientos' },
-      ],
-      rows: this.rows().map((row) => ({
-        openedAt: this.formatDateTime(row.openedAt),
-        closedAt: this.formatDateTime(row.closedAt),
-        branchName: row.branchName,
-        openedByUserName: row.openedByUserName,
-        closedByUserName: row.closedByUserName ?? '—',
-        openingCashAmount: row.openingCashAmount,
-        expectedCashAmount: row.expectedCashAmount ?? '—',
-        countedCashAmount: row.countedCashAmount ?? '—',
-        cashDifferenceAmount: row.cashDifferenceAmount ?? '—',
-        cashDifferenceReason: row.cashDifferenceReason ?? '',
-        status: row.status,
-        totalPayments: row.totalPayments,
-        totalManualMovements: row.totalManualMovements,
-      })),
-    };
+    return cashHistoryExport(this.rows());
   }
 
   public differenceClass(value: string | null | undefined): string {
@@ -193,65 +173,20 @@ export class CashSessionHistoryPageComponent implements OnInit {
     return status === 'OPEN' ? 'success' : 'neutral';
   }
 
-  private formatDateTime(value: string | null | undefined): string {
-    if (!value) {
-      return '—';
-    }
-    return new Date(value).toLocaleString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
   private load(): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-    this.cashReportService
-      .getCashSessionHistory(
-        null,
-        this.toIsoDate(this.fromDate()),
-        this.toIsoDate(this.toDate()),
-        null,
-        null,
-        this.statusFilter(),
-        this.page(),
-        this.pageSize(),
-      )
-      .subscribe({
-        next: (response) => {
-          this.data.set(response);
-          this.loading.set(false);
-        },
-        error: (err: unknown) => {
-          this.loading.set(false);
-          this.errorMessage.set(this.extractMessage(err));
-        },
-      });
-  }
-
-  private toIsoDate(date: Date | null): string | null {
-    if (!date) {
-      return null;
-    }
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  private extractMessage(err: unknown): string {
-    if (err && typeof err === 'object') {
-      const candidate = err as { error?: { message?: string } | null; message?: string };
-      if (candidate.error && typeof candidate.error === 'object' && candidate.error.message) {
-        return this.errorMapping.getMessage('INTERNAL_ERROR');
-      }
-      if (typeof candidate.message === 'string') {
-        return this.errorMapping.getMessage('INTERNAL_ERROR');
-      }
-    }
-    return this.errorMapping.getMessage('INTERNAL_ERROR');
+    this.requestState.load(
+      () =>
+        this.cashReportService.getCashSessionHistory(
+          null,
+          toReportIsoDate(this.fromDate()),
+          toReportIsoDate(this.toDate()),
+          null,
+          null,
+          this.statusFilter(),
+          this.page(),
+          this.pageSize(),
+        ),
+      this.errorMapping.getMessage('INTERNAL_ERROR'),
+    );
   }
 }

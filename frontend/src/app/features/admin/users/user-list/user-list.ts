@@ -10,6 +10,13 @@ import {
 } from '@angular/core';
 import { MessageService } from 'primeng/api';
 
+import {
+  buildUserSort,
+  userEmptyDescription,
+  userRoleLabel,
+  userRoleTone,
+  type UserBadgeTone,
+} from './user-list.helpers';
 import { UserService } from '@features/users/data-access/user';
 import type { Branch, UserResponse } from '@features/users/domain/user';
 import type { ColumnDef } from '@shared/components/app-data-table/app-data-table';
@@ -21,22 +28,6 @@ import { AppPageHeader } from '@shared/components/app-page-header/app-page-heade
 import { AppSearchBar } from '@shared/components/app-search-bar/app-search-bar';
 import { AppToggleSwitch } from '@shared/components/app-toggle-switch/app-toggle-switch';
 
-/** Maps a role to an AppBadge tone. */
-const ROLE_TONE: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
-  ADMIN: 'info',
-  MANAGER: 'warning',
-  EMPLOYEE: 'success',
-  CUSTOMER: 'neutral',
-};
-
-/** Maps a role to a Spanish label for display. */
-const ROLE_LABEL: Record<string, string> = {
-  ADMIN: 'Administrador',
-  MANAGER: 'Gerente',
-  EMPLOYEE: 'Empleado',
-  CUSTOMER: 'Cliente',
-};
-
 /** Column definitions for the users data table. */
 const USER_COLUMNS: ColumnDef[] = [
   { field: 'firstName', header: 'Nombre', sortable: true, width: '18%' },
@@ -46,9 +37,6 @@ const USER_COLUMNS: ColumnDef[] = [
   { field: 'enabled', header: 'Estado', sortable: true, width: '12%' },
   { field: 'id', header: 'Acciones', sortable: false, width: '20%' },
 ];
-
-/** Backend-supported user fields that can be used for server-side sorting. */
-const USER_SORT_FIELDS = new Set(['firstName', 'email', 'role', 'enabled']);
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -87,11 +75,7 @@ export class UserList implements OnInit {
   // ---------------------------------------------------------------------------
   protected readonly searchQuery = signal('');
 
-  protected readonly emptyDescription = computed(() => {
-    const query = this.searchQuery().trim();
-    if (query) return `No se encontraron usuarios que coincidan con "${query}".`;
-    return 'Cree el primer usuario interno para comenzar.';
-  });
+  protected readonly emptyDescription = computed(() => userEmptyDescription(this.searchQuery()));
 
   protected readonly displayTotalRecords = computed(() => this.totalRecords());
 
@@ -159,7 +143,8 @@ export class UserList implements OnInit {
   protected onSort(event: { field: string; order: number }): void {
     this.first.set(0);
 
-    if (!USER_SORT_FIELDS.has(event.field) || ![1, -1].includes(event.order)) {
+    const sort = buildUserSort(event.field, event.order);
+    if (!sort) {
       this.sortField.set(undefined);
       this.sortOrder.set(undefined);
       this.loadUsers();
@@ -173,14 +158,7 @@ export class UserList implements OnInit {
 
   /** Builds the Spring Data sort parameter from the current validated table state. */
   private buildSortParam(): string | undefined {
-    const field = this.sortField();
-    const order = this.sortOrder();
-
-    if (!field || ![1, -1].includes(order ?? 0)) {
-      return undefined;
-    }
-
-    return `${field},${order === 1 ? 'asc' : 'desc'}`;
+    return buildUserSort(this.sortField(), this.sortOrder());
   }
 
   // ---------------------------------------------------------------------------
@@ -204,11 +182,11 @@ export class UserList implements OnInit {
   // ---------------------------------------------------------------------------
   // Template helpers
   // ---------------------------------------------------------------------------
-  protected roleTone(role: string): 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
-    return ROLE_TONE[role] ?? 'neutral';
+  protected roleTone(role: string): UserBadgeTone {
+    return userRoleTone(role);
   }
 
   protected roleLabel(role: string): string {
-    return ROLE_LABEL[role] ?? role;
+    return userRoleLabel(role);
   }
 }

@@ -1,0 +1,59 @@
+<div class="orders-toolbar">
+  <div class="orders-toolbar__info">
+    <p class="orders-toolbar__kicker">Listado general</p>
+    <h2 class="orders-toolbar__title">Pedidos en curso</h2>
+  </div>
+  <div class="orders-toolbar__actions">
+    <app-input
+      inputId="orders-search"
+      [value]="search()"
+      (valueChange)="searchChange.emit($event)"
+      placeholder="Buscar por numero de orden o cliente"
+      prefixIcon="pi pi-search"
+      ariaLabel="Buscar pedidos"
+      class="orders-toolbar__search"
+    />
+    <app-select
+      [options]="statusOptions"
+      [value]="status()"
+      (valueChange)="statusValue($event)"
+      placeholder="Estado"
+      [showClear]="true"
+    />
+    <app-select
+      [options]="typeOptions"
+      [value]="type()"
+      (valueChange)="typeValue($event)"
+      placeholder="Tipo"
+      [showClear]="true"
+    />
+    <app-select
+      [options]="[
+        { label: 'Todas las sucursales', value: null },
+        ...branches().map((branch) => ({ label: branch.name, value: branch.id })),
+      ]"
+      [value]="branchId()"
+      (valueChange)="branchValue($event)"
+      placeholder="Sucursal"
+      [showClear]="!branchRestricted()"
+      [disabled]="branchRestricted()"
+    />
+    <app-date-picker
+      inputId="orders-date-from"
+      [value]="from()"
+      (valueChange)="fromChange.emit($event)"
+      placeholder="Desde"
+      dateFormat="dd/mm/yy"
+    />
+    <app-date-picker
+      inputId="orders-date-to"
+      [value]="to()"
+      (valueChange)="toChange.emit($event)"
+      placeholder="Hasta"
+      dateFormat="dd/mm/yy"
+    />
+    <app-button variant="ghost" size="sm" icon="pi pi-filter-slash" (click)="reset.emit()">
+      Limpiar
+    </app-button>
+  </div>
+</div>

@@ -6,7 +6,7 @@ import { provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { vi } from 'vitest';
 
-import { DashboardStore } from '@features/dashboard/state/dashboard.store';
+import { DashboardStore } from '@features/dashboard/public-api';
 import { Dashboard } from './dashboard';
 
 /**

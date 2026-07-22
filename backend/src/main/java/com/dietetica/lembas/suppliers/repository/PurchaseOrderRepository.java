@@ -2,14 +2,15 @@ package com.dietetica.lembas.suppliers.repository;
 
 import com.dietetica.lembas.suppliers.model.PurchaseOrder;
 import com.dietetica.lembas.suppliers.model.PurchaseOrderStatus;
+import jakarta.persistence.LockModeType;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.util.Optional;
 
 /** Repository for supplier purchase orders. */
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
@@ -18,9 +19,15 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     @Query("select po from PurchaseOrder po where po.id = :id")
     Optional<PurchaseOrder> findWithItemsById(@Param("id") Long id);
 
+    /** Locks the purchase order before receipt quantities and lifecycle state are validated. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select po from PurchaseOrder po where po.id = :id")
+    Optional<PurchaseOrder> findByIdForUpdate(@Param("id") Long id);
+
     /** Lists purchase orders filtered by supplier, branch, and status. */
     @EntityGraph(attributePaths = {"supplier", "branch", "items"})
-    @Query("""
+    @Query(
+            """
             select po from PurchaseOrder po
             join po.supplier s
             join po.branch b
@@ -32,6 +39,5 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
             @Param("supplierId") Long supplierId,
             @Param("branchId") Long branchId,
             @Param("status") PurchaseOrderStatus status,
-            Pageable pageable
-    );
+            Pageable pageable);
 }

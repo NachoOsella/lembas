@@ -1,0 +1,50 @@
+.supplier-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.supplier-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.supplier-form__field--wide {
+  grid-column: 1 / -1;
+}
+
+:host ::ng-deep .supplier-form .p-select,
+:host ::ng-deep .supplier-form .p-inputnumber,
+:host ::ng-deep .supplier-form .p-inputnumber-input {
+  width: 100%;
+}
+
+.supplier-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: 0.25rem;
+}
+
+.supplier-form .app-error-alert {
+  margin-top: 1rem;
+}
+
+@media (max-width: 48rem) {
+  .supplier-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .supplier-form__actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .supplier-form__actions app-button {
+    width: 100%;
+  }
+}

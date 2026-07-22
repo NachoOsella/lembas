@@ -3,11 +3,10 @@ package com.dietetica.lembas.payments.service;
 import com.dietetica.lembas.orders.model.Order;
 import com.dietetica.lembas.orders.model.OrderStatus;
 import com.dietetica.lembas.payments.model.Payment;
+import java.time.OffsetDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import java.time.OffsetDateTime;
 
 /**
  * Centralizes the order state transitions triggered by Mercado Pago webhook
@@ -49,8 +48,12 @@ public class WebhookOrderEffectApplier {
         order.setCancellationReason("MP_REJECTED: payment " + payment.getId());
     }
 
-    /** Marks the order as cancelled when its approved payment is later refunded. */
+    /** Restores the original sale lots before marking a refunded order as cancelled. */
     public void markRefunded(Order order) {
+        int reversedCount = stockDeductionGateway.reverseForOrder(order.getId());
+        if (reversedCount > 0) {
+            log.info("Reversed {} stock movements for refunded order {}", reversedCount, order.getId());
+        }
         order.setStatus(OrderStatus.CANCELLED);
         order.setCancellationReason("MP_REFUNDED");
         order.setCancelledAt(OffsetDateTime.now());

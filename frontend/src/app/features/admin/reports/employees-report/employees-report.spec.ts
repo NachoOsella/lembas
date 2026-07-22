@@ -65,7 +65,7 @@ describe('EmployeesReportPageComponent', () => {
   });
 
   it('renders the employee POS and cash metrics', () => {
-    const text = fixture.nativeElement.textContent as string;
+    const text = fixture.nativeElement.textContent ?? '';
     expect(text).toContain('5');
     expect(text).toContain('2');
     expect(text).toContain('Empleado');

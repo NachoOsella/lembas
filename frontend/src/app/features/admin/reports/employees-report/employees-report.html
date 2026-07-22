@@ -51,7 +51,7 @@
       >Actualizar</app-button
     ><app-data-export slot="actions" [data]="exportData()" />
   </app-report-filter-bar>
-  @if (errorMessage() && !data()) {
+  @if (errorMessage()) {
     <app-error-alert title="Sin datos por ahora" [message]="errorMessage() ?? ''" />
   } @else if (loading() && !data()) {
     <app-loading-spinner label="Cargando reporte de empleados..." surface="card" />
@@ -73,8 +73,8 @@
         description="Facturación POS y cantidad de ventas de cada operador."
         ><app-dashboard-chart
           type="bar"
-          [labels]="employeeLabels()"
-          [data]="revenueValues()"
+          [labels]="revenueChart().labels"
+          [data]="revenueChart().values"
           [secondaryData]="salesValues()"
           primaryLabel="Facturación POS"
           secondaryLabel="Ventas POS"
@@ -90,8 +90,8 @@
         description="Participación de cada operador sobre la facturación POS total."
         ><app-dashboard-chart
           type="doughnut"
-          [labels]="employeeLabels()"
-          [data]="revenueValues()"
+          [labels]="revenueChart().labels"
+          [data]="revenueChart().values"
           [loading]="loading()"
           [empty]="!hasPerformanceData()"
           emptyMessage="No hay facturación POS para distribuir."

@@ -7,6 +7,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { PurchaseOrderService } from '@features/suppliers/data-access/purchase-order';
 import { SupplierService } from '@features/suppliers/data-access/supplier';
+import { PurchaseOrdersPageStore } from '@features/suppliers/public-api';
 import { UserService } from '@features/users/data-access/user';
 import { ErrorMappingService } from '@core/services/error-mapping';
 import { PurchaseOrders } from './purchase-orders';
@@ -101,16 +102,25 @@ describe('PurchaseOrders', () => {
   });
 
   it('should create a purchase order with preloaded supplier product cost', () => {
-    const cmp = component as any;
-    cmp.supplierId.set(10);
-    cmp.branchId.set(20);
-    cmp.supplierProducts.set([
-      { id: 30, productName: 'Yerba', supplierSku: 'YER', currentCost: 2200 },
+    const store = fixture.debugElement.injector.get(PurchaseOrdersPageStore);
+    store.supplierId.set(10);
+    store.branchId.set(20);
+    store.supplierProducts.set([
+      {
+        id: 30,
+        productId: 40,
+        productName: 'Yerba',
+        supplierId: 10,
+        supplierName: 'Distribuidora',
+        supplierSku: 'YER',
+        currentCost: 2200,
+        preferred: true,
+      },
     ]);
-    cmp.selectedSupplierProductId.set(30);
+    store.selectedSupplierProductId.set(30);
 
-    cmp.addSelectedItem();
-    cmp.save();
+    store.addSelectedItem();
+    store.save();
 
     expect(purchaseOrderService.create).toHaveBeenCalledWith({
       supplierId: 10,
@@ -122,7 +132,7 @@ describe('PurchaseOrders', () => {
   });
 
   it('should request the PDF download for manual sending', () => {
-    const cmp = component as any;
+    const store = fixture.debugElement.injector.get(PurchaseOrdersPageStore);
     const createObjectUrl = vi
       .spyOn(window.URL, 'createObjectURL')
       .mockReturnValue('blob:purchase-order');
@@ -130,7 +140,19 @@ describe('PurchaseOrders', () => {
       .spyOn(window.URL, 'revokeObjectURL')
       .mockImplementation(() => undefined);
 
-    cmp.downloadPdf({ id: 1 });
+    store.downloadPdf({
+      id: 1,
+      supplierId: 10,
+      supplierName: 'Distribuidora',
+      branchId: 20,
+      branchName: 'Centro',
+      status: 'SENT',
+      orderDate: '2026-06-01T12:00:00Z',
+      expectedDeliveryDate: null,
+      total: 0,
+      itemCount: 0,
+      createdAt: '2026-06-01T12:00:00Z',
+    });
 
     expect(purchaseOrderService.downloadPdf).toHaveBeenCalledWith(1);
     expect(createObjectUrl).toHaveBeenCalled();

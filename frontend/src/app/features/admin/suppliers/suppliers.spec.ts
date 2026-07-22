@@ -7,6 +7,7 @@ import { of } from 'rxjs';
 import { ProductService } from '@features/catalog/data-access/product';
 import { SupplierService } from '@features/suppliers/data-access/supplier';
 import { ErrorMappingService } from '@core/services/error-mapping';
+import { SuppliersPageStore } from '@features/suppliers/public-api';
 import { Suppliers } from './suppliers';
 
 /** Unit tests for the supplier management page. */
@@ -54,14 +55,14 @@ describe('Suppliers', () => {
   });
 
   it('should create a supplier from the dialog form', () => {
-    const cmp = component as any;
-    cmp.supplierFormName.set('Distribuidora Cordoba');
-    cmp.supplierFormContactName.set('');
-    cmp.supplierFormPhone.set('');
-    cmp.supplierFormEmail.set('');
-    cmp.supplierFormCuit.set('');
+    const store = fixture.debugElement.injector.get(SuppliersPageStore);
+    store.supplierFormName.set('Distribuidora Cordoba');
+    store.supplierFormContactName.set('');
+    store.supplierFormPhone.set('');
+    store.supplierFormEmail.set('');
+    store.supplierFormCuit.set('');
 
-    cmp.saveSupplier();
+    store.saveSupplier();
 
     expect(supplierService.createSupplier).toHaveBeenCalledWith({
       name: 'Distribuidora Cordoba',

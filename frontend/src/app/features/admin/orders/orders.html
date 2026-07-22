@@ -5,168 +5,57 @@
     description="Administra pedidos online y POS. Las ordenes online avanzan por estados de preparacion hasta la entrega."
   />
 
-  @if (error()) {
-    <app-error-alert variant="inline" [title]="error()" message="">
-      <app-button variant="secondary" size="sm" (click)="loadOrders()">Reintentar</app-button>
+  @if (store.error()) {
+    <app-error-alert variant="inline" [title]="store.error()" message="">
+      <app-button variant="secondary" size="sm" (click)="store.load()">Reintentar</app-button>
     </app-error-alert>
   }
 
-  <app-data-table
-    [data]="orders()"
-    [columns]="columns"
-    [loading]="loading()"
-    [sortable]="true"
-    [paginated]="true"
-    [lazy]="true"
-    [totalRecords]="totalRecords()"
-    [first]="first()"
-    [rows]="pageSize()"
-    [rowsPerPageOptions]="[10, 20, 50]"
-    [sortField]="sortField()"
-    [sortOrder]="sortOrder()"
-    (pageChange)="onPageChange($event)"
-    (sortChange)="onSort($event)"
-    emptyTitle="Aun no hay pedidos"
-    emptyDescription="Los pedidos de la tienda online y del POS apareceran aca."
-  >
-    <ng-template #toolbar>
-      <div class="orders-toolbar">
-        <div class="orders-toolbar__info">
-          <p class="orders-toolbar__kicker">Listado general</p>
-          <h2 class="orders-toolbar__title">Pedidos en curso</h2>
-        </div>
-        <div class="orders-toolbar__actions">
-          <app-input
-            inputId="orders-search"
-            [value]="searchQuery()"
-            (valueChange)="onSearchChange($event)"
-            placeholder="Buscar por numero de orden o cliente"
-            prefixIcon="pi pi-search"
-            ariaLabel="Buscar pedidos"
-            class="orders-toolbar__search"
-          />
-          <app-select
-            [options]="statusOptions"
-            [value]="statusFilter()"
-            (valueChange)="onStatusChange($event)"
-            placeholder="Estado"
-            [showClear]="true"
-          />
-          <app-select
-            [options]="typeOptions"
-            [value]="typeFilter()"
-            (valueChange)="onTypeChange($event)"
-            placeholder="Tipo"
-            [showClear]="true"
-          />
-          <app-select
-            [options]="branchOptions()"
-            [value]="selectedBranchId()"
-            (valueChange)="onBranchChange($event)"
-            placeholder="Sucursal"
-            [showClear]="!isBranchRestricted()"
-            [disabled]="isBranchRestricted()"
-          />
-          <app-date-picker
-            inputId="orders-date-from"
-            [value]="dateFrom()"
-            (valueChange)="onDateFromChange($event)"
-            placeholder="Desde"
-            dateFormat="dd/mm/yy"
-          />
-          <app-date-picker
-            inputId="orders-date-to"
-            [value]="dateTo()"
-            (valueChange)="onDateToChange($event)"
-            placeholder="Hasta"
-            dateFormat="dd/mm/yy"
-          />
-          <app-button variant="ghost" size="sm" icon="pi pi-filter-slash" (click)="clearFilters()">
-            Limpiar
-          </app-button>
-        </div>
-      </div>
-    </ng-template>
+  <app-order-filters
+    [status]="store.filters().status"
+    [type]="store.filters().type"
+    [branchId]="store.filters().branchId"
+    [from]="store.filters().from"
+    [to]="store.filters().to"
+    [search]="store.filters().search"
+    [branches]="store.branches()"
+    [branchRestricted]="store.isBranchRestricted()"
+    (statusChange)="store.setStatus($event)"
+    (typeChange)="store.setType($event)"
+    (branchChange)="store.setBranch($event)"
+    (fromChange)="store.setDateFrom($event)"
+    (toChange)="store.setDateTo($event)"
+    (searchChange)="store.setSearch($event)"
+    (reset)="store.clearFilters()"
+  />
 
-    <ng-template #body let-item>
-      <tr>
-        <td class="orders-col--number">
-          <div class="orders-number-cell">
-            <span class="orders-number-cell__value">{{ item.orderNumber }}</span>
-            <span
-              class="orders-number-cell__type orders-number-cell__type--{{
-                item.type.toLowerCase()
-              }}"
-            >
-              {{ typeLabel(item.type) }}
-            </span>
-          </div>
-        </td>
-        <td>
-          <span class="orders-customer-name">{{ item.customerName }}</span>
-        </td>
-        <td class="orders-col--status">
-          <app-status-badge [status]="item.status" [config]="statusBadges" />
-        </td>
-        <td class="orders-col--branch">{{ item.branchName }}</td>
-        <td class="orders-col--total">
-          <strong>{{ item.total | currencyAr }}</strong>
-        </td>
-        <td class="orders-col--date">{{ item.createdAt | shortDateAr }}</td>
-        <td class="orders-col--actions">
-          <div class="orders-row-actions">
-            <!-- View detail -->
-            <button
-              type="button"
-              class="orders-icon-btn orders-icon-btn--view"
-              [attr.aria-label]="'Ver detalle del pedido ' + item.orderNumber"
-              (click)="viewOrder(item)"
-            >
-              <i class="pi pi-eye" aria-hidden="true"></i>
-            </button>
-
-            <!-- Quick transition button (ONLINE orders with valid next state) -->
-            @if (quickActionFor(item); as act) {
-              <button
-                type="button"
-                class="orders-icon-btn orders-icon-btn--action"
-                [attr.aria-label]="act.label + ' - Pedido ' + item.orderNumber"
-                (click)="openQuickConfirm(item, act)"
-              >
-                <i [class]="act.icon" aria-hidden="true"></i>
-              </button>
-            }
-
-            <!-- Cancel button (any non-terminal order) -->
-            @if (canCancel(item)) {
-              <button
-                type="button"
-                class="orders-icon-btn orders-icon-btn--cancel"
-                [attr.aria-label]="'Cancelar pedido ' + item.orderNumber"
-                (click)="openCancelConfirm(item, $event)"
-              >
-                <i class="pi pi-times-circle" aria-hidden="true"></i>
-              </button>
-            }
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-  </app-data-table>
+  <app-order-table
+    [orders]="store.orders()"
+    [loading]="store.loading()"
+    [totalRecords]="store.totalRecords()"
+    [first]="store.table().first"
+    [pageSize]="store.table().pageSize"
+    [sortField]="store.table().sortField"
+    [sortOrder]="store.table().sortOrder"
+    (pageChange)="store.setPage($event.first, $event.rows)"
+    (sortChange)="store.setSort($event.field, $event.order)"
+    (view)="viewOrder($event)"
+    (quickAction)="openQuickConfirm($event)"
+    (cancel)="openCancelConfirm($event)"
+  />
 </div>
 
-<!-- Quick-action / cancel confirm dialog -->
 <app-confirm-dialog
   [visible]="confirmVisible()"
   [mode]="confirmMode()"
-  [title]="pendingAction()?.label ?? ''"
-  [message]="pendingAction()?.description ?? ''"
+  [title]="pendingAction()?.confirmTitle ?? ''"
+  [message]="pendingAction()?.confirmMessage ?? pendingAction()?.description ?? ''"
   [confirmLabel]="pendingAction()?.label ?? 'Confirmar'"
-  [destructive]="!!pendingAction()?.destructive"
-  [reasonLabel]="'Motivo de cancelacion'"
-  [reasonPlaceholder]="'Ej: cliente desiste del pedido, mercaderia danada, etc.'"
+  [destructive]="pendingAction()?.destructive ?? false"
+  reasonLabel="Motivo de cancelacion"
+  reasonPlaceholder="Ej: cliente desiste del pedido, mercaderia danada, etc."
   [reasonMaxLength]="500"
-  [reasonRequired]="!!pendingAction()?.requiresReason"
+  [reasonRequired]="pendingAction()?.requiresReason ?? false"
   [(reason)]="cancelReason"
   (confirmed)="executeConfirmedAction()"
   (cancelled)="cancelQuickConfirm()"

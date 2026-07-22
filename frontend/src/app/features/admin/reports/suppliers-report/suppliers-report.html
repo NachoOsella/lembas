@@ -48,7 +48,7 @@
       >Actualizar</app-button
     ><app-data-export slot="actions" [data]="exportData()" />
   </app-report-filter-bar>
-  @if (errorMessage() && !data()) {
+  @if (errorMessage()) {
     <app-error-alert title="Sin datos por ahora" [message]="errorMessage() ?? ''" />
   } @else if (loading() && !data()) {
     <app-loading-spinner label="Cargando reporte de proveedores..." surface="card" />
@@ -70,11 +70,11 @@
         description="Costo real recibido y cantidad de recepciones confirmadas por mes."
         ><app-dashboard-chart
           type="bar"
-          [labels]="purchaseLabels()"
-          [data]="purchaseValues()"
+          [labels]="purchasesChart().labels"
+          [data]="purchasesChart().values"
           [secondaryData]="purchaseOrders()"
           [loading]="loading()"
-          [empty]="purchaseValues().every((v) => v === 0)"
+          [empty]="purchasesChart().values.every((value) => value === 0)"
           emptyMessage="Aun no hay compras en el periodo."
           [height]="'320px'"
           [currency]="true"

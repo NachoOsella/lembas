@@ -1,10 +1,11 @@
 package com.dietetica.lembas.payments.web;
 
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import com.dietetica.lembas.payments.api.CustomerPaymentQuery;
 import com.dietetica.lembas.payments.dto.CreatePreferenceResponse;
 import com.dietetica.lembas.payments.dto.PaymentSummaryDto;
-import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.payments.service.PreferenceService;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * REST endpoints for authenticated customers to start and inspect online
@@ -26,16 +25,15 @@ import java.util.List;
 public class CustomerPaymentController {
 
     private final PreferenceService preferenceService;
-    private final PaymentRepository paymentRepository;
+    private final CustomerPaymentQuery customerPaymentQuery;
     private final SecurityContextHelper securityContextHelper;
 
     public CustomerPaymentController(
             PreferenceService preferenceService,
-            PaymentRepository paymentRepository,
-            SecurityContextHelper securityContextHelper
-    ) {
+            CustomerPaymentQuery customerPaymentQuery,
+            SecurityContextHelper securityContextHelper) {
         this.preferenceService = preferenceService;
-        this.paymentRepository = paymentRepository;
+        this.customerPaymentQuery = customerPaymentQuery;
         this.securityContextHelper = securityContextHelper;
     }
 
@@ -52,30 +50,12 @@ public class CustomerPaymentController {
     /**
      * Returns the payment attempts recorded for the order.
      *
-     * <p>Ownership is enforced at the query level: the JPA finder joins on the
-     * order's customer user id, so payments for someone else's order are
-     * simply not returned. The {@code findById} call distinguishes "no
-     * payments yet" (an empty list) from "wrong owner" (404).</p>
+     * <p>Ownership is enforced inside the payment-owned query service, so this
+     * controller only coordinates the authenticated customer and HTTP response.</p>
      */
     @GetMapping
     public List<PaymentSummaryDto> list(@PathVariable Long orderId) {
         Long customerId = securityContextHelper.getCurrentUser().getId();
-        return paymentRepository.findByOrderIdAndOrderCustomerUserIdOrderByIdAsc(orderId, customerId)
-                .stream()
-                .map(this::toDto)
-                .toList();
-    }
-
-    /** Maps a payment entity to the lightweight DTO exposed to customers. */
-    private PaymentSummaryDto toDto(com.dietetica.lembas.payments.model.Payment payment) {
-        return new PaymentSummaryDto(
-                payment.getId(),
-                payment.getProvider(),
-                payment.getMethod(),
-                payment.getStatus(),
-                payment.getAmount(),
-                payment.getApprovedAt(),
-                payment.getCreatedAt()
-        );
+        return customerPaymentQuery.findForCustomerOrder(orderId, customerId);
     }
 }

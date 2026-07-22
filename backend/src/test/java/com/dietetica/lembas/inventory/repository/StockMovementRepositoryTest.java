@@ -1,5 +1,7 @@
 package com.dietetica.lembas.inventory.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.dietetica.lembas.catalog.model.Category;
 import com.dietetica.lembas.catalog.model.Product;
 import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
@@ -10,6 +12,7 @@ import com.dietetica.lembas.inventory.model.StockMovement;
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -23,10 +26,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 /** PostgreSQL-backed tests for stock movement searches. */
 @DataJpaTest
 @Testcontainers
@@ -36,9 +35,8 @@ class StockMovementRepositoryTest {
 
     @Container
     @ServiceConnection
-    private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer(
-            DockerImageName.parse("postgres:16-alpine")
-    );
+    private static final PostgreSQLContainer POSTGRES =
+            new PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"));
 
     @Autowired
     private StockMovementRepository stockMovementRepository;
@@ -65,9 +63,7 @@ class StockMovementRepositoryTest {
 
         var page = stockMovementRepository.findAll((Specification<StockMovement>) null, PageRequest.of(0, 10));
 
-        assertThat(page.getContent())
-                .extracting(StockMovement::getType)
-                .contains(StockMovementType.PURCHASE_ENTRY);
+        assertThat(page.getContent()).extracting(StockMovement::getType).contains(StockMovementType.PURCHASE_ENTRY);
     }
 
     /** Returns the demo branch inserted by Flyway seed data. */

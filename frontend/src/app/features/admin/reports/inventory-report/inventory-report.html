@@ -30,7 +30,7 @@
     <app-data-export slot="actions" [data]="exportData()" />
   </app-report-filter-bar>
 
-  @if (errorMessage() && !data()) {
+  @if (errorMessage()) {
     <app-error-alert title="Sin datos por ahora" [message]="errorMessage() ?? ''" />
   } @else if (loading() && !data()) {
     <app-loading-spinner label="Cargando reporte de inventario..." surface="card" />
@@ -53,10 +53,10 @@
       >
         <app-dashboard-chart
           type="doughnut"
-          [labels]="stockLabels()"
-          [data]="stockAmounts()"
+          [labels]="stockChart().labels"
+          [data]="stockChart().values"
           [loading]="loading()"
-          [empty]="stockAmounts().length === 0"
+          [empty]="stockChart().values.length === 0"
           emptyMessage="Aun no hay stock valorizado."
           [height]="'300px'"
           [currency]="true"
@@ -68,14 +68,14 @@
       >
         <app-dashboard-chart
           type="bar"
-          [labels]="expiringLabels()"
-          [data]="expiringValues()"
+          [labels]="expiringChart().labels"
+          [data]="expiringChart().values"
           [secondaryData]="expiringUnits()"
           primaryLabel="Lotes"
           secondaryLabel="Unidades"
           [secondaryAxis]="true"
           [loading]="loading()"
-          [empty]="expiringValues().every((v) => v === 0)"
+          [empty]="expiringChart().values.every((value) => value === 0)"
           emptyMessage="No hay lotes proximos a vencer."
           [height]="'300px'"
         />

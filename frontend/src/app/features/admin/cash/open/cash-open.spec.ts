@@ -90,7 +90,7 @@ describe('CashOpen', () => {
 
     expect(component['isAdmin']()).toBe(false);
     expect(component['canSubmit']()).toBe(false);
-    component['openingCashAmount'].set(100);
+    component['setOpeningCashAmount'](100);
     fixture.detectChanges();
     expect(component['canSubmit']()).toBe(true);
   });
@@ -113,7 +113,7 @@ describe('CashOpen', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['openingCashAmount'].set(150);
+    component['setOpeningCashAmount'](150);
     component['submit']();
     await fixture.whenStable();
 
@@ -145,7 +145,7 @@ describe('CashOpen', () => {
 
     fixture.detectChanges();
     await fixture.whenStable();
-    component['openingCashAmount'].set(50);
+    component['setOpeningCashAmount'](50);
     component['submit']();
     await fixture.whenStable();
 

@@ -2,6 +2,7 @@ package com.dietetica.lembas.cash.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.groups.Tuple.tuple;
 
 import com.dietetica.lembas.AbstractIntegrationTest;
 import com.dietetica.lembas.cash.dto.CashCloseRequest;
@@ -40,12 +41,15 @@ import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import static org.assertj.core.groups.Tuple.tuple;
 
 /**
  * PostgreSQL characterization tests for durable cash-session behavior.
@@ -224,6 +228,197 @@ class CashServicePersistenceIntegrationTest extends AbstractIntegrationTest {
                 .isEmpty();
     }
 
+    @Test
+    void saleThatLocksFirstIsCommittedBeforeCloseAndIncludedInExpectedCash() throws Exception {
+        CashSessionDto session = openSession(employee, new BigDecimal("100.00"), null);
+        Product product = persistProductWithStock(new BigDecimal("25.00"), BigDecimal.ONE);
+        CountDownLatch salePrepared = new CountDownLatch(1);
+        CountDownLatch releaseSaleCommit = new CountDownLatch(1);
+        CountDownLatch closeLockAttempted = new CountDownLatch(1);
+        CountDownLatch closeLockAcquired = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        try {
+            Future<?> sale = executor.submit(() -> transactionTemplate.executeWithoutResult(status -> {
+                posSaleService.createSale(saleRequest(product.getId(), PaymentMethod.CASH), employee);
+                salePrepared.countDown();
+                await(releaseSaleCommit);
+            }));
+            await(salePrepared);
+
+            Future<CashSessionDto> close = executor.submit(() -> {
+                closeLockAttempted.countDown();
+                return transactionTemplate.execute(status -> {
+                    cashSessionRepository.findByIdForUpdate(session.id()).orElseThrow();
+                    closeLockAcquired.countDown();
+                    return cashService.closeCashSession(
+                            session.id(), new CashCloseRequest(new BigDecimal("125.00"), null, null), employee);
+                });
+            });
+            await(closeLockAttempted);
+            assertStillWaiting(closeLockAcquired);
+            releaseSaleCommit.countDown();
+
+            sale.get(5, TimeUnit.SECONDS);
+            CashSessionDto closed = close.get(5, TimeUnit.SECONDS);
+            assertThat(closed.expectedCashAmount()).isEqualByComparingTo("125.00");
+            assertThat(paymentRepository.findByCashSessionIdAndStatusOrderByIdAsc(session.id(), PaymentStatus.APPROVED))
+                    .singleElement()
+                    .satisfies(payment -> assertThat(payment.getAmount()).isEqualByComparingTo("25.00"));
+        } finally {
+            releaseSaleCommit.countDown();
+            shutDown(executor);
+        }
+    }
+
+    @Test
+    void movementThatLocksFirstIsCommittedBeforeCloseAndIncludedInExpectedCash() throws Exception {
+        CashSessionDto session = openSession(employee, new BigDecimal("100.00"), null);
+        CountDownLatch movementPrepared = new CountDownLatch(1);
+        CountDownLatch releaseMovementCommit = new CountDownLatch(1);
+        CountDownLatch closeLockAttempted = new CountDownLatch(1);
+        CountDownLatch closeLockAcquired = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        try {
+            Future<?> movement = executor.submit(() -> transactionTemplate.executeWithoutResult(status -> {
+                cashService.addMovement(
+                        session.id(), movement(CashMovementType.CASH_IN, CashMovementMethod.CASH, "10.00"), employee);
+                movementPrepared.countDown();
+                await(releaseMovementCommit);
+            }));
+            await(movementPrepared);
+
+            Future<CashSessionDto> close = executor.submit(() -> {
+                closeLockAttempted.countDown();
+                return transactionTemplate.execute(status -> {
+                    cashSessionRepository.findByIdForUpdate(session.id()).orElseThrow();
+                    closeLockAcquired.countDown();
+                    return cashService.closeCashSession(
+                            session.id(), new CashCloseRequest(new BigDecimal("110.00"), null, null), employee);
+                });
+            });
+            await(closeLockAttempted);
+            assertStillWaiting(closeLockAcquired);
+            releaseMovementCommit.countDown();
+
+            movement.get(5, TimeUnit.SECONDS);
+            CashSessionDto closed = close.get(5, TimeUnit.SECONDS);
+            assertThat(closed.expectedCashAmount()).isEqualByComparingTo("110.00");
+            assertThat(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(session.id()))
+                    .hasSize(1);
+        } finally {
+            releaseMovementCommit.countDown();
+            shutDown(executor);
+        }
+    }
+
+    @Test
+    void closeThatLocksFirstRejectsConcurrentSaleAndMovementAfterCommit() throws Exception {
+        CashSessionDto session = openSession(employee, new BigDecimal("100.00"), null);
+        Product product = persistProductWithStock(new BigDecimal("25.00"), BigDecimal.ONE);
+        CountDownLatch closePrepared = new CountDownLatch(1);
+        CountDownLatch releaseCloseCommit = new CountDownLatch(1);
+        CountDownLatch saleLockAttempted = new CountDownLatch(1);
+        CountDownLatch saleLockReturned = new CountDownLatch(1);
+        CountDownLatch movementLockAttempted = new CountDownLatch(1);
+        CountDownLatch movementLockAcquired = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+
+        try {
+            Future<?> close = executor.submit(() -> transactionTemplate.executeWithoutResult(status -> {
+                cashService.closeCashSession(
+                        session.id(), new CashCloseRequest(new BigDecimal("100.00"), null, null), employee);
+                closePrepared.countDown();
+                await(releaseCloseCommit);
+            }));
+            await(closePrepared);
+
+            Future<Throwable> saleFailure = executor.submit(() -> captureFailure(() -> {
+                saleLockAttempted.countDown();
+                transactionTemplate.executeWithoutResult(status -> {
+                    try {
+                        cashService.getCurrentSessionForUpdate(null, employee);
+                    } finally {
+                        saleLockReturned.countDown();
+                    }
+                    posSaleService.createSale(saleRequest(product.getId(), PaymentMethod.CASH), employee);
+                });
+            }));
+            Future<Throwable> movementFailure = executor.submit(() -> captureFailure(() -> {
+                movementLockAttempted.countDown();
+                transactionTemplate.executeWithoutResult(status -> {
+                    cashSessionRepository.findByIdForUpdate(session.id()).orElseThrow();
+                    movementLockAcquired.countDown();
+                    cashService.addMovement(
+                            session.id(),
+                            movement(CashMovementType.CASH_IN, CashMovementMethod.CASH, "10.00"),
+                            employee);
+                });
+            }));
+            await(saleLockAttempted);
+            await(movementLockAttempted);
+            assertStillWaiting(saleLockReturned);
+            assertStillWaiting(movementLockAcquired);
+            releaseCloseCommit.countDown();
+
+            close.get(5, TimeUnit.SECONDS);
+            assertDomainCode(saleFailure.get(5, TimeUnit.SECONDS), "CASH_SESSION_NOT_FOUND");
+            assertDomainCode(movementFailure.get(5, TimeUnit.SECONDS), "CASH_MOVEMENT_CLOSED_SESSION");
+            assertThat(orderRepository.count()).isZero();
+            assertThat(cashMovementRepository.findByCashSessionIdOrderByCreatedAtAsc(session.id()))
+                    .isEmpty();
+        } finally {
+            releaseCloseCommit.countDown();
+            shutDown(executor);
+        }
+    }
+
+    @Test
+    void concurrentDuplicateCloseIsSerializedAndRejectedAfterFirstCommit() throws Exception {
+        CashSessionDto session = openSession(employee, new BigDecimal("100.00"), null);
+        CountDownLatch firstClosePrepared = new CountDownLatch(1);
+        CountDownLatch releaseFirstCloseCommit = new CountDownLatch(1);
+        CountDownLatch secondCloseLockAttempted = new CountDownLatch(1);
+        CountDownLatch secondCloseLockAcquired = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        try {
+            Future<?> firstClose = executor.submit(() -> transactionTemplate.executeWithoutResult(status -> {
+                cashService.closeCashSession(
+                        session.id(), new CashCloseRequest(new BigDecimal("100.00"), "first", null), employee);
+                firstClosePrepared.countDown();
+                await(releaseFirstCloseCommit);
+            }));
+            await(firstClosePrepared);
+
+            Future<Throwable> secondFailure = executor.submit(() -> captureFailure(() -> {
+                secondCloseLockAttempted.countDown();
+                transactionTemplate.executeWithoutResult(status -> {
+                    cashSessionRepository.findByIdForUpdate(session.id()).orElseThrow();
+                    secondCloseLockAcquired.countDown();
+                    cashService.closeCashSession(
+                            session.id(),
+                            new CashCloseRequest(new BigDecimal("150.00"), "second", "difference"),
+                            employee);
+                });
+            }));
+            await(secondCloseLockAttempted);
+            assertStillWaiting(secondCloseLockAcquired);
+            releaseFirstCloseCommit.countDown();
+
+            firstClose.get(5, TimeUnit.SECONDS);
+            assertDomainCode(secondFailure.get(5, TimeUnit.SECONDS), "CASH_SESSION_ALREADY_CLOSED");
+            entityManager.clear();
+            CashSession closed = cashSessionRepository.findById(session.id()).orElseThrow();
+            assertThat(closed.getCountedCashAmount()).isEqualByComparingTo("100.00");
+            assertThat(closed.getClosingNotes()).isEqualTo("first");
+        } finally {
+            releaseFirstCloseCommit.countDown();
+            shutDown(executor);
+        }
+    }
+
     private CashSessionDto openSession(User opener, BigDecimal openingAmount, Long requestedBranchId) {
         return cashService.openCashSession(new OpenCashSessionRequest(openingAmount, null, requestedBranchId), opener);
     }
@@ -273,5 +468,41 @@ class CashServicePersistenceIntegrationTest extends AbstractIntegrationTest {
                         Long.class)
                 .setParameter("sessionId", sessionId)
                 .getSingleResult());
+    }
+
+    private static Throwable captureFailure(Runnable operation) {
+        try {
+            operation.run();
+            return null;
+        } catch (Throwable failure) {
+            return failure;
+        }
+    }
+
+    private static void assertDomainCode(Throwable failure, String expectedCode) {
+        assertThat(failure).isInstanceOfSatisfying(DomainException.class, exception -> assertThat(exception.getCode())
+                .isEqualTo(expectedCode));
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            if (!latch.await(5, TimeUnit.SECONDS)) {
+                throw new AssertionError("Timed out waiting for concurrent cash operation");
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("Interrupted while coordinating concurrent cash operations", exception);
+        }
+    }
+
+    private static void assertStillWaiting(CountDownLatch lockAcquired) throws InterruptedException {
+        assertThat(lockAcquired.await(300, TimeUnit.MILLISECONDS)).isFalse();
+    }
+
+    private static void shutDown(ExecutorService executor) throws InterruptedException {
+        executor.shutdownNow();
+        if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+            throw new AssertionError("Timed out terminating cash concurrency executor");
+        }
     }
 }

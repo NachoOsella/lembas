@@ -1,9 +1,13 @@
 package com.dietetica.lembas.shared.web;
 
 import com.dietetica.lembas.shared.dto.ApiError;
+import com.dietetica.lembas.shared.dto.ApiError.FieldError;
+import com.dietetica.lembas.shared.dto.ApiError.ValidationDetails;
 import com.dietetica.lembas.shared.exception.DomainException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import java.time.Instant;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,10 +19,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Converts application exceptions into the documented uniform {@link ApiError} format.
@@ -33,13 +33,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ApiError> handleDomainException(DomainException exception, HttpServletRequest request) {
-        ApiError error = buildError(
-                exception.getStatus(),
-                exception.getCode(),
-                exception.getMessage(),
-                null,
-                request
-        );
+        ApiError error = buildError(exception.getStatus(), exception.getCode(), exception.getMessage(), null, request);
         return ResponseEntity.status(exception.getStatus()).body(error);
     }
 
@@ -48,20 +42,17 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidationException(
-            MethodArgumentNotValidException exception,
-            HttpServletRequest request
-    ) {
-        List<FieldErrorDetail> fieldErrors = exception.getBindingResult().getFieldErrors().stream()
-                .map(fieldError -> new FieldErrorDetail(fieldError.getField(), fieldError.getDefaultMessage()))
+            MethodArgumentNotValidException exception, HttpServletRequest request) {
+        List<FieldError> fieldErrors = exception.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> new FieldError(fieldError.getField(), fieldError.getDefaultMessage()))
                 .toList();
 
         ApiError error = buildError(
                 HttpStatus.BAD_REQUEST,
                 "VALIDATION_ERROR",
                 "Validation failed",
-                Map.of("fieldErrors", fieldErrors),
-                request
-        );
+                new ValidationDetails(fieldErrors),
+                request);
         return ResponseEntity.badRequest().body(error);
     }
 
@@ -70,20 +61,17 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiError> handleConstraintViolationException(
-            ConstraintViolationException exception,
-            HttpServletRequest request
-    ) {
-        List<FieldErrorDetail> fieldErrors = exception.getConstraintViolations().stream()
-                .map(violation -> new FieldErrorDetail(violation.getPropertyPath().toString(), violation.getMessage()))
+            ConstraintViolationException exception, HttpServletRequest request) {
+        List<FieldError> fieldErrors = exception.getConstraintViolations().stream()
+                .map(violation -> new FieldError(violation.getPropertyPath().toString(), violation.getMessage()))
                 .toList();
 
         ApiError error = buildError(
                 HttpStatus.BAD_REQUEST,
                 "VALIDATION_ERROR",
                 "Validation failed",
-                Map.of("fieldErrors", fieldErrors),
-                request
-        );
+                new ValidationDetails(fieldErrors),
+                request);
         return ResponseEntity.badRequest().body(error);
     }
 
@@ -92,16 +80,13 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleUnreadableMessage(
-            HttpMessageNotReadableException exception,
-            HttpServletRequest request
-    ) {
+            HttpMessageNotReadableException exception, HttpServletRequest request) {
         ApiError error = buildError(
                 HttpStatus.BAD_REQUEST,
                 "VALIDATION_ERROR",
                 "Malformed request body",
-                null,
-                request
-        );
+                new ValidationDetails(List.of()),
+                request);
         return ResponseEntity.badRequest().body(error);
     }
 
@@ -110,9 +95,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrityViolation(
-            DataIntegrityViolationException exception,
-            HttpServletRequest request
-    ) {
+            DataIntegrityViolationException exception, HttpServletRequest request) {
         Throwable cause = exception.getMostSpecificCause();
         String causeMessage = cause != null ? cause.getMessage() : exception.getMessage();
         log.warn("Data integrity violation path={} cause={}", request.getRequestURI(), causeMessage);
@@ -122,8 +105,7 @@ public class GlobalExceptionHandler {
                 "DATA_INTEGRITY_VIOLATION",
                 "Request conflicts with existing or related data",
                 null,
-                request
-        );
+                request);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
@@ -132,13 +114,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException exception, HttpServletRequest request) {
-        ApiError error = buildError(
-                HttpStatus.FORBIDDEN,
-                "ACCESS_DENIED",
-                "Access denied",
-                null,
-                request
-        );
+        ApiError error = buildError(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "Access denied", null, request);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
@@ -146,14 +122,9 @@ public class GlobalExceptionHandler {
      * Handles unauthenticated requests to protected resources.
      */
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiError> handleAuthentication(AuthenticationException exception, HttpServletRequest request) {
-        ApiError error = buildError(
-                HttpStatus.UNAUTHORIZED,
-                "UNAUTHORIZED",
-                "Authentication required",
-                null,
-                request
-        );
+    public ResponseEntity<ApiError> handleAuthentication(
+            AuthenticationException exception, HttpServletRequest request) {
+        ApiError error = buildError(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Authentication required", null, request);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
@@ -164,12 +135,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleUnexpectedException(Exception exception, HttpServletRequest request) {
         log.error("Unhandled API exception path={}", request.getRequestURI(), exception);
         ApiError error = buildError(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "INTERNAL_ERROR",
-                "An unexpected error occurred",
-                null,
-                request
-        );
+                HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "An unexpected error occurred", null, request);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
@@ -177,25 +143,7 @@ public class GlobalExceptionHandler {
      * Builds a standard error payload for a request path.
      */
     private ApiError buildError(
-            HttpStatus status,
-            String code,
-            String message,
-            Object details,
-            HttpServletRequest request
-    ) {
-        return new ApiError(
-                status.value(),
-                code,
-                message,
-                details,
-                Instant.now(),
-                request.getRequestURI()
-        );
-    }
-
-    /**
-     * Field-level validation error entry used inside ApiError.details.fieldErrors.
-     */
-    public record FieldErrorDetail(String field, String message) {
+            HttpStatus status, String code, String message, Object details, HttpServletRequest request) {
+        return new ApiError(status.value(), code, message, details, Instant.now(), request.getRequestURI());
     }
 }

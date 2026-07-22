@@ -33,9 +33,12 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: corepack enable
       - run: npm install --global npm@11.14.1
-      - run: npm --version
+      - run: test "$(node --version)" = "v22.14.0"
+      - run: test "$(npm --version)" = "11.14.1"
       - run: npm ci
       - run: npm run verify
+      # The verification scripts use check-only formatters and must not rewrite the checkout.
+      - run: git diff --exit-code -- .
       - run: npm audit --omit=dev --audit-level=high
 
   backend:
@@ -51,8 +54,9 @@ jobs:
       - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '21.0.11'
           cache: maven
+      - run: java -version 2>&1 | grep -F '21.0.11'
       - run: ./mvnw --batch-mode verify
 
   containers:

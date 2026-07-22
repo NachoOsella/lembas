@@ -3,7 +3,7 @@ package com.dietetica.lembas.reports.service;
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import com.dietetica.lembas.reports.dto.RecommendationDto;
 import com.dietetica.lembas.reports.repository.ReportQueryRepository;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
@@ -66,15 +66,15 @@ public class RecommendationService {
 
     private final ReportQueryRepository reportRepository;
     private final SecurityContextHelper securityContextHelper;
-    private final BranchRepository branchRepository;
+    private final BranchQuery branchQuery;
 
     public RecommendationService(
             ReportQueryRepository reportRepository,
             SecurityContextHelper securityContextHelper,
-            BranchRepository branchRepository) {
+            BranchQuery branchQuery) {
         this.reportRepository = reportRepository;
         this.securityContextHelper = securityContextHelper;
-        this.branchRepository = branchRepository;
+        this.branchQuery = branchQuery;
     }
 
     /**
@@ -494,7 +494,7 @@ public class RecommendationService {
             if (requestedBranchId == null) {
                 return null;
             }
-            if (!branchRepository.existsByIdAndActiveTrue(requestedBranchId)) {
+            if (!branchQuery.existsActive(requestedBranchId)) {
                 throw new DomainException(CODE_BRANCH_NOT_FOUND, HttpStatus.NOT_FOUND, "Branch not found or inactive");
             }
             return requestedBranchId;

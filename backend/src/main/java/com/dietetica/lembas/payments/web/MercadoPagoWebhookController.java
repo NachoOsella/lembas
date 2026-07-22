@@ -4,10 +4,9 @@ import com.dietetica.lembas.payments.dto.MercadoPagoWebhookPayload;
 import com.dietetica.lembas.payments.service.IpnTopics;
 import com.dietetica.lembas.payments.service.MercadoPagoWebhookProcessor;
 import com.dietetica.lembas.payments.service.WebhookSignatureValidator;
-import com.dietetica.lembas.shared.exception.DomainException;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 /**
  * Public inbound endpoint for Mercado Pago webhook notifications.
@@ -41,9 +38,7 @@ public class MercadoPagoWebhookController {
     private final MercadoPagoWebhookProcessor processor;
 
     public MercadoPagoWebhookController(
-            WebhookSignatureValidator signatureValidator,
-            MercadoPagoWebhookProcessor processor
-    ) {
+            WebhookSignatureValidator signatureValidator, MercadoPagoWebhookProcessor processor) {
         this.signatureValidator = signatureValidator;
         this.processor = processor;
     }
@@ -66,34 +61,24 @@ public class MercadoPagoWebhookController {
             // the Webhooks secret signature. It is handled separately below.
             @RequestParam(name = "id", required = false) String legacyId,
             @RequestParam(name = "topic", required = false) String legacyTopic,
-            @RequestBody(required = false) MercadoPagoWebhookPayload payload
-    ) {
+            @RequestBody(required = false) MercadoPagoWebhookPayload payload) {
         // The x-signature value is never logged; only its length, so a leaked
         // log line never contains a usable HMAC.
-        log.debug("MP webhook received uri={} data.id={} legacy.id={} legacy.topic={} sig.len={}",
+        log.debug(
+                "MP webhook received uri={} data.id={} legacy.id={} legacy.topic={} sig.len={}",
                 httpRequest.getRequestURI(),
-                dataId, legacyId, legacyTopic,
+                dataId,
+                legacyId,
+                legacyTopic,
                 xSignature == null ? 0 : xSignature.length());
 
         if (isLegacyPaymentIpn(dataId, legacyId, legacyTopic)) {
             processSafely(new MercadoPagoWebhookPayload(
-                    legacyTopic,
-                    "ipn.received",
-                    legacyId,
-                    new MercadoPagoWebhookPayload.Data(legacyId),
-                    null,
-                    null
-            ));
+                    legacyTopic, "ipn.received", legacyId, new MercadoPagoWebhookPayload.Data(legacyId), null, null));
             return ResponseEntity.ok(Map.of("received", true, "source", "ipn"));
         }
 
-        try {
-            signatureValidator.validate(xSignature, xRequestId, dataId);
-        } catch (DomainException ex) {
-            log.warn("Rejected Mercado Pago webhook: {}", ex.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("received", false, "reason", ex.getCode()));
-        }
+        signatureValidator.validate(xSignature, xRequestId, dataId);
         if (payload != null) {
             processSafely(payload);
         }
@@ -103,7 +88,8 @@ public class MercadoPagoWebhookController {
     /** Returns true for legacy IPN notifications that cannot use Webhook HMAC validation. */
     private static boolean isLegacyPaymentIpn(String dataId, String legacyId, String legacyTopic) {
         return (dataId == null || dataId.isBlank())
-                && legacyId != null && !legacyId.isBlank()
+                && legacyId != null
+                && !legacyId.isBlank()
                 && IpnTopics.isKnown(legacyTopic);
     }
 
@@ -118,8 +104,11 @@ public class MercadoPagoWebhookController {
         try {
             processor.process(payload);
         } catch (RuntimeException ex) {
-            log.error("Failed to process Mercado Pago webhook (type={}, data.id={})",
-                    payload.type(), payload.data() == null ? null : payload.data().id(), ex);
+            log.error(
+                    "Failed to process Mercado Pago webhook (type={}, data.id={})",
+                    payload.type(),
+                    payload.data() == null ? null : payload.data().id(),
+                    ex);
         }
     }
 }

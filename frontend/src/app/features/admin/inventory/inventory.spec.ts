@@ -4,28 +4,16 @@ import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { of } from 'rxjs';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthService } from '@core/services/auth';
-import { InventoryService } from '@features/inventory/data-access/inventory';
-import { ProductService } from '@features/catalog/data-access/product';
-import { UserService } from '@features/users/data-access/user';
 import { ErrorMappingService } from '@core/services/error-mapping';
+import { ProductService } from '@features/catalog/data-access/product';
+import { InventoryService } from '@features/inventory/data-access/inventory';
+import { UserService } from '@features/users/data-access/user';
 import { Inventory } from './inventory';
 
-function summary(productName: string, branchName: string, qty: string) {
-  return {
-    productId: 10,
-    productName,
-    branchId: 20,
-    branchName,
-    totalAvailable: Number(qty),
-    nearestExpirationDate: '2026-12-31',
-    activeLotCount: 2,
-  };
-}
-
-const PAGE_EMPTY = {
+const EMPTY_PAGE = {
   content: [],
   totalElements: 0,
   totalPages: 0,
@@ -36,23 +24,38 @@ const PAGE_EMPTY = {
   empty: true,
 };
 
+const PRODUCT_PAGE = {
+  ...EMPTY_PAGE,
+  content: [
+    {
+      productId: 10,
+      productName: 'Granola',
+      branchId: 20,
+      branchName: 'Centro',
+      totalAvailable: 25.5,
+      nearestExpirationDate: '2026-12-31',
+      activeLotCount: 2,
+    },
+  ],
+  totalElements: 1,
+  totalPages: 1,
+  empty: false,
+};
+
 describe('Inventory', () => {
   let component: Inventory;
   let fixture: ComponentFixture<Inventory>;
   let inventoryService: {
     listProductSummaries: ReturnType<typeof vi.fn>;
     createStockLot: ReturnType<typeof vi.fn>;
+    adjustStock: ReturnType<typeof vi.fn>;
   };
-  let userService: { listBranches: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     inventoryService = {
-      listProductSummaries: vi.fn().mockReturnValue(of(PAGE_EMPTY)),
+      listProductSummaries: vi.fn().mockReturnValue(of(PRODUCT_PAGE)),
       createStockLot: vi.fn(),
-    };
-
-    userService = {
-      listBranches: vi.fn().mockReturnValue(of([])),
+      adjustStock: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -63,112 +66,78 @@ describe('Inventory', () => {
         MessageService,
         {
           provide: AuthService,
-          useValue: { getUserRole: vi.fn(() => 'MANAGER') },
+          useValue: {
+            getUserRole: vi.fn(() => 'MANAGER'),
+            currentUser: vi.fn(() => ({ branchId: 20 })),
+          },
         },
         { provide: InventoryService, useValue: inventoryService },
-        { provide: UserService, useValue: userService },
-        ProductService,
-        ErrorMappingService,
+        { provide: ProductService, useValue: { listAdminProducts: vi.fn() } },
+        {
+          provide: UserService,
+          useValue: { listBranches: vi.fn().mockReturnValue(of([{ id: 20, name: 'Centro' }])) },
+        },
+        {
+          provide: ErrorMappingService,
+          useValue: { getMessage: vi.fn(() => 'Error controlado.') },
+        },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Inventory);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-    expect(userService.listBranches).toHaveBeenCalled();
-    expect(inventoryService.listProductSummaries).toHaveBeenCalled();
-  });
-
-  it('should load products on init', () => {
-    const cmp = component as any;
-    const page = {
-      content: [summary('Granola', 'Centro', '25.500')],
-      totalElements: 1,
-      totalPages: 1,
-      number: 0,
-      size: 10,
-      first: true,
-      last: true,
-      empty: false,
-    };
-    inventoryService.listProductSummaries.mockReturnValue(of(page));
-    cmp.loadProducts();
-
-    expect(cmp.products().length).toBe(1);
-    expect(cmp.products()[0].productName).toBe('Granola');
-    expect(cmp.totalRecords()).toBe(1);
-  });
-
-  it('should show error when API fails', () => {
-    const cmp = component as any;
-    inventoryService.listProductSummaries.mockReturnValue(of(PAGE_EMPTY));
-    cmp.loadProducts();
-    expect(cmp.error()).toBe('');
-  });
-
-  it('should search by product name and reload', () => {
-    const cmp = component as any;
-    cmp.onSearch('Granola');
-
-    expect(cmp.search()).toBe('Granola');
+  it('loads the first inventory page and renders data state', () => {
+    expect(component.store.products()).toEqual(PRODUCT_PAGE.content);
+    expect(component.store.viewState()).toBe('data');
     expect(inventoryService.listProductSummaries).toHaveBeenCalledWith(
-      expect.objectContaining({ search: 'Granola' }),
-    );
-    expect(cmp.first()).toBe(0);
-  });
-
-  it('should clear search and reload', () => {
-    const cmp = component as any;
-    cmp.search.set('Yerba');
-    cmp.clearSearch();
-
-    expect(cmp.search()).toBe('');
-    expect(inventoryService.listProductSummaries).toHaveBeenCalledWith(
-      expect.objectContaining({ search: '' }),
+      expect.objectContaining({ page: 0, size: 10, sort: 'productName,asc' }),
     );
   });
 
-  it('should apply branch filter and reload', () => {
-    const cmp = component as any;
-    cmp.selectedBranchId.set(5);
-    cmp.onFilterChange();
+  it('applies search, branch, expiration, sort, and pagination filters', () => {
+    component.store.search('Granola');
+    component.store.selectBranch(20);
+    component.store.setExpiringSoon(true);
+    component.store.changeSort({ field: 'branchName', order: -1 });
+    component.store.changePage({ first: 20, rows: 20 });
 
-    expect(inventoryService.listProductSummaries).toHaveBeenCalledWith(
-      expect.objectContaining({ branchId: 5 }),
-    );
+    expect(inventoryService.listProductSummaries).toHaveBeenLastCalledWith({
+      search: 'Granola',
+      branchId: 20,
+      expiringSoon: true,
+      page: 1,
+      size: 20,
+      sort: 'branchName,desc',
+    });
   });
 
-  it('should handle sort change', () => {
-    const cmp = component as any;
-    cmp.onSort({ field: 'productName', order: 1 });
+  it('opens a clean lot form with the assigned branch', () => {
+    component.openCreateLot();
 
-    expect(inventoryService.listProductSummaries).toHaveBeenCalledWith(
-      expect.objectContaining({ sort: 'productName,asc' }),
-    );
-    expect(cmp.first()).toBe(0);
+    expect(component.store.createLotVisible()).toBe(true);
+    expect(component.assignedBranchId()).toBe(20);
+    expect(component.store.lotError()).toBe('');
   });
 
-  it('should navigate to receipts on empty action', () => {
+  it('navigates to receipts from the empty-state action', () => {
     const router = TestBed.inject(Router);
-    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
-    (component as any).navigateToReceipts();
+    component.navigateToReceipts();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/admin/receipts']);
+    expect(navigate).toHaveBeenCalledWith(['/admin/receipts']);
   });
 
-  it('should navigate to lot detail when viewLots is called', () => {
+  it('navigates to the selected product-branch lots', () => {
     const router = TestBed.inject(Router);
-    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    const item = summary('Granola', 'Centro', '10');
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
-    (component as any).viewLots(item);
+    component.viewLots(PRODUCT_PAGE.content[0]);
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/admin/inventory/product', 10, 'lots'], {
+    expect(navigate).toHaveBeenCalledWith(['/admin/inventory/product', 10, 'lots'], {
       queryParams: { branchId: 20, productName: 'Granola', branchName: 'Centro' },
     });
   });

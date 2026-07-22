@@ -3,15 +3,16 @@ import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@ang
 import { RouterLink } from '@angular/router';
 
 import { CatalogService } from '@features/catalog/data-access/catalog';
-import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
 import type { CarouselResponsiveOptions } from 'primeng/carousel';
 
 import { AppButton } from '@shared/components/app-button/app-button';
 import { AppCarousel } from '@shared/components/app-carousel/app-carousel';
 import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
+import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 import { CardBanner } from '@shared/components/app-card-banner/app-card-banner';
-import { ProductGridSkeleton } from '@features/catalog/ui/product-grid-skeleton/product-grid-skeleton';
-import { StoreProductCard } from '@features/catalog/ui/store-product-card/store-product-card';
+import { ProductGridSkeleton } from '@features/catalog/public-api';
+import { StoreProductCard } from '@features/catalog/public-api';
 import { HeroFlowers } from '@features/public-store/ui/hero-flowers/hero-flowers';
 import type { ProductSummary } from '@features/catalog/domain/product';
 
@@ -23,6 +24,7 @@ import type { ProductSummary } from '@features/catalog/domain/product';
     AppButton,
     AppCarousel,
     AppEyebrow,
+    ErrorAlert,
     CardBanner,
     ProductGridSkeleton,
     StoreProductCard,
@@ -220,6 +222,22 @@ import type { ProductSummary } from '@features/catalog/domain/product';
             >
               <app-product-grid-skeleton [count]="6" />
             </div>
+          } @else if (featuredError()) {
+            <app-error-alert
+              title="No pudimos cargar los recomendados"
+              message="Intenta nuevamente en unos segundos."
+              variant="inline"
+              [dismissible]="false"
+            >
+              <app-button
+                variant="ghost"
+                size="sm"
+                [iconOnly]="true"
+                icon="pi pi-refresh"
+                ariaLabel="Reintentar recomendados"
+                (click)="loadFeaturedProducts()"
+              />
+            </app-error-alert>
           } @else if (featuredProducts().length > 0) {
             <div
               class="home-surface-reveal rounded-xl border border-[rgba(7,95,54,0.08)] bg-white p-5 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.24)]"
@@ -238,6 +256,18 @@ import type { ProductSummary } from '@features/catalog/domain/product';
                   <app-store-product-card [product]="product" density="compact" />
                 </ng-template>
               </app-carousel>
+            </div>
+          } @else {
+            <div class="rounded-xl border border-primary/10 bg-white p-8 text-center shadow-card">
+              <p class="text-text-muted">Todavía no hay productos recomendados.</p>
+              <app-button
+                class="mt-4"
+                variant="secondary"
+                routerLink="/store/products"
+                icon="pi pi-arrow-right"
+              >
+                Explorar catálogo
+              </app-button>
             </div>
           }
         </section>
@@ -324,7 +354,6 @@ import type { ProductSummary } from '@features/catalog/domain/product';
             >
               Opiniones de la comunidad
             </h2>
-            <!-- TODO: Replace mock reviews with real Google Maps / review platform data via API -->
             <div class="mt-6 flex items-center justify-center gap-3">
               <div class="flex gap-1">
                 @for (star of [1, 2, 3, 4, 5]; track star) {
@@ -424,9 +453,11 @@ export class Home implements OnInit {
 
   protected readonly featuredProducts = signal<ProductSummary[]>([]);
   protected readonly featuredLoading = signal(true);
+  protected readonly featuredError = signal(false);
 
   /** Last branch id used to load featured stock availability. */
   private previousBranchId: number | null = this.branchSelection.selectedBranchId();
+  private featuredRequestId = 0;
 
   /** Responsive breakpoints for the featured products carousel. */
   protected readonly carouselResponsiveOptions: CarouselResponsiveOptions[] = [
@@ -460,7 +491,6 @@ export class Home implements OnInit {
   // ---------------------------------------------------------------------------
   // Reviews (mock data)
   // ---------------------------------------------------------------------------
-  // TODO: Replace with real Google Maps reviews via Places API or a review aggregator.
   protected readonly reviews = [
     {
       name: 'María González',
@@ -517,14 +547,22 @@ export class Home implements OnInit {
   }
 
   /** Loads featured products using the current pickup branch selection. */
-  private loadFeaturedProducts(): void {
+  protected loadFeaturedProducts(): void {
+    const requestId = ++this.featuredRequestId;
     this.featuredLoading.set(true);
+    this.featuredError.set(false);
     this.catalogService.getFeaturedProducts().subscribe({
       next: (res) => {
+        if (requestId !== this.featuredRequestId) return;
         this.featuredProducts.set(res.content);
         this.featuredLoading.set(false);
       },
-      error: () => this.featuredLoading.set(false),
+      error: () => {
+        if (requestId !== this.featuredRequestId) return;
+        this.featuredProducts.set([]);
+        this.featuredError.set(true);
+        this.featuredLoading.set(false);
+      },
     });
   }
 

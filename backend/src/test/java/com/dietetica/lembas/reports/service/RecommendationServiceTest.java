@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import com.dietetica.lembas.reports.dto.RecommendationDto;
 import com.dietetica.lembas.reports.repository.ReportQueryRepository;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
@@ -41,7 +41,7 @@ class RecommendationServiceTest {
     private SecurityContextHelper securityContextHelper;
 
     @Mock
-    private BranchRepository branchRepository;
+    private BranchQuery branchQuery;
 
     @InjectMocks
     private RecommendationService recommendationService;

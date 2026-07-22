@@ -1,4 +1,4 @@
-package com.dietetica.lembas.inventory.service;
+package com.dietetica.lembas.inventory.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -22,17 +22,15 @@ import com.dietetica.lembas.inventory.model.StockMovement;
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import com.dietetica.lembas.inventory.repository.StockLotRepository;
 import com.dietetica.lembas.inventory.repository.StockMovementRepository;
-import com.dietetica.lembas.orders.repository.OrderRepository;
+import com.dietetica.lembas.inventory.service.FefoStockDeductionPolicy;
+import com.dietetica.lembas.orders.api.OrderQuery;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.branch.model.Branch;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,9 +41,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
-/** Unit tests for stock lot entry use cases in {@link InventoryService}. */
+/** Unit tests for the inventory-owned {@link InventoryStockCommandService} boundary. */
 @ExtendWith(MockitoExtension.class)
-class InventoryServiceTest {
+class InventoryStockCommandServiceTest {
 
     @Mock
     private StockLotRepository stockLotRepository;
@@ -57,10 +55,10 @@ class InventoryServiceTest {
     private ProductRepository productRepository;
 
     @Mock
-    private BranchRepository branchRepository;
+    private BranchQuery branchQuery;
 
     @Mock
-    private OrderRepository orderRepository;
+    private OrderQuery orderQuery;
 
     @Mock
     private FefoStockDeductionPolicy fefoPolicy;
@@ -68,21 +66,43 @@ class InventoryServiceTest {
     @Mock
     private SecurityContextHelper securityContextHelper;
 
-    private final Clock clock = Clock.fixed(Instant.parse("2026-06-04T12:00:00Z"), ZoneOffset.UTC);
-
-    private InventoryService inventoryService;
+    private InventoryStockCommandService inventoryService;
 
     @BeforeEach
     void setUp() {
-        inventoryService = new InventoryService(
+        inventoryService = InventoryStockCommandServiceTestFactory.create(
                 stockLotRepository,
                 stockMovementRepository,
                 productRepository,
-                branchRepository,
-                orderRepository,
+                branchQuery,
+                orderQuery,
                 fefoPolicy,
-                securityContextHelper,
-                clock);
+                securityContextHelper);
+    }
+
+    @Test
+    void createStockLotScopesEmployeeRequestsToTheirAssignedBranch() {
+        Product product = product(10L, "Granola");
+        Branch assignedBranch = branch(20L, "Centro", true);
+        User employee = mock(User.class);
+        when(employee.getRole()).thenReturn(Role.EMPLOYEE);
+        when(employee.getBranchId()).thenReturn(20L);
+        when(securityContextHelper.getCurrentUser()).thenReturn(employee);
+        when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(assignedBranch));
+        when(stockLotRepository.save(any(StockLot.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(stockLotRepository.calculateAvailableQuantity(10L, 20L)).thenReturn(BigDecimal.valueOf(5));
+
+        var result = inventoryService.createStockLot(
+                new CreateStockLotRequest(10L, 99L, BigDecimal.valueOf(5), "  LOT-1  ", null, null));
+
+        ArgumentCaptor<StockLot> lotCaptor = ArgumentCaptor.forClass(StockLot.class);
+        verify(stockLotRepository).save(lotCaptor.capture());
+        assertThat(lotCaptor.getValue().getBranch()).isSameAs(assignedBranch);
+        assertThat(lotCaptor.getValue().getLotCode()).isEqualTo("LOT-1");
+        verify(branchQuery).findActiveById(20L);
+        verify(branchQuery, never()).findActiveById(99L);
+        assertThat(result.branchId()).isEqualTo(20L);
     }
 
     @Test
@@ -92,7 +112,7 @@ class InventoryServiceTest {
         CreateStockLotRequest request = new CreateStockLotRequest(
                 10L, 20L, BigDecimal.valueOf(3.5), " L-001 ", LocalDate.now().plusDays(30), BigDecimal.valueOf(500));
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(stockLotRepository.save(any(StockLot.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(stockLotRepository.calculateAvailableQuantity(10L, 20L)).thenReturn(BigDecimal.valueOf(8.5));
 
@@ -142,7 +162,7 @@ class InventoryServiceTest {
         CreateStockLotRequest request = new CreateStockLotRequest(10L, 20L, BigDecimal.ONE, null, null, null);
         Branch inactiveBranch = branch(20L, "Centro", false);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(inactiveBranch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> inventoryService.createStockLot(request))
                 .isInstanceOf(DomainException.class)
@@ -164,10 +184,9 @@ class InventoryServiceTest {
                 BigDecimal.valueOf(10),
                 true);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(stockLotRepository.findAvailableLotsForUpdate(10L, 20L)).thenReturn(List.of(lot));
         when(fefoPolicy.plan(List.of(lot), BigDecimal.valueOf(4))).thenReturn(plan);
-        when(stockLotRepository.findById(1L)).thenReturn(Optional.of(lot));
 
         DeductionPlan result =
                 inventoryService.deductStock(10L, 20L, BigDecimal.valueOf(4), StockMovementType.POS_SALE);
@@ -181,13 +200,41 @@ class InventoryServiceTest {
         verify(stockLotRepository).flush();
     }
 
-    /**
-     * Characterizes the pre-Phase 7 implementation: it performs a repository
-     * lookup for each entity already returned by the pessimistic FEFO query.
-     * The split should replace this with mutations of the locked entities.
-     */
     @Test
-    void deductStockRequeriesLotsReturnedByThePessimisticFefoQuery_currentBehavior() {
+    void deductManualStockShouldPreserveReasonAndEnforceManagerBranch() {
+        Product product = product(10L, "Granola");
+        Branch assignedBranch = branch(20L, "Centro", true);
+        StockLot lot = lot(1L, "5.000");
+        User manager = mock(User.class);
+        when(manager.getRole()).thenReturn(Role.MANAGER);
+        when(manager.getBranchId()).thenReturn(20L);
+        when(securityContextHelper.getCurrentUser()).thenReturn(manager);
+        when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(assignedBranch));
+        when(stockLotRepository.findAvailableLotsForUpdate(10L, 20L)).thenReturn(List.of(lot));
+        when(fefoPolicy.plan(List.of(lot), BigDecimal.valueOf(2)))
+                .thenReturn(new DeductionPlan(
+                        List.of(new DeductionEntry(
+                                1L, BigDecimal.valueOf(2), BigDecimal.valueOf(5), BigDecimal.valueOf(3))),
+                        BigDecimal.valueOf(2),
+                        BigDecimal.valueOf(5),
+                        true));
+
+        inventoryService.deductManualStock(10L, 99L, BigDecimal.valueOf(2), "  Damaged package  ");
+
+        ArgumentCaptor<StockMovement> movementCaptor = ArgumentCaptor.forClass(StockMovement.class);
+        verify(stockMovementRepository).save(movementCaptor.capture());
+        assertThat(movementCaptor.getValue().getBranch()).isSameAs(assignedBranch);
+        assertThat(movementCaptor.getValue().getReason()).isEqualTo("Damaged package");
+        assertThat(movementCaptor.getValue().getType()).isEqualTo(StockMovementType.MANUAL_ADJUSTMENT);
+        verify(branchQuery).findActiveById(20L);
+        verify(stockLotRepository).findAvailableLotsForUpdate(10L, 20L);
+        verify(branchQuery, never()).findActiveById(99L);
+    }
+
+    /** Verifies FEFO application mutates entities returned by the pessimistic query directly. */
+    @Test
+    void deductStockMutatesLotsReturnedByThePessimisticFefoQuery() {
         Product product = product(10L, "Granola");
         Branch branch = branch(20L, "Centro", true);
         StockLot lockedLot = lot(1L, "10.000");
@@ -197,14 +244,13 @@ class InventoryServiceTest {
                 BigDecimal.TEN,
                 true);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(stockLotRepository.findAvailableLotsForUpdate(10L, 20L)).thenReturn(List.of(lockedLot));
         when(fefoPolicy.plan(List.of(lockedLot), BigDecimal.ONE)).thenReturn(plan);
-        when(stockLotRepository.findById(1L)).thenReturn(Optional.of(lockedLot));
 
         inventoryService.deductStock(10L, 20L, BigDecimal.ONE, StockMovementType.POS_SALE);
 
-        verify(stockLotRepository).findById(1L);
+        verify(stockLotRepository, never()).findById(1L);
         verify(stockLotRepository, never()).findByIdForUpdate(1L);
     }
 
@@ -225,7 +271,7 @@ class InventoryServiceTest {
         Product product = product(10L, "Granola");
         Branch inactive = branch(20L, "Centro", false);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(inactive));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> inventoryService.deductStock(10L, 20L, BigDecimal.ONE, StockMovementType.POS_SALE))
                 .isInstanceOf(DomainException.class)
@@ -246,10 +292,9 @@ class InventoryServiceTest {
                 BigDecimal.valueOf(5),
                 true);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(stockLotRepository.findAvailableLotsForUpdate(10L, 20L)).thenReturn(List.of(lot));
         when(fefoPolicy.plan(List.of(lot), BigDecimal.valueOf(3))).thenReturn(plan);
-        when(stockLotRepository.findById(1L)).thenReturn(Optional.of(lot));
 
         inventoryService.deductStock(10L, 20L, BigDecimal.valueOf(3), StockMovementType.ONLINE_SALE);
 
@@ -269,10 +314,9 @@ class InventoryServiceTest {
                 BigDecimal.valueOf(5),
                 true);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(stockLotRepository.findAvailableLotsForUpdate(10L, 20L)).thenReturn(List.of(lot));
         when(fefoPolicy.plan(List.of(lot), BigDecimal.valueOf(5))).thenReturn(plan);
-        when(stockLotRepository.findById(1L)).thenReturn(Optional.of(lot));
 
         inventoryService.deductStock(10L, 20L, BigDecimal.valueOf(5), StockMovementType.POS_SALE);
 
@@ -286,7 +330,7 @@ class InventoryServiceTest {
         Branch branch = branch(20L, "Centro", true);
         StockLot lot = lot(1L, "3.000");
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(stockLotRepository.findAvailableLotsForUpdate(10L, 20L)).thenReturn(List.of(lot));
         when(fefoPolicy.plan(List.of(lot), BigDecimal.valueOf(5)))
                 .thenThrow(new DomainException("INSUFFICIENT_STOCK", HttpStatus.CONFLICT, ""));
@@ -312,7 +356,7 @@ class InventoryServiceTest {
         StockAdjustmentRequest request = new StockAdjustmentRequest(
                 10L, 20L, BigDecimal.valueOf(5), "Correccion inventario", StockMovementType.MANUAL_ADJUSTMENT, null);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(stockLotRepository.save(any(StockLot.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -350,11 +394,10 @@ class InventoryServiceTest {
                 BigDecimal.valueOf(10),
                 true);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(stockLotRepository.findAvailableLotsForUpdate(10L, 20L)).thenReturn(List.of(lot));
         when(fefoPolicy.plan(List.of(lot), BigDecimal.valueOf(4))).thenReturn(plan);
-        when(stockLotRepository.findById(1L)).thenReturn(Optional.of(lot));
 
         inventoryService.adjustStock(request);
 
@@ -374,7 +417,7 @@ class InventoryServiceTest {
         StockAdjustmentRequest request = new StockAdjustmentRequest(
                 10L, 20L, BigDecimal.valueOf(5), "   ", StockMovementType.MANUAL_ADJUSTMENT, null);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
 
         assertThatThrownBy(() -> inventoryService.adjustStock(request))
                 .isInstanceOf(DomainException.class)
@@ -391,7 +434,7 @@ class InventoryServiceTest {
         StockAdjustmentRequest request = new StockAdjustmentRequest(
                 10L, 20L, BigDecimal.ZERO, "Ajuste", StockMovementType.MANUAL_ADJUSTMENT, null);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
 
         assertThatThrownBy(() -> inventoryService.adjustStock(request))
                 .isInstanceOf(DomainException.class)
@@ -408,7 +451,7 @@ class InventoryServiceTest {
         StockAdjustmentRequest request =
                 new StockAdjustmentRequest(10L, 20L, BigDecimal.valueOf(5), "Test", StockMovementType.POS_SALE, null);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
 
         assertThatThrownBy(() -> inventoryService.adjustStock(request))
                 .isInstanceOf(DomainException.class)
@@ -427,7 +470,7 @@ class InventoryServiceTest {
         StockAdjustmentRequest request =
                 new StockAdjustmentRequest(10L, 20L, BigDecimal.valueOf(-5), "Merma", StockMovementType.WASTE, null);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(stockLotRepository.findAvailableLotsForUpdate(10L, 20L)).thenReturn(List.of(lot));
         when(fefoPolicy.plan(List.of(lot), BigDecimal.valueOf(5)))
@@ -452,7 +495,7 @@ class InventoryServiceTest {
         StockAdjustmentRequest request = new StockAdjustmentRequest(
                 10L, 20L, BigDecimal.valueOf(3), "Correccion", StockMovementType.MANUAL_ADJUSTMENT, 1L);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(stockLotRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(lot));
 
@@ -476,7 +519,7 @@ class InventoryServiceTest {
         StockAdjustmentRequest request = new StockAdjustmentRequest(
                 10L, 20L, BigDecimal.valueOf(-4), "Consumo interno", StockMovementType.INTERNAL_CONSUMPTION, 1L);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(stockLotRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(lot));
 
@@ -503,7 +546,7 @@ class InventoryServiceTest {
         StockAdjustmentRequest request = new StockAdjustmentRequest(
                 10L, 20L, BigDecimal.valueOf(2), "Reconteo", StockMovementType.MANUAL_ADJUSTMENT, 1L);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(stockLotRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(lot));
 
@@ -520,7 +563,7 @@ class InventoryServiceTest {
         StockAdjustmentRequest request =
                 new StockAdjustmentRequest(10L, 20L, BigDecimal.valueOf(2), "Merma", StockMovementType.WASTE, null);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
 
         assertThatThrownBy(() -> inventoryService.adjustStock(request))
                 .isInstanceOf(DomainException.class)
@@ -537,7 +580,7 @@ class InventoryServiceTest {
         StockAdjustmentRequest request = new StockAdjustmentRequest(
                 10L, 20L, BigDecimal.valueOf(2), "Office use", StockMovementType.INTERNAL_CONSUMPTION, null);
         when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(branch));
+        when(branchQuery.findActiveById(20L)).thenReturn(Optional.of(branch));
 
         assertThatThrownBy(() -> inventoryService.adjustStock(request))
                 .isInstanceOf(DomainException.class)

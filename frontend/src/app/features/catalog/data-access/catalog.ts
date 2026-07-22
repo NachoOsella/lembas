@@ -4,7 +4,7 @@ import type { Observable } from 'rxjs';
 
 import type { PageResponse } from '@shared/types/page';
 import type { Category, ProductSummary } from '@features/catalog/domain/product';
-import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
 
 /**
  * Public store catalog service.

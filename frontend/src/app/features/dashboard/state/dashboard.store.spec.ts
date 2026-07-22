@@ -69,7 +69,7 @@ describe('DashboardStore', () => {
     await Promise.resolve();
     expect(store.data()).toBeNull();
     expect(store.loading()).toBe(false);
-    expect(store.error()).toBe('boom');
+    expect(store.error()).toBe('INTERNAL_ERROR');
   });
 
   it('keeps the load stream recoverable so refresh can retry the selected date', async () => {

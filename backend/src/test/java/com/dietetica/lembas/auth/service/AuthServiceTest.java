@@ -1,15 +1,27 @@
 package com.dietetica.lembas.auth.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.dietetica.lembas.auth.dto.AuthResponse;
 import com.dietetica.lembas.auth.dto.LoginRequest;
 import com.dietetica.lembas.auth.dto.RegisterRequest;
 import com.dietetica.lembas.auth.model.RefreshToken;
 import com.dietetica.lembas.auth.repository.RefreshTokenRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import com.dietetica.lembas.users.api.UserDirectory;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
-import com.dietetica.lembas.users.repository.UserRepository;
 import com.dietetica.lembas.users.service.UserBranchPolicy;
+import java.time.Instant;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -20,19 +32,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.time.Instant;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link AuthService} registration business rules.
@@ -46,7 +45,7 @@ import static org.mockito.Mockito.when;
 class AuthServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserDirectory userDirectory;
 
     @Mock
     private JwtTokenProvider jwtTokenProvider;
@@ -61,8 +60,13 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userRepository, new AuthMapper(), jwtTokenProvider, passwordEncoder,
-                new UserBranchPolicy(), refreshTokenRepository);
+        authService = new AuthService(
+                userDirectory,
+                new AuthMapper(),
+                jwtTokenProvider,
+                passwordEncoder,
+                new UserBranchPolicy(),
+                refreshTokenRepository);
     }
 
     @Nested
@@ -73,20 +77,25 @@ class AuthServiceTest {
         private static final String ACCESS_TOKEN = "access-token";
         private static final String REFRESH_TOKEN = "refresh-token";
 
-        private final RegisterRequest validRequest = new RegisterRequest(
-                "Frodo",
-                "Baggins",
-                "frodo@lembas.com",
-                RAW_PASSWORD,
-                "+54 351 123 4567"
-        );
+        private final RegisterRequest validRequest =
+                new RegisterRequest("Frodo", "Baggins", "frodo@lembas.com", RAW_PASSWORD, "+54 351 123 4567");
 
         private void stubSuccess() {
-            when(userRepository.existsByEmail("frodo@lembas.com")).thenReturn(false);
+            when(userDirectory.existsByEmail("frodo@lembas.com")).thenReturn(false);
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            User savedUser = new User(1L, null, "frodo@lembas.com", ENCODED_PASSWORD, "Frodo", "Baggins",
-                    "+54 351 123 4567", Role.CUSTOMER, true, null, null);
-            when(userRepository.save(any(User.class))).thenReturn(savedUser);
+            User savedUser = new User(
+                    1L,
+                    null,
+                    "frodo@lembas.com",
+                    ENCODED_PASSWORD,
+                    "Frodo",
+                    "Baggins",
+                    "+54 351 123 4567",
+                    Role.CUSTOMER,
+                    true,
+                    null,
+                    null);
+            when(userDirectory.registerCustomer(any(User.class))).thenReturn(savedUser);
             when(jwtTokenProvider.createAccessToken(savedUser)).thenReturn(ACCESS_TOKEN);
             when(jwtTokenProvider.createRefreshToken(savedUser)).thenReturn(REFRESH_TOKEN);
         }
@@ -110,11 +119,21 @@ class AuthServiceTest {
 
         @Test
         void Should_encodePassword_when_registerCustomer() {
-            when(userRepository.existsByEmail(anyString())).thenReturn(false);
+            when(userDirectory.existsByEmail(anyString())).thenReturn(false);
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            User savedUser = new User(1L, null, "frodo@lembas.com", ENCODED_PASSWORD, "Frodo", "Baggins",
-                    "+54 351 123 4567", Role.CUSTOMER, true, null, null);
-            when(userRepository.save(any(User.class))).thenReturn(savedUser);
+            User savedUser = new User(
+                    1L,
+                    null,
+                    "frodo@lembas.com",
+                    ENCODED_PASSWORD,
+                    "Frodo",
+                    "Baggins",
+                    "+54 351 123 4567",
+                    Role.CUSTOMER,
+                    true,
+                    null,
+                    null);
+            when(userDirectory.registerCustomer(any(User.class))).thenReturn(savedUser);
             when(jwtTokenProvider.createAccessToken(any(User.class))).thenReturn(ACCESS_TOKEN);
             when(jwtTokenProvider.createRefreshToken(any(User.class))).thenReturn(REFRESH_TOKEN);
 
@@ -122,13 +141,13 @@ class AuthServiceTest {
 
             verify(passwordEncoder).encode(RAW_PASSWORD);
             ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-            verify(userRepository).save(captor.capture());
+            verify(userDirectory).registerCustomer(captor.capture());
             assertThat(captor.getValue().getPasswordHash()).isEqualTo(ENCODED_PASSWORD);
         }
 
         @Test
         void Should_throwEmailDuplicated_when_registerCustomerWithExistingEmail() {
-            when(userRepository.existsByEmail("frodo@lembas.com")).thenReturn(true);
+            when(userDirectory.existsByEmail("frodo@lembas.com")).thenReturn(true);
 
             assertThatThrownBy(() -> authService.registerCustomer(validRequest))
                     .isInstanceOf(DomainException.class)
@@ -139,52 +158,64 @@ class AuthServiceTest {
 
         @Test
         void Should_notPerformSideEffects_when_registerCustomerWithDuplicateEmail() {
-            when(userRepository.existsByEmail("frodo@lembas.com")).thenReturn(true);
+            when(userDirectory.existsByEmail("frodo@lembas.com")).thenReturn(true);
 
-            assertThatThrownBy(() -> authService.registerCustomer(validRequest))
-                    .isInstanceOf(DomainException.class);
+            assertThatThrownBy(() -> authService.registerCustomer(validRequest)).isInstanceOf(DomainException.class);
 
             verify(passwordEncoder, never()).encode(anyString());
-            verify(userRepository, never()).save(any());
+            verify(userDirectory, never()).registerCustomer(any());
             verify(jwtTokenProvider, never()).createAccessToken(any());
             verify(jwtTokenProvider, never()).createRefreshToken(any());
         }
 
         @Test
         void Should_normalizeEmail_when_registerCustomerWithTrailingSpaces() {
-            RegisterRequest request = new RegisterRequest(
-                    "Frodo", "Baggins",
-                    "  FRODO@LEMBAS.COM  ",
-                    RAW_PASSWORD, null
-            );
-            when(userRepository.existsByEmail("frodo@lembas.com")).thenReturn(false);
+            RegisterRequest request =
+                    new RegisterRequest("Frodo", "Baggins", "  FRODO@LEMBAS.COM  ", RAW_PASSWORD, null);
+            when(userDirectory.existsByEmail("frodo@lembas.com")).thenReturn(false);
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            User savedUser = new User(1L, null, "frodo@lembas.com", ENCODED_PASSWORD, "Frodo", "Baggins",
-                    null, Role.CUSTOMER, true, null, null);
-            when(userRepository.save(any(User.class))).thenReturn(savedUser);
+            User savedUser = new User(
+                    1L,
+                    null,
+                    "frodo@lembas.com",
+                    ENCODED_PASSWORD,
+                    "Frodo",
+                    "Baggins",
+                    null,
+                    Role.CUSTOMER,
+                    true,
+                    null,
+                    null);
+            when(userDirectory.registerCustomer(any(User.class))).thenReturn(savedUser);
             when(jwtTokenProvider.createAccessToken(savedUser)).thenReturn(ACCESS_TOKEN);
             when(jwtTokenProvider.createRefreshToken(savedUser)).thenReturn(REFRESH_TOKEN);
 
             authService.registerCustomer(request);
 
-            verify(userRepository).existsByEmail("frodo@lembas.com");
+            verify(userDirectory).existsByEmail("frodo@lembas.com");
             ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-            verify(userRepository).save(captor.capture());
+            verify(userDirectory).registerCustomer(captor.capture());
             assertThat(captor.getValue().getEmail()).isEqualTo("frodo@lembas.com");
         }
 
         @Test
         void Should_registerCustomer_when_phoneIsNull() {
-            RegisterRequest request = new RegisterRequest(
-                    "Samwise", "Gamgee",
-                    "sam@lembas.com",
-                    RAW_PASSWORD, null
-            );
-            when(userRepository.existsByEmail("sam@lembas.com")).thenReturn(false);
+            RegisterRequest request = new RegisterRequest("Samwise", "Gamgee", "sam@lembas.com", RAW_PASSWORD, null);
+            when(userDirectory.existsByEmail("sam@lembas.com")).thenReturn(false);
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            User savedUser = new User(2L, null, "sam@lembas.com", ENCODED_PASSWORD, "Samwise", "Gamgee",
-                    null, Role.CUSTOMER, true, null, null);
-            when(userRepository.save(any(User.class))).thenReturn(savedUser);
+            User savedUser = new User(
+                    2L,
+                    null,
+                    "sam@lembas.com",
+                    ENCODED_PASSWORD,
+                    "Samwise",
+                    "Gamgee",
+                    null,
+                    Role.CUSTOMER,
+                    true,
+                    null,
+                    null);
+            when(userDirectory.registerCustomer(any(User.class))).thenReturn(savedUser);
             when(jwtTokenProvider.createAccessToken(savedUser)).thenReturn(ACCESS_TOKEN);
             when(jwtTokenProvider.createRefreshToken(savedUser)).thenReturn(REFRESH_TOKEN);
 
@@ -197,18 +228,28 @@ class AuthServiceTest {
 
         @Test
         void Should_assignCustomerRole_when_registerCustomer() {
-            when(userRepository.existsByEmail(anyString())).thenReturn(false);
+            when(userDirectory.existsByEmail(anyString())).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn(ENCODED_PASSWORD);
-            User savedUser = new User(1L, null, "frodo@lembas.com", ENCODED_PASSWORD, "Frodo", "Baggins",
-                    null, Role.CUSTOMER, true, null, null);
-            when(userRepository.save(any(User.class))).thenReturn(savedUser);
+            User savedUser = new User(
+                    1L,
+                    null,
+                    "frodo@lembas.com",
+                    ENCODED_PASSWORD,
+                    "Frodo",
+                    "Baggins",
+                    null,
+                    Role.CUSTOMER,
+                    true,
+                    null,
+                    null);
+            when(userDirectory.registerCustomer(any(User.class))).thenReturn(savedUser);
             when(jwtTokenProvider.createAccessToken(any(User.class))).thenReturn(ACCESS_TOKEN);
             when(jwtTokenProvider.createRefreshToken(any(User.class))).thenReturn(REFRESH_TOKEN);
 
             authService.registerCustomer(validRequest);
 
             ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-            verify(userRepository).save(captor.capture());
+            verify(userDirectory).registerCustomer(captor.capture());
             assertThat(captor.getValue().getRole()).isEqualTo(Role.CUSTOMER);
             assertThat(captor.getValue().getBranchId()).isNull();
         }
@@ -223,12 +264,22 @@ class AuthServiceTest {
         private static final String REFRESH_TOKEN = "refresh-token";
 
         private final LoginRequest validLogin = new LoginRequest("frodo@lembas.com", RAW_PASSWORD);
-        private final User storedUser = new User(1L, null, "frodo@lembas.com", ENCODED_PASSWORD,
-                "Frodo", "Baggins", null, Role.CUSTOMER, true, null, null);
+        private final User storedUser = new User(
+                1L,
+                null,
+                "frodo@lembas.com",
+                ENCODED_PASSWORD,
+                "Frodo",
+                "Baggins",
+                null,
+                Role.CUSTOMER,
+                true,
+                null,
+                null);
 
         @Test
         void Should_returnTokensAndUser_when_credentialsAreValid() {
-            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
+            when(userDirectory.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
             when(passwordEncoder.matches(RAW_PASSWORD, ENCODED_PASSWORD)).thenReturn(true);
             when(jwtTokenProvider.createAccessToken(storedUser)).thenReturn(ACCESS_TOKEN);
             when(jwtTokenProvider.createRefreshToken(storedUser)).thenReturn(REFRESH_TOKEN);
@@ -245,7 +296,7 @@ class AuthServiceTest {
 
         @Test
         void Should_throwInvalidCredentials_when_emailNotFound() {
-            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.empty());
+            when(userDirectory.findByEmail("frodo@lembas.com")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> authService.authenticate(validLogin))
                     .isInstanceOf(DomainException.class)
@@ -259,7 +310,7 @@ class AuthServiceTest {
 
         @Test
         void Should_throwInvalidCredentials_when_passwordDoesNotMatch() {
-            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
+            when(userDirectory.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
             when(passwordEncoder.matches(RAW_PASSWORD, ENCODED_PASSWORD)).thenReturn(false);
 
             assertThatThrownBy(() -> authService.authenticate(validLogin))
@@ -273,9 +324,19 @@ class AuthServiceTest {
 
         @Test
         void Should_throwAccountDisabled_when_userIsDisabled() {
-            User disabledUser = new User(1L, null, "frodo@lembas.com", ENCODED_PASSWORD,
-                    "Frodo", "Baggins", null, Role.CUSTOMER, false, null, null);
-            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(disabledUser));
+            User disabledUser = new User(
+                    1L,
+                    null,
+                    "frodo@lembas.com",
+                    ENCODED_PASSWORD,
+                    "Frodo",
+                    "Baggins",
+                    null,
+                    Role.CUSTOMER,
+                    false,
+                    null,
+                    null);
+            when(userDirectory.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(disabledUser));
 
             assertThatThrownBy(() -> authService.authenticate(validLogin))
                     .isInstanceOf(DomainException.class)
@@ -290,7 +351,7 @@ class AuthServiceTest {
         @Test
         void Should_normalizeEmail_when_loginWithUppercaseAndSpaces() {
             LoginRequest request = new LoginRequest("  FRODO@LEMBAS.COM  ", RAW_PASSWORD);
-            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
+            when(userDirectory.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
             when(passwordEncoder.matches(RAW_PASSWORD, ENCODED_PASSWORD)).thenReturn(true);
             when(jwtTokenProvider.createAccessToken(storedUser)).thenReturn(ACCESS_TOKEN);
             when(jwtTokenProvider.createRefreshToken(storedUser)).thenReturn(REFRESH_TOKEN);
@@ -298,12 +359,12 @@ class AuthServiceTest {
             AuthResponse response = authService.authenticate(request);
 
             assertThat(response.token()).isEqualTo(ACCESS_TOKEN);
-            verify(userRepository).findByEmail("frodo@lembas.com");
+            verify(userDirectory).findByEmail("frodo@lembas.com");
         }
 
         @Test
         void Should_notRevealRegisteredStatus_when_emailNotFound() {
-            when(userRepository.findByEmail("unknown@lembas.com")).thenReturn(Optional.empty());
+            when(userDirectory.findByEmail("unknown@lembas.com")).thenReturn(Optional.empty());
 
             DomainException exception = null;
             try {
@@ -319,7 +380,7 @@ class AuthServiceTest {
 
         @Test
         void Should_notRevealPasswordMatch_when_passwordIsWrong() {
-            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
+            when(userDirectory.findByEmail("frodo@lembas.com")).thenReturn(Optional.of(storedUser));
             when(passwordEncoder.matches(RAW_PASSWORD, ENCODED_PASSWORD)).thenReturn(false);
 
             DomainException exception = null;
@@ -343,7 +404,7 @@ class AuthServiceTest {
         @DisplayName("wrong email and wrong password must produce identical error code and status")
         void Should_sameErrorCodeAndStatus_forWrongEmailAndWrongPassword() {
             // Wrong email
-            when(userRepository.findByEmail("frodo@lembas.com")).thenReturn(Optional.empty());
+            when(userDirectory.findByEmail("frodo@lembas.com")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> authService.authenticate(validLogin))
                     .isInstanceOf(DomainException.class)
@@ -366,19 +427,23 @@ class AuthServiceTest {
         private static final String NEW_REFRESH_TOKEN = "new-refresh-token";
         private static final String NEW_ACCESS_TOKEN = "new-access-token";
 
-        private final User storedUser = new User(1L, null, "frodo@lembas.com", "hash",
-                "Frodo", "Baggins", null, Role.CUSTOMER, true, null, null);
+        private final User storedUser = new User(
+                1L, null, "frodo@lembas.com", "hash", "Frodo", "Baggins", null, Role.CUSTOMER, true, null, null);
 
         @Test
         void Should_rotateRefreshToken_when_refreshTokenIsActive() {
             io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
-            RefreshToken storedToken = new RefreshToken(storedUser, hashForTest(OLD_REFRESH_TOKEN),
-                    Instant.now().plusSeconds(600), Instant.now().minusSeconds(60));
+            RefreshToken storedToken = new RefreshToken(
+                    storedUser,
+                    hashForTest(OLD_REFRESH_TOKEN),
+                    Instant.now().plusSeconds(600),
+                    Instant.now().minusSeconds(60));
 
             when(jwtTokenProvider.validateToken(OLD_REFRESH_TOKEN)).thenReturn(claims);
             when(jwtTokenProvider.isRefreshToken(claims)).thenReturn(true);
             when(claims.getSubject()).thenReturn("1");
-            when(refreshTokenRepository.findByTokenHash(hashForTest(OLD_REFRESH_TOKEN))).thenReturn(Optional.of(storedToken));
+            when(refreshTokenRepository.findByTokenHash(hashForTest(OLD_REFRESH_TOKEN)))
+                    .thenReturn(Optional.of(storedToken));
             when(jwtTokenProvider.createAccessToken(storedUser)).thenReturn(NEW_ACCESS_TOKEN);
             when(jwtTokenProvider.createRefreshToken(storedUser)).thenReturn(NEW_REFRESH_TOKEN);
 
@@ -395,13 +460,17 @@ class AuthServiceTest {
         @Test
         void Should_rejectRefreshToken_when_tokenWasAlreadyRevoked() {
             io.jsonwebtoken.Claims claims = mock(io.jsonwebtoken.Claims.class);
-            RefreshToken storedToken = new RefreshToken(storedUser, hashForTest(OLD_REFRESH_TOKEN),
-                    Instant.now().plusSeconds(600), Instant.now().minusSeconds(60));
+            RefreshToken storedToken = new RefreshToken(
+                    storedUser,
+                    hashForTest(OLD_REFRESH_TOKEN),
+                    Instant.now().plusSeconds(600),
+                    Instant.now().minusSeconds(60));
             storedToken.revoke(Instant.now().minusSeconds(5));
 
             when(jwtTokenProvider.validateToken(OLD_REFRESH_TOKEN)).thenReturn(claims);
             when(jwtTokenProvider.isRefreshToken(claims)).thenReturn(true);
-            when(refreshTokenRepository.findByTokenHash(hashForTest(OLD_REFRESH_TOKEN))).thenReturn(Optional.of(storedToken));
+            when(refreshTokenRepository.findByTokenHash(hashForTest(OLD_REFRESH_TOKEN)))
+                    .thenReturn(Optional.of(storedToken));
 
             assertThatThrownBy(() -> authService.refresh(OLD_REFRESH_TOKEN))
                     .isInstanceOf(DomainException.class)
@@ -429,7 +498,8 @@ class AuthServiceTest {
         private String hashForTest(String rawToken) {
             try {
                 java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-                return java.util.HexFormat.of().formatHex(digest.digest(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                return java.util.HexFormat.of()
+                        .formatHex(digest.digest(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
             } catch (java.security.NoSuchAlgorithmException e) {
                 throw new IllegalStateException(e);
             }
@@ -441,10 +511,12 @@ class AuthServiceTest {
 
         @Test
         void Should_revokeRefreshToken_when_tokenExists() {
-            User user = new User(1L, null, "frodo@lembas.com", "hash", "Frodo", "Baggins",
-                    null, Role.CUSTOMER, true, null, null);
-            RefreshToken refreshToken = new RefreshToken(user, hashToken("refresh-token"), Instant.now().plusSeconds(3600), Instant.now());
-            when(refreshTokenRepository.findByTokenHash(hashToken("refresh-token"))).thenReturn(Optional.of(refreshToken));
+            User user = new User(
+                    1L, null, "frodo@lembas.com", "hash", "Frodo", "Baggins", null, Role.CUSTOMER, true, null, null);
+            RefreshToken refreshToken = new RefreshToken(
+                    user, hashToken("refresh-token"), Instant.now().plusSeconds(3600), Instant.now());
+            when(refreshTokenRepository.findByTokenHash(hashToken("refresh-token")))
+                    .thenReturn(Optional.of(refreshToken));
 
             authService.logout("refresh-token");
 
@@ -461,7 +533,8 @@ class AuthServiceTest {
         private String hashToken(String rawToken) {
             try {
                 java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-                return java.util.HexFormat.of().formatHex(digest.digest(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                return java.util.HexFormat.of()
+                        .formatHex(digest.digest(rawToken.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
             } catch (java.security.NoSuchAlgorithmException e) {
                 throw new IllegalStateException(e);
             }
@@ -473,8 +546,8 @@ class AuthServiceTest {
 
         @Test
         void Should_returnUserProfile_when_userIsAuthenticated() {
-            User user = new User(1L, null, "frodo@lembas.com", "hash", "Frodo", "Baggins",
-                    null, Role.CUSTOMER, true, null, null);
+            User user = new User(
+                    1L, null, "frodo@lembas.com", "hash", "Frodo", "Baggins", null, Role.CUSTOMER, true, null, null);
 
             AuthResponse response = authService.getCurrentUser(user);
 

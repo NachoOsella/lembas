@@ -1,8 +1,20 @@
-package com.dietetica.lembas.inventory.service;
+package com.dietetica.lembas.inventory.application;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import com.dietetica.lembas.catalog.model.Product;
 import com.dietetica.lembas.catalog.repository.ProductRepository;
+import com.dietetica.lembas.inventory.api.StockCommand.OnlineOrderDeductionOutcome;
 import com.dietetica.lembas.inventory.dto.DeductionPlan;
 import com.dietetica.lembas.inventory.dto.DeductionPlan.DeductionEntry;
 import com.dietetica.lembas.inventory.model.StockLot;
@@ -11,74 +23,74 @@ import com.dietetica.lembas.inventory.model.StockMovement;
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import com.dietetica.lembas.inventory.repository.StockLotRepository;
 import com.dietetica.lembas.inventory.repository.StockMovementRepository;
+import com.dietetica.lembas.inventory.service.FefoStockDeductionPolicy;
+import com.dietetica.lembas.orders.api.OrderQuery;
 import com.dietetica.lembas.orders.model.FulfillmentType;
 import com.dietetica.lembas.orders.model.Order;
 import com.dietetica.lembas.orders.model.OrderItem;
 import com.dietetica.lembas.orders.model.OrderStatus;
 import com.dietetica.lembas.orders.model.OrderType;
-import com.dietetica.lembas.orders.repository.OrderRepository;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.branch.model.Branch;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 /**
- * Unit tests for {@link InventoryService#deductForOnlineOrder(Long)}.
+ * Unit tests for {@link InventoryStockCommandService#deductForOnlineOrder(Long)}.
  *
  * <p>Covers FEFO ordering, multi-lot allocation, depleted-lot transition,
- * multi-item orders, missing product, missing branch, and STOCK_CONFLICT
- * propagation.</p>
+ * multi-item orders, duplicate lines, missing product, missing branch, and non-exceptional
+ * stock-conflict outcomes.</p>
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class InventoryServiceOnlineDeductionTest {
+class InventoryStockCommandServiceOnlineDeductionTest {
 
-    @Mock private StockLotRepository stockLotRepository;
-    @Mock private StockMovementRepository stockMovementRepository;
-    @Mock private ProductRepository productRepository;
-    @Mock private BranchRepository branchRepository;
-    @Mock private OrderRepository orderRepository;
-    @Mock private FefoStockDeductionPolicy fefoPolicy;
-    @Mock private SecurityContextHelper securityContextHelper;
+    @Mock
+    private StockLotRepository stockLotRepository;
 
-    private InventoryService service;
+    @Mock
+    private StockMovementRepository stockMovementRepository;
+
+    @Mock
+    private ProductRepository productRepository;
+
+    @Mock
+    private BranchQuery branchQuery;
+
+    @Mock
+    private OrderQuery orderQuery;
+
+    @Mock
+    private FefoStockDeductionPolicy fefoPolicy;
+
+    @Mock
+    private SecurityContextHelper securityContextHelper;
+
+    private InventoryStockCommandService service;
 
     @BeforeEach
     void setUp() {
-        Clock clock = Clock.systemUTC();
-        service = new InventoryService(
+        service = InventoryStockCommandServiceTestFactory.create(
                 stockLotRepository,
                 stockMovementRepository,
                 productRepository,
-                branchRepository,
-                orderRepository,
+                branchQuery,
+                orderQuery,
                 fefoPolicy,
-                securityContextHelper,
-                clock
-        );
+                securityContextHelper);
     }
 
     @Test
@@ -87,13 +99,14 @@ class InventoryServiceOnlineDeductionTest {
         Product product = order.getItems().get(0).getProduct();
         StockLot lot = lot(10L, product, order.getBranch(), new BigDecimal("5.000"));
 
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(productRepository.findByIdAndActiveTrue(product.getId())).thenReturn(Optional.of(product));
         when(stockLotRepository.findAvailableLotsForUpdate(product.getId(), 1L)).thenReturn(List.of(lot));
         when(stockLotRepository.findById(10L)).thenReturn(Optional.of(lot));
         when(fefoPolicy.plan(anyList(), any()))
                 .thenReturn(new DeductionPlan(
-                        List.of(new DeductionEntry(10L, new BigDecimal("2.000"), new BigDecimal("5.000"), new BigDecimal("3.000"))),
+                        List.of(new DeductionEntry(
+                                10L, new BigDecimal("2.000"), new BigDecimal("5.000"), new BigDecimal("3.000"))),
                         new BigDecimal("2.000"),
                         new BigDecimal("5.000"),
                         true));
@@ -110,6 +123,7 @@ class InventoryServiceOnlineDeductionTest {
         assertThat(movement.getOrderId()).isEqualTo(order.getId());
         assertThat(movement.getReferenceType()).isEqualTo("ORDER");
         verify(stockLotRepository, times(1)).flush();
+        verify(stockLotRepository, never()).findById(any());
     }
 
     @Test
@@ -118,13 +132,14 @@ class InventoryServiceOnlineDeductionTest {
         Product product = order.getItems().get(0).getProduct();
         StockLot lot = lot(10L, product, order.getBranch(), new BigDecimal("5.000"));
 
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(productRepository.findByIdAndActiveTrue(product.getId())).thenReturn(Optional.of(product));
         when(stockLotRepository.findAvailableLotsForUpdate(product.getId(), 1L)).thenReturn(List.of(lot));
         when(stockLotRepository.findById(10L)).thenReturn(Optional.of(lot));
         when(fefoPolicy.plan(anyList(), any()))
                 .thenReturn(new DeductionPlan(
-                        List.of(new DeductionEntry(10L, new BigDecimal("5.000"), new BigDecimal("5.000"), BigDecimal.ZERO)),
+                        List.of(new DeductionEntry(
+                                10L, new BigDecimal("5.000"), new BigDecimal("5.000"), BigDecimal.ZERO)),
                         new BigDecimal("5.000"),
                         new BigDecimal("5.000"),
                         true));
@@ -136,20 +151,39 @@ class InventoryServiceOnlineDeductionTest {
     }
 
     @Test
-    void shouldPropagateStockConflictFromFefoPolicy() {
-        Order order = orderWith(branchWithId(1L), product(1L, new BigDecimal("5.000")));
-        Product product = order.getItems().get(0).getProduct();
+    void shouldReturnInsufficientStockWithoutThrowingOrMutating() {
+        Product product = product(1L, new BigDecimal("5.000"));
+        Order order = orderWith(branchWithId(1L), product, new BigDecimal("5.000"));
         StockLot lot = lot(10L, product, order.getBranch(), new BigDecimal("1.000"));
 
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(productRepository.findByIdAndActiveTrue(product.getId())).thenReturn(Optional.of(product));
         when(stockLotRepository.findAvailableLotsForUpdate(product.getId(), 1L)).thenReturn(List.of(lot));
-        when(fefoPolicy.plan(any(), any()))
-                .thenThrow(new DomainException("INSUFFICIENT_STOCK", org.springframework.http.HttpStatus.CONFLICT, "Insufficient"));
+
+        assertThat(service.tryDeductForOnlineOrder(order.getId()))
+                .isEqualTo(OnlineOrderDeductionOutcome.INSUFFICIENT_STOCK);
+        assertThat(lot.getQuantityAvailable()).isEqualByComparingTo("1.000");
+        assertThat(lot.getStatus()).isEqualTo(StockLotStatus.ACTIVE);
+        verify(fefoPolicy, never()).plan(any(), any());
+        verify(stockMovementRepository, never()).save(any());
+        verify(stockLotRepository, never()).flush();
+    }
+
+    @Test
+    void throwingOnlineDeductionShouldPreserveInsufficientStockFailure() {
+        Product product = product(1L, new BigDecimal("2.000"));
+        Order order = orderWith(branchWithId(1L), product, new BigDecimal("2.000"));
+        StockLot lot = lot(10L, product, order.getBranch(), new BigDecimal("1.000"));
+
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(productRepository.findByIdAndActiveTrue(product.getId())).thenReturn(Optional.of(product));
+        when(stockLotRepository.findAvailableLotsForUpdate(product.getId(), 1L)).thenReturn(List.of(lot));
 
         assertThatThrownBy(() -> service.deductForOnlineOrder(order.getId()))
                 .isInstanceOf(DomainException.class)
-                .extracting("code").isEqualTo("INSUFFICIENT_STOCK");
+                .extracting("code")
+                .isEqualTo("INSUFFICIENT_STOCK");
+        assertThat(lot.getQuantityAvailable()).isEqualByComparingTo("1.000");
         verify(stockMovementRepository, never()).save(any());
     }
 
@@ -160,7 +194,7 @@ class InventoryServiceOnlineDeductionTest {
         StockLot lot1 = lot(10L, product, order.getBranch(), new BigDecimal("3.000"));
         StockLot lot2 = lot(11L, product, order.getBranch(), new BigDecimal("5.000"));
 
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(productRepository.findByIdAndActiveTrue(product.getId())).thenReturn(Optional.of(product));
         when(stockLotRepository.findAvailableLotsForUpdate(product.getId(), 1L)).thenReturn(List.of(lot1, lot2));
         when(stockLotRepository.findById(10L)).thenReturn(Optional.of(lot1));
@@ -168,9 +202,13 @@ class InventoryServiceOnlineDeductionTest {
         when(fefoPolicy.plan(anyList(), any()))
                 .thenReturn(new DeductionPlan(
                         List.of(
-                                new DeductionEntry(10L, new BigDecimal("3.000"), new BigDecimal("3.000"), BigDecimal.ZERO),
-                                new DeductionEntry(11L, new BigDecimal("4.000"), new BigDecimal("5.000"), new BigDecimal("1.000"))
-                        ),
+                                new DeductionEntry(
+                                        10L, new BigDecimal("3.000"), new BigDecimal("3.000"), BigDecimal.ZERO),
+                                new DeductionEntry(
+                                        11L,
+                                        new BigDecimal("4.000"),
+                                        new BigDecimal("5.000"),
+                                        new BigDecimal("1.000"))),
                         new BigDecimal("7.000"),
                         new BigDecimal("8.000"),
                         true));
@@ -186,15 +224,18 @@ class InventoryServiceOnlineDeductionTest {
 
     @Test
     void shouldDeductEachItemInMultiItemOrder() {
-        Order order = orderWith(branchWithId(1L),
-                product(1L, new BigDecimal("1.000")), new BigDecimal("1.000"),
-                product(2L, new BigDecimal("2.000")), new BigDecimal("2.000"));
+        Order order = orderWith(
+                branchWithId(1L),
+                product(1L, new BigDecimal("1.000")),
+                new BigDecimal("1.000"),
+                product(2L, new BigDecimal("2.000")),
+                new BigDecimal("2.000"));
         Product p1 = order.getItems().get(0).getProduct();
         Product p2 = order.getItems().get(1).getProduct();
         StockLot lot1 = lot(10L, p1, order.getBranch(), new BigDecimal("5.000"));
         StockLot lot2 = lot(20L, p2, order.getBranch(), new BigDecimal("5.000"));
 
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(productRepository.findByIdAndActiveTrue(p1.getId())).thenReturn(Optional.of(p1));
         when(productRepository.findByIdAndActiveTrue(p2.getId())).thenReturn(Optional.of(p2));
         when(stockLotRepository.findAvailableLotsForUpdate(p1.getId(), 1L)).thenReturn(List.of(lot1));
@@ -203,13 +244,15 @@ class InventoryServiceOnlineDeductionTest {
         when(stockLotRepository.findById(20L)).thenReturn(Optional.of(lot2));
         when(fefoPolicy.plan(anyList(), org.mockito.ArgumentMatchers.eq(new BigDecimal("1.000"))))
                 .thenReturn(new DeductionPlan(
-                        List.of(new DeductionEntry(10L, new BigDecimal("1.000"), new BigDecimal("5.000"), new BigDecimal("4.000"))),
+                        List.of(new DeductionEntry(
+                                10L, new BigDecimal("1.000"), new BigDecimal("5.000"), new BigDecimal("4.000"))),
                         new BigDecimal("1.000"),
                         new BigDecimal("5.000"),
                         true));
         when(fefoPolicy.plan(anyList(), org.mockito.ArgumentMatchers.eq(new BigDecimal("2.000"))))
                 .thenReturn(new DeductionPlan(
-                        List.of(new DeductionEntry(20L, new BigDecimal("2.000"), new BigDecimal("5.000"), new BigDecimal("3.000"))),
+                        List.of(new DeductionEntry(
+                                20L, new BigDecimal("2.000"), new BigDecimal("5.000"), new BigDecimal("3.000"))),
                         new BigDecimal("2.000"),
                         new BigDecimal("5.000"),
                         true));
@@ -221,6 +264,81 @@ class InventoryServiceOnlineDeductionTest {
         verify(stockMovementRepository, times(2)).save(any());
     }
 
+    @Test
+    void shouldPreflightAllProductsInIdOrderBeforeReturningInsufficient() {
+        Product product2 = product(2L, new BigDecimal("2.000"));
+        Product product1 = product(1L, new BigDecimal("2.000"));
+        Order order = orderWith(branchWithId(1L), product2, new BigDecimal("2.000"), product1, new BigDecimal("2.000"));
+        StockLot product1Lot = lot(10L, product1, order.getBranch(), new BigDecimal("1.000"));
+        StockLot product2Lot = lot(20L, product2, order.getBranch(), new BigDecimal("5.000"));
+
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(productRepository.findByIdAndActiveTrue(product1.getId())).thenReturn(Optional.of(product1));
+        when(productRepository.findByIdAndActiveTrue(product2.getId())).thenReturn(Optional.of(product2));
+        when(stockLotRepository.findAvailableLotsForUpdate(product1.getId(), 1L))
+                .thenReturn(List.of(product1Lot));
+        when(stockLotRepository.findAvailableLotsForUpdate(product2.getId(), 1L))
+                .thenReturn(List.of(product2Lot));
+
+        assertThat(service.tryDeductForOnlineOrder(order.getId()))
+                .isEqualTo(OnlineOrderDeductionOutcome.INSUFFICIENT_STOCK);
+
+        InOrder lockOrder = inOrder(stockLotRepository);
+        lockOrder.verify(stockLotRepository).findAvailableLotsForUpdate(1L, 1L);
+        lockOrder.verify(stockLotRepository).findAvailableLotsForUpdate(2L, 1L);
+        assertThat(product1Lot.getQuantityAvailable()).isEqualByComparingTo("1.000");
+        assertThat(product2Lot.getQuantityAvailable()).isEqualByComparingTo("5.000");
+        verify(stockMovementRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldValidateGroupedDemandForDuplicateProductLines() {
+        Product product = product(1L, new BigDecimal("2.000"));
+        Order order = orderWith(branchWithId(1L), product, new BigDecimal("2.000"), product, new BigDecimal("2.000"));
+        StockLot lot = lot(10L, product, order.getBranch(), new BigDecimal("3.000"));
+
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(productRepository.findByIdAndActiveTrue(product.getId())).thenReturn(Optional.of(product));
+        when(stockLotRepository.findAvailableLotsForUpdate(product.getId(), 1L)).thenReturn(List.of(lot));
+
+        assertThat(service.tryDeductForOnlineOrder(order.getId()))
+                .isEqualTo(OnlineOrderDeductionOutcome.INSUFFICIENT_STOCK);
+        assertThat(lot.getQuantityAvailable()).isEqualByComparingTo("3.000");
+        verify(stockLotRepository).findAvailableLotsForUpdate(product.getId(), 1L);
+        verify(fefoPolicy, never()).plan(any(), any());
+        verify(stockMovementRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldPreservePerItemMovementsForSufficientDuplicateProductLines() {
+        Product product = product(1L, new BigDecimal("3.000"));
+        Order order = orderWith(branchWithId(1L), product, new BigDecimal("2.000"), product, new BigDecimal("1.000"));
+        StockLot lot = lot(10L, product, order.getBranch(), new BigDecimal("5.000"));
+        InventoryStockCommandService serviceWithRealPolicy = InventoryStockCommandServiceTestFactory.create(
+                stockLotRepository,
+                stockMovementRepository,
+                productRepository,
+                branchQuery,
+                orderQuery,
+                new FefoStockDeductionPolicy(),
+                securityContextHelper);
+
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(productRepository.findByIdAndActiveTrue(product.getId())).thenReturn(Optional.of(product));
+        when(stockLotRepository.findAvailableLotsForUpdate(product.getId(), 1L)).thenReturn(List.of(lot));
+
+        assertThat(serviceWithRealPolicy.tryDeductForOnlineOrder(order.getId()))
+                .isEqualTo(OnlineOrderDeductionOutcome.DEDUCTED);
+        assertThat(lot.getQuantityAvailable()).isEqualByComparingTo("2.000");
+        ArgumentCaptor<StockMovement> movementCaptor = ArgumentCaptor.forClass(StockMovement.class);
+        verify(stockMovementRepository, times(2)).save(movementCaptor.capture());
+        assertThat(movementCaptor.getAllValues())
+                .extracting(StockMovement::getQuantity, StockMovement::getReason)
+                .containsExactly(
+                        org.assertj.core.groups.Tuple.tuple(new BigDecimal("-2.000"), "Online order ON-1 line 1"),
+                        org.assertj.core.groups.Tuple.tuple(new BigDecimal("-1.000"), "Online order ON-1 line 2"));
+        verify(stockLotRepository, times(1)).findAvailableLotsForUpdate(product.getId(), 1L);
+    }
 
     @Test
     void shouldRejectOrderWithoutItems() {
@@ -235,7 +353,7 @@ class InventoryServiceOnlineDeductionTest {
         order.setTotal(BigDecimal.ZERO);
         order.setBranch(branchWithId(1L));
 
-        when(orderRepository.findWithItemsById(99L)).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(99L)).thenReturn(Optional.of(order));
 
         // No items -> nothing to deduct but also no exception; flush called for safety.
         service.deductForOnlineOrder(99L);
@@ -245,21 +363,23 @@ class InventoryServiceOnlineDeductionTest {
     @Test
     void shouldRejectWhenProductInactive() {
         Order order = orderWith(branchWithId(1L), product(1L, new BigDecimal("1.000")));
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(productRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.deductForOnlineOrder(order.getId()))
                 .isInstanceOf(DomainException.class)
-                .extracting("code").isEqualTo("PRODUCT_NOT_FOUND");
+                .extracting("code")
+                .isEqualTo("PRODUCT_NOT_FOUND");
     }
 
     @Test
     void shouldRejectWhenOrderNotFound() {
-        when(orderRepository.findWithItemsById(404L)).thenReturn(Optional.empty());
+        when(orderQuery.findWithItemsById(404L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.deductForOnlineOrder(404L))
                 .isInstanceOf(DomainException.class)
-                .extracting("code").isEqualTo("ORDER_NOT_FOUND");
+                .extracting("code")
+                .isEqualTo("ORDER_NOT_FOUND");
     }
 
     // --------------------------------------------------------------------
@@ -324,11 +444,11 @@ class InventoryServiceOnlineDeductionTest {
     }
 
     private static Order orderWith(Branch branch, Product product, BigDecimal quantity) {
-        return orderWithQuantities(branch, new Product[]{product}, new BigDecimal[]{quantity});
+        return orderWithQuantities(branch, new Product[] {product}, new BigDecimal[] {quantity});
     }
 
     private static Order orderWith(Branch branch, Product p1, BigDecimal q1, Product p2, BigDecimal q2) {
-        return orderWithQuantities(branch, new Product[]{p1, p2}, new BigDecimal[]{q1, q2});
+        return orderWithQuantities(branch, new Product[] {p1, p2}, new BigDecimal[] {q1, q2});
     }
 
     private static Order orderWithQuantities(Branch branch, Product[] products, BigDecimal[] quantities) {

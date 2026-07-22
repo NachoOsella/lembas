@@ -1,38 +1,36 @@
-import type { OnInit } from '@angular/core';
-import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
-import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
 import { AppButton } from '@shared/components/app-button/app-button';
-import { AppToast } from '@shared/components/app-toast/app-toast';
 import { AppDatePicker } from '@shared/components/app-date-picker/app-date-picker';
+import { AppPageHeader } from '@shared/components/app-page-header/app-page-header';
 import { AppSelect } from '@shared/components/app-select/app-select';
-import { AppReportFilterBar } from '@features/reports/ui/app-report-filter-bar/app-report-filter-bar';
-import { AppReportGrid } from '@features/reports/ui/app-report-grid/app-report-grid';
-import { AppReportPanel } from '@features/reports/ui/app-report-panel/app-report-panel';
-import { DashboardStatCard } from '@features/dashboard/ui/dashboard-stat-card/dashboard-stat-card';
-import { DashboardChart } from '@features/dashboard/ui/dashboard-chart/dashboard-chart';
-import type { ExportData } from '@shared/components/data-export/data-export';
+import { AppToast } from '@shared/components/app-toast/app-toast';
 import { DataExport } from '@shared/components/data-export/data-export';
 import { EmptyState } from '@shared/components/empty-state/empty-state';
 import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
 
+import { DashboardChart } from '@features/dashboard/public-api';
+import { DashboardStatCard } from '@features/dashboard/public-api';
 import { ReportsService } from '@features/reports/data-access/reports';
+import { currentMonthRange, toReportIsoDate } from '@features/reports/domain/report-filters';
+import { salesProductsExport, salesSeriesExport } from '@features/reports/domain/report-export';
+import {
+  hasPositiveValue,
+  mapBreakdownChart,
+  mapReportKpis,
+  mapSeriesChart,
+} from '@features/reports/public-api';
+import type { SalesReportDto } from '@features/reports/domain/reports';
+import { ReportRequestState } from '@features/reports/public-api';
+import { AppReportFilterBar } from '@features/reports/public-api';
+import { AppReportGrid } from '@features/reports/public-api';
+import { AppReportPanel } from '@features/reports/public-api';
 import { UserService } from '@features/users/data-access/user';
 import type { Branch } from '@features/users/domain/user';
-import type { DashboardStatCardDto } from '@features/dashboard/domain/dashboard';
-import type {
-  ReportBreakdownDto,
-  ReportKpiDto,
-  ReportSeriesPointDto,
-  SalesReportDto,
-} from '@features/reports/domain/reports';
 
-/**
- * Sales report (Reportes / Ventas). Surfaces KPI tiles, a daily-sales
- * bar chart, a doughnut for payment methods, a category breakdown bar
- * and a top-products table.
- */
+/** Sales report with page-scoped filters and request state. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-sales-report',
@@ -55,9 +53,10 @@ import type {
   templateUrl: './sales-report.html',
   styleUrl: './sales-report.css',
 })
-export class SalesReportPageComponent implements OnInit {
+export class SalesReportPageComponent implements OnInit, OnDestroy {
   private readonly reports = inject(ReportsService);
   private readonly userService = inject(UserService);
+  private readonly requestState = new ReportRequestState<SalesReportDto | null>();
 
   protected readonly fromDate = signal<Date | null>(null);
   protected readonly toDate = signal<Date | null>(null);
@@ -67,76 +66,32 @@ export class SalesReportPageComponent implements OnInit {
     this.branches().map((branch) => ({ label: branch.name, value: branch.id })),
   );
 
-  protected readonly loading = signal(true);
-  protected readonly errorMessage = signal<string | null>(null);
-  protected readonly data = signal<SalesReportDto | null>(null);
-
+  protected readonly loading = this.requestState.loading;
+  protected readonly errorMessage = this.requestState.errorMessage;
+  protected readonly data = this.requestState.data;
   protected readonly hasData = computed(() => {
-    const data = this.data();
-    if (!data) {
-      return false;
-    }
+    const report = this.data();
     return (
-      data.kpis.length > 0 ||
-      data.series.some((p) => p.value > 0) ||
-      data.byMethod.length > 0 ||
-      data.topProducts.length > 0
+      !!report &&
+      (report.kpis.length > 0 ||
+        report.series.some((point) => point.value > 0) ||
+        report.byMethod.length > 0 ||
+        report.topProducts.length > 0)
     );
   });
-
-  /** Projects the backend KPIs into the shape the stat card expects. */
-  protected readonly statCards = computed<DashboardStatCardDto[]>(() => {
-    const data = this.data();
-    if (!data) {
-      return [];
-    }
-    return data.kpis.map((kpi: ReportKpiDto) => ({
-      label: kpi.label,
-      value: kpi.value,
-      subtitle: kpi.subtitle ?? null,
-      iconName: kpi.iconName,
-      colorStyle: kpi.colorStyle,
-      trend: kpi.trend ?? null,
-      trendPercentage: kpi.trendPercentage ?? null,
-    }));
-  });
-
-  // -- Chart projections --------------------------------------------------
-
-  protected readonly seriesLabels = computed(
-    () => this.data()?.series.map((p: ReportSeriesPointDto) => p.label) ?? [],
+  protected readonly statCards = computed(() => mapReportKpis(this.data()?.kpis ?? []));
+  protected readonly seriesChart = computed(() => mapSeriesChart(this.data()?.series ?? []));
+  protected readonly methodChart = computed(() => mapBreakdownChart(this.data()?.byMethod ?? []));
+  protected readonly categoryChart = computed(() =>
+    mapBreakdownChart(this.data()?.byCategory ?? []),
   );
-  protected readonly seriesValues = computed(
-    () => this.data()?.series.map((p: ReportSeriesPointDto) => p.value) ?? [],
-  );
-  protected readonly seriesHasValues = computed(() => this.seriesValues().some((v) => v > 0));
-
-  protected readonly methodLabels = computed(
-    () => this.data()?.byMethod.map((m: ReportBreakdownDto) => m.label) ?? [],
-  );
-  protected readonly methodAmounts = computed(
-    () => this.data()?.byMethod.map((m: ReportBreakdownDto) => m.amount) ?? [],
-  );
-
-  protected readonly categoryLabels = computed(
-    () => this.data()?.byCategory.map((c: ReportBreakdownDto) => c.label) ?? [],
-  );
-  protected readonly categoryAmounts = computed(
-    () => this.data()?.byCategory.map((c: ReportBreakdownDto) => c.amount) ?? [],
-  );
-
-  protected readonly totalRevenue = computed(() => {
-    const kpis = this.data()?.kpis ?? [];
-    return kpis[0]?.value ?? '$ 0';
-  });
-
-  // -- Lifecycle ----------------------------------------------------------
+  protected readonly seriesHasValues = computed(() => hasPositiveValue(this.seriesChart().values));
+  protected readonly totalRevenue = computed(() => this.data()?.kpis[0]?.value ?? '$ 0');
 
   ngOnInit(): void {
-    // Default to the current month.
-    const now = new Date();
-    this.fromDate.set(new Date(now.getFullYear(), now.getMonth(), 1));
-    this.toDate.set(now);
+    const range = currentMonthRange();
+    this.fromDate.set(range.from);
+    this.toDate.set(range.to);
     this.userService.listBranches().subscribe({
       next: (branches) => this.branches.set(branches),
       error: () => this.branches.set([]),
@@ -144,7 +99,9 @@ export class SalesReportPageComponent implements OnInit {
     this.load();
   }
 
-  // -- Filter handlers ----------------------------------------------------
+  ngOnDestroy(): void {
+    this.requestState.destroy();
+  }
 
   protected onFromChange(date: Date | null): void {
     this.fromDate.set(date);
@@ -162,85 +119,34 @@ export class SalesReportPageComponent implements OnInit {
   }
 
   protected onClearFilters(): void {
-    const now = new Date();
-    this.fromDate.set(new Date(now.getFullYear(), now.getMonth(), 1));
-    this.toDate.set(now);
+    const range = currentMonthRange();
+    this.fromDate.set(range.from);
+    this.toDate.set(range.to);
     this.branchId.set(null);
     this.load();
   }
 
   protected onRefresh(): void {
-    this.load();
+    this.requestState.retry();
   }
 
-  // -- Export -------------------------------------------------------------
-
-  protected exportData(): ExportData {
-    const report = this.data();
-    return {
-      filename: 'reporte_ventas_diarias',
-      columns: [
-        { key: 'date', label: 'Fecha' },
-        { key: 'branch', label: 'Sucursal' },
-        { key: 'revenue', label: 'Facturacion' },
-      ],
-      rows: (report?.series ?? []).map((point) => ({
-        date: point.date,
-        branch: report?.branchName ?? 'Todas',
-        revenue: point.value,
-      })),
-    };
+  protected exportData() {
+    return salesSeriesExport(this.data());
   }
 
-  protected topProductsExport(): ExportData {
-    return {
-      filename: 'reporte_ventas_productos',
-      columns: [
-        { key: 'product', label: 'Producto' },
-        { key: 'category', label: 'Categoria historica' },
-        { key: 'revenue', label: 'Facturacion neta' },
-        { key: 'quantity', label: 'Cantidad' },
-      ],
-      rows: (this.data()?.topProducts ?? []).map((row) => ({
-        product: row.primary,
-        category: row.secondary ?? 'Sin categoria',
-        revenue: row.metric,
-        quantity: row.submetric ?? '',
-      })),
-    };
+  protected topProductsExport() {
+    return salesProductsExport(this.data());
   }
-
-  // -- Internals ----------------------------------------------------------
 
   private load(): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-    this.reports
-      .getSalesReport(toIsoDate(this.fromDate()), toIsoDate(this.toDate()), this.branchId())
-      .subscribe({
-        next: (data) => {
-          this.data.set(data);
-          this.loading.set(false);
-          if (!data) {
-            this.errorMessage.set(
-              'El reporte de ventas todavia no esta disponible. Intenta nuevamente en unos minutos.',
-            );
-          }
-        },
-        error: () => {
-          this.errorMessage.set('No se pudo cargar el reporte de ventas.');
-          this.loading.set(false);
-        },
-      });
+    this.requestState.load(
+      () =>
+        this.reports.getSalesReport(
+          toReportIsoDate(this.fromDate()),
+          toReportIsoDate(this.toDate()),
+          this.branchId(),
+        ),
+      'No se pudo cargar el reporte de ventas.',
+    );
   }
-}
-
-function toIsoDate(date: Date | null): string | null {
-  if (!date) {
-    return null;
-  }
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
 }

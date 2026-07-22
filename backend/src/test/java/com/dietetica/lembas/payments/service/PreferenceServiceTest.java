@@ -1,11 +1,20 @@
 package com.dietetica.lembas.payments.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.dietetica.lembas.orders.api.OrderQuery;
 import com.dietetica.lembas.orders.model.FulfillmentType;
 import com.dietetica.lembas.orders.model.Order;
 import com.dietetica.lembas.orders.model.OrderItem;
 import com.dietetica.lembas.orders.model.OrderStatus;
 import com.dietetica.lembas.orders.model.OrderType;
-import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.payments.dto.CreatePreferenceResponse;
 import com.dietetica.lembas.payments.gateway.PaymentGateway;
 import com.dietetica.lembas.payments.model.Payment;
@@ -18,22 +27,12 @@ import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 /**
  * Unit tests for {@link PreferenceService}.
@@ -43,7 +42,7 @@ import static org.mockito.Mockito.when;
  */
 class PreferenceServiceTest {
 
-    private OrderRepository orderRepository;
+    private OrderQuery orderQuery;
     private PaymentRepository paymentRepository;
     private PaymentGateway paymentGateway;
     private PreferenceService service;
@@ -56,29 +55,28 @@ class PreferenceServiceTest {
             "https://fail",
             "https://pending",
             "https://notify",
-            5000L
-    );
+            5000L);
 
     @BeforeEach
     void setUp() {
-        orderRepository = mock(OrderRepository.class);
+        orderQuery = mock(OrderQuery.class);
         paymentRepository = mock(PaymentRepository.class);
         paymentGateway = mock(PaymentGateway.class);
-        service = new PreferenceService(
-                orderRepository, paymentRepository, paymentGateway, properties, new ObjectMapper());
+        service = new PreferenceService(orderQuery, paymentRepository, paymentGateway, properties, new ObjectMapper());
     }
 
     @Test
     void shouldCreatePreferenceForPendingOnlineOrder() {
         User customer = customer(10L);
         Order order = orderForCustomer(customer, OrderStatus.PENDING_PAYMENT, OrderType.ONLINE);
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(
-                order.getId(), PaymentProvider.MERCADO_PAGO,
-                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                        order.getId(),
+                        PaymentProvider.MERCADO_PAGO,
+                        List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
                 .thenReturn(List.of());
-        when(paymentGateway.createPreference(any())).thenReturn(
-                new PaymentPreferenceResult("PREF-1", "https://init/PREF-1", "https://sandbox/PREF-1"));
+        when(paymentGateway.createPreference(any()))
+                .thenReturn(new PaymentPreferenceResult("PREF-1", "https://init/PREF-1", "https://sandbox/PREF-1"));
         when(paymentRepository.save(any())).thenAnswer(invocation -> {
             Payment payment = invocation.getArgument(0);
             payment.setId(99L);
@@ -114,10 +112,11 @@ class PreferenceServiceTest {
         existing.setProviderPreferenceId("1234567890");
         existing.setMetadata("{\"initPoint\":\"https://init/1234567890\"}");
 
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(
-                order.getId(), PaymentProvider.MERCADO_PAGO,
-                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                        order.getId(),
+                        PaymentProvider.MERCADO_PAGO,
+                        List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
                 .thenReturn(List.of(existing));
         when(paymentRepository.save(any())).thenAnswer(inv -> {
             Payment p = inv.getArgument(0);
@@ -126,8 +125,8 @@ class PreferenceServiceTest {
             }
             return p;
         });
-        when(paymentGateway.createPreference(any())).thenReturn(
-                new PaymentPreferenceResult("NEW-PREF", "https://init/NEW-PREF", null));
+        when(paymentGateway.createPreference(any()))
+                .thenReturn(new PaymentPreferenceResult("NEW-PREF", "https://init/NEW-PREF", null));
 
         CreatePreferenceResponse response = service.createPreference(order.getId(), customer);
 
@@ -154,14 +153,15 @@ class PreferenceServiceTest {
         stale.setAmount(order.getTotal());
         stale.setProviderPreferenceId("1234567890");
 
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(
-                order.getId(), PaymentProvider.MERCADO_PAGO,
-                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                        order.getId(),
+                        PaymentProvider.MERCADO_PAGO,
+                        List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
                 .thenReturn(List.of(stale));
         when(paymentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(paymentGateway.createPreference(any())).thenReturn(
-                new PaymentPreferenceResult("MP-REAL-1", "https://init/MP-REAL-1", null));
+        when(paymentGateway.createPreference(any()))
+                .thenReturn(new PaymentPreferenceResult("MP-REAL-1", "https://init/MP-REAL-1", null));
 
         CreatePreferenceResponse response = service.createPreference(order.getId(), customer);
 
@@ -178,13 +178,13 @@ class PreferenceServiceTest {
         assertThatThrownBy(() -> service.createPreference(1L, admin))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Only customers");
-        verify(orderRepository, never()).findWithItemsById(any());
+        verify(orderQuery, never()).findWithItemsById(any());
     }
 
     @Test
     void shouldReturnOrderNotFoundWhenOrderMissing() {
         User customer = customer(10L);
-        when(orderRepository.findWithItemsById(99L)).thenReturn(Optional.empty());
+        when(orderQuery.findWithItemsById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.createPreference(99L, customer))
                 .isInstanceOf(DomainException.class)
@@ -196,7 +196,7 @@ class PreferenceServiceTest {
         User customer = customer(10L);
         User otherCustomer = customer(99L);
         Order order = orderForCustomer(otherCustomer, OrderStatus.PENDING_PAYMENT, OrderType.ONLINE);
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
 
         assertThatThrownBy(() -> service.createPreference(order.getId(), customer))
                 .isInstanceOf(DomainException.class)
@@ -207,7 +207,7 @@ class PreferenceServiceTest {
     void shouldRejectPosOrders() {
         User customer = customer(10L);
         Order posOrder = orderForCustomer(customer, OrderStatus.PAID, OrderType.POS);
-        when(orderRepository.findWithItemsById(posOrder.getId())).thenReturn(Optional.of(posOrder));
+        when(orderQuery.findWithItemsById(posOrder.getId())).thenReturn(Optional.of(posOrder));
 
         assertThatThrownBy(() -> service.createPreference(posOrder.getId(), customer))
                 .isInstanceOf(DomainException.class)
@@ -218,7 +218,7 @@ class PreferenceServiceTest {
     void shouldRejectOrderNotInPendingPayment() {
         User customer = customer(10L);
         Order order = orderForCustomer(customer, OrderStatus.PAID, OrderType.ONLINE);
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
 
         assertThatThrownBy(() -> service.createPreference(order.getId(), customer))
                 .isInstanceOf(DomainException.class)
@@ -229,20 +229,22 @@ class PreferenceServiceTest {
     void shouldPropagateGatewayErrors() {
         User customer = customer(10L);
         Order order = orderForCustomer(customer, OrderStatus.PENDING_PAYMENT, OrderType.ONLINE);
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(
-                order.getId(), PaymentProvider.MERCADO_PAGO,
-                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                        order.getId(),
+                        PaymentProvider.MERCADO_PAGO,
+                        List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
                 .thenReturn(List.of());
-        when(paymentGateway.createPreference(any())).thenThrow(
-                new DomainException("MP_PREFERENCE_REJECTED", "rejected"));
+        when(paymentGateway.createPreference(any()))
+                .thenThrow(new DomainException("MP_PREFERENCE_REJECTED", "rejected"));
 
         assertThatThrownBy(() -> service.createPreference(order.getId(), customer))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("rejected");
         verify(paymentRepository, times(1))
                 .findByOrderIdAndProviderAndStatusInOrderByIdAsc(
-                        order.getId(), PaymentProvider.MERCADO_PAGO,
+                        order.getId(),
+                        PaymentProvider.MERCADO_PAGO,
                         List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS));
     }
 
@@ -250,13 +252,14 @@ class PreferenceServiceTest {
     void shouldFallbackToSandboxInitPointWhenProductionMissing() {
         User customer = customer(10L);
         Order order = orderForCustomer(customer, OrderStatus.PENDING_PAYMENT, OrderType.ONLINE);
-        when(orderRepository.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
+        when(orderQuery.findWithItemsById(order.getId())).thenReturn(Optional.of(order));
         when(paymentRepository.findByOrderIdAndProviderAndStatusInOrderByIdAsc(
-                order.getId(), PaymentProvider.MERCADO_PAGO,
-                List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
+                        order.getId(),
+                        PaymentProvider.MERCADO_PAGO,
+                        List.of(PaymentStatus.PENDING, PaymentStatus.IN_PROCESS)))
                 .thenReturn(List.of());
-        when(paymentGateway.createPreference(any())).thenReturn(
-                new PaymentPreferenceResult("PREF-2", null, "https://sandbox/PREF-2"));
+        when(paymentGateway.createPreference(any()))
+                .thenReturn(new PaymentPreferenceResult("PREF-2", null, "https://sandbox/PREF-2"));
         when(paymentRepository.save(any())).thenAnswer(invocation -> {
             Payment payment = invocation.getArgument(0);
             payment.setId(123L);
@@ -269,7 +272,8 @@ class PreferenceServiceTest {
     }
 
     private static User customer(long id) {
-        return setId(new User(null, "c" + id + "@lembas.com", "hash", "Test", "Customer", "+54 351 123", Role.CUSTOMER), id);
+        return setId(
+                new User(null, "c" + id + "@lembas.com", "hash", "Test", "Customer", "+54 351 123", Role.CUSTOMER), id);
     }
 
     /** Sets the auto-generated id on a User via reflection for unit tests. */

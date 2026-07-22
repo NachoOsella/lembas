@@ -6,7 +6,9 @@ WORKDIR /workspace/frontend
 
 # Copy package manifests first to maximize Docker layer cache reuse without BuildKit.
 COPY frontend/package*.json ./
-RUN npm install --global npm@11.14.1 && npm ci
+RUN npm install --global npm@11.14.1 && \
+    test "$(npm --version)" = "11.14.1" && \
+    npm ci
 
 # Copy the frontend source and build the production bundle.
 COPY frontend/ ./
@@ -20,4 +22,5 @@ ARG NG_DIST_PATH=dist/frontend/browser
 COPY --chown=101:101 docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build --chown=101:101 /workspace/frontend/${NG_DIST_PATH} /usr/share/nginx/html
 
+USER 101
 EXPOSE 8080

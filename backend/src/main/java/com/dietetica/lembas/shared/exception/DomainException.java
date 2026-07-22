@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
  *   <li>{@code EMAIL_DUPLICATED} — 409 Conflict</li>
  *   <li>{@code INVALID_CREDENTIALS} — 401 Unauthorized</li>
  *   <li>{@code ACCOUNT_DISABLED} — 403 Forbidden</li>
- *   <li>{@code NOT_FOUND} — 404 Not Found</li>
  *   <li>{@code INSUFFICIENT_STOCK} — 409 Conflict</li>
  *   <li>{@code ORDER_INVALID_STATE} — 409 Conflict</li>
  * </ul>

@@ -7,11 +7,6 @@ import { MessageService } from 'primeng/api';
 
 import { SuppliersReportPageComponent } from './suppliers-report';
 
-interface TestableSuppliers {
-  fromDate: () => Date | null;
-  toDate: () => Date | null;
-}
-
 describe('SuppliersReportPageComponent', () => {
   let component: SuppliersReportPageComponent;
   let fixture: ComponentFixture<SuppliersReportPageComponent>;
@@ -37,8 +32,7 @@ describe('SuppliersReportPageComponent', () => {
   });
 
   it('initialises the from-date to 89 days before today', () => {
-    const testable = component as unknown as TestableSuppliers;
-    const from = testable.fromDate();
+    const from = component['fromDate']();
     const today = new Date();
     expect(from).toBeTruthy();
     if (from) {

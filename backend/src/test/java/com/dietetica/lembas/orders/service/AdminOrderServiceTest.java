@@ -1,35 +1,5 @@
 package com.dietetica.lembas.orders.service;
 
-import com.dietetica.lembas.auth.service.SecurityContextHelper;
-import com.dietetica.lembas.inventory.service.InventoryService;
-import com.dietetica.lembas.orders.dto.OrderDetailDto;
-import com.dietetica.lembas.orders.model.FulfillmentType;
-import com.dietetica.lembas.orders.model.Order;
-import com.dietetica.lembas.orders.model.OrderStatus;
-import com.dietetica.lembas.orders.model.OrderType;
-import com.dietetica.lembas.orders.repository.OrderRepository;
-import com.dietetica.lembas.payments.model.Payment;
-import com.dietetica.lembas.payments.model.PaymentMethod;
-import com.dietetica.lembas.payments.model.PaymentProvider;
-import com.dietetica.lembas.payments.model.PaymentStatus;
-import com.dietetica.lembas.shared.exception.DomainException;
-import com.dietetica.lembas.users.model.Role;
-import com.dietetica.lembas.users.model.User;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,6 +10,35 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.dietetica.lembas.auth.service.SecurityContextHelper;
+import com.dietetica.lembas.orders.dto.OrderDetailDto;
+import com.dietetica.lembas.orders.model.FulfillmentType;
+import com.dietetica.lembas.orders.model.Order;
+import com.dietetica.lembas.orders.model.OrderStatus;
+import com.dietetica.lembas.orders.model.OrderType;
+import com.dietetica.lembas.orders.repository.OrderRepository;
+import com.dietetica.lembas.payments.model.Payment;
+import com.dietetica.lembas.payments.model.PaymentMethod;
+import com.dietetica.lembas.payments.model.PaymentProvider;
+import com.dietetica.lembas.payments.model.PaymentStatus;
+import com.dietetica.lembas.payments.service.PaymentLockService;
+import com.dietetica.lembas.payments.service.StockDeductionGateway;
+import com.dietetica.lembas.shared.exception.DomainException;
+import com.dietetica.lembas.users.model.Role;
+import com.dietetica.lembas.users.model.User;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
 /**
  * Unit tests for {@link AdminOrderService} lifecycle transitions, including
  * stock-reversing cancellation.
@@ -49,10 +48,16 @@ class AdminOrderServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
+
     @Mock
     private OrderMapper orderMapper;
+
     @Mock
-    private InventoryService inventoryService;
+    private StockDeductionGateway stockDeductionGateway;
+
+    @Mock
+    private PaymentLockService paymentLockService;
+
     @Mock
     private SecurityContextHelper securityContextHelper;
 
@@ -129,8 +134,7 @@ class AdminOrderServiceTest {
         Order order = onlineOrder(OrderStatus.PAID);
         when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> adminOrderService.markReady(1L))
-                .isInstanceOf(DomainException.class);
+        assertThatThrownBy(() -> adminOrderService.markReady(1L)).isInstanceOf(DomainException.class);
     }
 
     // ----------------------------------------------------------------
@@ -156,8 +160,7 @@ class AdminOrderServiceTest {
         Order order = onlineOrder(OrderStatus.PREPARING);
         when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> adminOrderService.deliver(1L))
-                .isInstanceOf(DomainException.class);
+        assertThatThrownBy(() -> adminOrderService.deliver(1L)).isInstanceOf(DomainException.class);
     }
 
     // ----------------------------------------------------------------
@@ -171,8 +174,8 @@ class AdminOrderServiceTest {
         order.getPayments().add(payment);
         User user = mock(User.class);
         when(user.getId()).thenReturn(7L);
-        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
-        when(inventoryService.reverseMovementsForOrder(1L)).thenReturn(2);
+        stubLockedCancellation(order);
+        when(stockDeductionGateway.reverseForOrder(1L)).thenReturn(2);
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
         when(orderMapper.toDetailDto(any(Order.class))).thenAnswer(inv -> dummyDto(inv.getArgument(0)));
@@ -183,8 +186,12 @@ class AdminOrderServiceTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
         assertThat(order.getCancelledAt()).isNotNull();
         assertThat(order.getCancellationReason()).isEqualTo("Cliente desiste del pedido");
-        verify(inventoryService).reverseMovementsForOrder(1L);
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+        org.mockito.InOrder locksAndReversal =
+                org.mockito.Mockito.inOrder(orderRepository, paymentLockService, stockDeductionGateway);
+        locksAndReversal.verify(orderRepository).findByIdForUpdate(1L);
+        locksAndReversal.verify(paymentLockService).lockForOrder(1L);
+        locksAndReversal.verify(stockDeductionGateway).reverseForOrder(1L);
     }
 
     @Test
@@ -192,8 +199,8 @@ class AdminOrderServiceTest {
         Order order = onlineOrder(OrderStatus.PREPARING);
         User user = mock(User.class);
         when(user.getId()).thenReturn(7L);
-        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
-        when(inventoryService.reverseMovementsForOrder(1L)).thenReturn(1);
+        stubLockedCancellation(order);
+        when(stockDeductionGateway.reverseForOrder(1L)).thenReturn(1);
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
         when(orderMapper.toDetailDto(any(Order.class))).thenAnswer(inv -> dummyDto(inv.getArgument(0)));
@@ -201,7 +208,7 @@ class AdminOrderServiceTest {
         OrderDetailDto result = adminOrderService.cancel(1L, "Stock da\u00f1ado");
 
         assertThat(result.status()).isEqualTo(OrderStatus.CANCELLED);
-        verify(inventoryService).reverseMovementsForOrder(1L);
+        verify(stockDeductionGateway).reverseForOrder(1L);
     }
 
     @Test
@@ -209,8 +216,8 @@ class AdminOrderServiceTest {
         Order order = onlineOrder(OrderStatus.READY);
         User user = mock(User.class);
         when(user.getId()).thenReturn(7L);
-        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
-        when(inventoryService.reverseMovementsForOrder(1L)).thenReturn(2);
+        stubLockedCancellation(order);
+        when(stockDeductionGateway.reverseForOrder(1L)).thenReturn(2);
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
         when(orderMapper.toDetailDto(any(Order.class))).thenAnswer(inv -> dummyDto(inv.getArgument(0)));
@@ -218,7 +225,7 @@ class AdminOrderServiceTest {
         OrderDetailDto result = adminOrderService.cancel(1L, "Cliente no retiro");
 
         assertThat(result.status()).isEqualTo(OrderStatus.CANCELLED);
-        verify(inventoryService).reverseMovementsForOrder(1L);
+        verify(stockDeductionGateway).reverseForOrder(1L);
     }
 
     @Test
@@ -228,8 +235,8 @@ class AdminOrderServiceTest {
         order.getPayments().add(payment);
         User user = mock(User.class);
         when(user.getId()).thenReturn(7L);
-        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
-        when(inventoryService.reverseMovementsForOrder(1L)).thenReturn(0);
+        stubLockedCancellation(order);
+        when(stockDeductionGateway.reverseForOrder(1L)).thenReturn(0);
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
         when(orderMapper.toDetailDto(any(Order.class))).thenAnswer(inv -> dummyDto(inv.getArgument(0)));
@@ -238,8 +245,7 @@ class AdminOrderServiceTest {
 
         assertThat(result.status()).isEqualTo(OrderStatus.CANCELLED);
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
-        // No sale movements -> no-op (InventoryService itself returns 0).
-        verify(inventoryService).reverseMovementsForOrder(1L);
+        verify(stockDeductionGateway).reverseForOrder(1L);
     }
 
     @Test
@@ -247,8 +253,8 @@ class AdminOrderServiceTest {
         Order order = posOrder(OrderStatus.PAID);
         User user = mock(User.class);
         when(user.getId()).thenReturn(7L);
-        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
-        when(inventoryService.reverseMovementsForOrder(1L)).thenReturn(1);
+        stubLockedCancellation(order);
+        when(stockDeductionGateway.reverseForOrder(1L)).thenReturn(1);
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
         when(orderMapper.toDetailDto(any(Order.class))).thenAnswer(inv -> dummyDto(inv.getArgument(0)));
@@ -256,7 +262,7 @@ class AdminOrderServiceTest {
         OrderDetailDto result = adminOrderService.cancel(1L, "Devoluci\u00f3n en caja");
 
         assertThat(result.status()).isEqualTo(OrderStatus.CANCELLED);
-        verify(inventoryService).reverseMovementsForOrder(1L);
+        verify(stockDeductionGateway).reverseForOrder(1L);
     }
 
     // ----------------------------------------------------------------
@@ -266,22 +272,21 @@ class AdminOrderServiceTest {
     @Test
     void cancel_deliveredOrder_throwsConflict() {
         Order order = onlineOrder(OrderStatus.DELIVERED);
-        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
+        stubLockedCancellation(order);
 
         assertThatThrownBy(() -> adminOrderService.cancel(1L, "Cliente arrepentido"))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("DELIVERED");
-        verify(inventoryService, never()).reverseMovementsForOrder(anyLong());
+        verify(stockDeductionGateway, never()).reverseForOrder(anyLong());
     }
 
     @Test
     void cancel_alreadyCancelledOrder_throwsConflict() {
         Order order = onlineOrder(OrderStatus.CANCELLED);
-        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
+        stubLockedCancellation(order);
 
-        assertThatThrownBy(() -> adminOrderService.cancel(1L, "Otro intento"))
-                .isInstanceOf(DomainException.class);
-        verify(inventoryService, never()).reverseMovementsForOrder(anyLong());
+        assertThatThrownBy(() -> adminOrderService.cancel(1L, "Otro intento")).isInstanceOf(DomainException.class);
+        verify(stockDeductionGateway, never()).reverseForOrder(anyLong());
     }
 
     @Test
@@ -289,7 +294,7 @@ class AdminOrderServiceTest {
         assertThatThrownBy(() -> adminOrderService.cancel(1L, "   "))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("reason is required");
-        verify(inventoryService, never()).reverseMovementsForOrder(anyLong());
+        verify(stockDeductionGateway, never()).reverseForOrder(anyLong());
     }
 
     @Test
@@ -312,12 +317,12 @@ class AdminOrderServiceTest {
         Order order = onlineOrder(OrderStatus.PAID);
         Payment refunded = buildPayment(PaymentStatus.REFUNDED);
         order.getPayments().add(refunded);
-        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
+        stubLockedCancellation(order);
 
         assertThatThrownBy(() -> adminOrderService.cancel(1L, "Conflicto con refund"))
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("refunded");
-        verify(inventoryService, never()).reverseMovementsForOrder(anyLong());
+        verify(stockDeductionGateway, never()).reverseForOrder(anyLong());
     }
 
     @Test
@@ -325,8 +330,8 @@ class AdminOrderServiceTest {
         Order order = onlineOrder(OrderStatus.PAID);
         User user = mock(User.class);
         when(user.getId()).thenReturn(7L);
-        when(orderRepository.findWithItemsById(1L)).thenReturn(Optional.of(order));
-        when(inventoryService.reverseMovementsForOrder(1L)).thenReturn(0);
+        stubLockedCancellation(order);
+        when(stockDeductionGateway.reverseForOrder(1L)).thenReturn(0);
         when(securityContextHelper.getCurrentUser()).thenReturn(user);
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
         when(orderMapper.toDetailDto(any(Order.class))).thenAnswer(inv -> dummyDto(inv.getArgument(0)));
@@ -339,6 +344,11 @@ class AdminOrderServiceTest {
     // ----------------------------------------------------------------
     // helpers
     // ----------------------------------------------------------------
+
+    private void stubLockedCancellation(Order order) {
+        when(orderRepository.findByIdForUpdate(order.getId())).thenReturn(Optional.of(order));
+        when(paymentLockService.lockForOrder(order.getId())).thenReturn(order.getPayments());
+    }
 
     private Order onlineOrder(OrderStatus status) {
         Order order = new Order();
@@ -377,7 +387,6 @@ class AdminOrderServiceTest {
 
     /** Helper removed: tests construct the User mock inline to avoid nested
      *  Mockito stubbing during thenReturn() argument evaluation. */
-
     private OrderDetailDto dummyDto(Order order) {
         return new OrderDetailDto(
                 order.getId(),
@@ -385,12 +394,19 @@ class AdminOrderServiceTest {
                 order.getType(),
                 order.getStatus(),
                 order.getFulfillmentType(),
-                null, null, null, null, null, null,
-                null, null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 order.getSubtotal(),
                 order.getDiscountTotal(),
                 order.getTotal(),
-                null, null,
+                null,
+                null,
                 Collections.emptyList(),
                 Collections.emptyList(),
                 order.getPaidAt(),
@@ -399,8 +415,7 @@ class AdminOrderServiceTest {
                 order.getDeliveredAt(),
                 order.getCancelledAt(),
                 order.getCreatedAt(),
-                order.getUpdatedAt()
-        );
+                order.getUpdatedAt());
     }
 
     // ----------------------------------------------------------------
@@ -522,8 +537,7 @@ class AdminOrderServiceTest {
         java.time.LocalDate from = java.time.LocalDate.of(2026, 7, 1);
         java.time.LocalDate to = java.time.LocalDate.of(2026, 7, 6);
 
-        adminOrderService.listOrders(
-                OrderStatus.PAID, 2L, OrderType.ONLINE, from, to, "yerba", pageable);
+        adminOrderService.listOrders(OrderStatus.PAID, 2L, OrderType.ONLINE, from, to, "yerba", pageable);
 
         verify(orderRepository).findAll(any(Specification.class), any(Pageable.class));
     }

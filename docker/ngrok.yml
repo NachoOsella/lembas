@@ -1,23 +1,23 @@
 # ngrok tunnel configuration for Mercado Pago sandbox testing.
 #
-# Used by `docker/mp-sandbox.override.yml` to expose the backend to the
+# Used by the `dev-tunnel` Compose profile to expose the backend to the
 # public internet so Mercado Pago can deliver webhook notifications
 # against a local checkout.
 #
 # Start with:
 #   cd docker
-#   docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml up -d
-#   docker compose --env-file .env -f compose.yml -f mp-sandbox.override.yml logs -f ngrok
+#   docker compose --env-file .env --profile dev-tunnel up -d
+#   docker compose --env-file .env --profile dev-tunnel logs -f ngrok
 #
-# The first log line includes the public https://<random>.ngrok-free.dev URL.
+# The first log line includes the public https://<random>.ngrok-free.app URL.
 # Copy that URL into the Mercado Pago webhook configuration as
-#   https://<random>.ngrok-free.dev/api/webhooks/mercadopago
+#   https://<random>.ngrok-free.app/api/webhooks/mercadopago
 #
 # The authtoken is intentionally NOT declared here: docker compose only
 # interpolates ${VAR} in compose files, not in bind-mounted config files,
 # so a literal ${NGROK_AUTHTOKEN} would reach ngrok as-is. The
-# mp-sandbox.override.yml injects the token via the NGROK_AUTHTOKEN
-# environment variable, which ngrok reads directly.
+# The Compose profile injects the token via the NGROK_AUTHTOKEN environment
+# variable, which ngrok reads directly.
 
 version: "2"
 tunnels:

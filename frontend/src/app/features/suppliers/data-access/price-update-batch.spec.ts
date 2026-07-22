@@ -104,7 +104,10 @@ describe('PriceUpdateBatchService', () => {
         request.url === '/api/admin/price-update-batches/import' && request.method === 'POST',
     );
     expect(req.request.method).toBe('POST');
-    const formData = req.request.body as FormData;
+    if (!(req.request.body instanceof FormData)) {
+      throw new Error('Expected multipart form data.');
+    }
+    const formData = req.request.body;
     expect(formData.get('supplierId')).toBe('10');
     expect(formData.get('file')).toBe(file);
     expect(formData.get('newProductMarginPercentage')).toBe('35');
@@ -122,7 +125,10 @@ describe('PriceUpdateBatchService', () => {
       (request) =>
         request.url === '/api/admin/price-update-batches/import' && request.method === 'POST',
     );
-    const formData = req.request.body as FormData;
+    if (!(req.request.body instanceof FormData)) {
+      throw new Error('Expected multipart form data.');
+    }
+    const formData = req.request.body;
     expect(formData.get('supplierId')).toBe('10');
     expect(formData.get('newProductMarginPercentage')).toBeNull();
     expect(formData.get('applyCostUpdatesByDefault')).toBeNull();

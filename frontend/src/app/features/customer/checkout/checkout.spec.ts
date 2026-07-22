@@ -9,10 +9,10 @@ import { of, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import { Checkout } from './checkout';
-import { Cart } from '@features/checkout/state/cart';
+import { Cart } from '@features/checkout/public-api';
 import type { OrderCreated } from '@features/orders/data-access/customer-order';
 import { CustomerOrderService } from '@features/orders/data-access/customer-order';
-import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
 
 /** Minimal mock for Cart service. */
 function mockCart(overrides: Partial<Cart> = {}): Cart {

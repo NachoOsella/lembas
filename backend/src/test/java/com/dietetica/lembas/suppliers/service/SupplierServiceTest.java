@@ -1,7 +1,14 @@
 package com.dietetica.lembas.suppliers.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.dietetica.lembas.catalog.api.ProductLookup;
 import com.dietetica.lembas.catalog.model.Product;
-import com.dietetica.lembas.catalog.repository.ProductRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.suppliers.dto.SupplierProductRequest;
 import com.dietetica.lembas.suppliers.dto.SupplierRequest;
@@ -11,6 +18,8 @@ import com.dietetica.lembas.suppliers.model.SupplierProductCostHistory;
 import com.dietetica.lembas.suppliers.repository.SupplierProductCostHistoryRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierProductRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierRepository;
+import java.math.BigDecimal;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,33 +27,27 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 /** Unit tests for supplier and supplier-product cost use cases. */
 @ExtendWith(MockitoExtension.class)
 class SupplierServiceTest {
     @Mock
     private SupplierRepository supplierRepository;
+
     @Mock
     private SupplierProductRepository supplierProductRepository;
+
     @Mock
     private SupplierProductCostHistoryRepository costHistoryRepository;
+
     @Mock
-    private ProductRepository productRepository;
+    private ProductLookup productLookup;
 
     private SupplierService supplierService;
 
     @BeforeEach
     void setUp() {
-        supplierService = new SupplierService(supplierRepository, supplierProductRepository, costHistoryRepository, productRepository);
+        supplierService = new SupplierService(
+                supplierRepository, supplierProductRepository, costHistoryRepository, productLookup);
     }
 
     @Test
@@ -65,7 +68,7 @@ class SupplierServiceTest {
         Product product = product(10L, "Yerba");
         Supplier supplier = supplier(20L, "Distribuidora");
         SupplierProductRequest request = new SupplierProductRequest(10L, 20L, "YER-1", BigDecimal.valueOf(5200), true);
-        when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
+        when(productLookup.findActiveById(10L)).thenReturn(Optional.of(product));
         when(supplierRepository.findByIdAndActiveTrue(20L)).thenReturn(Optional.of(supplier));
         when(supplierProductRepository.save(any(SupplierProduct.class))).thenAnswer(invocation -> {
             SupplierProduct value = invocation.getArgument(0);

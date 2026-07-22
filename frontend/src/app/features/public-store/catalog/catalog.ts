@@ -10,17 +10,17 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { CatalogService } from '@features/catalog/data-access/catalog';
-import { Cart } from '@features/checkout/state/cart';
-import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import { Cart } from '@features/checkout/public-api';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
 import type { Category, ProductSummary } from '@features/catalog/domain/product';
-import { ProductGridSkeleton } from '@features/catalog/ui/product-grid-skeleton/product-grid-skeleton';
+import { ProductGridSkeleton } from '@features/catalog/public-api';
 import { EmptyState } from '@shared/components/empty-state/empty-state';
 import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 import { AppButton } from '@shared/components/app-button/app-button';
 import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
 import { AppPagination } from '@shared/components/app-pagination/app-pagination';
-import type { ProductGridAddToCartEvent } from '@features/catalog/ui/product-grid/product-grid';
-import { ProductGrid } from '@features/catalog/ui/product-grid/product-grid';
+import type { ProductGridAddToCartEvent } from '@features/catalog/public-api';
+import { ProductGrid } from '@features/catalog/public-api';
 import { HeroFlowers } from '@features/public-store/ui/hero-flowers/hero-flowers';
 import { CategoryNav } from '../category-nav/category-nav';
 
@@ -130,7 +130,7 @@ export class Catalog implements OnInit {
 
     // Read initial query params from the URL (search query may come from store nav).
     this.route.queryParams.subscribe((params) => {
-      const q = ((params['q'] as string | undefined) ?? '').trim();
+      const q = (typeof params['q'] === 'string' ? params['q'] : '').trim();
       const catId = params['categoryId'] ? Number(params['categoryId']) : null;
       const nextCategoryId = catId != null && !isNaN(catId) ? catId : null;
       const queryChanged = this.searchQuery() !== q;

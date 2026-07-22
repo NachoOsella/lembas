@@ -1,9 +1,8 @@
 package com.dietetica.lembas.orders.service;
 
+import com.dietetica.lembas.catalog.api.ProductLookup;
 import com.dietetica.lembas.catalog.model.Product;
-import com.dietetica.lembas.catalog.model.ProductOnlineStatus;
-import com.dietetica.lembas.catalog.repository.ProductRepository;
-import com.dietetica.lembas.inventory.repository.StockLotRepository;
+import com.dietetica.lembas.inventory.api.InventoryQuery;
 import com.dietetica.lembas.orders.dto.CreateOnlineOrderItemRequest;
 import com.dietetica.lembas.orders.dto.CreateOnlineOrderRequest;
 import com.dietetica.lembas.orders.dto.OrderCreatedDto;
@@ -19,44 +18,42 @@ import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.payments.model.PaymentMethod;
 import com.dietetica.lembas.payments.model.PaymentProvider;
 import com.dietetica.lembas.payments.model.PaymentStatus;
+import com.dietetica.lembas.shared.branch.api.BranchQuery;
 import com.dietetica.lembas.shared.branch.model.Branch;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /** Customer-facing use cases for online orders. */
 @Service
 public class CustomerOrderService {
 
     private final OrderRepository orderRepository;
-    private final ProductRepository productRepository;
-    private final BranchRepository branchRepository;
-    private final StockLotRepository stockLotRepository;
+    private final ProductLookup productLookup;
+    private final BranchQuery branchQuery;
+    private final InventoryQuery inventoryQuery;
     private final OrderNumberGenerator orderNumberGenerator;
     private final OrderMapper orderMapper;
 
     public CustomerOrderService(
             OrderRepository orderRepository,
-            ProductRepository productRepository,
-            BranchRepository branchRepository,
-            StockLotRepository stockLotRepository,
+            ProductLookup productLookup,
+            BranchQuery branchQuery,
+            InventoryQuery inventoryQuery,
             OrderNumberGenerator orderNumberGenerator,
-            OrderMapper orderMapper
-    ) {
+            OrderMapper orderMapper) {
         this.orderRepository = orderRepository;
-        this.productRepository = productRepository;
-        this.branchRepository = branchRepository;
-        this.stockLotRepository = stockLotRepository;
+        this.productLookup = productLookup;
+        this.branchQuery = branchQuery;
+        this.inventoryQuery = inventoryQuery;
         this.orderNumberGenerator = orderNumberGenerator;
         this.orderMapper = orderMapper;
     }
@@ -65,8 +62,8 @@ public class CustomerOrderService {
     @Transactional
     public OrderCreatedDto createOnlineOrder(CreateOnlineOrderRequest request, User customer) {
         validateCustomer(customer);
-        Branch branch = branchRepository.findById(request.branchId())
-                .filter(Branch::isActive)
+        Branch branch = branchQuery
+                .findActiveById(request.branchId())
                 .orElseThrow(() -> new DomainException("BRANCH_NOT_FOUND", HttpStatus.NOT_FOUND, "Branch not found"));
 
         List<CreateOnlineOrderItemRequest> mergedItems = mergeDuplicateItems(request.items());
@@ -104,7 +101,8 @@ public class CustomerOrderService {
     @Transactional(readOnly = true)
     public OrderDetailDto getCustomerOrder(Long orderId, User customer) {
         validateCustomer(customer);
-        Order order = orderRepository.findWithItemsById(orderId)
+        Order order = orderRepository
+                .findWithItemsById(orderId)
                 .filter(candidate -> candidate.getCustomerUser() != null
                         && candidate.getCustomerUser().getId().equals(customer.getId()))
                 .orElseThrow(() -> new DomainException("ORDER_NOT_FOUND", HttpStatus.NOT_FOUND, "Order not found"));
@@ -115,8 +113,7 @@ public class CustomerOrderService {
     @Transactional(readOnly = true)
     public List<OrderSummaryDto> listCustomerOrders(User customer) {
         validateCustomer(customer);
-        return orderRepository.findByCustomerUserIdOrderByCreatedAtDesc(customer.getId())
-                .stream()
+        return orderRepository.findByCustomerUserIdOrderByCreatedAtDesc(customer.getId()).stream()
                 .map(orderMapper::toSummaryDto)
                 .toList();
     }
@@ -134,19 +131,17 @@ public class CustomerOrderService {
 
     /** Finds an active, published product or raises the public API error. */
     private Product findPurchasableProduct(Long productId) {
-        return productRepository.findByIdAndActiveTrueAndOnlineStatus(productId, ProductOnlineStatus.PUBLISHED)
+        return productLookup
+                .findPublishedById(productId)
                 .orElseThrow(() -> new DomainException("PRODUCT_NOT_FOUND", HttpStatus.NOT_FOUND, "Product not found"));
     }
 
     /** Validates the selected branch has enough current physical stock for the requested line. */
     private void validateAvailableStock(Product product, Branch branch, BigDecimal requestedQuantity) {
-        BigDecimal available = stockLotRepository.calculateAvailableQuantity(product.getId(), branch.getId());
+        BigDecimal available = inventoryQuery.calculateAvailableQuantity(product.getId(), branch.getId());
         if (available.compareTo(requestedQuantity) < 0) {
             throw new DomainException(
-                    "INSUFFICIENT_STOCK",
-                    HttpStatus.CONFLICT,
-                    "Insufficient stock for product " + product.getName()
-            );
+                    "INSUFFICIENT_STOCK", HttpStatus.CONFLICT, "Insufficient stock for product " + product.getName());
         }
     }
 
@@ -162,8 +157,10 @@ public class CustomerOrderService {
         item.setSubtotalAmount(subtotal);
         item.setProductNameSnapshot(product.getName());
         item.setProductBarcodeSnapshot(product.getBarcode());
-        item.setCategoryIdSnapshot(product.getCategory() == null ? null : product.getCategory().getId());
-        item.setCategoryNameSnapshot(product.getCategory() == null ? null : product.getCategory().getName());
+        item.setCategoryIdSnapshot(
+                product.getCategory() == null ? null : product.getCategory().getId());
+        item.setCategoryNameSnapshot(
+                product.getCategory() == null ? null : product.getCategory().getName());
         item.setCostPriceSnapshot(null);
         return item;
     }
@@ -191,7 +188,8 @@ public class CustomerOrderService {
     }
 
     private static String customerFullName(User user) {
-        String firstName = user.getFirstName() == null ? "" : user.getFirstName().trim();
+        String firstName =
+                user.getFirstName() == null ? "" : user.getFirstName().trim();
         String lastName = user.getLastName() == null ? "" : user.getLastName().trim();
         String fullName = (firstName + " " + lastName).trim();
         return fullName.isBlank() ? user.getEmail() : fullName;

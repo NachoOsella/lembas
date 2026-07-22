@@ -56,7 +56,7 @@
     <app-data-export slot="actions" [data]="exportData()" />
   </app-report-filter-bar>
 
-  @if (errorMessage() && !data()) {
+  @if (errorMessage()) {
     <app-error-alert title="No se pudo cargar el resumen" [message]="errorMessage() ?? ''" />
   } @else if (loading() && !data()) {
     <app-loading-spinner label="Cargando resumen de caja..." surface="card" />

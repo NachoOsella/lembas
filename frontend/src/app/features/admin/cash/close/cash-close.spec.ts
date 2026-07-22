@@ -217,7 +217,7 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component['errorMessage']()).toBe('CASH_SESSION_NOT_FOUND');
+    expect(component['errorMessage']()).toBe('No se pudo cargar la caja.');
     expect(component['loading']()).toBe(false);
   });
 
@@ -239,7 +239,7 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(500);
+    component['setCountedCashAmount'](500);
     expect(component['expectedCash']()).toBe(500);
     expect(component['difference']()).toBe(0);
     expect(component['isDifferenceNonZero']()).toBe(false);
@@ -254,14 +254,14 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(450);
+    component['setCountedCashAmount'](450);
     expect(component['expectedCash']()).toBe(500);
     expect(component['difference']()).toBe(-50);
     expect(component['isDifferenceNonZero']()).toBe(true);
     expect(component['isReasonInvalid']()).toBe(true);
     expect(component['canSubmit']()).toBe(false);
 
-    component['cashDifferenceReason'].set('Faltante por error de conteo');
+    component['setCashDifferenceReason']('Faltante por error de conteo');
     expect(component['isReasonInvalid']()).toBe(false);
     expect(component['canSubmit']()).toBe(true);
   });
@@ -273,7 +273,7 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(-10);
+    component['setCountedCashAmount'](-10);
     expect(component['canSubmit']()).toBe(false);
   });
 
@@ -294,7 +294,7 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(500);
+    component['setCountedCashAmount'](500);
     component['openConfirm']();
     expect(component['confirmDialogVisible']()).toBe(true);
 
@@ -331,9 +331,9 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(450);
-    component['cashDifferenceReason'].set('Faltante por error de conteo');
-    component['closingNotes'].set('Notas opcionales');
+    component['setCountedCashAmount'](450);
+    component['setCashDifferenceReason']('Faltante por error de conteo');
+    component['setClosingNotes']('Notas opcionales');
     component['openConfirm']();
     component['confirmClose']();
     await fixture.whenStable();
@@ -355,13 +355,11 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(500);
+    component['setCountedCashAmount'](500);
     component['openConfirm']();
     component['confirmClose']();
     await fixture.whenStable();
 
-    // The mock errorMapping returns the fallback message (apiError.message)
-    // when the code is not in the mapping.
     expect(component['errorMessage']()).toBe('Reason required');
     expect(component['saving']()).toBe(false);
     expect(router.navigate).not.toHaveBeenCalled();
@@ -377,7 +375,7 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(500);
+    component['setCountedCashAmount'](500);
     component['openConfirm']();
     component['confirmClose']();
     await fixture.whenStable();
@@ -406,7 +404,7 @@ describe('CashClose', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['countedCashAmount'].set(500);
+    component['setCountedCashAmount'](500);
     component['openConfirm']();
     component['confirmClose']();
     await fixture.whenStable();

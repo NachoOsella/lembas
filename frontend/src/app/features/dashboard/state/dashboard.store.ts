@@ -245,4 +245,3 @@ function parseValueAsNumber(value: string): number {
   const parsed = Number(cleaned);
   return Number.isFinite(parsed) ? parsed : 0;
 }
-

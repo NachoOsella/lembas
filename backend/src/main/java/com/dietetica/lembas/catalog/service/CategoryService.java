@@ -6,17 +6,16 @@ import com.dietetica.lembas.catalog.dto.CategoryStoreDto;
 import com.dietetica.lembas.catalog.model.Category;
 import com.dietetica.lembas.catalog.repository.CategoryRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service for category management operations.
@@ -35,8 +34,8 @@ public class CategoryService {
     /** Lists all active categories for admin management. */
     @Transactional(readOnly = true)
     public List<CategoryDto> listAdminCategories() {
-        return categoryRepository.findByActiveTrueOrderByNameAsc(
-                        PageRequest.of(0, MAX_LIST_SIZE, Sort.by(Sort.Direction.ASC, "name")))
+        return categoryRepository
+                .findByActiveTrueOrderByNameAsc(PageRequest.of(0, MAX_LIST_SIZE, Sort.by(Sort.Direction.ASC, "name")))
                 .getContent()
                 .stream()
                 .map(this::toDto)
@@ -51,12 +50,11 @@ public class CategoryService {
      */
     @Transactional(readOnly = true)
     public List<CategoryDto> searchCategories(String search) {
-        String normalizedSearch = (search == null || search.isBlank())
-                ? null
-                : search.trim().toLowerCase(Locale.ROOT);
-        return categoryRepository.searchCategories(
-                        normalizedSearch,
-                        PageRequest.of(0, MAX_LIST_SIZE, Sort.by(Sort.Direction.ASC, "name")))
+        String normalizedSearch =
+                (search == null || search.isBlank()) ? null : search.trim().toLowerCase(Locale.ROOT);
+        return categoryRepository
+                .searchCategories(
+                        normalizedSearch, PageRequest.of(0, MAX_LIST_SIZE, Sort.by(Sort.Direction.ASC, "name")))
                 .getContent()
                 .stream()
                 .map(this::toDto)
@@ -78,7 +76,7 @@ public class CategoryService {
         Category category = findActiveById(id);
         Category parent = resolveActiveParent(request.parentId());
         if (parent != null && parent.getId().equals(id)) {
-            throw new DomainException("PARENT_INVALID", "A category cannot be its own parent");
+            throw new DomainException("PARENT_INVALID", HttpStatus.CONFLICT, "A category cannot be its own parent");
         }
         validateNoHierarchyCycle(id, parent);
         validateUniqueNameAtLevel(request.name(), parent, id);
@@ -101,8 +99,7 @@ public class CategoryService {
             throw new DomainException(
                     "CATEGORY_HAS_CHILDREN",
                     HttpStatus.CONFLICT,
-                    "Cannot delete category \"" + category.getName() + "\": it has active child categories"
-            );
+                    "Cannot delete category \"" + category.getName() + "\": it has active child categories");
         }
 
         long productCount = categoryRepository.countActiveProductsByCategoryId(id);
@@ -110,8 +107,8 @@ public class CategoryService {
             throw new DomainException(
                     "CATEGORY_HAS_PRODUCTS",
                     HttpStatus.CONFLICT,
-                    "Cannot delete category \"" + category.getName() + "\": " + productCount + " active product(s) reference it"
-            );
+                    "Cannot delete category \"" + category.getName() + "\": " + productCount
+                            + " active product(s) reference it");
         }
 
         category.setActive(false);
@@ -123,15 +120,11 @@ public class CategoryService {
      */
     @Transactional(readOnly = true)
     public List<CategoryStoreDto> listStoreCategories() {
-        return categoryRepository.findStoreCategorySummaries(
-                        PageRequest.of(0, MAX_LIST_SIZE, Sort.by(Sort.Direction.ASC, "name")))
+        return categoryRepository
+                .findStoreCategorySummaries(PageRequest.of(0, MAX_LIST_SIZE, Sort.by(Sort.Direction.ASC, "name")))
                 .getContent()
                 .stream()
-                .map(summary -> new CategoryStoreDto(
-                        summary.getId(),
-                        summary.getName(),
-                        summary.getProductCount()
-                ))
+                .map(summary -> new CategoryStoreDto(summary.getId(), summary.getName(), summary.getProductCount()))
                 .toList();
     }
 
@@ -146,32 +139,27 @@ public class CategoryService {
             Long cursorId = cursor.getId();
             if (cursorId != null && cursorId.equals(categoryId)) {
                 throw new DomainException(
-                        "CATEGORY_HIERARCHY_CYCLE",
-                        HttpStatus.CONFLICT,
-                        "Category hierarchy cannot contain cycles"
-                );
+                        "CATEGORY_HIERARCHY_CYCLE", HttpStatus.CONFLICT, "Category hierarchy cannot contain cycles");
             }
 
             if (cursorId != null && !visited.add(cursorId)) {
                 throw new DomainException(
-                        "CATEGORY_HIERARCHY_CYCLE",
-                        HttpStatus.CONFLICT,
-                        "Category hierarchy cannot contain cycles"
-                );
+                        "CATEGORY_HIERARCHY_CYCLE", HttpStatus.CONFLICT, "Category hierarchy cannot contain cycles");
             }
 
             cursor = cursor.getParent();
         }
     }
 
-
     /** Resolves a nullable parent id to an active entity. */
     private Category resolveActiveParent(Long parentId) {
         if (parentId == null) {
             return null;
         }
-        return categoryRepository.findByIdAndActiveTrue(parentId)
-                .orElseThrow(() -> new DomainException("PARENT_NOT_FOUND", HttpStatus.NOT_FOUND, "Parent category not found"));
+        return categoryRepository
+                .findByIdAndActiveTrue(parentId)
+                .orElseThrow(() ->
+                        new DomainException("PARENT_NOT_FOUND", HttpStatus.NOT_FOUND, "Parent category not found"));
     }
 
     /** Ensures category names are unique among active siblings or root categories. */
@@ -188,14 +176,17 @@ public class CategoryService {
             duplicated = existing.isPresent() && !existing.get().getId().equals(currentId);
         }
         if (duplicated) {
-            throw new DomainException("CATEGORY_NAME_DUPLICATED", HttpStatus.CONFLICT, "Category name already exists at this level");
+            throw new DomainException(
+                    "CATEGORY_NAME_DUPLICATED", HttpStatus.CONFLICT, "Category name already exists at this level");
         }
     }
 
     /** Finds an active category by id or throws the uniform not-found error. */
     private Category findActiveById(Long id) {
-        return categoryRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(() -> new DomainException("CATEGORY_NOT_FOUND", HttpStatus.NOT_FOUND, "Category not found"));
+        return categoryRepository
+                .findByIdAndActiveTrue(id)
+                .orElseThrow(
+                        () -> new DomainException("CATEGORY_NOT_FOUND", HttpStatus.NOT_FOUND, "Category not found"));
     }
 
     /** Converts blank optional strings to null before persistence. */
@@ -205,7 +196,8 @@ public class CategoryService {
 
     /** Maps an entity to its API DTO without exposing JPA internals. */
     private CategoryDto toDto(Category category) {
-        Long parentId = category.getParent() == null ? null : category.getParent().getId();
+        Long parentId =
+                category.getParent() == null ? null : category.getParent().getId();
         return new CategoryDto(category.getId(), parentId, category.getName(), category.getDescription());
     }
 }

@@ -1,10 +1,11 @@
 package com.dietetica.lembas;
 
 import com.dietetica.lembas.auth.repository.RefreshTokenRepository;
-import com.dietetica.lembas.catalog.repository.CategoryRepository;
-import com.dietetica.lembas.catalog.repository.ProductRepository;
 import com.dietetica.lembas.cash.repository.CashMovementRepository;
 import com.dietetica.lembas.cash.repository.CashSessionRepository;
+import com.dietetica.lembas.catalog.repository.CategoryRepository;
+import com.dietetica.lembas.catalog.repository.ProductRepository;
+import com.dietetica.lembas.catalog.repository.ProductSalePriceHistoryRepository;
 import com.dietetica.lembas.inventory.repository.StockLotRepository;
 import com.dietetica.lembas.inventory.repository.StockMovementRepository;
 import com.dietetica.lembas.orders.repository.OrderItemRepository;
@@ -12,16 +13,16 @@ import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.reports.repository.ReportQueryRepository;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
+import com.dietetica.lembas.suppliers.repository.PriceUpdateBatchItemRepository;
+import com.dietetica.lembas.suppliers.repository.PriceUpdateBatchRepository;
 import com.dietetica.lembas.suppliers.repository.PurchaseOrderRepository;
 import com.dietetica.lembas.suppliers.repository.PurchaseReceiptItemRepository;
 import com.dietetica.lembas.suppliers.repository.PurchaseReceiptRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierProductCostHistoryRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierProductRepository;
 import com.dietetica.lembas.suppliers.repository.SupplierRepository;
-import com.dietetica.lembas.suppliers.repository.PriceUpdateBatchRepository;
-import com.dietetica.lembas.suppliers.repository.PriceUpdateBatchItemRepository;
-import com.dietetica.lembas.catalog.repository.ProductSalePriceHistoryRepository;
 import com.dietetica.lembas.users.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -29,12 +30,14 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 /**
  * Verifies that the application context can start without external services.
  */
-@SpringBootTest(classes = LembasBackendApplication.class, properties = {
-        "spring.autoconfigure.exclude="
-                + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
-                + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration"
-})
+@SpringBootTest(
+        classes = LembasBackendApplication.class,
+        properties = {
+            "spring.autoconfigure.exclude="
+                    + "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
+                    + "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,"
+                    + "org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration"
+        })
 class LembasBackendApplicationTests {
 
     /**
@@ -132,10 +135,13 @@ class LembasBackendApplicationTests {
     @MockitoBean
     private ReportQueryRepository reportQueryRepository;
 
+    /** Provides the webhook persistence-context collaborator while JPA is disabled. */
+    @MockitoBean
+    private EntityManager entityManager;
+
     /**
      * Keeps a fast smoke test for the application context without external services.
      */
     @Test
-    void contextLoads() {
-    }
+    void contextLoads() {}
 }

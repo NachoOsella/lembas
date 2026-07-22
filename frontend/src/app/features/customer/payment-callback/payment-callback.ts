@@ -13,6 +13,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CustomerOrderService } from '@features/orders/data-access/customer-order';
 import { ShortDateArPipe } from '@core/pipes/short-date-ar.pipe';
 import { ErrorMappingService } from '@core/services/error-mapping';
+import { getApiError } from '@shared/types/api-error';
 import type { OrderDetail, OrderStatus } from '@features/orders/domain/order';
 import { AppButton } from '@shared/components/app-button/app-button';
 import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
@@ -117,9 +118,7 @@ export class PaymentCallback implements OnInit {
         },
         error: (err: unknown) => {
           this.phase.set('error');
-          this.errorCode.set(
-            (err as { error?: { code?: string } } | null)?.error?.code ?? 'INTERNAL_ERROR',
-          );
+          this.errorCode.set(getApiError(err)?.code ?? 'INTERNAL_ERROR');
         },
       });
   }

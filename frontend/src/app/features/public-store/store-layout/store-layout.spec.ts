@@ -9,7 +9,7 @@ import { MessageService } from 'primeng/api';
 import { StoreLayout } from './store-layout';
 import type { AuthUser } from '@core/services/auth';
 import { AuthService } from '@core/services/auth';
-import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
 
 describe('StoreLayout', () => {
   let component: StoreLayout;

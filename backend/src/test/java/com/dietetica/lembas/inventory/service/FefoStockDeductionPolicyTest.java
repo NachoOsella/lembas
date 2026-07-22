@@ -144,13 +144,12 @@ class FefoStockDeductionPolicyTest {
     }
 
     @Test
-    void shouldPreserveRepositoryProvidedOrderForLotsWithEqualExpirationDates() {
+    void shouldUseLotIdAsDeterministicTieBreakerForEqualExpirationDates() {
         LocalDate sameExpirationDate = LocalDate.of(2026, 7, 1);
-        StockLot firstByRepositoryTieBreaker = lot(10L, "2.000", sameExpirationDate);
-        StockLot secondByRepositoryTieBreaker = lot(11L, "2.000", sameExpirationDate);
+        StockLot firstByLotId = lot(10L, "2.000", sameExpirationDate);
+        StockLot secondByLotId = lot(11L, "2.000", sameExpirationDate);
 
-        DeductionPlan plan =
-                policy.plan(List.of(firstByRepositoryTieBreaker, secondByRepositoryTieBreaker), BigDecimal.valueOf(3));
+        DeductionPlan plan = policy.plan(List.of(secondByLotId, firstByLotId), BigDecimal.valueOf(3));
 
         assertThat(plan.entries())
                 .extracting(DeductionPlan.DeductionEntry::stockLotId)
@@ -159,6 +158,29 @@ class FefoStockDeductionPolicyTest {
                 .extracting(DeductionPlan.DeductionEntry::quantityToDeduct)
                 .usingComparatorForType(BigDecimal::compareTo, BigDecimal.class)
                 .containsExactly(BigDecimal.valueOf(2), BigDecimal.ONE);
+    }
+
+    @Test
+    void shouldNotMutateLotsWhenPlanning() {
+        StockLot later = lot(2L, "5.000", LocalDate.of(2026, 8, 1));
+        StockLot earlier = lot(1L, "3.000", LocalDate.of(2026, 7, 1));
+
+        policy.plan(List.of(later, earlier), BigDecimal.ONE);
+
+        assertThat(later.getQuantityAvailable()).isEqualByComparingTo("5");
+        assertThat(earlier.getQuantityAvailable()).isEqualByComparingTo("3");
+    }
+
+    @Test
+    void shouldPlaceNullExpirationAfterDatedLotsRegardlessOfInputOrder() {
+        StockLot noDate = lot(1L, "5.000", null);
+        StockLot dated = lot(2L, "3.000", LocalDate.of(2026, 7, 1));
+
+        DeductionPlan plan = policy.plan(List.of(noDate, dated), BigDecimal.valueOf(4));
+
+        assertThat(plan.entries())
+                .extracting(DeductionPlan.DeductionEntry::stockLotId)
+                .containsExactly(2L, 1L);
     }
 
     @Test

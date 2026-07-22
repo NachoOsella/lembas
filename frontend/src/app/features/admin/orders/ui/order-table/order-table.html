@@ -1,0 +1,76 @@
+<app-data-table
+  [data]="orders()"
+  [columns]="columns"
+  [loading]="loading()"
+  [sortable]="true"
+  [paginated]="true"
+  [lazy]="true"
+  [totalRecords]="totalRecords()"
+  [first]="first()"
+  [rows]="pageSize()"
+  [rowsPerPageOptions]="[10, 20, 50]"
+  [sortField]="sortField()"
+  [sortOrder]="sortOrder()"
+  (pageChange)="pageChange.emit($event)"
+  (sortChange)="sortChange.emit($event)"
+  emptyTitle="Aun no hay pedidos"
+  emptyDescription="Los pedidos de la tienda online y del POS apareceran aca."
+>
+  <ng-template #body let-item>
+    <tr>
+      <td class="orders-col--number">
+        <div class="orders-number-cell">
+          <span class="orders-number-cell__value">{{ item.orderNumber }}</span>
+          <span
+            class="orders-number-cell__type orders-number-cell__type--{{ item.type.toLowerCase() }}"
+          >
+            {{ typeLabel(item.type) }}
+          </span>
+        </div>
+      </td>
+      <td>
+        <span class="orders-customer-name">{{ item.customerName }}</span>
+      </td>
+      <td class="orders-col--status">
+        <app-status-badge [status]="item.status" [config]="statusBadges" />
+      </td>
+      <td class="orders-col--branch">{{ item.branchName }}</td>
+      <td class="orders-col--total">
+        <strong>{{ item.total | currencyAr }}</strong>
+      </td>
+      <td class="orders-col--date">{{ item.createdAt | shortDateAr }}</td>
+      <td class="orders-col--actions">
+        <div class="orders-row-actions">
+          <button
+            type="button"
+            class="orders-icon-btn orders-icon-btn--view"
+            [attr.aria-label]="'Ver detalle del pedido ' + item.orderNumber"
+            (click)="view.emit(item.id)"
+          >
+            <i class="pi pi-eye" aria-hidden="true"></i>
+          </button>
+          @if (quickActionFor(item); as action) {
+            <button
+              type="button"
+              class="orders-icon-btn orders-icon-btn--action"
+              [attr.aria-label]="action.label + ' - Pedido ' + item.orderNumber"
+              (click)="emitQuickAction(item, action)"
+            >
+              <i [class]="action.icon" aria-hidden="true"></i>
+            </button>
+          }
+          @if (canCancel(item)) {
+            <button
+              type="button"
+              class="orders-icon-btn orders-icon-btn--cancel"
+              [attr.aria-label]="'Cancelar pedido ' + item.orderNumber"
+              (click)="cancel.emit(item)"
+            >
+              <i class="pi pi-times-circle" aria-hidden="true"></i>
+            </button>
+          }
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</app-data-table>

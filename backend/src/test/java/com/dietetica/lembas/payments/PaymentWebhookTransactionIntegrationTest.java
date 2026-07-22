@@ -1,6 +1,7 @@
 package com.dietetica.lembas.payments;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,6 +27,7 @@ import com.dietetica.lembas.orders.model.OrderItem;
 import com.dietetica.lembas.orders.model.OrderStatus;
 import com.dietetica.lembas.orders.model.OrderType;
 import com.dietetica.lembas.orders.repository.OrderRepository;
+import com.dietetica.lembas.payments.dto.MercadoPagoWebhookPayload;
 import com.dietetica.lembas.payments.gateway.PaymentGateway;
 import com.dietetica.lembas.payments.model.Payment;
 import com.dietetica.lembas.payments.model.PaymentMethod;
@@ -33,8 +35,10 @@ import com.dietetica.lembas.payments.model.PaymentProvider;
 import com.dietetica.lembas.payments.model.PaymentStatus;
 import com.dietetica.lembas.payments.repository.PaymentRepository;
 import com.dietetica.lembas.payments.service.GatewayPaymentLookup;
+import com.dietetica.lembas.payments.service.MercadoPagoWebhookProcessor;
 import com.dietetica.lembas.shared.branch.model.Branch;
 import com.dietetica.lembas.shared.branch.repository.BranchRepository;
+import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
@@ -45,6 +49,12 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,6 +84,9 @@ class PaymentWebhookTransactionIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private MercadoPagoWebhookProcessor webhookProcessor;
 
     @Autowired
     private jakarta.persistence.EntityManager entityManager;
@@ -182,6 +195,104 @@ class PaymentWebhookTransactionIntegrationTest extends AbstractIntegrationTest {
         notifyApprovedPayment();
         notifyApprovedPayment();
 
+        assertSingleApprovedDeduction();
+        verify(paymentGateway, times(2)).findPayment(PROVIDER_PAYMENT_ID);
+    }
+
+    @Test
+    void concurrentDuplicateApprovedWebhooksSerializeToOneDeduction() throws Exception {
+        CyclicBarrier providerLookupsReady = new CyclicBarrier(2);
+        when(paymentGateway.findPayment(PROVIDER_PAYMENT_ID)).thenAnswer(invocation -> {
+            await(providerLookupsReady);
+            return approvedProviderState();
+        });
+        CountDownLatch workersReady = new CountDownLatch(2);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        try {
+            Future<Optional<Long>> first = executor.submit(() -> processInTransaction(workersReady, start));
+            Future<Optional<Long>> second = executor.submit(() -> processInTransaction(workersReady, start));
+            assertThat(workersReady.await(5, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
+
+            assertThat(first.get(10, TimeUnit.SECONDS)).contains(payment.getId());
+            assertThat(second.get(10, TimeUnit.SECONDS)).contains(payment.getId());
+        } finally {
+            start.countDown();
+            shutDown(executor);
+        }
+
+        assertSingleApprovedDeduction();
+        verify(paymentGateway, times(2)).findPayment(PROVIDER_PAYMENT_ID);
+    }
+
+    @Test
+    void unexpectedStockDomainFailureRollsBackPaymentAndOrder() {
+        transactionTemplate.executeWithoutResult(status -> {
+            Product persistedProduct =
+                    productRepository.findById(product.getId()).orElseThrow();
+            persistedProduct.setActive(false);
+            productRepository.saveAndFlush(persistedProduct);
+        });
+
+        assertThatThrownBy(() -> transactionTemplate.execute(status -> webhookProcessor.process(webhookPayload())))
+                .isInstanceOf(DomainException.class)
+                .extracting("code")
+                .isEqualTo("PRODUCT_NOT_FOUND");
+
+        assertThat(paymentRepository.findById(payment.getId()).orElseThrow().getStatus())
+                .isEqualTo(PaymentStatus.PENDING);
+        assertThat(orderRepository.findById(order.getId()).orElseThrow().getStatus())
+                .isEqualTo(OrderStatus.PENDING_PAYMENT);
+        assertThat(stockMovementRepository.findSaleMovementsByOrderId(order.getId()))
+                .isEmpty();
+        assertThat(stockLotRepository
+                        .findById(earliestLot.getId())
+                        .orElseThrow()
+                        .getQuantityAvailable())
+                .isEqualByComparingTo("2.000");
+        assertThat(stockLotRepository.findById(laterLot.getId()).orElseThrow().getQuantityAvailable())
+                .isEqualByComparingTo("3.000");
+    }
+
+    @Test
+    void refundedWebhookRestoresExactOriginalLotsOnlyOnce() throws Exception {
+        notifyApprovedPayment();
+        when(paymentGateway.findPayment(PROVIDER_PAYMENT_ID))
+                .thenReturn(Optional.of(new GatewayPaymentLookup(
+                        PROVIDER_PAYMENT_ID,
+                        "refunded",
+                        new BigDecimal("40.00"),
+                        "ARS",
+                        Map.of("external_reference", order.getOrderNumber()))));
+
+        notifyApprovedPayment();
+        notifyApprovedPayment();
+
+        assertThat(paymentRepository.findById(payment.getId()).orElseThrow().getStatus())
+                .isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(orderRepository.findById(order.getId()).orElseThrow().getStatus())
+                .isEqualTo(OrderStatus.CANCELLED);
+        assertThat(stockLotRepository
+                        .findById(earliestLot.getId())
+                        .orElseThrow()
+                        .getQuantityAvailable())
+                .isEqualByComparingTo("2.000");
+        assertThat(stockLotRepository.findById(laterLot.getId()).orElseThrow().getQuantityAvailable())
+                .isEqualByComparingTo("3.000");
+        assertThat(cancellationReturns())
+                .extracting(StockMovement::getQuantity)
+                .containsExactly(new BigDecimal("2.000"), new BigDecimal("2.000"));
+    }
+
+    private Optional<Long> processInTransaction(CountDownLatch workersReady, CountDownLatch start) {
+        workersReady.countDown();
+        await(start);
+        return transactionTemplate.execute(status -> webhookProcessor.process(webhookPayload()));
+    }
+
+    private void assertSingleApprovedDeduction() {
         assertThat(paymentRepository.findById(payment.getId()).orElseThrow().getStatus())
                 .isEqualTo(PaymentStatus.APPROVED);
         assertThat(orderRepository.findById(order.getId()).orElseThrow().getStatus())
@@ -196,7 +307,32 @@ class PaymentWebhookTransactionIntegrationTest extends AbstractIntegrationTest {
         assertThat(stockMovementRepository.findSaleMovementsByOrderId(order.getId()))
                 .extracting(StockMovement::getQuantity)
                 .containsExactly(new BigDecimal("-2.000"), new BigDecimal("-2.000"));
-        verify(paymentGateway, times(2)).findPayment(PROVIDER_PAYMENT_ID);
+    }
+
+    private List<StockMovement> cancellationReturns() {
+        return stockMovementRepository.findAll().stream()
+                .filter(movement -> movement.getType() == StockMovementType.CANCELLATION_RETURN)
+                .sorted(java.util.Comparator.comparing(StockMovement::getId))
+                .toList();
+    }
+
+    private Optional<GatewayPaymentLookup> approvedProviderState() {
+        return Optional.of(new GatewayPaymentLookup(
+                PROVIDER_PAYMENT_ID,
+                "approved",
+                new BigDecimal("40.00"),
+                "ARS",
+                Map.of("external_reference", order.getOrderNumber())));
+    }
+
+    private static MercadoPagoWebhookPayload webhookPayload() {
+        return new MercadoPagoWebhookPayload(
+                "payment",
+                "payment.updated",
+                null,
+                new MercadoPagoWebhookPayload.Data(PROVIDER_PAYMENT_ID),
+                false,
+                null);
     }
 
     private void notifyApprovedPayment() throws Exception {
@@ -286,6 +422,32 @@ class PaymentWebhookTransactionIntegrationTest extends AbstractIntegrationTest {
         value.setExpirationDate(expirationDate);
         value.setStatus(StockLotStatus.ACTIVE);
         return value;
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            if (!latch.await(5, TimeUnit.SECONDS)) {
+                throw new AssertionError("Timed out waiting for webhook workers");
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("Interrupted while coordinating webhook workers", exception);
+        }
+    }
+
+    private static void await(CyclicBarrier barrier) {
+        try {
+            barrier.await(5, TimeUnit.SECONDS);
+        } catch (Exception exception) {
+            throw new AssertionError("Webhook workers did not reach provider lookup together", exception);
+        }
+    }
+
+    private static void shutDown(ExecutorService executor) throws InterruptedException {
+        executor.shutdownNow();
+        if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+            throw new AssertionError("Timed out terminating webhook executor");
+        }
     }
 
     /** Returns the Flyway-seeded branch required by the application integration fixture. */

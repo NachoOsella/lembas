@@ -9,11 +9,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { MovementForm } from './movement-form';
 import { CashService } from '@features/cash/data-access/cash';
 import { ErrorMappingService } from '@core/services/error-mapping';
-import type {
-  CashMovementDto,
-  CashMovementMethod,
-  CashMovementType,
-} from '@features/cash/domain/cash-session';
+import type { CashMovementDto } from '@features/cash/domain/cash-session';
 
 describe('MovementForm', () => {
   let fixture: ComponentFixture<MovementForm>;
@@ -43,8 +39,8 @@ describe('MovementForm', () => {
     return {
       id: 1,
       cashSessionId: 5,
-      type: 'CASH_IN' as CashMovementType,
-      method: 'CASH' as CashMovementMethod,
+      type: 'CASH_IN',
+      method: 'CASH',
       amount: '100.00',
       reason: 'test',
       createdByUserId: 1,
@@ -59,10 +55,10 @@ describe('MovementForm', () => {
 
     expect(component['canSubmit']()).toBe(false);
 
-    component['type'].set('CASH_IN');
-    component['method'].set('CASH');
-    component['amount'].set(100);
-    component['reason'].set('test reason');
+    component['selectType']('CASH_IN');
+    component['selectMethod']('CASH');
+    component['setAmount'](100);
+    component['setReason']('test reason');
     fixture.detectChanges();
 
     expect(component['canSubmit']()).toBe(true);
@@ -72,10 +68,10 @@ describe('MovementForm', () => {
     createComponent();
     await fixture.whenStable();
 
-    component['type'].set('CASH_IN');
-    component['method'].set('CASH');
-    component['amount'].set(0);
-    component['reason'].set('test');
+    component['selectType']('CASH_IN');
+    component['selectMethod']('CASH');
+    component['setAmount'](0);
+    component['setReason']('test');
     fixture.detectChanges();
 
     expect(component['canSubmit']()).toBe(false);
@@ -87,10 +83,10 @@ describe('MovementForm', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    component['type'].set('CASH_IN');
-    component['method'].set('CASH');
-    component['amount'].set(50);
-    component['reason'].set('test');
+    component['selectType']('CASH_IN');
+    component['selectMethod']('CASH');
+    component['setAmount'](50);
+    component['setReason']('test');
     fixture.detectChanges();
 
     expect(component['canSubmit']()).toBe(false);
@@ -102,10 +98,10 @@ describe('MovementForm', () => {
     const movementAddedSpy = vi.fn();
     component.movementAdded.subscribe(movementAddedSpy);
 
-    component['type'].set('CASH_IN');
-    component['method'].set('CASH');
-    component['amount'].set(50);
-    component['reason'].set('test reason');
+    component['selectType']('CASH_IN');
+    component['selectMethod']('CASH');
+    component['setAmount'](50);
+    component['setReason']('test reason');
     component['submit']();
     await fixture.whenStable();
 
@@ -130,10 +126,10 @@ describe('MovementForm', () => {
     });
     cashService.addMovement.mockReturnValue(throwError(() => error));
 
-    component['type'].set('CASH_OUT');
-    component['method'].set('TRANSFER');
-    component['amount'].set(200);
-    component['reason'].set('payment');
+    component['selectType']('CASH_OUT');
+    component['selectMethod']('TRANSFER');
+    component['setAmount'](200);
+    component['setReason']('payment');
     component['submit']();
     await fixture.whenStable();
 
@@ -144,10 +140,10 @@ describe('MovementForm', () => {
     createComponent();
     cashService.addMovement.mockReturnValue(of(movementDto()));
 
-    component['type'].set('CASH_IN');
-    component['method'].set('CASH');
-    component['amount'].set(75);
-    component['reason'].set('some reason');
+    component['selectType']('CASH_IN');
+    component['selectMethod']('CASH');
+    component['setAmount'](75);
+    component['setReason']('some reason');
     component['submit']();
     await fixture.whenStable();
 
@@ -190,7 +186,7 @@ describe('MovementForm', () => {
 
     expect(component['selectedTypeDescription']()).toBeNull();
 
-    component['type'].set('ADJUSTMENT');
+    component['selectType']('ADJUSTMENT');
     expect(component['selectedTypeDescription']()).toContain('Correccion');
   });
 
@@ -200,8 +196,8 @@ describe('MovementForm', () => {
 
     expect(component['movementPreview']()).toBeNull();
 
-    component['type'].set('CASH_IN');
-    component['amount'].set(1234.5);
+    component['selectType']('CASH_IN');
+    component['setAmount'](1234.5);
     expect(component['movementPreview']()).toContain('1.234,50');
   });
 });

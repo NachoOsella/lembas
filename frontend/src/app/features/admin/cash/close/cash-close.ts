@@ -1,18 +1,36 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import type { OnInit } from '@angular/core';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { form, required, submit, validate } from '@angular/forms/signals';
 import { MessageService } from 'primeng/api';
 
-import { CashService } from '@features/cash/data-access/cash';
-import { ErrorMappingService } from '@core/services/error-mapping';
-import { getApiError } from '@shared/types/api-error';
-import type {
-  CashCloseRequestPayload,
-  CashEntryDto,
-  CashSessionDto,
-  CashTotalsByMethod,
-} from '@features/cash/domain/cash-session';
+import { CashClosePageStore } from '../state/cash-close-page.store';
+import {
+  calculateCashDifference,
+  calculateExpectedCash,
+  calculateManualCashEffect,
+  cashDifferenceDescription,
+  cashDifferenceLabel,
+  formatCashAmount,
+  formatSignedCashAmount,
+  totalByMethod,
+} from '@features/cash/public-api';
+import {
+  isCashCloseFormValid,
+  isCountedCashAmountValid,
+  parseCashAmount,
+  toCashCloseRequest,
+} from '@features/cash/domain/cash-forms';
+import type { CashCloseFormModel } from '@features/cash/domain/cash-forms';
+import type { CashEntryDto } from '@features/cash/domain/cash-session';
 
 import { AppBadge } from '@shared/components/app-badge/app-badge';
 import { AppButton } from '@shared/components/app-button/app-button';
@@ -26,8 +44,10 @@ import type { AppMetricItem } from '@shared/components/app-stat-card/app-stat-ca
 import { AppStatCard } from '@shared/components/app-stat-card/app-stat-card';
 import { AppToast } from '@shared/components/app-toast/app-toast';
 import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
 import { FormSection } from '@shared/components/form-section/form-section';
 import { LoadingSpinner } from '@shared/components/loading-spinner/loading-spinner';
+import { SeverityPill } from '@shared/components/severity-pill/severity-pill';
 import {
   CASH_ENTRY_COLUMNS,
   cashEntryAmountModifier,
@@ -38,24 +58,8 @@ import {
   cashEntrySign,
   cashEntryTypeTone,
 } from '../shared/cash-entry-display';
-import { SeverityPill } from '@shared/components/severity-pill/severity-pill';
 
-const ARS_CURRENCY = new Intl.NumberFormat('es-AR', {
-  style: 'currency',
-  currency: 'ARS',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
-
-/**
- * Cash close screen (S3-US08).
- *
- * Loads the OPEN session, shows the close summary (apertura, totales por
- * método, total de movimientos manuales, efectivo esperado), captures the
- * efectivo contado, validates que haya motivo de diferencia cuando es
- * distinta de cero, confirma con un modal y muestra la pantalla de resumen
- * final al cerrar la sesión.
- */
+/** Cash close page: physical-cash calculation, typed close form, and command confirmation. */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-cash-close',
@@ -71,95 +75,90 @@ const ARS_CURRENCY = new Intl.NumberFormat('es-AR', {
     AppStatCard,
     AppToast,
     ErrorAlert,
+    EmptyState,
     FormSection,
     LoadingSpinner,
     SeverityPill,
     CurrencyPipe,
     DatePipe,
   ],
+  providers: [CashClosePageStore],
   templateUrl: './cash-close.html',
   styleUrl: './cash-close.css',
 })
 export class CashClose implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly cashService = inject(CashService);
   private readonly messageService = inject(MessageService);
-  private readonly errorMapping = inject(ErrorMappingService);
+  protected readonly store = inject(CashClosePageStore);
 
-  protected readonly loading = signal(true);
-  protected readonly saving = signal(false);
-  protected readonly errorMessage = signal<string | null>(null);
-
-  protected readonly session = signal<CashSessionDto | null>(null);
-  protected readonly entries = signal<CashEntryDto[]>([]);
-  protected readonly totalsByMethod = signal<CashTotalsByMethod | null>(null);
-
-  protected readonly countedCashAmount = signal<number | null>(null);
-  protected readonly cashDifferenceReason = signal('');
-  protected readonly closingNotes = signal('');
-
+  protected readonly loading = this.store.loading;
+  protected readonly saving = this.store.saving;
+  protected readonly errorMessage = this.store.errorMessage;
+  protected readonly session = this.store.session;
+  protected readonly entries = this.store.entries;
+  protected readonly totalsByMethod = this.store.totalsByMethod;
   protected readonly confirmDialogVisible = signal(false);
 
-  /** Id resolved from the route param; -1 means the route is invalid. */
+  protected readonly closeModel = signal<CashCloseFormModel>({
+    countedCashAmount: '',
+    cashDifferenceReason: '',
+    closingNotes: '',
+  });
+  protected readonly closeForm = form(this.closeModel, (schema) => {
+    required(schema.countedCashAmount, { message: 'El efectivo contado es obligatorio.' });
+    validate(schema.countedCashAmount, ({ value }) =>
+      isCountedCashAmountValid(value())
+        ? undefined
+        : { kind: 'invalidAmount', message: 'Ingresa un monto contado valido.' },
+    );
+  });
+
   private sessionId = -1;
 
-  // ---- derived state ----
-
+  protected readonly countedCashAmount = computed(() =>
+    parseCashAmount(this.closeModel().countedCashAmount),
+  );
+  protected readonly cashDifferenceReason = computed(() => this.closeModel().cashDifferenceReason);
+  protected readonly closingNotes = computed(() => this.closeModel().closingNotes);
   protected readonly opening = computed(() => Number(this.session()?.openingCashAmount ?? 0));
-
   protected readonly expectedCash = computed(() => {
-    const fromBackend = this.session()?.expectedCashAmount;
-    if (fromBackend != null && fromBackend !== '') {
-      return Number(fromBackend);
-    }
-    return this.computeExpectedFromEntries();
+    const backendExpected = this.session()?.expectedCashAmount;
+    return backendExpected !== null && backendExpected !== undefined && backendExpected !== ''
+      ? Number(backendExpected)
+      : calculateExpectedCash(this.session()?.openingCashAmount, this.entries());
   });
-
-  protected readonly difference = computed(() => {
-    const counted = this.countedCashAmount();
-    if (counted == null) {
-      return 0;
-    }
-    return round2(counted - this.expectedCash());
-  });
-
-  protected readonly isDifferenceNonZero = computed(() => round2(this.difference()) !== 0);
-
+  protected readonly difference = computed(() =>
+    calculateCashDifference(this.countedCashAmount(), this.expectedCash()),
+  );
+  protected readonly isDifferenceNonZero = computed(() => this.difference() !== 0);
+  protected readonly netMovementsEffect = computed(() => calculateManualCashEffect(this.entries()));
   protected readonly isReasonInvalid = computed(
     () => this.isDifferenceNonZero() && this.cashDifferenceReason().trim() === '',
   );
-
-  protected readonly canSubmit = computed(() => {
-    if (this.saving() || this.loading()) {
-      return false;
-    }
-    const counted = this.countedCashAmount();
-    if (counted == null || counted < 0) {
-      return false;
-    }
-    if (this.isDifferenceNonZero() && this.cashDifferenceReason().trim() === '') {
-      return false;
-    }
-    return true;
-  });
-
+  protected readonly canSubmit = computed(
+    () =>
+      !this.loading() &&
+      !this.saving() &&
+      this.closeForm().valid() &&
+      isCashCloseFormValid(this.closeModel(), this.expectedCash()),
+  );
   protected readonly hasEntries = computed(() => this.entries().length > 0);
 
   protected readonly summaryMetrics = computed<readonly AppMetricItem[]>(() => {
-    const totals = this.totalsByMethod();
-    const net = this.netMovementsEffect();
+    const net = calculateManualCashEffect(this.entries());
+    const cashPayments = this.totalPaymentsAmount();
     return [
       {
         label: 'Apertura',
-        value: this.formatCurrency(this.opening()),
+        value: formatCashAmount(this.opening()),
         detail: 'Fondo inicial declarado al abrir la caja',
         icon: 'pi pi-flag',
         tone: 'forest',
       },
       {
         label: 'Efectivo en movimientos',
-        value: this.formatSignedCurrency(net),
+        value: formatSignedCashAmount(net),
         detail: this.movementsDetail(),
         icon: 'pi pi-exchange',
         tone: net === 0 ? 'sage' : net > 0 ? 'sage' : 'amber',
@@ -167,17 +166,14 @@ export class CashClose implements OnInit {
       },
       {
         label: 'Pagos en efectivo',
-        value: this.formatCurrency(this.totalPaymentsAmount()),
-        detail:
-          totals && totals.paymentsByMethod['CASH']
-            ? 'Pagos POS cobrados en efectivo'
-            : 'Sin pagos en efectivo',
+        value: formatCashAmount(cashPayments),
+        detail: cashPayments > 0 ? 'Pagos POS que afectan el cajon' : 'Sin pagos en efectivo',
         icon: 'pi pi-credit-card',
         tone: 'sage',
       },
       {
         label: 'Efectivo esperado',
-        value: this.formatCurrency(this.expectedCash()),
+        value: formatCashAmount(this.expectedCash()),
         detail: 'Apertura + movimientos + pagos en efectivo',
         icon: 'pi pi-wallet',
         tone: 'forest',
@@ -188,15 +184,15 @@ export class CashClose implements OnInit {
   protected readonly differenceMetrics = computed<readonly AppMetricItem[]>(() => [
     {
       label: 'Efectivo contado',
-      value: this.formatCurrency(this.countedCashAmount() ?? 0),
+      value: formatCashAmount(this.countedCashAmount() ?? 0),
       detail: 'Monto contado por el cajero',
       icon: 'pi pi-money-bill',
       tone: 'forest',
     },
     {
-      label: this.differenceLabel(),
-      value: this.formatCurrency(Math.abs(this.difference())),
-      detail: this.differenceSubtitle(),
+      label: cashDifferenceLabel(this.difference()),
+      value: formatCashAmount(Math.abs(this.difference())),
+      detail: cashDifferenceDescription(this.difference(), this.isReasonInvalid()),
       icon: this.difference() >= 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down',
       tone: this.difference() === 0 ? 'sage' : this.difference() > 0 ? 'sage' : 'amber',
       trend: this.difference() === 0 ? 'neutral' : this.difference() > 0 ? 'up' : 'down',
@@ -205,154 +201,146 @@ export class CashClose implements OnInit {
 
   protected readonly entriesColumns = CASH_ENTRY_COLUMNS;
 
-  ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('sessionId'));
-    if (!Number.isFinite(id) || id <= 0) {
-      this.loading.set(false);
-      this.errorMessage.set('Identificador de caja invalido.');
-      return;
-    }
-    this.sessionId = id;
-    this.loadSession(id);
-  }
-
-  private loadSession(id: number): void {
-    this.loading.set(true);
-    this.errorMessage.set(null);
-    this.cashService.getById(id).subscribe({
-      next: (session) => {
-        if (session.status === 'CLOSED') {
-          this.messageService.add({
-            severity: 'info',
-            summary: 'Caja ya cerrada',
-            detail: 'La sesion seleccionada ya fue cerrada.',
-          });
-          void this.router.navigate(['/admin/cash', session.id]);
-          return;
-        }
-        this.session.set(session);
-        this.entries.set(session.entries ?? []);
-        this.totalsByMethod.set(session.totalsByMethod ?? null);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.errorMessage.set(this.messageForError(err, 'No se pudo cargar la caja.'));
-      },
-    });
-  }
-
-  /** Opens the confirmation modal after client-side validation passes. */
-  protected openConfirm(): void {
-    if (!this.canSubmit()) {
-      return;
-    }
-    this.confirmDialogVisible.set(true);
-  }
-
-  /**
-   * Header-level shortcut: scrolls the user to the arqueo form and focuses
-   * the counted-cash input. Used by the always-visible "Cerrar caja" button
-   * in the page header so the user does not have to scroll to find the
-   * submit action.
-   */
-  protected scrollToArqueo(): void {
-    const target = document.getElementById('cash-close-arqueo');
-    if (target instanceof HTMLElement) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      const input = target.querySelector('input');
-      if (input instanceof HTMLElement) {
-        // Defer to let the smooth scroll start.
-        setTimeout(() => input.focus(), 250);
-      }
-    }
-  }
-
-  /** Closes the confirmation modal without submitting. */
-  protected closeConfirm(): void {
-    if (this.saving()) {
-      return;
-    }
-    this.confirmDialogVisible.set(false);
-  }
-
-  /** Submits the close request after the user confirms the modal. */
-  protected confirmClose(): void {
-    if (!this.canSubmit()) {
-      return;
-    }
-    const counted = this.countedCashAmount() ?? 0;
-    const request: CashCloseRequestPayload = {
-      countedCashAmount: counted.toFixed(2),
-      closingNotes: this.closingNotes().trim() || null,
-      cashDifferenceReason: this.isDifferenceNonZero() ? this.cashDifferenceReason().trim() : null,
-    };
-
-    this.saving.set(true);
-    this.errorMessage.set(null);
-
-    this.cashService.closeSession(this.sessionId, request).subscribe({
-      next: () => {
-        this.saving.set(false);
+  constructor() {
+    effect(() => {
+      const closedSession = this.store.closedSession();
+      if (closedSession) {
         this.confirmDialogVisible.set(false);
         this.messageService.add({
           severity: 'success',
           summary: 'Caja cerrada',
           detail: 'El cierre de caja fue registrado correctamente.',
         });
-        // Redirect straight to the open form so the user can start a new
-        // session without seeing the closed (read-only) detail screen.
         void this.router.navigate(['/admin/cash/open']);
-      },
-      error: (err) => {
-        this.saving.set(false);
-        this.errorMessage.set(this.messageForError(err, 'No se pudo cerrar la caja.'));
-      },
+        return;
+      }
+
+      const session = this.session();
+      if (session?.status === 'CLOSED') {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Caja ya cerrada',
+          detail: 'La sesion seleccionada ya fue cerrada.',
+        });
+        void this.router.navigate(['/admin/cash', session.id]);
+      }
     });
   }
 
-  /** Cancels and navigates back to the cash detail. */
-  protected cancel(): void {
-    if (this.saving()) {
+  ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('sessionId'));
+    if (!Number.isFinite(id) || id <= 0) {
+      this.store.setInvalidRouteError('Identificador de caja invalido.');
       return;
     }
-    void this.router.navigate(['/admin/cash', this.sessionId]);
+    this.sessionId = id;
+    this.store.load(id);
   }
 
-  /**
-   * Net cash effect of all manual movements (CASH-method only, matching the
-   * expected-cash rule). Positive means the movements put more cash in the
-   * drawer; negative means they took cash out. Adjustments (NEUTRAL) keep
-   * their sign as entered by the operator.
-   */
-  private netMovementsEffect(): number {
-    return this.entries()
-      .filter((entry) => entry.kind === 'MANUAL' && entry.method === 'CASH')
-      .reduce((sum, entry) => {
-        const amount = Number(entry.amount);
-        if (entry.direction === 'IN') {
-          return sum + Math.abs(amount);
-        }
-        if (entry.direction === 'OUT') {
-          return sum - Math.abs(amount);
-        }
-        // NEUTRAL (adjustment): signed value, operator-entered.
-        return sum + amount;
-      }, 0);
+  protected retry(): void {
+    this.store.refresh();
   }
 
-  /**
-   * Detail string for the movements metric: summarizes how many CASH IN/OUT
-   * movements were registered and flags non-cash movements as informational.
-   */
+  protected setCountedCashAmount(amount: number | null): void {
+    this.closeModel.update((model) => ({
+      ...model,
+      countedCashAmount: amount === null ? '' : String(amount),
+    }));
+  }
+
+  protected setCashDifferenceReason(reason: string): void {
+    this.closeModel.update((model) => ({ ...model, cashDifferenceReason: reason }));
+  }
+
+  protected setClosingNotes(notes: string): void {
+    this.closeModel.update((model) => ({ ...model, closingNotes: notes }));
+  }
+
+  protected openConfirm(): void {
+    if (!this.canSubmit()) {
+      return;
+    }
+    submit(this.closeForm, async () => {
+      if (this.canSubmit()) {
+        this.confirmDialogVisible.set(true);
+      }
+    });
+  }
+
+  protected scrollToArqueo(): void {
+    const target = document.getElementById('cash-close-arqueo');
+    if (target instanceof HTMLElement) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const input = target.querySelector('input');
+      if (input instanceof HTMLElement) {
+        setTimeout(() => input.focus(), 250);
+      }
+    }
+  }
+
+  protected closeConfirm(): void {
+    if (!this.saving()) {
+      this.confirmDialogVisible.set(false);
+    }
+  }
+
+  protected confirmClose(): void {
+    if (!this.canSubmit()) {
+      return;
+    }
+    const request = toCashCloseRequest(this.closeModel(), this.expectedCash());
+    if (!request) {
+      return;
+    }
+    this.store.closeSession(request);
+  }
+
+  protected cancel(): void {
+    if (!this.saving()) {
+      void this.router.navigate(['/admin/cash', this.sessionId]);
+    }
+  }
+
+  protected movementLabel(entry: CashEntryDto): string {
+    return cashEntryLabel(entry);
+  }
+
+  protected movementTone(entry: CashEntryDto) {
+    return cashEntryTypeTone(entry);
+  }
+
+  protected kindLabel(kind: CashEntryDto['kind']): string {
+    return cashEntryKindLabel(kind);
+  }
+
+  protected kindTone(kind: CashEntryDto['kind']) {
+    return cashEntryKindTone(kind);
+  }
+
+  protected methodLabel(method: string | null): string {
+    return cashEntryMethodLabel(method);
+  }
+
+  protected movementAmountClass(entry: CashEntryDto): string {
+    return `cash-close__amount--${cashEntryAmountModifier(entry.direction)}`;
+  }
+
+  protected movementSign(direction: CashEntryDto['direction']): string {
+    return cashEntrySign(direction);
+  }
+
   private movementsDetail(): string {
     const manual = this.entries().filter((entry) => entry.kind === 'MANUAL');
     if (manual.length === 0) {
       return 'Sin movimientos manuales';
     }
-    const cashIn = manual.filter((e) => e.method === 'CASH' && e.direction === 'IN').length;
-    const cashOut = manual.filter((e) => e.method === 'CASH' && e.direction === 'OUT').length;
-    const nonCash = manual.length - cashIn - cashOut;
+    const cashIn = manual.filter(
+      (entry) => entry.method === 'CASH' && entry.direction === 'IN',
+    ).length;
+    const cashOut = manual.filter(
+      (entry) => entry.method === 'CASH' && entry.direction === 'OUT',
+    ).length;
+    const informational = manual.length - cashIn - cashOut;
     const parts: string[] = [];
     if (cashIn > 0) {
       parts.push(`${cashIn} ingreso${cashIn > 1 ? 's' : ''}`);
@@ -361,121 +349,16 @@ export class CashClose implements OnInit {
       parts.push(`${cashOut} egreso${cashOut > 1 ? 's' : ''}`);
     }
     const summary = parts.length > 0 ? parts.join(' + ') : 'Solo ajustes';
-    return nonCash > 0 ? `${summary} (${nonCash} informacional)` : summary;
+    return informational > 0 ? `${summary} (${informational} informacional)` : summary;
   }
 
-  /** Total amount of APPROVED payments across all methods. */
   private totalPaymentsAmount(): number {
     const totals = this.totalsByMethod();
     if (totals) {
-      return Object.values(totals.paymentsByMethod).reduce((sum, value) => sum + Number(value), 0);
+      return totalByMethod(totals.paymentsByMethod, 'CASH');
     }
     return this.entries()
-      .filter((entry) => entry.kind === 'PAYMENT')
-      .reduce((sum, entry) => sum + Number(entry.amount), 0);
+      .filter((entry) => entry.kind === 'PAYMENT' && entry.method === 'CASH')
+      .reduce((sum, entry) => sum + Math.abs(Number(entry.amount)), 0);
   }
-
-  /** Computes the expected cash from the entries timeline when the backend
-   *  does not provide it (e.g. when the session is still OPEN). */
-  private computeExpectedFromEntries(): number {
-    const opening = this.opening();
-    const cashIn = this.entries()
-      .filter((entry) => entry.method === 'CASH' && entry.direction === 'IN')
-      .reduce((sum, entry) => sum + Number(entry.amount), 0);
-    const cashOut = this.entries()
-      .filter((entry) => entry.method === 'CASH' && entry.direction === 'OUT')
-      .reduce((sum, entry) => sum + Number(entry.amount), 0);
-    const cashAdjust = this.entries()
-      .filter((entry) => entry.method === 'CASH' && entry.direction === 'NEUTRAL')
-      .reduce((sum, entry) => sum + Number(entry.amount), 0);
-    return opening + cashIn - cashOut + cashAdjust;
-  }
-
-  /** Returns "Sobrante", "Faltante" or "Cuadra exacto" depending on the sign. */
-  private differenceLabel(): string {
-    const diff = this.difference();
-    if (diff === 0) {
-      return 'Cuadra exacto';
-    }
-    return diff > 0 ? 'Sobrante' : 'Faltante';
-  }
-
-  /** Subtitle that explains the difference metric in the UI. */
-  private differenceSubtitle(): string {
-    const diff = this.difference();
-    if (diff === 0) {
-      return 'El efectivo contado coincide con el esperado';
-    }
-    if (this.isReasonInvalid()) {
-      return 'Indica el motivo del sobrante o faltante';
-    }
-    return diff > 0 ? 'Hay mas efectivo del esperado' : 'Hay menos efectivo del esperado';
-  }
-
-  /** Localized label for the entry type or kind. */
-  protected movementLabel(entry: CashEntryDto): string {
-    return cashEntryLabel(entry);
-  }
-
-  /** Severity tone for the entry type pill. */
-  protected movementTone(entry: CashEntryDto) {
-    return cashEntryTypeTone(entry);
-  }
-
-  /** Pill label for the entry kind (Manual / Caja). */
-  protected kindLabel(kind: CashEntryDto['kind']): string {
-    return cashEntryKindLabel(kind);
-  }
-
-  /** Severity tone for the kind pill (Manual = success, Caja = warn). */
-  protected kindTone(kind: CashEntryDto['kind']) {
-    return cashEntryKindTone(kind);
-  }
-
-  /** Localized label for the entry method. */
-  protected methodLabel(method: string | null): string {
-    return cashEntryMethodLabel(method);
-  }
-
-  /** Tone class for the amount cell. */
-  protected movementAmountClass(entry: CashEntryDto): string {
-    return `cash-close__amount--${cashEntryAmountModifier(entry.direction)}`;
-  }
-
-  /** Sign prefix for the amount cell. */
-  protected movementSign(direction: CashEntryDto['direction']): string {
-    return cashEntrySign(direction);
-  }
-
-  /** Maps backend API errors to Spanish copy. */
-  private messageForError(error: unknown, fallback: string): string {
-    const apiError = getApiError(error);
-    if (!apiError) {
-      return fallback;
-    }
-    if (apiError.code === 'VALIDATION_ERROR') {
-      return this.errorMapping.formatValidationErrors(apiError);
-    }
-    return this.errorMapping.getMessage(apiError.code);
-  }
-
-  /** Formats a number as ARS currency (es-AR locale), no decimals. */
-  private formatCurrency(value: number): string {
-    return ARS_CURRENCY.format(value);
-  }
-
-  /** Formats a number as ARS currency with an explicit sign prefix so the
-   *  movements metric shows direction at a glance. */
-  private formatSignedCurrency(value: number): string {
-    if (value === 0) {
-      return ARS_CURRENCY.format(0);
-    }
-    const sign = value > 0 ? '+' : '−';
-    return `${sign} ${ARS_CURRENCY.format(Math.abs(value))}`;
-  }
-}
-
-/** Rounds a number to 2 decimals with HALF_UP semantics to avoid -0.00. */
-function round2(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
 }

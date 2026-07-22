@@ -21,7 +21,7 @@ import type {
   ProductOnlineStatus,
   ProductRequest,
 } from '@features/catalog/domain/product';
-import { PRODUCT_STATUS_ACTIONS } from '@features/catalog/presentation/product-status';
+import { PRODUCT_STATUS_ACTIONS } from '@features/catalog/public-api';
 
 interface Option<T> {
   readonly label: string;

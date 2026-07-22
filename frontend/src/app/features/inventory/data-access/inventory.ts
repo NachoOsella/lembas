@@ -67,10 +67,10 @@ export class InventoryService {
     if (filters.search) {
       params = params.set('search', filters.search);
     }
-    if (filters.productId) {
+    if (filters.productId !== null && filters.productId !== undefined) {
       params = params.set('productId', filters.productId);
     }
-    if (filters.branchId) {
+    if (filters.branchId !== null && filters.branchId !== undefined) {
       params = params.set('branchId', filters.branchId);
     }
     if (filters.expiringSoon) {
@@ -95,7 +95,7 @@ export class InventoryService {
     if (filters.search) {
       params = params.set('search', filters.search);
     }
-    if (filters.branchId) {
+    if (filters.branchId !== null && filters.branchId !== undefined) {
       params = params.set('branchId', filters.branchId);
     }
     if (filters.expiringSoon) {
@@ -128,10 +128,10 @@ export class InventoryService {
     if (filters.type) {
       params = params.set('type', filters.type);
     }
-    if (filters.productId) {
+    if (filters.productId !== null && filters.productId !== undefined) {
       params = params.set('productId', filters.productId);
     }
-    if (filters.branchId) {
+    if (filters.branchId !== null && filters.branchId !== undefined) {
       params = params.set('branchId', filters.branchId);
     }
     if (filters.from) {

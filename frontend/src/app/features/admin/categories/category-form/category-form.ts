@@ -14,12 +14,13 @@ import { MessageService } from 'primeng/api';
 import { getApiError } from '@shared/types/api-error';
 import { CategoryService } from '@features/catalog/data-access/category';
 import { ErrorMappingService } from '@core/services/error-mapping';
-import type { CategoryDto, CategoryRequest } from '@features/catalog/domain/category';
+import type { CategoryDto } from '@features/catalog/domain/category';
 import { AppButton } from '@shared/components/app-button/app-button';
 import { AppFormField } from '@shared/components/app-form-field/app-form-field';
 import { AppModal } from '@shared/components/app-modal/app-modal';
 import { ErrorAlert } from '@shared/components/error-alert/error-alert';
 import { FormSection } from '@shared/components/form-section/form-section';
+import { buildCategoryRequest } from './category-form.helpers';
 
 interface ParentOption {
   readonly label: string;
@@ -89,7 +90,15 @@ export class CategoryForm {
     }
 
     this.submitting.set(true);
-    const payload = this.toRequest();
+    const payload = buildCategoryRequest(
+      this.formName(),
+      this.formParentId(),
+      this.formDescription(),
+    );
+    if (!payload) {
+      return;
+    }
+
     const editing = this.editing();
     const request$ = editing
       ? this.categoryService.updateCategory(editing.id, payload)
@@ -122,15 +131,6 @@ export class CategoryForm {
     this.formSubmitted.set(false);
     this.dialogError.set('');
     this.dialogVisible.set(true);
-  }
-
-  /** Converts form values into the API request shape. */
-  private toRequest(): CategoryRequest {
-    return {
-      name: this.formName().trim(),
-      parentId: this.formParentId(),
-      description: this.formDescription().trim() || undefined,
-    };
   }
 
   /** Maps backend error codes to actionable Spanish copy using centralized service. */

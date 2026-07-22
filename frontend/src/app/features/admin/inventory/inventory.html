@@ -5,280 +5,67 @@
     description="Stock disponible agrupado por producto y sucursal. El vencimiento muestra la fecha del lote mas proximo a vencer."
   >
     @if (canManageInventory()) {
-      <app-button icon="pi pi-plus" (click)="openCreateDialog()">Nuevo lote</app-button>
+      <app-button icon="pi pi-plus" (click)="openCreateLot()">Nuevo lote</app-button>
     }
   </app-page-header>
 
-  @if (error()) {
-    <app-error-alert variant="inline" [title]="error()" message="">
-      <app-button variant="secondary" size="sm" (click)="loadProducts()">Reintentar</app-button>
+  @if (store.listError()) {
+    <app-error-alert variant="inline" [title]="store.listError()" message="">
+      <app-button variant="secondary" size="sm" (click)="store.refresh()">Reintentar</app-button>
     </app-error-alert>
   }
 
-  <app-data-table
-    [data]="products()"
-    [columns]="columns()"
-    [loading]="loading()"
-    [sortable]="true"
-    [paginated]="true"
-    [lazy]="true"
-    [totalRecords]="totalRecords()"
-    [first]="first()"
-    [rows]="pageSize()"
-    [rowsPerPageOptions]="[10, 20, 50]"
-    (pageChange)="onPageChange($event)"
-    (sortChange)="onSort($event)"
-    emptyTitle="No hay stock disponible"
-    emptyDescription="Registra una recepcion de mercaderia para que aparezcan los primeros productos con stock."
-    [emptyActionLabel]="canManageInventory() ? 'Ir a recepciones' : null"
+  <app-inventory-table
+    [products]="store.products()"
+    [loading]="store.loading()"
+    [state]="store.viewState()"
+    [totalRecords]="store.totalRecords()"
+    [first]="store.first()"
+    [rows]="store.pageSize()"
+    [canManage]="canManageInventory()"
+    (pageChanged)="store.changePage($event)"
+    (sortChanged)="store.changeSort($event)"
+    (viewLots)="viewLots($event)"
+    (adjust)="store.openAdjustment($event)"
     (emptyAction)="navigateToReceipts()"
   >
-    <ng-template #toolbar>
-      <div class="table-toolbar__info">
-        <p class="table-toolbar__kicker">Stock disponible</p>
-        <h2 class="table-toolbar__title">Productos con stock</h2>
-      </div>
-      <div class="table-toolbar__actions">
-        <div class="table-toolbar__filters">
-          <app-search-bar
-            [(value)]="search"
-            placeholder="Buscar por producto..."
-            (search)="onSearch($event)"
-            (clear)="clearSearch()"
-          />
-          <app-select
-            [value]="selectedBranchId()"
-            (valueChange)="selectedBranchId.set($event); onFilterChange()"
-            [options]="branchOptions()"
-            placeholder="Sucursal"
-            [showClear]="true"
-          />
-          <div class="inventory-expiring-toggle">
-            <app-toggle-switch
-              [(checked)]="expiringSoon"
-              (checkedChange)="onFilterChange()"
-              [ariaLabel]="'Filtrar solo productos proximos a vencer'"
-            />
-            <label class="inventory-expiring-label">Prox. a vencer</label>
-          </div>
-        </div>
-      </div>
-    </ng-template>
-
-    <ng-template #body let-item>
-      <tr>
-        <td>
-          <strong>{{ item.productName }}</strong>
-        </td>
-        <td>{{ item.branchName }}</td>
-        <td class="inventory-qty">{{ formatQuantity(item.totalAvailable) }}</td>
-        <td>{{ formatDate(item.nearestExpirationDate) }}</td>
-        @if (canManageInventory()) {
-          <td>
-            <div class="table-actions">
-              <app-button
-                variant="ghost"
-                size="sm"
-                icon="pi pi-list"
-                [iconOnly]="true"
-                [ariaLabel]="'Ver lotes de ' + item.productName + ' en ' + item.branchName"
-                (click)="viewLots(item)"
-              />
-              <app-button
-                variant="ghost"
-                size="sm"
-                icon="pi pi-sliders-v"
-                [iconOnly]="true"
-                [ariaLabel]="'Ajustar stock de ' + item.productName"
-                (click)="openAdjustDialog(item)"
-              />
-            </div>
-          </td>
-        }
-      </tr>
-    </ng-template>
-  </app-data-table>
+    <app-inventory-toolbar
+      [search]="store.searchValue()"
+      [branchId]="store.selectedBranchId()"
+      [expiringSoon]="store.expiringSoon()"
+      [branchOptions]="branchOptions()"
+      (searchChanged)="store.search($event)"
+      (branchChanged)="store.selectBranch($event)"
+      (expiringSoonChanged)="store.setExpiringSoon($event)"
+    />
+  </app-inventory-table>
 </div>
 
-<app-modal [(visible)]="dialogVisible" title="Nuevo lote de stock" [width]="'min(38rem, 92vw)'">
-  <form class="supplier-form" (ngSubmit)="saveLot()">
-    <app-form-section
-      [index]="1"
-      title="Datos del lote"
-      description="Registra stock directamente. Para ingresos habituales usa Recepciones de mercaderia."
-    >
-      <div class="supplier-form__grid">
-        <div class="supplier-form__field supplier-form__field--wide">
-          <app-control-field label="Producto" [required]="true">
-            <app-product-selector
-              [label]="''"
-              [selected]="newProduct()"
-              (selectedChange)="newProduct.set($event)"
-              [suggestions]="newProductSuggestions()"
-              placeholder="Buscar producto por nombre o codigo..."
-              (search)="searchNewProduct($event)"
-            />
-          </app-control-field>
-        </div>
+<app-stock-lot-form
+  [visible]="store.createLotVisible()"
+  (visibleChange)="store.setCreateLotVisible($event)"
+  [branches]="branchOptions()"
+  [initialBranchId]="assignedBranchId()"
+  [branchRestricted]="isBranchRestricted()"
+  [suggestions]="store.productSuggestions()"
+  [saving]="store.lotSaving()"
+  [error]="store.lotError()"
+  (productSearch)="store.searchProducts($event)"
+  (submitted)="store.createLot($event)"
+/>
 
-        <div class="supplier-form__field supplier-form__field--wide">
-          <app-control-field label="Sucursal" [required]="true">
-            <app-select
-              [value]="newBranchId()"
-              (valueChange)="newBranchId.set($event)"
-              [options]="branchOptions()"
-              placeholder="Seleccionar sucursal"
-              [disabled]="isBranchRestricted()"
-            />
-          </app-control-field>
-        </div>
-
-        <div class="supplier-form__field">
-          <app-control-field label="Cantidad" [required]="true">
-            <app-input-number
-              [(value)]="newQuantity"
-              [min]="0"
-              [maxFractionDigits]="3"
-              placeholder="0"
-            />
-          </app-control-field>
-        </div>
-
-        <div class="supplier-form__field">
-          <app-control-field label="Costo unitario">
-            <app-input-number
-              [(value)]="newCostPrice"
-              mode="currency"
-              currency="ARS"
-              locale="es-AR"
-              [min]="0"
-              [maxFractionDigits]="2"
-            />
-          </app-control-field>
-        </div>
-
-        <div class="supplier-form__field">
-          <app-form-field
-            label="Codigo de lote"
-            [value]="newLotCode()"
-            (valueChange)="newLotCode.set($event)"
-            placeholder="Lote del proveedor"
-            testId="lot-code"
-          />
-        </div>
-
-        <div class="supplier-form__field">
-          <app-control-field label="Fecha de vencimiento">
-            <app-date-picker
-              inputId="lot-expiration-date"
-              [(value)]="newExpirationDate"
-              dateFormat="dd/mm/yy"
-              [minDate]="minDate()"
-              placeholder="Seleccionar fecha"
-            />
-          </app-control-field>
-        </div>
-      </div>
-    </app-form-section>
-
-    @if (error()) {
-      <app-error-alert variant="inline" [title]="error()" message="" />
-    }
-
-    <div class="supplier-form__actions" modalFooter>
-      <app-button variant="secondary" type="button" (click)="dialogVisible.set(false)">
-        Cancelar
-      </app-button>
-      <app-button type="submit" [loading]="saving()">Guardar lote</app-button>
-    </div>
-  </form>
-</app-modal>
-
-<app-modal [(visible)]="adjDialogVisible" title="Ajustar stock" [width]="'min(38rem, 92vw)'">
-  <form class="supplier-form" (ngSubmit)="saveAdjustment()">
-    <app-form-section
-      [index]="1"
-      title="Datos del ajuste"
-      description="Corrige diferencias de inventario, registra consumos internos o mermas. El motivo es obligatorio."
-    >
-      <div class="supplier-form__grid">
-        <div class="supplier-form__field supplier-form__field--wide">
-          <app-control-field label="Producto" [required]="true">
-            <app-product-selector
-              [label]="''"
-              [selected]="adjSelectedProduct()"
-              (selectedChange)="onAdjProductChange($event)"
-              [suggestions]="adjProductSuggestions()"
-              placeholder="Buscar producto por nombre o codigo..."
-              (search)="searchAdjProduct($event)"
-            />
-          </app-control-field>
-        </div>
-
-        <div class="supplier-form__field supplier-form__field--wide">
-          <app-control-field label="Sucursal" [required]="true">
-            <app-select
-              [value]="adjSelectedBranchId()"
-              (valueChange)="onAdjBranchChange($event)"
-              [options]="branchOptions()"
-              placeholder="Seleccionar sucursal"
-              [disabled]="isBranchRestricted()"
-            />
-          </app-control-field>
-        </div>
-
-        <div class="supplier-form__field">
-          <app-control-field label="Tipo" [required]="true">
-            <app-select
-              [value]="adjType()"
-              (valueChange)="adjType.set($event ?? 'MANUAL_ADJUSTMENT')"
-              [options]="adjTypeOptions"
-              placeholder="Seleccionar tipo"
-            />
-          </app-control-field>
-        </div>
-
-        <div class="supplier-form__field">
-          <app-control-field label="Cantidad" [required]="true">
-            <app-input-number
-              [(value)]="adjQuantity"
-              [min]="0"
-              [maxFractionDigits]="3"
-              placeholder="0"
-            />
-          </app-control-field>
-        </div>
-
-        <div class="supplier-form__field supplier-form__field--wide">
-          <app-form-field
-            label="Motivo"
-            [required]="true"
-            [(value)]="adjReason"
-            placeholder="Explica el motivo del ajuste (obligatorio)"
-            testId="adjustment-reason"
-          />
-        </div>
-      </div>
-
-      @if (adjCurrentStockLabel()) {
-        <div class="adjustment-form__stock-info">
-          <i class="pi pi-info-circle"></i>
-          <span>{{ adjCurrentStockLabel() }}</span>
-        </div>
-      }
-
-      @if (adjError()) {
-        <app-error-alert variant="inline" [title]="adjError()" message="" />
-      }
-    </app-form-section>
-
-    <div class="supplier-form__actions" modalFooter>
-      <app-button variant="secondary" type="button" (click)="adjDialogVisible.set(false)">
-        Cancelar
-      </app-button>
-      <app-button type="submit" [loading]="adjSaving()" [disabled]="!canSubmitAdjustment">
-        Ejecutar ajuste
-      </app-button>
-    </div>
-  </form>
-</app-modal>
+<app-stock-adjustment-form
+  [visible]="store.adjustmentVisible()"
+  (visibleChange)="store.setAdjustmentVisible($event)"
+  [branches]="branchOptions()"
+  [initialProduct]="store.adjustmentInitialProduct()"
+  [initialBranchId]="store.adjustmentInitialBranchId()"
+  [branchRestricted]="isBranchRestricted()"
+  [suggestions]="store.productSuggestions()"
+  [stockLabel]="store.adjustmentStockLabel()"
+  [saving]="store.adjustmentSaving()"
+  [error]="store.adjustmentError()"
+  (productSearch)="store.searchProducts($event)"
+  (stockContextChanged)="store.updateAdjustmentStock($event.product, $event.branchId)"
+  (submitted)="store.createAdjustment($event)"
+/>

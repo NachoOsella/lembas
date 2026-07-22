@@ -1,19 +1,16 @@
-package com.dietetica.lembas.inventory.service;
+package com.dietetica.lembas.inventory.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.dietetica.lembas.auth.service.SecurityContextHelper;
 import com.dietetica.lembas.catalog.model.Product;
-import com.dietetica.lembas.catalog.repository.ProductRepository;
-import com.dietetica.lembas.inventory.dto.CreateStockLotRequest;
 import com.dietetica.lembas.inventory.dto.StockLotDto;
 import com.dietetica.lembas.inventory.dto.StockMovementDto;
 import com.dietetica.lembas.inventory.model.StockLot;
@@ -22,9 +19,7 @@ import com.dietetica.lembas.inventory.model.StockMovement;
 import com.dietetica.lembas.inventory.model.StockMovementType;
 import com.dietetica.lembas.inventory.repository.StockLotRepository;
 import com.dietetica.lembas.inventory.repository.StockMovementRepository;
-import com.dietetica.lembas.orders.repository.OrderRepository;
 import com.dietetica.lembas.shared.branch.model.Branch;
-import com.dietetica.lembas.shared.branch.repository.BranchRepository;
 import com.dietetica.lembas.shared.exception.DomainException;
 import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
@@ -35,7 +30,6 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,7 +44,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 /** Characterization tests for inventory branch scoping and API query mappings. */
 @ExtendWith(MockitoExtension.class)
-class InventoryServiceQueryCharacterizationTest {
+class StockQueryServiceTest {
 
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-06-04T12:00:00Z"), ZoneOffset.UTC);
 
@@ -61,61 +55,14 @@ class InventoryServiceQueryCharacterizationTest {
     private StockMovementRepository stockMovementRepository;
 
     @Mock
-    private ProductRepository productRepository;
-
-    @Mock
-    private BranchRepository branchRepository;
-
-    @Mock
-    private OrderRepository orderRepository;
-
-    @Mock
-    private FefoStockDeductionPolicy fefoPolicy;
-
-    @Mock
     private SecurityContextHelper securityContextHelper;
 
-    private InventoryService inventoryService;
+    private StockQueryService stockQueryService;
 
     @BeforeEach
     void setUp() {
-        inventoryService = new InventoryService(
-                stockLotRepository,
-                stockMovementRepository,
-                productRepository,
-                branchRepository,
-                orderRepository,
-                fefoPolicy,
-                securityContextHelper,
-                CLOCK);
-    }
-
-    @Test
-    void createStockLotScopesEmployeeRequestsToTheirAssignedBranch() {
-        Product product = product(10L, "Granola");
-        Branch assignedBranch = branch(20L, "Centro");
-        when(assignedBranch.isActive()).thenReturn(true);
-        User employee = user(Role.EMPLOYEE, 20L);
-        when(securityContextHelper.getCurrentUser()).thenReturn(employee);
-        when(productRepository.findByIdAndActiveTrue(10L)).thenReturn(Optional.of(product));
-        when(branchRepository.findById(20L)).thenReturn(Optional.of(assignedBranch));
-        when(stockLotRepository.save(any(StockLot.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(stockLotRepository.calculateAvailableQuantity(10L, 20L)).thenReturn(BigDecimal.valueOf(5));
-
-        StockLotDto result = inventoryService.createStockLot(
-                new CreateStockLotRequest(10L, 99L, BigDecimal.valueOf(5), "  LOT-1  ", null, null));
-
-        ArgumentCaptor<StockLot> lotCaptor = ArgumentCaptor.forClass(StockLot.class);
-        verify(stockLotRepository).save(lotCaptor.capture());
-        assertThat(lotCaptor.getValue().getBranch()).isSameAs(assignedBranch);
-        assertThat(lotCaptor.getValue().getLotCode()).isEqualTo("LOT-1");
-        assertThat(lotCaptor.getValue().getInitialQuantity()).isEqualByComparingTo("5");
-        assertThat(lotCaptor.getValue().getQuantityAvailable()).isEqualByComparingTo("5");
-        assertThat(lotCaptor.getValue().getUnitCost()).isEqualByComparingTo("0");
-        verify(branchRepository).findById(20L);
-        verify(branchRepository, never()).findById(99L);
-        assertThat(result.branchId()).isEqualTo(20L);
-        assertThat(result.totalAvailableForProductBranch()).isEqualByComparingTo("5");
+        stockQueryService =
+                new StockQueryService(stockLotRepository, stockMovementRepository, securityContextHelper, CLOCK);
     }
 
     @Test
@@ -149,7 +96,7 @@ class InventoryServiceQueryCharacterizationTest {
                         any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(lot), requestedPage, 1));
 
-        var page = inventoryService.listLots("  GRANOLA ", 10L, 99L, false, requestedPage);
+        var page = stockQueryService.listLots("  GRANOLA ", 10L, 99L, false, requestedPage);
 
         assertThat(page.getContent())
                 .containsExactly(new StockLotDto(
@@ -212,7 +159,7 @@ class InventoryServiceQueryCharacterizationTest {
                         org.mockito.ArgumentMatchers.<Specification<StockMovement>>any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(movement), PageRequest.of(0, 10), 1));
 
-        var page = inventoryService.listMovements(
+        var page = stockQueryService.listMovements(
                 StockMovementType.WASTE,
                 10L,
                 20L,
@@ -238,11 +185,39 @@ class InventoryServiceQueryCharacterizationTest {
     }
 
     @Test
+    void listProductSummariesPreservesFiltersAndMappedPageable() {
+        User admin = mock(User.class);
+        when(admin.getRole()).thenReturn(Role.ADMIN);
+        when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+        when(stockLotRepository.searchProductSummaries(
+                        eq("%granola%"), eq(20L), eq(true), eq(LocalDate.of(2026, 7, 4)), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+
+        var page = stockQueryService.listProductSummaries(
+                " Granola ", 20L, true, PageRequest.of(0, 10, Sort.by("productName")));
+
+        assertThat(page).isEmpty();
+        verify(stockLotRepository)
+                .searchProductSummaries(
+                        eq("%granola%"), eq(20L), eq(true), eq(LocalDate.of(2026, 7, 4)), any(Pageable.class));
+    }
+
+    @Test
+    void calculateAvailableQuantityDelegatesToActiveLotSourceOfTruth() {
+        when(stockLotRepository.calculateAvailableQuantity(10L, 20L)).thenReturn(new BigDecimal("7.500"));
+
+        BigDecimal available = stockQueryService.calculateAvailableQuantity(10L, 20L);
+
+        assertThat(available).isEqualByComparingTo("7.5");
+        verify(stockLotRepository).calculateAvailableQuantity(10L, 20L);
+    }
+
+    @Test
     void listLotsRejectsBranchScopedUsersWithoutAnAssignedBranch() {
         User employeeWithoutBranch = user(Role.EMPLOYEE, null);
         when(securityContextHelper.getCurrentUser()).thenReturn(employeeWithoutBranch);
 
-        assertThatThrownBy(() -> inventoryService.listLots(null, null, 20L, false, PageRequest.of(0, 10)))
+        assertThatThrownBy(() -> stockQueryService.listLots(null, null, 20L, false, PageRequest.of(0, 10)))
                 .isInstanceOf(DomainException.class)
                 .extracting("code")
                 .isEqualTo("INVALID_USER_BRANCH");

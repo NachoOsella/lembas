@@ -3,18 +3,19 @@ import { Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
 import { AuthService } from '@core/services/auth';
-import type { CartItem } from '@features/checkout/state/cart';
-import { Cart } from '@features/checkout/state/cart';
+import type { CartItem } from '@features/checkout/public-api';
+import { Cart } from '@features/checkout/public-api';
 import { CurrencyArPipe } from '@core/pipes/currency-ar.pipe';
 import { CustomerCheckoutService } from '@features/checkout/data-access/customer-checkout';
 import type { OrderCreated } from '@features/orders/data-access/customer-order';
 import { CustomerOrderService } from '@features/orders/data-access/customer-order';
-import { StoreBranchSelectionService } from '@features/branches/state/store-branch-selection';
+import { StoreBranchSelectionService } from '@features/branches/public-api';
 import { AppButton } from '@shared/components/app-button/app-button';
 import { AppEyebrow } from '@shared/components/app-eyebrow/app-eyebrow';
 import { AppSelect } from '@shared/components/app-select/app-select';
 import { EmptyState } from '@shared/components/empty-state/empty-state';
 import { ErrorAlert } from '@shared/components/error-alert/error-alert';
+import { getApiError } from '@shared/types/api-error';
 import { QuantityStepper } from '@shared/components/quantity-stepper/quantity-stepper';
 
 @Component({
@@ -157,7 +158,7 @@ export class Checkout {
           });
         },
         error: (error) => {
-          this.errorCode.set(error?.error?.code ?? 'UNKNOWN');
+          this.errorCode.set(getCheckoutErrorCode(error));
           this.submitting.set(false);
         },
       });
@@ -181,7 +182,7 @@ export class Checkout {
         window.location.href = preference.initPoint;
       },
       error: (error) => {
-        this.errorCode.set(error?.error?.code ?? 'PAYMENT_PREFERENCE_FAILED');
+        this.errorCode.set(getCheckoutErrorCode(error, 'PAYMENT_PREFERENCE_FAILED'));
         this.redirecting.set(false);
       },
     });
@@ -191,4 +192,18 @@ export class Checkout {
   protected continueShopping(): void {
     this.router.navigate(['/store/products']);
   }
+}
+
+function getCheckoutErrorCode(error: unknown, fallback = 'UNKNOWN'): string {
+  const apiError = getApiError(error);
+  if (apiError) return apiError.code;
+
+  if (typeof error !== 'object' || error === null || !('error' in error)) {
+    return fallback;
+  }
+  const payload = error.error;
+  if (typeof payload !== 'object' || payload === null || !('code' in payload)) {
+    return fallback;
+  }
+  return typeof payload.code === 'string' && payload.code.length > 0 ? payload.code : fallback;
 }

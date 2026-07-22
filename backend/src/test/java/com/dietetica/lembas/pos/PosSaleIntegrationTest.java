@@ -1,10 +1,13 @@
 package com.dietetica.lembas.pos;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.dietetica.lembas.AbstractIntegrationTest;
 import com.dietetica.lembas.auth.service.JwtTokenProvider;
 import com.dietetica.lembas.cash.dto.CashSessionDto;
-import com.dietetica.lembas.cash.model.CashMovementMethod;
-import com.dietetica.lembas.cash.model.CashMovementType;
 import com.dietetica.lembas.cash.model.CashSessionStatus;
 import com.dietetica.lembas.cash.repository.CashSessionRepository;
 import com.dietetica.lembas.cash.service.CashService;
@@ -33,24 +36,18 @@ import com.dietetica.lembas.users.model.Role;
 import com.dietetica.lembas.users.model.User;
 import com.dietetica.lembas.users.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * End-to-end integration tests for {@code POST /api/pos/sales}.
@@ -62,22 +59,53 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class PosSaleIntegrationTest extends AbstractIntegrationTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private JwtTokenProvider jwtTokenProvider;
-    @Autowired private PasswordEncoder passwordEncoder;
-    @Autowired private UserRepository userRepository;
-    @Autowired private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
-    @Autowired private jakarta.persistence.EntityManager entityManager;
-    @Autowired private BranchRepository branchRepository;
-    @Autowired private CategoryRepository categoryRepository;
-    @Autowired private ProductRepository productRepository;
-    @Autowired private StockLotRepository stockLotRepository;
-    @Autowired private StockMovementRepository stockMovementRepository;
-    @Autowired private OrderRepository orderRepository;
-    @Autowired private PaymentRepository paymentRepository;
-    @Autowired private CashSessionRepository cashSessionRepository;
-    @Autowired private CashService cashService;
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private jakarta.persistence.EntityManager entityManager;
+
+    @Autowired
+    private BranchRepository branchRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private StockLotRepository stockLotRepository;
+
+    @Autowired
+    private StockMovementRepository stockMovementRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
+    private CashSessionRepository cashSessionRepository;
+
+    @Autowired
+    private CashService cashService;
 
     private Branch branch;
     private Product product;
@@ -95,7 +123,9 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
             cashSessionRepository.deleteAllInBatch();
             stockLotRepository.deleteAllInBatch();
             // supplier_products / supplier_product_cost_history may exist from seeds
-            entityManager.createNativeQuery("DELETE FROM supplier_product_cost_history").executeUpdate();
+            entityManager
+                    .createNativeQuery("DELETE FROM supplier_product_cost_history")
+                    .executeUpdate();
             entityManager.createNativeQuery("DELETE FROM supplier_products").executeUpdate();
             productRepository.deleteAllInBatch();
             categoryRepository.deleteAllInBatch();
@@ -108,11 +138,15 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
         branch = branchRepository.saveAndFlush(activeBranch("POS Branch"));
 
         User admin = userRepository.saveAndFlush(new User(
-                null, "admin@it.com", passwordEncoder.encode("AdminPass!123"),
-                "Admin", "User", null, Role.ADMIN));
+                null, "admin@it.com", passwordEncoder.encode("AdminPass!123"), "Admin", "User", null, Role.ADMIN));
         cashier = userRepository.saveAndFlush(new User(
-                branch.getId(), "cashier@it.com", passwordEncoder.encode("CashPass!123"),
-                "Carla", "Cajero", null, Role.EMPLOYEE));
+                branch.getId(),
+                "cashier@it.com",
+                passwordEncoder.encode("CashPass!123"),
+                "Carla",
+                "Cajero",
+                null,
+                Role.EMPLOYEE));
         cashierToken = jwtTokenProvider.createAccessToken(cashier);
 
         Category category = newCategory("Integration");
@@ -167,10 +201,16 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
         assertThat(movements.get(0).getType()).isEqualTo(StockMovementType.POS_SALE);
         assertThat(movements.get(0).getQuantity()).isEqualByComparingTo("-3");
         assertThat(movements.get(0).getOrderId()).isNotNull();
+        assertThat(movements.get(0).getReferenceType()).isEqualTo("ORDER");
+        assertThat(movements.get(0).getReferenceId()).isEqualTo(movements.get(0).getOrderId());
+        assertThat(movements.get(0).getReason()).isEqualTo("POS sale deduction");
         assertThat(movements.get(0).getUnitCostSnapshot()).isNotNull();
 
         // Order has the cash session id set
-        Long orderId = objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
+        Long orderId = objectMapper
+                .readTree(result.getResponse().getContentAsString())
+                .get("id")
+                .asLong();
         var savedOrder = orderRepository.findById(orderId).orElseThrow();
         assertThat(savedOrder.getType()).isEqualTo(OrderType.POS);
         assertThat(savedOrder.getStatus()).isEqualTo(OrderStatus.PAID);
@@ -191,7 +231,8 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.payments[0].method").value("QR"));
 
-        var payments = paymentRepository.findByOrderIdOrderByIdAsc(orderRepository.findAll().get(0).getId());
+        var payments = paymentRepository.findByOrderIdOrderByIdAsc(
+                orderRepository.findAll().get(0).getId());
         assertThat(payments).hasSize(1);
         assertThat(payments.get(0).getMethod()).isEqualTo(PaymentMethod.QR);
         assertThat(payments.get(0).getStatus()).isEqualTo(PaymentStatus.APPROVED);
@@ -205,7 +246,9 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
 
         CreatePosSaleRequest request = new CreatePosSaleRequest(
                 List.of(new CreatePosSaleItemRequest(product.getId(), 1)),
-                PaymentMethod.CASH, new BigDecimal("3000.00"), null);
+                PaymentMethod.CASH,
+                new BigDecimal("3000.00"),
+                null);
 
         mockMvc.perform(post("/api/pos/sales")
                         .header("Authorization", "Bearer " + cashierToken)
@@ -213,7 +256,9 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
-        var payment = paymentRepository.findByOrderIdOrderByIdAsc(orderRepository.findAll().get(0).getId()).get(0);
+        var payment = paymentRepository
+                .findByOrderIdOrderByIdAsc(orderRepository.findAll().get(0).getId())
+                .get(0);
         assertThat(payment.getMetadata()).contains("\"cashReceived\"").contains("3000.00");
     }
 
@@ -226,8 +271,10 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
         openCashSession();
         // FEFO: expirationDate ASC nulls last. Lot B has earlier expiration, should
         // be deducted first.
-        StockLot earlier = persistLot(product, new BigDecimal("2"), LocalDate.now().plusDays(5));
-        StockLot later = persistLot(product, new BigDecimal("5"), LocalDate.now().plusDays(30));
+        StockLot earlier =
+                persistLot(product, new BigDecimal("2"), LocalDate.now().plusDays(5));
+        StockLot later =
+                persistLot(product, new BigDecimal("5"), LocalDate.now().plusDays(30));
         earlier = stockLotRepository.findById(earlier.getId()).orElseThrow();
         later = stockLotRepository.findById(later.getId()).orElseThrow();
 
@@ -242,7 +289,9 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
         StockLot earlierAfter = stockLotRepository.findById(earlier.getId()).orElseThrow();
         StockLot laterAfter = stockLotRepository.findById(later.getId()).orElseThrow();
         assertThat(earlierAfter.getQuantityAvailable()).isEqualByComparingTo("0");
+        assertThat(earlierAfter.getStatus()).isEqualTo(StockLotStatus.DEPLETED);
         assertThat(laterAfter.getQuantityAvailable()).isEqualByComparingTo("3");
+        assertThat(laterAfter.getStatus()).isEqualTo(StockLotStatus.ACTIVE);
     }
 
     @Test
@@ -340,7 +389,8 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
     @Test
     void createSale_invalidQuantity_returns400() throws Exception {
         openCashSession();
-        String body = """
+        String body =
+                """
                 { "items": [ { "productId": 1, "quantity": 0 } ], "paymentMethod": "CASH" }
                 """;
 
@@ -356,8 +406,7 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
     void createSale_unauthenticated_returns401() throws Exception {
         persistLot(product, new BigDecimal("5"), null);
         openCashSession();
-        String body = objectMapper.writeValueAsString(
-                saleRequest(product.getId(), 1, PaymentMethod.CASH, null));
+        String body = objectMapper.writeValueAsString(saleRequest(product.getId(), 1, PaymentMethod.CASH, null));
 
         mockMvc.perform(post("/api/pos/sales")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -371,8 +420,7 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
 
     private void openCashSession() {
         CashSessionDto session = cashService.openCashSession(
-                new com.dietetica.lembas.cash.dto.OpenCashSessionRequest(
-                        new BigDecimal("100.00"), null, null),
+                new com.dietetica.lembas.cash.dto.OpenCashSessionRequest(new BigDecimal("100.00"), null, null),
                 cashier);
         assertThat(session.status()).isEqualTo(CashSessionStatus.OPEN);
     }
@@ -423,7 +471,6 @@ class PosSaleIntegrationTest extends AbstractIntegrationTest {
     private static CreatePosSaleRequest saleRequest(
             Long productId, int qty, PaymentMethod method, BigDecimal cashReceived) {
         return new CreatePosSaleRequest(
-                List.of(new CreatePosSaleItemRequest(productId, qty)),
-                method, cashReceived, null);
+                List.of(new CreatePosSaleItemRequest(productId, qty)), method, cashReceived, null);
     }
 }
